@@ -1,0 +1,99 @@
+{
+  "insurer": "ADVOCARD Rechtsschutzversicherung AG",
+  "tariff": "Rechtsschutzversicherung",
+  "stand": "04.2024",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "beruf": {
+      "included": true,
+      "level": null
+    },
+    "verkehr": {
+      "included": true,
+      "level": null
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null
+    },
+    "internet_web": {
+      "included": true,
+      "level": null
+    },
+    "steuer": {
+      "included": true,
+      "level": null
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt (mit Ausnahmen je Bereich)",
+    "selbstbeteiligung": "0 EUR, 150 EUR oder 300 EUR (wählbar)",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Schadenersatz-Rechtsschutz",
+      "Verwaltungs-Rechtsschutz Verkehrssachen",
+      "Disziplinar- und Standes-Rechtsschutz",
+      "Straf-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Madeira; weltweit bis 1 Mio EUR",
+    "vertragslaufzeit": "1 oder 3 Jahre"
+  },
+  "leistungen": [
+    "Telefonische Rechtsberatung",
+    "Online-Rechtsberatung per Chat",
+    "Mediation bis 180 EUR/Stunde",
+    "Vorsorgliche anwaltliche Beratung",
+    "Strafkaution als zinsloses Darlehen",
+    "Übernahme von Übersetzungskosten im Ausland",
+    "Identity Protection (360°-Pakete)",
+    "Psychologische Unterstützung bei Cyber-Mobbing"
+  ],
+  "ausschluesse": [
+    "Baufinanzierung",
+    "Patent- und Markenrecht",
+    "Kapitalanlage-Streitigkeiten",
+    "Spiel- und Wettverträge",
+    "Familienrecht-Streitigkeiten",
+    "Erbrecht-Streitigkeiten",
+    "Kriegs- und innere Unruhen",
+    "Vorsätzliche Straftaten des Versicherten"
+  ],
+  "besonderheiten": [
+    "Modular aufgebaut mit kombinierbar Bausteinen",
+    "Komplettangebote 360°-PRIVAT und 360°-GEWERBE",
+    "Schadenfreiheitsrabatt ab 3. Versicherungsjahr",
+    "Beitragsfreistellung bei Arbeitslosigkeit möglich",
+    "Differenzdeckung beim Wechsel von Versicherer",
+    "Identity Protection und Cyber-Mobbing-Support"
+  ],
+  "beitrag": {
+    "monatlich_eur": null,
+    "jaehrlich_eur": null,
+    "quelle": null
+  },
+  "_input_hash": "aaf2f5f11d1429eecf5794a3c1c0f9e606d971e10f856e82fc09a8f034858e0b",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "c096fe09af144332fa693f1520431bbb5e5aa544e995c211cf4a55130c05deb7"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "3f59b041e5545823b4e7d46aad1cc5118975fd7e604ce2dab5efbfb2155f8aec"
+    }
+  ]
+}

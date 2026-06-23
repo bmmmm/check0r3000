@@ -21,9 +21,11 @@ from __future__ import annotations
 import argparse
 import html
 import json
-import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _providers  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TARIFFS = ROOT / "out" / "tariffs"
@@ -96,13 +98,10 @@ def synthesize_pros_cons(tariffs: list[dict], model: str | None) -> str:
         "tariffs. End with a short '### Fazit' naming who fits which need. "
         "Base every point strictly on the JSON facts — no invented numbers. Output only Markdown."
     )
-    cmd = ["claude", "-p", instruction]
-    if model:
-        cmd += ["--model", model]
-    proc = subprocess.run(cmd, input=payload, capture_output=True, text=True)
-    if proc.returncode != 0:
-        raise RuntimeError(f"claude -p failed (exit {proc.returncode}): {proc.stderr.strip()[:300]}")
-    return proc.stdout.strip()
+    res = _providers.run(model or "claude", instruction, payload)
+    if res["error"] or not res["text"]:
+        raise RuntimeError(res["error"] or "empty response")
+    return res["text"].strip()
 
 
 def md_to_html(md: str) -> str:

@@ -1,0 +1,108 @@
+{
+  "insurer": "ARAG SE",
+  "tariff": "Aktiv-Rechtsschutz 2026",
+  "stand": "02.2022",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Schadenersatz-, Vertrags- und Sachenrecht, Beratungs-Rechtsschutz im Familien- und Erbrecht"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Schadenersatz-, Verwaltungs-Rechtsschutz in Verkehrssachen, Ordnungswidrigkeiten-Rechtsschutz"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungs- und Grundstücks-Rechtsschutz"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "web@ktiv Basis, Komfort, Premium optional"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz vor Finanz- und Verwaltungsgerichten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz vor deutschen Sozialgerichten"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz in Verkehrs- und Nichtverkehrssachen"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "wählbar",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Versicherungsfälle Verkehr und Verkehrsrecht entfällt Wartezeit",
+      "Mediation entfällt Wartezeit",
+      "Schadenersatz-Rechtsschutz Privatpersonen",
+      "Bauherren-Rechtsschutz: 6 Monate",
+      "Rechtsschutz in Ehesachen: 3 Jahre",
+      "Rechtsschutz in Unterhaltssachen: 1 Jahr"
+    ],
+    "geltungsbereich": "Europa, Anliegerstaaten des Mittelmeers, Kanarische Inseln, Madeira, Azoren; weltweit bis zu einem Jahr Aufenthalt im Ausland",
+    "vertragslaufzeit": "1 oder 3 Jahre"
+  },
+  "leistungen": [
+    "Telefonische Rechtsberatung ARAG JuraTel®",
+    "Mediation inkl. außergerichtliche Sachverständigenkosten",
+    "Mobiler Anwalt (Besuch bei Ihnen zu Hause)",
+    "ARAG Dokumenten-Center",
+    "Anwaltsempfehlung",
+    "Außergerichtliche Tätigkeiten des Anwalts",
+    "Sachverständigenkosten bei Mediation",
+    "Psychologische Soforthilfe in Krisensituationen"
+  ],
+  "ausschluesse": [
+    "Baufinanzierung und Grundstückserwerb/Veräußerung",
+    "Patent-, Urheber-, Marken- und Designrechte",
+    "Spiel- und Wettverträge oder Gewinnzusagen",
+    "Kartell- und Wettbewerbsrecht",
+    "Versicherungsverträge (mit Ausnahmen)",
+    "Ehe- und Unterhaltssachen ohne entsprechende Zusatzversicherung",
+    "Kriegsereignisse, Aufruhr, Streik, Erdbeben",
+    "Angelegenheiten, bei denen Versicherter vorsätzlich handelt"
+  ],
+  "besonderheiten": [
+    "Leistungsupdate-Garantie für beitragsfreie Leistungserweiterungen",
+    "Verzicht auf Selbstbeteiligungsabzug bei Erledigung durch Erstberatung",
+    "Vorversicherungs-Garantie bei Wechsel vom Vorversicherer",
+    "Differenzdeckung möglich",
+    "Mehrfachversicherungsschutz in verschiedenen Lebensbereichen kombinierbar",
+    "Flexible Auswahl einzelner Deckungsbereiche"
+  ],
+  "beitrag": null,
+  "_input_hash": "1fa8a520d17c9ef535fc117928317b73b32d2c3663c83fdf950b837061c332c2",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "5de19b50976366a9bc61aaa26bd325fd2fa44c061fa95f6c45f2027ea3489d0a"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "45ddaf8573f0cf3febe87f0ecdb8c1f0d43d5c63e37a771a456cea46e04347cf"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "6abaeef287ab921ae35ee3f0bdf66304abe80ad913f5f43b4e6b04331151c049"
+    }
+  ]
+}

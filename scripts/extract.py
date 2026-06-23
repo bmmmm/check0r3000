@@ -13,10 +13,14 @@ unless a document or the prompt changed.
 Reads:   data/extracted/manifest.json + data/extracted/**/*.txt
 Writes:  out/tariffs/<insurer>__<tariff>.json
 
-Requires the `claude` CLI on PATH. Pure stdlib — no uv deps needed:
-Run:  python3 scripts/extract.py            (all tariffs, cached)
-      python3 scripts/extract.py --force     (ignore cache)
+Models are addressed by spec (see scripts/_providers.py): a bare name or claude:X
+is the `claude` CLI; ollama:/mlx:/openai: route to a local OpenAI-compatible server.
+Pure stdlib — no uv deps needed:
+Run:  python3 scripts/extract.py                  (all tariffs, cached)
+      python3 scripts/extract.py --force           (ignore cache)
       python3 scripts/extract.py --model opus
+      python3 scripts/extract.py --model haiku --filter   (trim oversized AVBs)
+      python3 scripts/extract.py --model ollama:llama3.1:8b
 """
 from __future__ import annotations
 
@@ -24,9 +28,12 @@ import argparse
 import hashlib
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _filter  # noqa: E402
+import _providers  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 EXTRACTED = ROOT / "data" / "extracted"
@@ -34,7 +41,7 @@ SCHEMA = ROOT / "schema" / "tariff.schema.json"
 OUT = ROOT / "out" / "tariffs"
 
 # Bump when the prompt/schema semantics change to invalidate all caches.
-PROMPT_VERSION = "1"
+PROMPT_VERSION = "3"
 
 INSTRUCTION = """You are extracting structured, comparable facts from a German \
 legal-protection-insurance (Rechtsschutzversicherung) document set.
@@ -50,9 +57,13 @@ code fences.
 - Facts only. Do NOT copy verbatim policy text into the output.
 - Use null / empty arrays where the documents do not state a value. NEVER guess \
 a number.
-- For module `level`, use Basis/Komfort/Premium only if the documents grade the \
-area; otherwise null.
-- Keep array entries short (a few words each), in German."""
+- For module `level`, use Basis/Komfort/Premium ONLY if the documents state which \
+variant THIS tariff actually has. If they merely list the variants as selectable \
+options without naming the chosen one (typical for AVB/PIB), use null — never guess \
+a level.
+- Keep array entries short (a few words each), in German.
+- Omit the `sources` field entirely — the pipeline adds provenance; never invent \
+content hashes."""
 
 
 def slug(s: str) -> str:
@@ -83,34 +94,41 @@ def coerce_json(text: str) -> dict:
         raise
 
 
-def build_payload(schema_text: str, docs: list[dict], root: Path) -> str:
+def build_payload(schema_text: str, docs: list[dict], root: Path,
+                  transform=None) -> str:
     """Concatenate the schema and each document into one stdin payload.
 
-    Shared with scripts/eval.py so the benchmark scores the exact same input the
-    pipeline uses.
+    `transform(doctype, text) -> text` optionally rewrites a document before it is
+    appended (used to trim oversized AVBs). Shared with scripts/eval.py so the
+    benchmark scores the exact same input the pipeline uses.
     """
     parts = [f"===== SCHEMA =====\n{schema_text}\n"]
     for d in docs:
         text = (root / d["extracted_path"]).read_text(encoding="utf-8")
+        if transform:
+            text = transform(d["doctype"], text)
         parts.append(f"===== {d['doctype']} =====\n{text}\n")
     return "\n".join(parts)
 
 
-def run_claude(payload: str, model: str | None) -> str:
-    cmd = ["claude", "-p", INSTRUCTION]
-    if model:
-        cmd += ["--model", model]
-    proc = subprocess.run(cmd, input=payload, capture_output=True, text=True)
-    if proc.returncode != 0:
-        raise RuntimeError(f"claude -p failed (exit {proc.returncode}): {proc.stderr.strip()[:500]}")
-    return proc.stdout
+def avb_transform(doctype: str, text: str) -> str:
+    """Trim only the AVB (the oversized document); pass others through unchanged."""
+    return _filter.filter_text(text) if doctype == "avb" else text
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true", help="ignore cache, re-extract all")
-    ap.add_argument("--model", default=None, help="claude model (default: CLI default)")
+    ap.add_argument("--model", default="claude",
+                    help="model spec (default: claude CLI default; e.g. haiku, "
+                         "opus, ollama:llama3.1:8b) — see scripts/_providers.py")
+    ap.add_argument("--filter", action="store_true",
+                    help="trim oversized AVBs to comparison-relevant passages so "
+                         "small/cheap/local models fit them")
     args = ap.parse_args()
+
+    transform = avb_transform if args.filter else None
+    filter_tag = "avb-filter" if args.filter else "none"
 
     manifest_path = EXTRACTED / "manifest.json"
     if not manifest_path.exists():
@@ -129,7 +147,8 @@ def main() -> int:
     rc = 0
     for (insurer, tariff), docs in sorted(tariffs.items()):
         docs = sorted(docs, key=lambda d: d["doctype"])
-        sig = PROMPT_VERSION + "|" + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs)
+        sig = (PROMPT_VERSION + f"|filter={filter_tag}|"
+               + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs))
         input_hash = hashlib.sha256(sig.encode()).hexdigest()
         out_path = OUT / f"{slug(insurer)}__{slug(tariff)}.json"
 
@@ -142,21 +161,34 @@ def main() -> int:
             except Exception:
                 pass
 
-        payload = build_payload(schema_text, docs, ROOT)
+        payload = build_payload(schema_text, docs, ROOT, transform)
 
-        print(f"  extract   {insurer} / {tariff}  ({len(payload)} chars -> claude -p) ...")
+        print(f"  extract   {insurer} / {tariff}  ({len(payload)} chars, {args.model}) ...")
+        result = _providers.run(args.model, INSTRUCTION, payload)
+        if result["error"] or not result["text"]:
+            print(f"    FAILED: {result['error'] or 'empty response'}", file=sys.stderr)
+            rc = 1
+            continue
         try:
-            raw = run_claude(payload, args.model)
-            record = coerce_json(raw)
+            record = coerce_json(result["text"])
         except Exception as e:
-            print(f"    FAILED: {e}", file=sys.stderr)
+            print(f"    FAILED: could not parse JSON: {e}", file=sys.stderr)
             rc = 1
             continue
 
         record["_input_hash"] = input_hash
-        record["_model"] = args.model or "default"
-        # Ensure provenance even if the model omitted it.
-        record.setdefault("sources", [{"doctype": d["doctype"], "content_sha256": d["content_sha256"]} for d in docs])
+        record["_model"] = args.model
+        record["_filter"] = filter_tag
+        # Identity is known from the manifest — never let a model leave it null.
+        record["insurer"] = record.get("insurer") or insurer
+        record["tariff"] = record.get("tariff") or tariff
+        # Provenance is the pipeline's job: set the real hashes authoritatively,
+        # overwriting anything the model may have (wrongly) produced.
+        record["sources"] = [{"doctype": d["doctype"],
+                              "content_sha256": d["content_sha256"]} for d in docs]
+        empty = [k for k in ("modules", "coverage") if not record.get(k)]
+        if empty:
+            print(f"    warn: {insurer}/{tariff}: model returned empty {empty}", file=sys.stderr)
         out_path.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"    -> {out_path.relative_to(ROOT)}")
 
