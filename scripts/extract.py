@@ -67,6 +67,35 @@ def strip_fences(text: str) -> str:
     return t.strip()
 
 
+def coerce_json(text: str) -> dict:
+    """Parse the model's reply into a dict, tolerating fences or surrounding prose.
+
+    Large inputs make models more likely to wrap the JSON in explanatory text; fall
+    back to the outermost brace span before giving up.
+    """
+    t = strip_fences(text)
+    try:
+        return json.loads(t)
+    except json.JSONDecodeError:
+        m = re.search(r"\{.*\}", t, re.DOTALL)
+        if m:
+            return json.loads(m.group(0))
+        raise
+
+
+def build_payload(schema_text: str, docs: list[dict], root: Path) -> str:
+    """Concatenate the schema and each document into one stdin payload.
+
+    Shared with scripts/eval.py so the benchmark scores the exact same input the
+    pipeline uses.
+    """
+    parts = [f"===== SCHEMA =====\n{schema_text}\n"]
+    for d in docs:
+        text = (root / d["extracted_path"]).read_text(encoding="utf-8")
+        parts.append(f"===== {d['doctype']} =====\n{text}\n")
+    return "\n".join(parts)
+
+
 def run_claude(payload: str, model: str | None) -> str:
     cmd = ["claude", "-p", INSTRUCTION]
     if model:
@@ -113,16 +142,12 @@ def main() -> int:
             except Exception:
                 pass
 
-        parts = [f"===== SCHEMA =====\n{schema_text}\n"]
-        for d in docs:
-            text = (ROOT / d["extracted_path"]).read_text(encoding="utf-8")
-            parts.append(f"===== {d['doctype']} =====\n{text}\n")
-        payload = "\n".join(parts)
+        payload = build_payload(schema_text, docs, ROOT)
 
         print(f"  extract   {insurer} / {tariff}  ({len(payload)} chars -> claude -p) ...")
         try:
             raw = run_claude(payload, args.model)
-            record = json.loads(strip_fences(raw))
+            record = coerce_json(raw)
         except Exception as e:
             print(f"    FAILED: {e}", file=sys.stderr)
             rc = 1
