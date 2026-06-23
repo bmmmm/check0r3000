@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bmmmm/check0r3000/schema/tariff.schema.json",
+  "title": "Rechtsschutz tariff comparison record",
+  "description": "Normalized, comparable facts extracted from one legal-protection-insurance tariff's document set. Facts only — no verbatim policy text. Use null when a document set does not state a value (do NOT guess).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["insurer", "tariff", "modules", "coverage", "sources"],
+  "properties": {
+    "insurer": { "type": "string", "description": "Insurer / company name, e.g. 'ARAG SE'." },
+    "tariff": { "type": "string", "description": "Tariff / product name as marketed, e.g. 'Aktiv-Rechtsschutz Premium'." },
+    "stand": { "type": ["string", "null"], "description": "Document version date / 'Stand', e.g. '02.2022'." },
+
+    "modules": {
+      "type": "object",
+      "description": "Which legal areas are covered, and at which service level (Basis/Komfort/Premium or null if not graded).",
+      "additionalProperties": false,
+      "properties": {
+        "privat":            { "$ref": "#/$defs/module" },
+        "beruf":             { "$ref": "#/$defs/module" },
+        "verkehr":           { "$ref": "#/$defs/module" },
+        "wohnen_immobilien": { "$ref": "#/$defs/module" },
+        "internet_web":      { "$ref": "#/$defs/module" },
+        "steuer":            { "$ref": "#/$defs/module" },
+        "sozialgericht":     { "$ref": "#/$defs/module" },
+        "verwaltungsrecht":  { "$ref": "#/$defs/module" }
+      }
+    },
+
+    "coverage": {
+      "type": "object",
+      "description": "Financial and temporal coverage parameters.",
+      "additionalProperties": false,
+      "properties": {
+        "versicherungssumme":       { "type": ["string", "null"], "description": "Sum insured per case, e.g. 'unbegrenzt' or '300000 EUR'." },
+        "selbstbeteiligung":        { "type": ["string", "null"], "description": "Deductible per case, e.g. '0 EUR', '150 EUR', or 'wählbar 150/300 EUR'." },
+        "wartezeit_monate":         { "type": ["integer", "null"], "description": "General waiting period in months; 0 if none." },
+        "wartezeit_ausnahmen":      { "type": "array", "items": { "type": "string" }, "description": "Areas with deviating / no waiting period." },
+        "geltungsbereich":          { "type": ["string", "null"], "description": "Geographic scope, e.g. 'Europa + Mittelmeeranrainer; weltweit temporär'." },
+        "vertragslaufzeit":         { "type": ["string", "null"], "description": "Term options, e.g. '1 oder 3 Jahre'." }
+      }
+    },
+
+    "leistungen": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Notable covered services / benefits (e.g. 'telefonische Rechtsberatung', 'Mediation', 'Strafkaution als Darlehen')."
+    },
+    "ausschluesse": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key exclusions / coverage limits (e.g. 'Baufinanzierung', 'Patent-/Markenrecht')."
+    },
+    "besonderheiten": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Distinguishing features worth flagging in a comparison."
+    },
+
+    "beitrag": {
+      "type": "object",
+      "description": "Premium. Usually NOT in AVB/PIB — comes from the check24 result table or a personal offer. Leave null if absent.",
+      "additionalProperties": false,
+      "properties": {
+        "monatlich_eur": { "type": ["number", "null"] },
+        "jaehrlich_eur": { "type": ["number", "null"] },
+        "quelle":        { "type": ["string", "null"], "description": "Where the premium came from, e.g. 'check24-Ergebnisliste 2026-06-23'." }
+      }
+    },
+
+    "sources": {
+      "type": "array",
+      "description": "Provenance: which extracted documents this record was derived from.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["doctype", "content_sha256"],
+        "properties": {
+          "doctype":        { "type": "string", "description": "avb | produktinfoblatt | weitere_unterlagen | leistungsuebersicht" },
+          "content_sha256": { "type": "string" }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["included"],
+      "properties": {
+        "included": { "type": "boolean" },
+        "level":    { "type": ["string", "null"], "enum": ["Basis", "Komfort", "Premium", null], "description": "Service variant, or null if the area is not graded." },
+        "note":     { "type": ["string", "null"] }
+      }
+    }
+  }
+}

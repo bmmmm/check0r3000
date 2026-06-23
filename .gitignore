@@ -1,0 +1,31 @@
+# --- Source documents: third-party copyright (ARAG/check24 etc.) ---
+# Never publish the raw insurer PDFs or their verbatim extracted text.
+data/inbox/
+data/raw/
+data/extracted/
+
+# --- Local scratch ---
+tmp/
+*.log
+
+# --- Python / uv ---
+.venv/
+__pycache__/
+*.pyc
+.uv-cache/
+
+# --- macOS ---
+.DS_Store
+
+# --- Secrets (belt and suspenders; none expected in this repo) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# --- Tracked deliverables live in out/ (see .gitignore exception below) ---
+# out/ is intentionally NOT ignored: it holds our own factual comparison
+# (tariffs/*.json) and synthesized overview (vergleich.md, index.html).

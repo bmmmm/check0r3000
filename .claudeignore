@@ -1,0 +1,25 @@
+# Binary / large source documents — don't feed PDFs to the model directly;
+# the pipeline extracts text first.
+data/raw/
+*.pdf
+
+# Verbatim extracted text (third-party copyright)
+data/extracted/
+
+# Local scratch
+tmp/
+*.log
+
+# macOS metadata
+.DS_Store
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+.ssh/
+id_*
+*_host_key
