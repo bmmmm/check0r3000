@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
 # dependencies = []
@@ -126,16 +127,21 @@ def import_files(paths: list[str], move: bool) -> int:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--import", dest="import_paths", nargs="+", metavar="PFAD",
-                    help="Dateien (z.B. aus ~/Downloads) in data/inbox/ aufnehmen, dann Dry-Run")
-    ap.add_argument("--move", action="store_true", help="beim --import verschieben statt kopieren")
-    ap.add_argument("--apply", action="store_true", help="Inbox einsortieren (default: dry-run)")
+    ap = argparse.ArgumentParser(
+        description="PDFs in data/inbox/ aufnehmen und nach "
+                    "data/raw/<versicherer>/<tarif>/<doctype>.pdf einsortieren.")
+    ap.add_argument("sources", nargs="*", metavar="PFAD",
+                    help="optionale Dateipfade (z.B. ~/Downloads/*.pdf), die in die Inbox "
+                         "kopiert werden, bevor sortiert wird")
+    ap.add_argument("--move", action="store_true",
+                    help="übergebene Dateien verschieben statt kopieren")
+    ap.add_argument("--apply", action="store_true",
+                    help="Inbox wirklich einsortieren (default: Dry-Run)")
     args = ap.parse_args()
 
-    if args.import_paths:
-        print(f"Import — {len(args.import_paths)} Datei(en) in die Inbox:")
-        if import_files(args.import_paths, args.move):
+    if args.sources:
+        print(f"Import — {len(args.sources)} Datei(en) in die Inbox:")
+        if import_files(args.sources, args.move):
             print("\nMindestens eine Datei konnte nicht importiert werden (s.o.).")
         print()
 

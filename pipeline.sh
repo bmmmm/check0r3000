@@ -21,10 +21,10 @@ uv run scripts/ingest.py
 
 echo "==> extract (claude -p -> structured facts)"
 # shellcheck disable=SC2086
-python3 scripts/extract.py $MODEL_ARGS
+uv run scripts/extract.py $MODEL_ARGS
 
 echo "==> render (matrix + pros/cons -> out/)"
 # shellcheck disable=SC2086
-python3 scripts/render.py $MODEL_ARGS
+uv run scripts/render.py $MODEL_ARGS
 
 echo "==> done. See out/vergleich.md and out/index.html"

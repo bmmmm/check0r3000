@@ -46,13 +46,13 @@ Voraussetzungen: [`uv`](https://docs.astral.sh/uv/) und die `claude`-CLI auf dem
 1. PDFs in den Sammelordner `data/inbox/` bekommen (Original-Dateinamen von check24
    können bleiben) — entweder selbst hineinkopieren, oder per Pfad importieren lassen:
    ```sh
-   # Variante A: Pfade übergeben (kopiert in die Inbox; --move zum Verschieben)
-   uv run scripts/intake.py --import ~/Downloads/Allgemeine_Versicherungsbedingungen_*.pdf
+   # Variante A: Pfade direkt übergeben (kopiert in die Inbox; --move zum Verschieben)
+   ./scripts/intake.py ~/Downloads/Allgemeine_Versicherungsbedingungen_*.pdf
    # Variante B: Dateien selbst nach data/inbox/ legen
 
    # dann einsortieren:
-   uv run scripts/intake.py            # Dry-Run: zeigt den Sortierplan
-   uv run scripts/intake.py --apply    # verschiebt nach data/raw/<versicherer>/<tarif>/
+   ./scripts/intake.py            # Dry-Run: zeigt den Sortierplan
+   ./scripts/intake.py --apply    # verschiebt nach data/raw/<versicherer>/<tarif>/
    ```
    Dateinamen mit Leerzeichen/Sonderzeichen/URL-Encoding (`%C2%B0`) werden korrekt
    normalisiert. Pfade mit Leerzeichen in der Shell quoten.
@@ -68,11 +68,12 @@ Voraussetzungen: [`uv`](https://docs.astral.sh/uv/) und die `claude`-CLI auf dem
    ./pipeline.sh                 # ingest → extract → render
    ./pipeline.sh --model opus    # Modell für die LLM-Stufen überschreiben
    ```
-   Einzelstufen mit Flags:
+   Einzelstufen mit Flags (Scripts sind direkt ausführbar via uv-Shebang;
+   `uv run scripts/<name>.py …` ist gleichwertig):
    ```sh
-   uv run scripts/ingest.py
-   python3 scripts/extract.py --force      # Cache ignorieren
-   python3 scripts/render.py  --no-llm     # nur deterministische Matrix
+   ./scripts/ingest.py
+   ./scripts/extract.py --force      # Cache ignorieren
+   ./scripts/render.py  --no-llm     # nur deterministische Matrix
    ```
 3. Ergebnis: `out/vergleich.md` und `out/index.html`.
 

@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
 """Extract stage: turn each tariff's documents into structured comparison facts.
 
 For every (insurer, tariff) in data/extracted/manifest.json, concatenate the
