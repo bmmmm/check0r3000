@@ -163,11 +163,15 @@ def _record_from_data(
         # wrong type (a list, a string) for these. extract.py only warns on empty
         # modules/coverage and writes the record anyway, and any non-dict/non-list
         # here crashes the render sites (rec.modules.get(...), for x in leistungen).
-        modules=_as_dict(data.get("modules")),
+        # Guard at the *element* level too: a non-dict per-module value (modules.privat
+        # = "Premium") and non-string benefit items crash the same render sites that the
+        # container guard alone leaves exposed.
+        modules={k: v for k, v in _as_dict(data.get("modules")).items()
+                 if isinstance(v, dict)},
         coverage=_as_dict(data.get("coverage")),
-        leistungen=_as_list(data.get("leistungen")),
-        ausschluesse=_as_list(data.get("ausschluesse")),
-        besonderheiten=_as_list(data.get("besonderheiten")),
+        leistungen=[str(x) for x in _as_list(data.get("leistungen"))],
+        ausschluesse=[str(x) for x in _as_list(data.get("ausschluesse"))],
+        besonderheiten=[str(x) for x in _as_list(data.get("besonderheiten"))],
         beitrag=data.get("beitrag") if isinstance(data.get("beitrag"), dict) else None,
         is_enriched=is_enriched,
     )
@@ -268,10 +272,14 @@ def load_snapshot(path: Path) -> Snapshot | None:
         data = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         return None
+    if not isinstance(data, dict):
+        return None
 
     tracked = _tracked_keys()
     rows: list[SnapshotRow] = []
     for t in data.get("tariffs", []):
+        if not isinstance(t, dict):
+            continue
         insurer = t.get("insurer", "")
         product = t.get("product", "")
         slug = _slug(insurer, product)
@@ -327,9 +335,10 @@ def load_favorites() -> dict[str, Any]:
     if not path.is_file():
         return {}
     try:
-        return json.loads(path.read_text())
+        data = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         return {}
+    return data if isinstance(data, dict) else {}
 
 
 def load_doc_index() -> dict[str, list[dict]]:
@@ -342,11 +351,16 @@ def load_doc_index() -> dict[str, list[dict]]:
         data = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         return {}
+    if not isinstance(data, dict):
+        return {}
     index: dict[str, list[dict]] = {}
     for t in data.get("tariffs", []):
+        if not isinstance(t, dict):
+            continue
         stem = t.get("stem")
         if stem:
-            index[stem] = t.get("docs", [])
+            docs = t.get("docs", [])
+            index[stem] = docs if isinstance(docs, list) else []
     return index
 
 
@@ -363,8 +377,12 @@ def load_doc_by_tariff() -> dict[tuple[str, str], dict]:
         data = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         return {}
+    if not isinstance(data, dict):
+        return {}
     index: dict[tuple[str, str], dict] = {}
     for t in data.get("tariffs", []):
+        if not isinstance(t, dict):
+            continue
         ins = (t.get("insurer") or "").strip().casefold()
         prod = (t.get("tariff") or "").strip().casefold()
         if ins and prod:
@@ -492,10 +510,13 @@ def _vergleich_col_w(ncols: int, avail: int = 130) -> int:
     return max(13, min(24, (avail - VERGLEICH_LABEL_W) // ncols))
 
 
-def _esc(s: str) -> str:
+def _esc(s) -> str:
     """Escape a literal '[' so data text can't be parsed as Textual markup. A lone
-    ']' is harmless, so only '[' needs escaping."""
-    return (s or "").replace("[", r"\[")
+    ']' is harmless, so only '[' needs escaping. Tolerates non-string input (a model
+    may emit a number/bool where text is expected) by stringifying it."""
+    if s is None:
+        return ""
+    return str(s).replace("[", r"\[")
 
 
 def _pad_cell(plain: str, width: int, color: str | None = None) -> str:
@@ -534,7 +555,7 @@ def _col_label(stem: str) -> str:
 
 def _module_cell(mod: dict[str, Any]) -> tuple[str, str]:
     """(plain, colour) for one module in a tariff column."""
-    if not mod.get("included"):
+    if not isinstance(mod, dict) or not mod.get("included"):
         return "—", "dim"
     return {
         "Premium": ("★★★ Premium", "bright_green"),
@@ -543,14 +564,32 @@ def _module_cell(mod: dict[str, Any]) -> tuple[str, str]:
     }.get(mod.get("level"), ("✓", "cyan"))
 
 
-def _distinct_numbers(s: str, limit: int = 2) -> list[str]:
+def _fmt_eur(v) -> str:
+    """A monthly/yearly EUR amount for the detail band. A model may emit a numeric
+    string ("12,50") or other type where the schema wants a number; format real
+    numbers as before and fall back to the escaped raw text instead of crashing on
+    f'{v:.2f}'."""
+    if not isinstance(v, bool) and isinstance(v, (int, float)):
+        return f"{v:.2f}"
+    return _esc(str(v))
+
+
+def _amount_tokens(s: str | None) -> list[str]:
+    """Digit-run tokens from a German-formatted amount string, in order. Treats '.',
+    spaces, NBSP and narrow-NBSP as thousands grouping (dropped) and a ',<digits>'
+    decimal fraction as cents (dropped), so distinct numbers stay distinct while one
+    grouped number stays whole: '1 000 000,50' -> ['1000000'], '150 - 300' ->
+    ['150', '300'], '150,00' -> ['150'] (not the garbage '150', '00')."""
     import re
 
+    s = (s or "").replace("\u00a0", " ").replace("\u202f", " ")
+    s = re.sub(r",\d+", "", s)
+    return [re.sub(r"[.\s]", "", m) for m in re.findall(r"\d{1,3}(?:[.\s]\d{3})+|\d+", s)]
+
+
+def _distinct_numbers(s: str, limit: int = 2) -> list[str]:
     out: list[str] = []
-    # Match a German-grouped number (1.000) as ONE token and drop the grouping
-    # dots, so "1.000 €" reads as "1000", not two numbers "1" and "000".
-    for raw in re.findall(r"\d{1,3}(?:\.\d{3})+|\d+", s or ""):
-        n = raw.replace(".", "")
+    for n in _amount_tokens(s):
         if n not in out:
             out.append(n)
         if len(out) >= limit:
@@ -561,17 +600,17 @@ def _distinct_numbers(s: str, limit: int = 2) -> list[str]:
 def _short_versicherungssumme(v: str | None) -> str:
     if not v:
         return "k.A."
-    import re
-
     low = v.lower()
     # A finite per-variant cap must stay visible even when another variant is
     # unlimited: "2000000 EUR (Smart); unbegrenzt (Best)" is NOT blanket-unlimited
     # cover, and collapsing it to "unbegrenzt*" silently hid the Smart 2-Mio cap.
+    # _amount_tokens handles NBSP/space-grouped thousands and decimal commas, so
+    # "1 000 000" / "2.000.000,00" no longer misparse to "1/0" / "2 Mio./0".
     parts: list[str] = []
-    for raw in re.findall(r"\d{1,3}(?:\.\d{3})+|\d+", v):
-        n = int(raw.replace(".", ""))
+    for raw in _amount_tokens(v):
+        n = int(raw)
         if n >= 1_000_000:
-            token = f"{n / 1_000_000:g} Mio."
+            token = f"{n / 1_000_000:g}".replace(".", ",") + " Mio."
         elif n >= 1_000:
             token = f"{n // 1000} Tsd."
         else:
@@ -1306,6 +1345,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._doc_by_tariff: dict[tuple[str, str], dict] = {}
             self._doc_by_stem: dict[str, dict] = {}
             self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
+            self._market_rows: dict[str, SnapshotRow] = {}
             self._active_row: SnapshotRow | None = None
             self._active_fav: dict | None = None
             # Vergleich tab view state: compact by default (clean ✓/✗/~/— matrix);
@@ -1692,7 +1732,12 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             except NoMatches:
                 pass
 
-            for r in rows:
+            # Build a unique DataTable key per row and a key->row map for the
+            # highlight handler. r.key (insurer|product|SB) can legitimately repeat —
+            # snapshot.py itself counts same-key rows — so an enumerate suffix keeps
+            # add_row from raising DuplicateKey on mount/filter/sort.
+            self._market_rows = {}
+            for i, r in enumerate(rows):
                 star = _status_glyph(r)
 
                 note_col = (
@@ -1706,6 +1751,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     f"[{_price_color(r.monatlich_eur, self._q1, self._q3)}]{price_str}[/{_price_color(r.monatlich_eur, self._q1, self._q3)}]"
                 )
 
+                row_key = f"{r.key or r.position}#{i}"
+                self._market_rows[row_key] = r
                 table.add_row(
                     str(r.position),
                     star,
@@ -1715,7 +1762,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     _bewertung_cell(r),
                     price_col,
                     r.selbstbeteiligung or "—",
-                    key=r.key or f"{r.position}",
+                    key=row_key,
                 )
 
             # rebuild the Vergleich tab while we're refreshing
@@ -1832,7 +1879,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     lines.append(f"  Wartezeit:           {cov['wartezeit_monate']} Monate")
                 if cov.get("wartezeit_ausnahmen"):
                     lines.append("  Wartezeit-Ausnahmen:")
-                    for ex in cov["wartezeit_ausnahmen"]:
+                    wa = cov["wartezeit_ausnahmen"]
+                    for ex in (wa if isinstance(wa, list) else [wa]):
                         lines.append(f"    • {_esc(str(ex))}")
                 if cov.get("geltungsbereich"):
                     lines.append(f"  Geltungsbereich:     {_esc(str(cov['geltungsbereich']))}")
@@ -1846,9 +1894,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 m = detail.beitrag.get("monatlich_eur")
                 y = detail.beitrag.get("jaehrlich_eur")
                 if m is not None:
-                    lines.append(f"  [bright_green]€ {m:.2f} / Monat[/bright_green]")
+                    lines.append(f"  [bright_green]€ {_fmt_eur(m)} / Monat[/bright_green]")
                 if y is not None:
-                    lines.append(f"  € {y:.2f} / Jahr")
+                    lines.append(f"  € {_fmt_eur(y)} / Jahr")
                 if detail.beitrag.get("quelle"):
                     lines.append(f"  Quelle: {_esc(str(detail.beitrag['quelle']))}")
                 lines.append("")
@@ -2154,9 +2202,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self.selected_row_key = key
             if not self._snapshot or key is None:
                 return
-            row = next(
-                (r for r in self._snapshot.rows if (r.key or str(r.position)) == key), None
-            )
+            row = self._market_rows.get(key)
             if row is None:
                 return
             self._active_row = row  # target for the [g] download/analyze action
@@ -2311,23 +2357,27 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             ppath = REPO_ROOT / "config" / "check24-profile.json"
             epath = REPO_ROOT / "config" / "check24-profile.example.json"
             is_example = False
-            if ppath.is_file():
-                profile = json.loads(ppath.read_text())
-            elif epath.is_file():
-                profile = json.loads(epath.read_text())
-                is_example = True
-            else:
-                self.notify(
-                    "Kein Query-Profil (config/check24-profile.json).",
-                    severity="error",
-                    timeout=6,
-                )
+            try:
+                if ppath.is_file():
+                    profile = json.loads(ppath.read_text())
+                elif epath.is_file():
+                    profile = json.loads(epath.read_text())
+                    is_example = True
+                else:
+                    self.notify(
+                        "Kein Query-Profil (config/check24-profile.json).",
+                        severity="error",
+                        timeout=6,
+                    )
+                    return
+            except (json.JSONDecodeError, OSError) as exc:
+                self.notify(f"Query-Profil unlesbar: {exc}", severity="error", timeout=6)
                 return
 
-            base = profile.get("base_url")
-            query = profile.get("query")
-            if not base or query is None:
-                self.notify("Profil ohne base_url/query.", severity="error", timeout=6)
+            base = profile.get("base_url") if isinstance(profile, dict) else None
+            query = profile.get("query") if isinstance(profile, dict) else None
+            if not base or not isinstance(query, str):
+                self.notify("Profil ohne base_url/query (string).", severity="error", timeout=6)
                 return
 
             pairs = parse_qsl(query, keep_blank_values=True)
@@ -2354,12 +2404,18 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         # --- Favorites management ([u] toggle, [D] delete) ---
 
         def _save_favorites(self) -> None:
-            """Persist the (tracked, PII-free) shortlist back to config/favorites.json."""
+            """Persist the (tracked, PII-free) shortlist back to config/favorites.json.
+
+            Atomic write: this is the only copy of a hand-curated file, and a crash /
+            full disk mid-write would truncate it (load_favorites then silently returns
+            {} — the shortlist would vanish). Write a temp file, then os.replace()."""
             path = REPO_ROOT / "config" / "favorites.json"
-            path.write_text(
+            tmp = path.with_suffix(".json.tmp")
+            tmp.write_text(
                 json.dumps(self._favorites, indent=2, ensure_ascii=False) + "\n",
                 encoding="utf-8",
             )
+            os.replace(tmp, path)
 
         def _is_favorite_stem(self, stem: str | None) -> bool:
             if not stem:
@@ -2610,12 +2666,22 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
             if scope in ("purge", "purge_unfav"):
                 insurer_part, _, tariff_part = stem.partition("__")
-                for base in ("raw", "extracted"):
-                    d = REPO_ROOT / "data" / base / insurer_part / tariff_part
-                    if d.is_dir():
-                        shutil.rmtree(d)
-                        removed.append(f"data/{base}/{insurer_part}/{tariff_part}/")
-                self._prune_ingest_manifest(insurer_part, tariff_part)
+                # A stem must be 'insurer__tariff'; without the partition tariff_part is
+                # "" and the path collapses to data/<base>/<insurer>/, so rmtree would
+                # wipe the WHOLE insurer (every tariff). Refuse rather than over-delete.
+                if "__" not in stem or not insurer_part or not tariff_part:
+                    self.notify(
+                        f"Abbruch: '{stem}' ist kein insurer__tariff-stem — "
+                        f"PDFs/Extrakte nicht gelöscht (sonst ganzer Versicherer).",
+                        severity="error", timeout=8,
+                    )
+                else:
+                    for base in ("raw", "extracted"):
+                        d = REPO_ROOT / "data" / base / insurer_part / tariff_part
+                        if d.is_dir():
+                            shutil.rmtree(d)
+                            removed.append(f"data/{base}/{insurer_part}/{tariff_part}/")
+                    self._prune_ingest_manifest(insurer_part, tariff_part)
 
             if scope == "purge_unfav":
                 favs = self._favorites.get("favorites", [])

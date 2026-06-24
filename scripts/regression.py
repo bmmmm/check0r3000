@@ -37,8 +37,15 @@ SCHEMA = ROOT / "schema" / "tariff.schema.json"
 TARIFFS = ROOT / "out" / "tariffs"
 
 
-def norm_digits(s: str) -> str:
-    return re.sub(r"\D", "", s)
+def amounts(s: str) -> set[str]:
+    """The German-formatted numbers in `s` as plain digit strings: thousands grouping
+    ('.', spaces, NBSP, narrow-NBSP) is dropped and a ',<digits>' decimal fraction is
+    discarded, but distinct numbers stay distinct. '1.503,00 EUR' -> {'1503'};
+    '150 / 300' -> {'150', '300'}. Compared as whole numbers, never as substrings of a
+    concatenated digit stream (which let '1.503,00' satisfy ['150', '300'])."""
+    s = s.replace("\u00a0", " ").replace("\u202f", " ")
+    s = re.sub(r",\d+", "", s)
+    return {re.sub(r"[.\s]", "", m) for m in re.findall(r"\d{1,3}(?:[.\s]\d{3})+|\d+", s)}
 
 
 def get_path(obj, path: str):
@@ -67,11 +74,14 @@ def check_invariant(record: dict, inv: dict) -> tuple[bool, str]:
         ok = val is not None and str(exp).lower() in str(val).lower()
         return ok, f"{exp!r} in {val!r}"
     if chk == "contains_all_digits":
-        digits = norm_digits(str(val)) if val is not None else ""
-        missing = [n for n in exp if n not in digits]
+        nums = amounts(str(val)) if val is not None else set()
+        missing = [n for n in exp if n not in nums]
         return not missing, (f"digits {exp} present" if not missing
                              else f"missing {missing} in {val!r}")
     if chk == "in":
+        if not isinstance(exp, (list, tuple, set, str)):
+            raise ValueError(f"'in' check needs a container in 'expected' "
+                             f"(path {inv['path']}, got {type(exp).__name__})")
         return val in exp, f"{val!r} in {exp}"
     raise ValueError(f"unknown check kind: {chk!r} (path {inv['path']})")
 
@@ -83,6 +93,11 @@ def schema_errors(record: dict, schema: dict) -> list[str]:
     handed in fresh from a model may not; provenance is never the model's job,
     so a missing `sources` is not a regression.
     """
+    if not isinstance(record, dict):
+        # A model may emit a top-level list/scalar/null; reporting it as one clean
+        # violation keeps the whole run from aborting on `.items()` (the guard would
+        # otherwise go blind exactly when the extraction degraded the most).
+        return [f"<root>: record is not a JSON object (got {type(record).__name__})"]
     model_schema = dict(schema)
     model_schema["required"] = [r for r in schema.get("required", []) if r != "sources"]
     # Drop provenance (`sources`) and pipeline bookkeeping (`_input_hash`, `_model`,

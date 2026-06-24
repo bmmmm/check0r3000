@@ -59,9 +59,12 @@ HALLUCINATION_GUARD = [
     ("beitrag", "monatlich_eur"),
     ("beitrag", "jaehrlich_eur"),
 ]
-# Fields the documents clearly state -> must be populated (and, where given, match).
+# Fields the documents clearly state -> must be populated (and, where given, match one
+# of the accepted lowercased substrings). Geltungsbereich must name a recognizable
+# scope; a BROADER one ("weltweit") is correct too, so accept the whole family instead
+# of only "europ" (which wrongly failed a worldwide scope).
 REQUIRE_PRESENT = {
-    ("coverage", "geltungsbereich"): "europ",   # lowercased substring expected
+    ("coverage", "geltungsbereich"): ("europ", "weltweit", "welt", "international", "ww"),
     ("coverage", "vertragslaufzeit"): None,      # any non-null value
 }
 MODULE_KEYS = ["privat", "beruf", "verkehr", "wohnen_immobilien",
@@ -100,7 +103,11 @@ def grounded(value, source_digits: str, source_low: str) -> bool:
     substring. Single-digit runs are ignored as too noisy to anchor on.
     """
     s = str(value)
-    nums = [norm_digits(n) for n in re.findall(r"\d[\d.\s]*\d|\d", s)]
+    # Include ',' so a German decimal/grouped amount ("29,90", "1.500,00") is read as
+    # ONE contiguous number, not split into fragments ("29", "90") that each match some
+    # unrelated digits in the source -> a false "grounded". norm_digits drops the
+    # separators, leaving the whole number to check against the source digit stream.
+    nums = [norm_digits(n) for n in re.findall(r"\d[\d.,\s]*\d|\d", s)]
     nums = [n for n in nums if len(n) >= 2]
     if nums:
         return all(n in source_digits for n in nums)
@@ -108,6 +115,14 @@ def grounded(value, source_digits: str, source_low: str) -> bool:
 
 
 def score(record: dict, source_text: str, schema: dict) -> dict:
+    if not isinstance(record, dict):
+        # run_job's coerce_json guarantees a dict, but --rescore reads saved files
+        # straight from disk; a corrupt one must score as a clean failure, not crash
+        # the whole batch on record.get().
+        return {"schema_valid": False,
+                "schema_errors": [f"<root>: not an object ({type(record).__name__})"],
+                "hallucinations": [], "unsupported_claims": 0, "required_present": {},
+                "modules_included": [], "modules_levels": {}, "faithful": False}
     # The model is not responsible for `sources` provenance — the pipeline injects
     # the real content hashes, which the model cannot know. Validate its output with
     # `sources` optional and ignored, so a missing/empty provenance is not a "fail".
@@ -131,11 +146,12 @@ def score(record: dict, source_text: str, schema: dict) -> dict:
             })
 
     present = {}
-    for (sec, field), needle in REQUIRE_PRESENT.items():
+    for (sec, field), needles in REQUIRE_PRESENT.items():
         val = (record.get(sec) or {}).get(field)
         ok = val not in (None, "", [])
-        if ok and needle:
-            ok = needle in str(val).lower()
+        if ok and needles:
+            low = str(val).lower()
+            ok = any(n in low for n in needles)
         present[f"{sec}.{field}"] = ok
 
     mods = record.get("modules") or {}
@@ -197,15 +213,21 @@ def cross_model(results: list[dict]) -> dict:
         if r["status"] == "ok":
             by_tariff.setdefault(r["tariff"], []).append(r)
     for tariff, recs in by_tariff.items():
-        if len(recs) < 2:
+        # Collapse repeat runs of the same model (first run wins) so the cross-MODEL
+        # view is not skewed by run count or silently overwritten in the dict; run-to-
+        # run variance is print_variance's job, not this one's.
+        by_model: dict[str, dict] = {}
+        for r in recs:
+            by_model.setdefault(r["model"], r)
+        if len(by_model) < 2:
             continue
-        mod_sets = {r["model"]: set(r["modules_included"]) for r in recs}
+        mod_sets = {m: set(r["modules_included"]) for m, r in by_model.items()}
         all_mods = set().union(*mod_sets.values())
         disagree = sorted(m for m in all_mods
                           if any(m in s for s in mod_sets.values())
                           and not all(m in s for s in mod_sets.values()))
         out[tariff] = {
-            "models": [r["model"] for r in recs],
+            "models": list(by_model.keys()),
             "module_disagreements": {
                 m: {model: (m in s) for model, s in mod_sets.items()} for m in disagree
             },

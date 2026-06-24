@@ -124,7 +124,13 @@ def coerce_json(text: str) -> dict:
     """
     t = strip_fences(text)
     try:
-        return json.loads(t)
+        obj = json.loads(t)
+        # Only a top-level object satisfies the contract. A valid top-level array or
+        # scalar must NOT be returned as-is: callers index it like a dict
+        # (record["_input_hash"], record.get(...)) and would crash. Fall through to the
+        # brace scan, which recovers the largest embedded object (e.g. "[ {…} ]").
+        if isinstance(obj, dict):
+            return obj
     except json.JSONDecodeError:
         pass
     candidates: list[dict] = []

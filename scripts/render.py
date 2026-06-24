@@ -48,7 +48,15 @@ def load_records(prefer_enriched: bool) -> list[dict]:
     for f in sorted(TARIFFS.glob("*.json")):
         twin = ENRICHED / f.name
         src = twin if (prefer_enriched and twin.exists()) else f
-        records.append(json.loads(src.read_text(encoding="utf-8")))
+        # The record is untrusted LLM JSON (extract.py only guarantees the top level
+        # is *some* object); a stray list/scalar would crash the whole render and
+        # leave no vergleich.md/index.html. Skip it loudly instead.
+        rec = json.loads(src.read_text(encoding="utf-8"))
+        if not isinstance(rec, dict):
+            print(f"  skip {src.name}: top-level JSON is {type(rec).__name__}, not an object",
+                  file=sys.stderr)
+            continue
+        records.append(rec)
     return records
 
 
@@ -57,23 +65,37 @@ def has_enriched() -> bool:
 
 
 def module_cell(m: dict | None) -> str:
-    if not m or not m.get("included"):
+    if not isinstance(m, dict) or not m.get("included"):
         return "–"
-    return m.get("level") or "✓"
+    lvl = m.get("level")
+    return str(lvl) if lvl else "✓"
 
 
 def fmt(v) -> str:
-    return "–" if v in (None, "", []) else str(v)
+    if v in (None, "", [], {}):
+        return "–"
+    if isinstance(v, (list, tuple)):
+        return "; ".join(str(x) for x in v)
+    return str(v)
+
+
+def _as_dict(v) -> dict:
+    return v if isinstance(v, dict) else {}
 
 
 def build_matrix_md(tariffs: list[dict]) -> str:
-    cols = [f"{t['insurer']} — {t['tariff']}" for t in tariffs]
+    # Values are untrusted LLM text: a literal '|' would split a Markdown column, and
+    # wrong nested types (a string where a dict is expected) would crash the join.
+    def esc(s) -> str:
+        return str(s).replace("|", "\\|")
+
+    cols = [esc(f"{t.get('insurer', '?')} — {t.get('tariff', '?')}") for t in tariffs]
     head = "| Merkmal | " + " | ".join(cols) + " |\n"
     head += "|" + "---|" * (len(cols) + 1) + "\n"
 
     rows: list[tuple[str, list[str]]] = []
     for key, label in MODULE_LABELS.items():
-        rows.append((label, [module_cell(t.get("modules", {}).get(key)) for t in tariffs]))
+        rows.append((label, [esc(module_cell(_as_dict(t.get("modules")).get(key))) for t in tariffs]))
     cov_fields = [
         ("Versicherungssumme", "versicherungssumme"),
         ("Selbstbeteiligung", "selbstbeteiligung"),
@@ -82,8 +104,9 @@ def build_matrix_md(tariffs: list[dict]) -> str:
         ("Laufzeit", "vertragslaufzeit"),
     ]
     for label, f in cov_fields:
-        rows.append((label, [fmt(t.get("coverage", {}).get(f)) for t in tariffs]))
-    rows.append(("Beitrag/Monat (EUR)", [fmt((t.get("beitrag") or {}).get("monatlich_eur")) for t in tariffs]))
+        rows.append((label, [esc(fmt(_as_dict(t.get("coverage")).get(f))) for t in tariffs]))
+    rows.append(("Beitrag/Monat (EUR)",
+                 [esc(fmt(_as_dict(t.get("beitrag")).get("monatlich_eur"))) for t in tariffs]))
 
     body = "".join(f"| {label} | " + " | ".join(cells) + " |\n" for label, cells in rows)
     return head + body
@@ -92,11 +115,12 @@ def build_matrix_md(tariffs: list[dict]) -> str:
 def build_lists_md(tariffs: list[dict]) -> str:
     out = []
     for t in tariffs:
-        out.append(f"### {t['insurer']} — {t['tariff']}\n")
+        out.append(f"### {t.get('insurer', '?')} — {t.get('tariff', '?')}\n")
         for title, key in [("Leistungen", "leistungen"), ("Ausschlüsse", "ausschluesse"), ("Besonderheiten", "besonderheiten")]:
-            items = t.get(key) or []
+            raw = t.get(key)
+            items = raw if isinstance(raw, list) else ([raw] if raw else [])
             if items:
-                out.append(f"**{title}:** " + "; ".join(items) + "\n")
+                out.append(f"**{title}:** " + "; ".join(str(x) for x in items) + "\n")
         out.append("")
     return "\n".join(out)
 
