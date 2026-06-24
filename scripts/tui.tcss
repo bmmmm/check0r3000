@@ -1,0 +1,133 @@
+/*
+ * check0r3000 — Rechtsschutz-Vergleich
+ * Textual CSS stylesheet
+ */
+
+/* ── App shell ──────────────────────────────────────────────────────────── */
+
+App {
+    background: $surface;
+}
+
+Header {
+    background: #1e3a5f;
+    color: #a8d4ff;
+    text-style: bold;
+    height: 2;
+}
+
+Footer {
+    background: #1e3a5f;
+    color: #7aadcc;
+    height: 1;
+}
+
+/* ── Tabs ───────────────────────────────────────────────────────────────── */
+
+TabbedContent {
+    height: 1fr;
+}
+
+TabPane {
+    padding: 0 1;
+}
+
+/* ── Filter input ───────────────────────────────────────────────────────── */
+
+#filter-input {
+    dock: top;
+    height: 3;
+    margin: 1 0 0 0;
+    border: tall #1e3a5f;
+    background: $surface-darken-1;
+    color: $text;
+}
+
+#filter-input:focus {
+    border: tall #5ba0d0;
+}
+
+/* ── Market tab layout ──────────────────────────────────────────────────── */
+
+#market-layout {
+    height: 1fr;
+    margin-top: 1;
+}
+
+/* Main table — takes 65% of width */
+#market-table {
+    width: 65%;
+    height: 1fr;
+    border: tall #1e3a5f;
+    scrollbar-color: #1e3a5f;
+    scrollbar-background: $surface-darken-1;
+}
+
+DataTable > .datatable--header {
+    background: #1e3a5f;
+    color: #a8d4ff;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: #264f78;
+    color: $text;
+}
+
+DataTable > .datatable--even-row {
+    background: $surface-darken-1;
+}
+
+DataTable > .datatable--odd-row {
+    background: $surface;
+}
+
+/* Sidebar detail panel */
+#detail-panel {
+    width: 35%;
+    height: 1fr;
+    border: tall #1e3a5f;
+    padding: 1 2;
+    background: $surface-darken-1;
+    margin-left: 1;
+}
+
+#detail-content {
+    color: $text;
+}
+
+/* ── Detail full tab ────────────────────────────────────────────────────── */
+
+#detail-full-panel {
+    height: 1fr;
+    border: tall #1e3a5f;
+    padding: 1 2;
+    background: $surface-darken-1;
+    margin-top: 1;
+}
+
+#detail-full-content {
+    color: $text;
+}
+
+/* ── Diff tab ───────────────────────────────────────────────────────────── */
+
+#diff-panel {
+    height: 1fr;
+    border: tall #1e3a5f;
+    padding: 1 2;
+    background: $surface-darken-1;
+    margin-top: 1;
+}
+
+#diff-content {
+    color: $text;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────────────────── */
+
+ScrollableContainer {
+    scrollbar-color: #5ba0d0;
+    scrollbar-background: $surface-darken-2;
+    scrollbar-corner-color: $surface;
+}
