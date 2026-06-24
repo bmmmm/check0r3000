@@ -16,7 +16,8 @@ Run:
   uv run scripts/fetch_docs.py arag__premium-2026       # dry-run, one tariff (by stem)
   uv run scripts/fetch_docs.py --insurer ADVOCARD        # dry-run, one insurer
   uv run scripts/fetch_docs.py --check                  # probe URLs reachable (downloads nothing)
-  uv run scripts/fetch_docs.py arag__premium-2026 --apply   # download, then run intake.py
+  uv run scripts/fetch_docs.py arag__premium-2026 --apply   # download into data/inbox/ (then intake.py)
+  uv run scripts/fetch_docs.py arag__premium-2026 --into-raw  # canonical: straight into data/raw/ (then ingest.py)
 """
 from __future__ import annotations
 
@@ -31,7 +32,19 @@ import json
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "data" / "sources" / "check24-documents.json"
 INBOX = ROOT / "data" / "inbox"
+RAW = ROOT / "data" / "raw"
 UA = "Mozilla/5.0 (check0r3000 fetch_docs; personal RSV comparison)"
+
+# CHECK24 filestore "kind" -> a UNIQUE canonical doctype per tariff. tariff_terms and
+# tariff_terms_extra both describe terms (AVB vs. Besondere VB); keeping them distinct
+# avoids the silent filename collision the filename-guessing intake path suffers, so
+# both documents survive into the extract payload.
+KIND_TO_DOCTYPE = {
+    "tariff_terms": "avb",
+    "tariff_terms_extra": "avb_besondere",
+    "tariff_infos": "produktinfoblatt",
+    "tariff_concatenated_additional_documents": "weitere_unterlagen",
+}
 
 
 def load_manifest() -> list[dict]:
@@ -72,6 +85,23 @@ def target_for(doc: dict) -> Path:
     if not name.lower().endswith(".pdf"):
         name += ".pdf"
     return INBOX / name
+
+
+def raw_target_for(stem: str, doc: dict, used: set[str]) -> Path:
+    """Canonical target under data/raw/<insurer>/<tariff>/<doctype>.pdf, derived from
+    the stem and the doc's CHECK24 `kind` — so ingest/extract name the record exactly
+    `<stem>.json` without any filename guessing. Disambiguates a repeated doctype with
+    a numeric suffix so no document is lost."""
+    insurer_part, _, tariff_part = stem.partition("__")
+    doctype = KIND_TO_DOCTYPE.get(doc.get("kind", ""), doc.get("doctype") or "unsortiert")
+    name = doctype
+    i = 2
+    while name in used:
+        name = f"{doctype}-{i}"
+        i += 1
+    used.add(name)
+    # stem parts are our own slugs (no slashes); still take basename defensively.
+    return RAW / Path(insurer_part).name / Path(tariff_part).name / f"{name}.pdf"
 
 
 def check(url: str) -> str:
@@ -131,9 +161,14 @@ def main() -> int:
     ap.add_argument("stems", nargs="*", help="tariff stems to fetch (default: all in the manifest)")
     ap.add_argument("--insurer", help="fetch every tariff whose insurer name contains this")
     ap.add_argument("--apply", action="store_true", help="actually download (default: dry-run)")
+    ap.add_argument("--into-raw", action="store_true",
+                    help="sort straight into data/raw/<stem>/<doctype>.pdf (canonical, "
+                         "skips the filename-guessing intake step); implies --apply")
     ap.add_argument("--check", action="store_true",
                     help="probe each URL for reachability + PDF type (downloads nothing)")
     args = ap.parse_args()
+    if args.into_raw:
+        args.apply = True
 
     tariffs = select(load_manifest(), args.stems, args.insurer)
     if not tariffs:
@@ -161,13 +196,16 @@ def main() -> int:
         return 1 if bad else 0
 
     if args.apply:
-        INBOX.mkdir(parents=True, exist_ok=True)
-    print(f"{'DOWNLOAD' if args.apply else 'DRY-RUN'} — {len(tariffs)} tariff(s):\n")
+        (RAW if args.into_raw else INBOX).mkdir(parents=True, exist_ok=True)
+    print(f"{'DOWNLOAD' if args.apply else 'DRY-RUN'} — {len(tariffs)} tariff(s)"
+          f"{' (canonical -> data/raw/)' if args.into_raw else ''}:\n")
     n_docs = 0
     for t in tariffs:
         print(f"  {t.get('stem')}  [{t.get('insurer')} — {t.get('tariff')}]")
+        used: set[str] = set()
         for doc in t.get("docs", []):
-            dest = target_for(doc)
+            dest = (raw_target_for(t.get("stem", ""), doc, used)
+                    if args.into_raw else target_for(doc))
             n_docs += 1
             rel = dest.relative_to(ROOT)
             if not args.apply:
@@ -175,12 +213,15 @@ def main() -> int:
             elif dest.exists():
                 print(f"    {doc.get('doctype')}: exists, skipped -> {rel}")
             else:
+                dest.parent.mkdir(parents=True, exist_ok=True)
                 print(f"    {doc.get('doctype')}: {download(doc.get('url'), dest)} -> {rel}")
         print()
 
     if not args.apply:
         print(f"{n_docs} document(s) would be fetched. Re-run with --apply to download, "
               f"then: uv run scripts/intake.py")
+    elif args.into_raw:
+        print("Downloaded into data/raw/. Next: uv run scripts/ingest.py")
     else:
         print("Downloaded. Next: uv run scripts/intake.py  (sort into data/raw/)")
     return 0

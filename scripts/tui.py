@@ -16,8 +16,8 @@ Usage:
 Navigate a tariff (Market or Favorites) with the arrow keys or a click; press [d]
 to toggle a detail band below the table (tariff modules, coverage, premium and the
 harvested source documents). If the documents are not yet analyzed, [g] downloads
-them and runs the pipeline (fetch_docs --apply -> intake -> ingest -> extract) in
-the background, after a confirm. The extract model defaults to "claude"; override
+them and runs the pipeline (fetch_docs --into-raw -> ingest -> extract) in the
+background, after a confirm. The extract model defaults to "claude"; override
 with the CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were never harvested
 point you back to the browser "Tarifdetails" step.
 """
@@ -69,8 +69,15 @@ class SnapshotRow:
     selbstbeteiligung: str
     key: str
 
+    # CHECK24 customer rating (separate from the expert Tarifnote), if scraped.
+    bewertung: float | None = None
+    bewertung_anzahl: int | None = None
+
     # enriched at load time
-    has_detail: bool = False
+    stem: str | None = None  # canonical tariff id (from the URL manifest)
+    has_urls: bool = False   # source-document URLs harvested (manifest entry exists)
+    has_pdf: bool = False    # source PDFs downloaded locally (data/raw/<stem>/)
+    has_detail: bool = False  # analyzed record present (out/<…>/<stem>.json)
     has_offer: bool = False
 
 
@@ -113,67 +120,65 @@ def _slug(insurer: str, product: str) -> str:
     return f"{slugify(insurer)}__{slugify(product)}"
 
 
-def _load_detail(insurer: str, product: str) -> DetailRecord | None:
-    """Try to load enriched or plain tariff record for an insurer+product."""
-    slug = _slug(insurer, product)
-    enriched_path = REPO_ROOT / "out" / "enriched" / f"{slug}.json"
-    plain_path = REPO_ROOT / "out" / "tariffs" / f"{slug}.json"
+def _record_from_data(
+    data: dict, is_enriched: bool, insurer: str, product: str
+) -> DetailRecord:
+    return DetailRecord(
+        insurer=data.get("insurer", insurer),
+        tariff=data.get("tariff", product),
+        stand=data.get("stand"),
+        modules=data.get("modules", {}),
+        coverage=data.get("coverage", {}),
+        leistungen=data.get("leistungen", []),
+        ausschluesse=data.get("ausschluesse", []),
+        besonderheiten=data.get("besonderheiten", []),
+        beitrag=data.get("beitrag"),
+        is_enriched=is_enriched,
+    )
 
-    for path, is_enriched in [(enriched_path, True), (plain_path, False)]:
+
+def _detail_path_for_stem(stem: str) -> tuple[Path, bool] | None:
+    """Locate the analyzed record for a canonical stem (enriched preferred)."""
+    for sub, is_enriched in (("enriched", True), ("tariffs", False)):
+        path = REPO_ROOT / "out" / sub / f"{stem}.json"
+        if path.is_file():
+            return path, is_enriched
+    return None
+
+
+def _load_detail_by_stem(stem: str) -> DetailRecord | None:
+    hit = _detail_path_for_stem(stem)
+    if hit is None:
+        return None
+    path, is_enriched = hit
+    try:
+        data = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+    return _record_from_data(data, is_enriched, data.get("insurer", ""), data.get("tariff", ""))
+
+
+def _load_detail(insurer: str, product: str) -> DetailRecord | None:
+    """Load the analyzed record for a tariff.
+
+    The canonical key is the manifest `stem` (the same join the docs/[g] path uses);
+    this resolves the long-standing mismatch where the pipeline named files from the
+    PDF filename while the TUI looked them up from the snapshot's DOM strings. Falls
+    back to the slug only for records with no manifest entry (legacy/manual)."""
+    stem = resolve_stem(insurer, product)
+    if stem:
+        rec = _load_detail_by_stem(stem)
+        if rec is not None:
+            return rec
+
+    slug = _slug(insurer, product)
+    for sub, is_enriched in (("enriched", True), ("tariffs", False)):
+        path = REPO_ROOT / "out" / sub / f"{slug}.json"
         if path.is_file():
             try:
-                data = json.loads(path.read_text())
-                return DetailRecord(
-                    insurer=data.get("insurer", insurer),
-                    tariff=data.get("tariff", product),
-                    stand=data.get("stand"),
-                    modules=data.get("modules", {}),
-                    coverage=data.get("coverage", {}),
-                    leistungen=data.get("leistungen", []),
-                    ausschluesse=data.get("ausschluesse", []),
-                    besonderheiten=data.get("besonderheiten", []),
-                    beitrag=data.get("beitrag"),
-                    is_enriched=is_enriched,
-                )
+                return _record_from_data(json.loads(path.read_text()), is_enriched, insurer, product)
             except (json.JSONDecodeError, OSError):
                 pass
-
-    # Also try fuzzy match on any file in enriched/tariffs that starts with slugified insurer
-    for directory in [REPO_ROOT / "out" / "enriched", REPO_ROOT / "out" / "tariffs"]:
-        if not directory.is_dir():
-            continue
-        is_enriched = directory.name == "enriched"
-        import re
-
-        def slugify(s: str) -> str:
-            s = s.lower()
-            s = re.sub(r"[äöü]", lambda m: {"ä": "ae", "ö": "oe", "ü": "ue"}[m.group()], s)
-            s = re.sub(r"[^a-z0-9]+", "-", s)
-            s = s.strip("-")
-            return s
-
-        insurer_slug = slugify(insurer)
-        for p in sorted(directory.glob("*.json")):
-            if p.stem.startswith(insurer_slug[:8]):
-                try:
-                    data = json.loads(p.read_text())
-                    if slugify(data.get("insurer", "")) == insurer_slug or slugify(
-                        data.get("tariff", "")
-                    ) == slugify(product):
-                        return DetailRecord(
-                            insurer=data.get("insurer", insurer),
-                            tariff=data.get("tariff", product),
-                            stand=data.get("stand"),
-                            modules=data.get("modules", {}),
-                            coverage=data.get("coverage", {}),
-                            leistungen=data.get("leistungen", []),
-                            ausschluesse=data.get("ausschluesse", []),
-                            besonderheiten=data.get("besonderheiten", []),
-                            beitrag=data.get("beitrag"),
-                            is_enriched=is_enriched,
-                        )
-                except (json.JSONDecodeError, OSError):
-                    pass
     return None
 
 
@@ -204,16 +209,25 @@ def load_snapshot(path: Path) -> Snapshot | None:
     tracked = _tracked_keys()
     rows: list[SnapshotRow] = []
     for t in data.get("tariffs", []):
-        slug = _slug(t.get("insurer", ""), t.get("product", ""))
+        insurer = t.get("insurer", "")
+        product = t.get("product", "")
+        slug = _slug(insurer, product)
+        stem = resolve_stem(insurer, product)
+        has_detail = bool(stem and _detail_path_for_stem(stem)) or (slug in tracked)
         row = SnapshotRow(
             position=t.get("position", 0),
-            insurer=t.get("insurer", ""),
-            product=t.get("product", ""),
+            insurer=insurer,
+            product=product,
             tarifnote=t.get("tarifnote", ""),
             monatlich_eur=t.get("monatlich_eur"),
             selbstbeteiligung=t.get("selbstbeteiligung", ""),
             key=t.get("key", ""),
-            has_detail=slug in tracked,
+            bewertung=t.get("bewertung"),
+            bewertung_anzahl=t.get("bewertung_anzahl"),
+            stem=stem,
+            has_urls=stem is not None,
+            has_pdf=bool(stem and _raw_dir_for_stem(stem).is_dir()),
+            has_detail=has_detail,
             has_offer=(REPO_ROOT / "data" / "offers" / f"{slug}.json").is_file(),
         )
         rows.append(row)
@@ -288,6 +302,39 @@ def load_doc_by_tariff() -> dict[tuple[str, str], dict]:
         if ins and prod:
             index[(ins, prod)] = t
     return index
+
+
+# The URL manifest is static within a session (we never re-harvest URLs in-app), so
+# cache the (insurer, product) -> entry map once for the module-level stem resolver.
+_DOC_BY_TARIFF_CACHE: dict[tuple[str, str], dict] | None = None
+
+
+def _doc_by_tariff_map() -> dict[tuple[str, str], dict]:
+    global _DOC_BY_TARIFF_CACHE
+    if _DOC_BY_TARIFF_CACHE is None:
+        _DOC_BY_TARIFF_CACHE = load_doc_by_tariff()
+    return _DOC_BY_TARIFF_CACHE
+
+
+def resolve_stem(insurer: str, product: str) -> str | None:
+    """Map a snapshot (insurer, product) to its canonical tariff stem via the URL
+    manifest. Exact match first, then a unique product match with overlapping insurer
+    names (handles the snapshot's 'BavariaDirekt' vs the manifest's
+    'BavariaDirekt / ÖRAG'). This is the single source of truth for a row's identity."""
+    idx = _doc_by_tariff_map()
+    ins = insurer.strip().casefold()
+    prod = product.strip().casefold()
+    entry = idx.get((ins, prod))
+    if entry is not None:
+        return entry.get("stem")
+    hits = [v for (i, p), v in idx.items() if p == prod and (ins in i or i in ins)]
+    return hits[0].get("stem") if len(hits) == 1 else None
+
+
+def _raw_dir_for_stem(stem: str) -> Path:
+    """The canonical local-PDF directory for a stem (insurer__tariff -> insurer/tariff)."""
+    insurer_part, _, tariff_part = stem.partition("__")
+    return REPO_ROOT / "data" / "raw" / insurer_part / tariff_part
 
 
 # Short doctype labels for the Favorites "Docs" column.
@@ -615,6 +662,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._favorites: dict[str, Any] = {}
             self._doc_index: dict[str, list[dict]] = {}
             self._doc_by_tariff: dict[tuple[str, str], dict] = {}
+            self._doc_by_stem: dict[str, dict] = {}
             self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
             self._active_row: SnapshotRow | None = None
             self._active_fav: dict | None = None
@@ -643,6 +691,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._favorites = load_favorites()
             self._doc_index = load_doc_index()
             self._doc_by_tariff = load_doc_by_tariff()
+            self._doc_by_stem = {
+                t["stem"]: t for t in self._doc_by_tariff.values() if t.get("stem")
+            }
 
         # --- Layout ---
 
@@ -891,8 +942,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         "[bright_yellow]  \\[g] herunterladen + analysieren[/bright_yellow]"
                     )
                     lines.append(
-                        f"  [dim]→ fetch_docs.py {fav.get('stem')} --apply"
-                        " → intake → ingest → extract[/dim]"
+                        f"  [dim]→ fetch_docs.py {fav.get('stem')} --into-raw"
+                        " → ingest → extract[/dim]"
                     )
                 lines.append("")
 
@@ -990,24 +1041,12 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         # --- Detail panel (sidebar) ---
 
         def _doc_entry(self, row: SnapshotRow) -> dict | None:
-            """Resolve a snapshot row to its harvested manifest entry (stem + docs).
-            Exact (insurer, product) first; fall back to a unique product match —
-            the manifest sometimes records the underwriter in the insurer field
-            ("BavariaDirekt / ÖRAG") where the row only says "BavariaDirekt"."""
-            ins = row.insurer.strip().casefold()
-            prod = row.product.strip().casefold()
-            entry = self._doc_by_tariff.get((ins, prod))
-            if entry is not None:
-                return entry
-            # Fallback: same product, and the insurers overlap one way or the other
-            # ("BavariaDirekt" ⊂ "BavariaDirekt / ÖRAG"). The substring guard keeps a
-            # coincidental product-name clash across unrelated insurers from matching.
-            hits = [
-                v
-                for (i, p), v in self._doc_by_tariff.items()
-                if p == prod and (ins in i or i in ins)
-            ]
-            return hits[0] if len(hits) == 1 else None
+            """Resolve a snapshot row to its harvested manifest entry (stem + docs)
+            via the row's canonical stem (computed once at load via the same manifest
+            join). None when the tariff has no harvested source URLs."""
+            if row.stem:
+                return self._doc_by_stem.get(row.stem)
+            return None
 
         def _render_docs_block(
             self, row: SnapshotRow, detail: DetailRecord | None
@@ -1031,8 +1070,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         "[bright_yellow]  \\[g] herunterladen + analysieren[/bright_yellow]"
                     )
                     lines.append(
-                        f"  [dim]→ fetch_docs.py {entry.get('stem')} --apply"
-                        " → intake → ingest → extract[/dim]"
+                        f"  [dim]→ fetch_docs.py {entry.get('stem')} --into-raw"
+                        " → ingest → extract[/dim]"
                     )
             elif not detail:
                 lines.append(
@@ -1437,9 +1476,11 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             import subprocess
 
             stem = entry.get("stem", "")
+            # Download straight into the canonical data/raw/<stem>/ layout (--into-raw),
+            # so ingest/extract name the record exactly <stem>.json — no filename-guessing
+            # intake step that could misname it and hide the result from the TUI.
             steps = [
-                ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--apply"]),
-                ("Intake", ["uv", "run", "scripts/intake.py", "--apply"]),
+                ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--into-raw"]),
                 ("Ingest", ["uv", "run", "scripts/ingest.py"]),
                 ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
             ]
