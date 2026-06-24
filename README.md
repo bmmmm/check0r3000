@@ -94,12 +94,15 @@ scripts/tui.py                                        interaktiver Browser über
   über die kuratierte Taxonomie `config/coverage_taxonomy.json` einer kanonischen Kategorie
   zu (deterministisch, **ohne Modell-Call**), sodass dieselbe Leistung über Versicherer
   hinweg in einer Zeile steht, auch wenn sie anders heißt (`telefonische Rechtsberatung`
-  ↔ `JuraTel®` ↔ `DMB-Hotline`). Jede Kategorie zeigt den **Original-Wortlaut** je Tarif
-  als Subtext; nicht zugeordnete Einträge landen sichtbar im **Sonstige**-Bucket (nie
-  verworfen); `~` markiert Teil-Deckung (nur/eingeschr./außer/begrenzt). Erweitern =
-  ein Objekt an die Taxonomie anhängen (`coverage_taxonomy.py --selftest` pinnt die
-  Cross-Tarif-Zuordnung). Der frühere Snapshot-Preis-Diff hängt nur noch an, sobald ein
-  zweiter Snapshot existiert.
+  ↔ `JuraTel®` ↔ `DMB-Hotline`). Default ist **kompakt** (nur die `✓/✗/~/—`-Matrix,
+  Zeilen-Labels sauber gekürzt); **`[w]`** blendet den **Original-Wortlaut** je
+  Versicherer ein (eine Zeile pro Tarif, hart gekürzt → kein Umbruch). Nicht zugeordnete
+  Einträge landen sichtbar im **Sonstige**-Bucket (nie verworfen); `~` markiert
+  Teil-Deckung (nur/eingeschr./außer/begrenzt). **`[c]`** blendet den markierten Tarif
+  aus dem Vergleich aus bzw. wieder ein (persistiert als Ausschluss-Set `compare_hidden`,
+  damit neu analysierte Tarife automatisch dazukommen). Erweitern = ein Objekt an die
+  Taxonomie anhängen (`coverage_taxonomy.py --selftest` pinnt die Cross-Tarif-Zuordnung).
+  Der frühere Snapshot-Preis-Diff hängt nur noch an, sobald ein zweiter Snapshot existiert.
 - **Identität über den `stem`**: jeder Tarif hat einen kanonischen `stem`
   (`<versicherer>__<tarif>`, aus `data/sources/check24-documents.json`). TUI-Lookup,
   Pipeline-Output und Doc-Manifest hängen alle daran — `[g]` schreibt direkt nach
@@ -109,9 +112,13 @@ scripts/tui.py                                        interaktiver Browser über
   **`[g]`** lädt + analysiert nach Bestätigung (Pipeline `fetch_docs --into-raw → ingest
   → extract` im Hintergrund; Modell per `CHECK0R_ANALYZE_MODEL`, Default `claude`);
   **`[G]`** nur analysieren ohne Download (`ingest → extract`), wenn die PDFs schon unter
-  `data/raw/<stem>/` liegen; **`[R]`** setzt die markierte Zeile als Δ-Referenz; **`[u]`** Favorit an/aus;
+  `data/raw/<stem>/` liegen; **`[o]`** öffnet die Quelldokumente online (Browser) oder als
+  lokale PDFs (`data/raw/<stem>/`); **`[R]`** setzt die markierte Zeile als Δ-Referenz;
+  **`[u]`** Favorit an/aus; **`[c]`** Tarif aus dem Vergleich aus-/einblenden;
   **`[D]`** lokale Daten löschen (mit Umfang-Auswahl); **`[b]`** baut die CHECK24-URL.
-  Tarife ohne gesicherte URLs verweisen auf den Browser-Schritt „Tarifdetails".
+  Tarife ohne gesicherte URLs verweisen auf den Browser-Schritt „Tarifdetails". Ein
+  analysierter Favorit zeigt im Detail-Band den **vollen Record** (Module/Deckung/
+  Leistungen/Ausschlüsse/Besonderheiten), nicht nur die Preis-Zusammenfassung.
 
 ```sh
 uv run scripts/check24_query.py --all-insurers   # Result-URL für alle Versicherer
