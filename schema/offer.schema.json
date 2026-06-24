@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bmmmm/check0r3000/schema/offer.schema.json",
+  "title": "Tariff offer overlay (structured, non-LLM)",
+  "description": "User-supplied facts that are NOT in the AVB/PIB and that extraction correctly leaves null: the premium, the chosen service level per module, and the chosen Selbstbeteiligung. Source: a check24 result row, a personal Angebot, or a Leistungsuebersicht. scripts/overlay.py validates each data/offers/<key>.json against this, then merges it onto the pure record out/tariffs/<key>.json into out/enriched/<key>.json. No model touches this path; every value is copied verbatim.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["quelle"],
+  "properties": {
+    "quelle": {
+      "type": "string",
+      "description": "Provenance label, e.g. 'check24-Ergebnisliste 2026-06-23' or 'Persoenliches Angebot ARAG 2026-06'. overlay copies this into beitrag.quelle."
+    },
+    "doctype": {
+      "type": "string",
+      "enum": ["angebot", "leistungsuebersicht", "check24"],
+      "description": "Provenance doctype for the appended sources entry (default 'angebot')."
+    },
+    "beitrag": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Premium. Give monatlich_eur (check24 default) and/or jaehrlich_eur; overlay derives the monthly figure from the annual one if only the latter is present.",
+      "properties": {
+        "monatlich_eur": { "type": "number" },
+        "jaehrlich_eur": { "type": "number" }
+      }
+    },
+    "modules": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Chosen service level per module. overlay refuses a level on a module the tariff record does not mark included.",
+      "properties": {
+        "privat":            { "$ref": "#/$defs/levelpick" },
+        "beruf":             { "$ref": "#/$defs/levelpick" },
+        "verkehr":           { "$ref": "#/$defs/levelpick" },
+        "wohnen_immobilien": { "$ref": "#/$defs/levelpick" },
+        "internet_web":      { "$ref": "#/$defs/levelpick" },
+        "steuer":            { "$ref": "#/$defs/levelpick" },
+        "sozialgericht":     { "$ref": "#/$defs/levelpick" },
+        "verwaltungsrecht":  { "$ref": "#/$defs/levelpick" }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Chosen coverage values the AVB lists only as selectable options.",
+      "properties": {
+        "selbstbeteiligung": { "type": ["string", "null"], "description": "Chosen deductible, e.g. '150 EUR'." }
+      }
+    }
+  },
+  "$defs": {
+    "levelpick": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level"],
+      "properties": {
+        "level": { "type": "string", "enum": ["Basis", "Komfort", "Premium"], "description": "Chosen variant; mirrors tariff.schema module.level (null not allowed here — omit the module to leave it unset)." }
+      }
+    }
+  }
+}

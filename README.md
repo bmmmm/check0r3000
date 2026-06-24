@@ -34,9 +34,12 @@ data/extracted/…txt + manifest.json       (lokal, gitignored)
         │    --filter   AVB auf Vergleichs-§§ trimmen (passt dann in kleine Modelle)
         │    --model    claude:opus | haiku | ollama:llama3.1:8b | mlx:…@http://…
         ▼
-out/tariffs/*.json                         (getrackt: Fakten)
+out/tariffs/*.json                         (getrackt: reine LLM-Fakten; Beitrag/Stufe = null)
         │  scripts/regression.py (stdlib)     golden.json-Invarianten, exit≠0 bei Drift
-        │  scripts/render.py   (Modell)       Matrix + Vor/Nachteile
+        │  scripts/overlay.py   (stdlib)      Beitrag/Stufe/SB aus data/offers/ einmischen
+        ▼                                       (kein Modell) → out/enriched/*.json (gitignored)
+out/enriched/*.json  bzw.  out/tariffs/*.json
+        │  scripts/render.py   (Modell)       Matrix + Vor/Nachteile (nimmt enriched, sonst pur)
         ▼
 out/vergleich.md  +  out/index.html        (getrackt: Ergebnis)
 ```
@@ -86,6 +89,7 @@ Voraussetzungen: [`uv`](https://docs.astral.sh/uv/) und die `claude`-CLI auf dem
    ```sh
    ./scripts/ingest.py
    ./scripts/extract.py --force --model haiku --filter   # Cache ignorieren
+   ./scripts/overlay.py                                   # Beitrag/Stufe aus data/offers/ (kein Modell)
    ./scripts/render.py  --no-llm                          # nur deterministische Matrix
    ```
 3. Ergebnis: `out/vergleich.md` und `out/index.html`.
@@ -184,20 +188,34 @@ Was stattdessen trägt — und gebaut ist:
 Ein echter Optimierer lohnt erst ab ~10–20 Tarifen mit kuratierter Golden-Menge — dann als
 A/B-Lauf zweier Prompt-Versionen mit menschlicher Freigabe, nie als stiller Loop.
 
-## Was die Unterlagen NICHT enthalten
+## Was die Unterlagen NICHT enthalten — und der strukturierte Nebenpfad
 
 AVB, Produktinformationsblatt und „Weitere Unterlagen" beschreiben die generische
 Produktlinie eines Versicherers — **nicht** den konkret gewählten Tarif. Beitrag,
-Selbstbeteiligung und die gewählten Bausteine stehen nur in der **Leistungsübersicht /
-im persönlichen Angebot** bzw. in der **check24-Ergebnisliste**. Für einen echten
-Tarifvergleich diese Quellen mitliefern (`leistungsuebersicht.pdf`) oder den Beitrag
-in `out/tariffs/*.json` (`beitrag`) nachtragen.
+Selbstbeteiligung und die gewählte Leistungsstufe (`modules.*.level`,
+Basis/Komfort/Premium) stehen nur in der **Leistungsübersicht / im persönlichen
+Angebot** bzw. in der **check24-Ergebnisliste**. Die Extraktion lässt sie deshalb
+bewusst `null` (und `golden.json` pinnt sie `null`, damit das Modell sie nie errät) —
+ohne diese Quelle ist das Ergebnis ein **Deckungs-**, kein **Preis- oder
+Stufen-Vergleich**.
 
-Konkret heißt das: die **gewählte Leistungsstufe** (`modules.*.level`,
-Kompakt/Komfort/Premium) bleibt absichtlich `null`, solange keine Leistungsübersicht
-vorliegt — die Dokumente listen die Stufen nur als wählbare Optionen, nicht die für
-diesen Tarif gebuchte. Ohne diese Quelle ist das Ergebnis ein **Deckungs-**, kein
-**Preis- oder Stufen-Vergleich**.
+Diese Fakten kommen über einen **eigenen, modellfreien Nebenpfad** rein: eine
+strukturierte Datei `data/offers/<key>.json` (Format: `schema/offer.schema.json`,
+Vorlage: `data/offers/_example.json`, Doku: `data/offers/README.md`).
+`scripts/overlay.py` validiert sie, mischt Beitrag/Stufe/Selbstbeteiligung **verbatim**
+auf das reine LLM-Record und schreibt `out/enriched/<key>.json`; `render` nimmt dann
+das enriched-Record statt des puren.
+
+- **Kein Modell** — jeder Wert wird wörtlich aus der von dir kontrollierten Datei kopiert.
+- **Reine Records bleiben eingefroren** — `out/tariffs/` und `regression.py` sehen den
+  Offer nie; die Garantie „das Modell erfindet keinen Preis / keine Stufe" bleibt intakt.
+- **Containment-Self-Check** — overlay prüft, dass der Merge ausschließlich Beitrag, die
+  benannten Stufen, die benannte SB und genau einen Provenance-Eintrag ändert, und
+  validiert das Ergebnis gegen `tariff.schema.json`. Eine Stufe auf einem nicht gedeckten
+  Modul wird abgelehnt (das Angebot widerspräche der AVB). `scripts/overlay.py --check`
+  re-validiert bestehende enriched-Records.
+- **Privacy** — der reale Beitrag ist persönlich: `data/offers/*` (außer Vorlage/README)
+  und `out/enriched/` sind gitignored; nur die Vorlage mit Fake-Werten ist getrackt.
 
 ## Schema
 

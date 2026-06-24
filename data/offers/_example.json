@@ -1,0 +1,7 @@
+{
+  "quelle": "check24-Ergebnisliste YYYY-MM-DD (BEISPIEL — echte Angebote sind gitignored)",
+  "doctype": "angebot",
+  "beitrag": { "monatlich_eur": 12.40, "jaehrlich_eur": 148.80 },
+  "modules": { "privat": { "level": "Premium" }, "verkehr": { "level": "Komfort" } },
+  "coverage": { "selbstbeteiligung": "150 EUR" }
+}

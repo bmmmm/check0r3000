@@ -4,6 +4,14 @@ data/inbox/
 data/raw/
 data/extracted/
 
+# --- Personal offer data: per-user premium / chosen Stufe (not copyright, but personal) ---
+# Use '/*' (NOT a trailing slash 'data/offers/'): git will not descend into an
+# ignored directory, so a trailing-slash rule would also hide the tracked template
+# and README below. Only the example + README are tracked; real offers are ignored.
+data/offers/*
+!data/offers/_example.json
+!data/offers/README.md
+
 # --- Local scratch ---
 tmp/
 *.log
@@ -29,3 +37,8 @@ __pycache__/
 # --- Tracked deliverables live in out/ (see .gitignore exception below) ---
 # out/ is intentionally NOT ignored: it holds our own factual comparison
 # (tariffs/*.json) and synthesized overview (vergleich.md, index.html).
+
+# Exception: out/enriched/ carries the personal premium/Stufe merged in from
+# data/offers/ — a per-user, machine-regenerable artifact, never a shareable
+# deliverable. Keep it out of git even though the rest of out/ is tracked.
+out/enriched/

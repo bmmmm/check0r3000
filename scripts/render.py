@@ -29,6 +29,7 @@ import _providers  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TARIFFS = ROOT / "out" / "tariffs"
+ENRICHED = ROOT / "out" / "enriched"
 OUT = ROOT / "out"
 
 MODULE_LABELS = {
@@ -38,9 +39,21 @@ MODULE_LABELS = {
 }
 
 
-def load_tariffs() -> list[dict]:
-    files = sorted(TARIFFS.glob("*.json"))
-    return [json.loads(f.read_text(encoding="utf-8")) for f in files]
+def load_records(prefer_enriched: bool) -> list[dict]:
+    # Keyed by filename (the stable manifest stem), never by record content — the
+    # record's insurer 'ARAG SE' is not the stem 'arag', so a content-derived key
+    # would never match. When prefer_enriched, take the enriched twin (pure facts +
+    # offer overlay) where it exists; otherwise always the pure record.
+    records = []
+    for f in sorted(TARIFFS.glob("*.json")):
+        twin = ENRICHED / f.name
+        src = twin if (prefer_enriched and twin.exists()) else f
+        records.append(json.loads(src.read_text(encoding="utf-8")))
+    return records
+
+
+def has_enriched() -> bool:
+    return ENRICHED.exists() and any(ENRICHED.glob("*.json"))
 
 
 def module_cell(m: dict | None) -> str:
@@ -117,34 +130,55 @@ def md_to_html(md: str) -> str:
     )
 
 
+def build_doc(tariffs: list[dict], pros_cons: str | None) -> str:
+    md = ["# Rechtsschutzversicherung — Vergleich\n",
+          f"_{len(tariffs)} Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergebnisliste._\n",
+          "## Leistungsmatrix\n", build_matrix_md(tariffs), "",
+          "## Details je Tarif\n", build_lists_md(tariffs)]
+    if pros_cons is not None:
+        md.append(pros_cons)
+    return "\n".join(md) + "\n"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-llm", action="store_true", help="skip the claude -p pros/cons synthesis")
     ap.add_argument("--model", default=None)
     args = ap.parse_args()
 
-    tariffs = load_tariffs()
-    if not tariffs:
+    pure = load_records(prefer_enriched=False)
+    if not pure:
         print("error: no tariff records in out/tariffs/ — run scripts/extract.py first", file=sys.stderr)
         return 2
 
-    md = ["# Rechtsschutzversicherung — Vergleich\n",
-          f"_{len(tariffs)} Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergebnisliste._\n",
-          "## Leistungsmatrix\n", build_matrix_md(tariffs), "",
-          "## Details je Tarif\n", build_lists_md(tariffs)]
-
+    # Synthesize pros/cons ONCE from the pure (premium-free) facts and reuse it for
+    # both renders — the comparison of coverage tradeoffs does not depend on price.
+    pros_cons = None
     if not args.no_llm:
         print("  synthesizing pros/cons via claude -p ...")
         try:
-            md.append(synthesize_pros_cons(tariffs, args.model))
+            pros_cons = synthesize_pros_cons(pure, args.model)
         except Exception as e:
             print(f"    synthesis skipped: {e}", file=sys.stderr)
-            md.append("## Vor- & Nachteile im Vergleich\n_(LLM-Synthese übersprungen.)_")
+            pros_cons = "## Vor- & Nachteile im Vergleich\n_(LLM-Synthese übersprungen.)_"
 
-    text = "\n".join(md) + "\n"
-    (OUT / "vergleich.md").write_text(text, encoding="utf-8")
-    (OUT / "index.html").write_text(md_to_html(text), encoding="utf-8")
-    print(f"  -> {(OUT / 'vergleich.md').relative_to(ROOT)}  +  index.html")
+    # Tracked, shareable deliverable: PURE facts only — never embeds a personal
+    # premium/Stufe, so a routine `git add out/` cannot leak it.
+    pure_doc = build_doc(pure, pros_cons)
+    (OUT / "vergleich.md").write_text(pure_doc, encoding="utf-8")
+    (OUT / "index.html").write_text(md_to_html(pure_doc), encoding="utf-8")
+    print(f"  -> {(OUT / 'vergleich.md').relative_to(ROOT)}  +  index.html  (pure, tracked)")
+
+    # Personal view WITH the premium/Stufe from data/offers/ — written only into the
+    # gitignored out/enriched/, so it can never be committed.
+    if has_enriched():
+        enriched = load_records(prefer_enriched=True)
+        enr_doc = build_doc(enriched, pros_cons)
+        ENRICHED.mkdir(parents=True, exist_ok=True)
+        (ENRICHED / "vergleich.md").write_text(enr_doc, encoding="utf-8")
+        (ENRICHED / "index.html").write_text(md_to_html(enr_doc), encoding="utf-8")
+        print("  -> out/enriched/vergleich.md  +  index.html  (with premium, gitignored)")
+
     return 0
 
 

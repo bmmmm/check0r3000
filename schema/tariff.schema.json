@@ -76,7 +76,7 @@
         "additionalProperties": false,
         "required": ["doctype", "content_sha256"],
         "properties": {
-          "doctype":        { "type": "string", "description": "avb | produktinfoblatt | weitere_unterlagen | leistungsuebersicht" },
+          "doctype":        { "type": "string", "description": "avb | produktinfoblatt | weitere_unterlagen | leistungsuebersicht | angebot | check24" },
           "content_sha256": { "type": "string" }
         }
       }

@@ -30,6 +30,14 @@ echo "==> extract (structured facts via model)"
 # shellcheck disable=SC2086
 uv run scripts/extract.py $MODEL_ARGS $FILTER_ARGS
 
+echo "==> overlay (structured price/Stufe from data/offers/, no model)"
+# Non-fatal: a self-check mismatch must be loud, but the common case (no offer
+# files yet) is normal and exits 0. Run scripts/overlay.py --check standalone
+# (e.g. in CI) for a hard re-validation gate over existing enriched records.
+if uv run scripts/overlay.py; then :; else
+  echo "WARNING: overlay self-check failed — see out/enriched/ and data/offers/." >&2
+fi
+
 echo "==> render (matrix + pros/cons -> out/)"
 # shellcheck disable=SC2086
 uv run scripts/render.py $MODEL_ARGS
