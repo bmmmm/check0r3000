@@ -62,20 +62,31 @@
 
     const grab = (re) => { const m = t.match(re); return m ? m[1].trim() : null; };
     // Customer rating (Kundenbewertung, 0-5 stars) is distinct from the expert
-    // Tarifnote (a 1,0-best grade). Best-effort: anchor on "Bewertung"/"/5"/"von 5"
-    // so we never mistake the Tarifnote for it. The count comes from "(N Bewertungen)".
-    // If CHECK24 only shows the rating on the tariff detail page these stay null.
-    const ratingStr =
-      grab(/Kundenbewertung[:\s]*([\d],[\d])/i) ||
-      grab(/([\d],[\d])\s*(?:\/|von)\s*5/i);
-    const countStr = grab(/([\d.]+)\s*(?:Kunden)?(?:bewertungen|meinungen)/i);
+    // Tarifnote (a 1,0-best grade). CHECK24 renders it NOT as text but as five
+    // `.star--active` inner spans whose CSS `width` percentages sum to the score
+    // (4×100% + 1×10% = 410% -> 4.1). The review count is the German-locale
+    // thousands number in `.efeedback-button__count` ("4.713" -> 4713 reviews, NOT
+    // a 4.713-star score). Both live in the card subtree, so query `c` directly;
+    // a regex over innerText can never see them (the star spans hold no text).
+    const starBox = c.querySelector(".rating_stars");
+    let bewertung = null;
+    if (starBox) {
+      const widthSum = [...starBox.querySelectorAll(".star--active")]
+        .reduce((sum, s) => sum + (parseFloat(s.style.width) || 0), 0);
+      const score = Math.round(widthSum) / 100;
+      bewertung = Number.isFinite(score) && score > 0 ? score : null;
+    }
+    const countEl = c.querySelector(".efeedback-button__count");
+    const bewertung_anzahl = countEl
+      ? (parseInt(countEl.textContent.replace(/\./g, ""), 10) || null)
+      : null;
     const row = {
       position,
       insurer,
       product,
       tarifnote: grab(/([\d],[\d])\s*\n?\s*Tarifnote/) || grab(/Tarifnote[:\s]*([\d],[\d])/),
-      bewertung: ratingStr ? Number(ratingStr.replace(",", ".")) : null,
-      bewertung_anzahl: countStr ? parseInt(countStr.replace(/\./g, ""), 10) : null,
+      bewertung,
+      bewertung_anzahl,
       monatlich_eur: eur(priceStr),
       selbstbeteiligung: grab(/Selbstbeteiligung[:\s]*([^\n]+)/),
       deckungssumme: grab(/Deckungssumme[:\s]*([^\n]+)/),

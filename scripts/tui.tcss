@@ -301,6 +301,35 @@ CompareTextScreen {
     height: auto;
 }
 
+/* ── Compare manager modal ([c] on the Vergleich tab) ───────────────────── */
+
+CompareManagerScreen {
+    align: center middle;
+    background: $surface 60%;
+}
+
+#compare-mgr-box {
+    width: 72;
+    height: 80%;
+    padding: 1 2;
+    border: thick #5ba0d0;
+    background: $surface-darken-1;
+    color: $text;
+}
+
+#compare-mgr-head {
+    width: 1fr;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#compare-mgr-list {
+    width: 1fr;
+    height: 1fr;
+    border: round $surface-lighten-2;
+    background: $surface-darken-2;
+}
+
 /* ── Scrollbars ─────────────────────────────────────────────────────────── */
 
 ScrollableContainer {

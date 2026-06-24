@@ -1047,6 +1047,110 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def action_close(self) -> None:
             self.dismiss(None)
 
+    class CompareManagerScreen(ModalScreen[list[str] | None]):
+        """Manage which analyzed tariffs the Vergleich shows. The single source of
+        truth is compare_hidden (an exclude-set) in config/favorites.json — this
+        modal is the one place to edit it: toggle a tariff in/out, clear the whole
+        comparison, or bring them all back. Returns the new exclude-set to persist
+        on save, or None on cancel."""
+
+        BINDINGS = [
+            Binding("space", "toggle", "Ein/Aus"),
+            Binding("enter", "toggle", "Ein/Aus"),
+            Binding("a", "include_all", "Alle"),
+            Binding("l", "clear_all", "Leeren"),
+            Binding("s", "save", "Speichern"),
+            Binding("escape", "cancel", "Abbrechen"),
+            Binding("q", "cancel", "Abbrechen"),
+        ]
+
+        def __init__(self, stems: list[tuple[str, str]], hidden: set[str],
+                     ref_stem: str | None) -> None:
+            # stems: (stem, label) already in display order (reference first).
+            super().__init__()
+            self._stems = stems
+            self._hidden = set(hidden)
+            self._ref = ref_stem
+
+        def compose(self) -> ComposeResult:
+            with Container(id="compare-mgr-box"):
+                yield Static(
+                    "[bold]Vergleich verwalten[/bold]   "
+                    "[dim]↑↓ wählen · Space/Enter ein-/ausblenden · "
+                    "\\[a] alle einblenden · \\[l] leeren · \\[s] speichern · "
+                    "\\[Esc] abbrechen[/dim]",
+                    id="compare-mgr-head",
+                )
+                yield OptionList(id="compare-mgr-list")
+
+        def on_mount(self) -> None:
+            self._refresh_list()
+
+        def _row_text(self, stem: str, label: str) -> str:
+            shown = stem not in self._hidden
+            box = "[green]\\[x][/green]" if shown else "[dim]\\[ ][/dim]"
+            ref = " [yellow](Ref)[/yellow]" if stem == self._ref else ""
+            name = label if shown else f"[dim]{label}[/dim]"
+            return f"{box} {name}{ref}"
+
+        def _refresh_list(self) -> None:
+            try:
+                lst = self.query_one("#compare-mgr-list", OptionList)
+            except NoMatches:
+                return
+            keep = lst.highlighted
+            lst.clear_options()
+            for stem, label in self._stems:
+                lst.add_option(Option(self._row_text(stem, label), id=stem))
+            n_shown = sum(1 for s, _ in self._stems if s not in self._hidden)
+            self.query_one("#compare-mgr-head", Static).update(
+                "[bold]Vergleich verwalten[/bold]   "
+                f"[dim]{n_shown}/{len(self._stems)} im Vergleich · ↑↓ wählen · "
+                "Space/Enter ein-/ausblenden · \\[a] alle · \\[l] leeren · "
+                "\\[s] speichern · \\[Esc] abbrechen[/dim]"
+            )
+            if self._stems and keep is not None:
+                lst.highlighted = min(keep, len(self._stems) - 1)
+
+        def _highlighted_stem(self) -> str | None:
+            lst = self.query_one("#compare-mgr-list", OptionList)
+            if lst.highlighted is None:
+                return None
+            return self._stems[lst.highlighted][0]
+
+        def on_option_list_option_selected(
+            self, event: OptionList.OptionSelected
+        ) -> None:
+            # Enter / click — the OptionList consumes enter before the screen
+            # binding, so toggle from here too.
+            stem = event.option.id
+            if stem is not None:
+                self._hidden.symmetric_difference_update({stem})
+                self._refresh_list()
+
+        def action_toggle(self) -> None:
+            stem = self._highlighted_stem()
+            if stem is None:
+                return
+            self._hidden.symmetric_difference_update({stem})
+            self._refresh_list()
+
+        def action_include_all(self) -> None:
+            self._hidden.clear()
+            self._refresh_list()
+
+        def action_clear_all(self) -> None:
+            # Exclude every tariff — the matrix then shows its "alle ausgeblendet"
+            # empty state, which tells the user how to bring tariffs back.
+            self._hidden = {stem for stem, _ in self._stems}
+            self._refresh_list()
+
+        def action_save(self) -> None:
+            self.dismiss(sorted(self._hidden))
+
+        def action_cancel(self) -> None:
+            self.dismiss(None)
+
     class HelpScreen(ModalScreen[None]):
         """Full keyboard reference, grouped. The footer shows only the essentials."""
 
@@ -1069,13 +1173,12 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 ("o", "Quelle öffnen (online im Browser / lokale PDFs)"),
                 ("R", "als Referenz setzen — Δ rechnet neu"),
                 ("u", "Favorit an/aus"),
-                ("c", "aus Vergleich \\[x] aus-/einblenden"),
                 ("D", "lokale Daten löschen (Umfang im Dialog)"),
             ]),
             ("Vergleich \\[x]", [
+                ("c", "Vergleich verwalten — Tarife ein-/ausblenden, leeren, alle"),
                 ("w", "Wortlaut ein/aus (kompakt ↔ ausführlich)"),
                 ("t", "Volltext-Modal: ganze Texte je Kategorie, alle Tarife"),
-                ("c", "markierten Tarif aus-/einblenden"),
             ]),
             ("Markt", [
                 ("f", "Filter (Versicherer / Produkt)"),
@@ -1120,7 +1223,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("q", "quit", "Quit", show=True),
             # Context / power keys — documented in [?], hidden from the footer.
             Binding("G", "analyze_local", "Analyze local", show=False),
-            Binding("c", "toggle_compare", "Compare on/off", show=False),
+            Binding("c", "manage_compare", "Vergleich verwalten", show=False),
             Binding("w", "toggle_compare_wording", "Wording", show=False),
             Binding("t", "compare_fulltext", "Volltext", show=False),
             Binding("o", "open_source", "Open source", show=False),
@@ -1764,8 +1867,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 if n_hidden:
                     widget.update(
                         f"[dim italic]Alle Tarife aus dem Vergleich ausgeblendet "
-                        f"({n_hidden} versteckt).\nIm Markt/Favoriten einen Tarif wählen "
-                        "und \\[c] drücken, um ihn wieder einzublenden.[/dim italic]"
+                        f"({n_hidden} versteckt).\n\\[c] öffnet den Manager — dort "
+                        "\\[a] drücken, um alle wieder einzublenden.[/dim italic]"
                     )
                 else:
                     widget.update(
@@ -1793,13 +1896,13 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 f" · [yellow]{n_hidden} ausgeblendet \\[c][/yellow]" if n_hidden else ""
             )
             overflow_hint = (
-                f" · [yellow]+{overflow} passen nicht — \\[c] ausblenden / Terminal "
+                f" · [yellow]+{overflow} passen nicht — \\[c] verwalten / Terminal "
                 f"breiter[/yellow]" if overflow else ""
             )
             parts = [
                 "[bold]Tarif-Vergleich[/bold]   "
                 f"[dim]{len(shown)}/{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
-                f"\\[t] Volltext · \\[c] aus-/einblenden · \\[o] Quelle öffnen"
+                f"\\[t] Volltext · \\[c] verwalten · \\[o] Quelle öffnen"
                 f"{hidden_hint}{overflow_hint}[/dim]",
                 self._render_module_matrix(shown, col_w),
                 self._render_coverage_matrix(shown, col_w),
@@ -2097,6 +2200,28 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             except NoMatches:
                 pass
 
+        def on_tabbed_content_tab_activated(
+            self, event: TabbedContent.TabActivated
+        ) -> None:
+            """Move focus to the activated tab's primary DataTable. Without this,
+            Textual focuses the first focusable widget in the new pane — on the
+            Market tab that is the dock-top #filter-input, which then swallows the
+            global single-letter shortcuts (v/m/x/…) as filter text instead of
+            switching tabs. That is the 'm flickers but does not switch' bug: the
+            keypress filtered the table rather than navigating. The filter stays
+            reachable with [f]."""
+            try:
+                active = self.query_one("#tabs", TabbedContent).active
+            except NoMatches:
+                return
+            target = {"favorites": "#fav-table", "market": "#market-table"}.get(active)
+            if not target:
+                return
+            try:
+                self.query_one(target, DataTable).focus()
+            except NoMatches:
+                pass
+
         def _reload_all(self) -> None:
             """Reload every data source from disk and repaint both tables, the header
             and whichever detail band is shown. Used after [g], a favorite edit or a
@@ -2263,33 +2388,40 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             )
             self._reload_all()
 
-        def action_toggle_compare(self) -> None:
-            """Hide/show the active tariff in the Vergleich tab. Persisted as an
-            exclude-set (compare_hidden) in config/favorites.json."""
-            ident = self._active_identity()
-            if ident is None:
-                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
-                return
-            insurer, product, stem = ident
-            if not stem:
+        def action_manage_compare(self) -> None:
+            """Open the Vergleich manager: toggle individual tariffs in/out of the
+            comparison, clear it, or bring them all back. The single source of truth
+            is compare_hidden (an exclude-set) in config/favorites.json — this works
+            on any tab and does not depend on a row cursor (the old per-row [c] toggle
+            was ambiguous on the Vergleich matrix, whose rows are categories, not
+            tariffs)."""
+            details = load_all_details()
+            if not details:
                 self.notify(
-                    "Kein kanonischer stem — dieser Tarif lässt sich nicht im Vergleich "
-                    "verwalten.",
-                    severity="warning",
-                    timeout=6,
+                    "Noch keine analysierten Tarife — erst \\[g] (Download + Analyse) "
+                    "oder \\[G] (nur Analyse).",
+                    severity="information",
+                    timeout=5,
                 )
                 return
-            hidden = self._compare_hidden()
-            if stem in hidden:
-                hidden.discard(stem)
-                msg = f"Wieder im Vergleich: {insurer} {product}"
-            else:
-                hidden.add(stem)
-                msg = f"Aus Vergleich entfernt: {insurer} {product}"
-            self._favorites["compare_hidden"] = sorted(hidden)
-            self._save_favorites()
-            self.notify(msg, timeout=4)
-            self._reload_all()
+            ref = self._favorites.get("reference_stem")
+            stems = sorted(
+                ((stem, _col_label(stem)) for stem, _ in details),
+                key=lambda sl: (sl[0] != ref, sl[0]),
+            )
+
+            def _apply(new_hidden: list[str] | None) -> None:
+                if new_hidden is None:
+                    return  # cancelled — leave compare_hidden untouched
+                self._favorites["compare_hidden"] = sorted(set(new_hidden))
+                self._save_favorites()
+                n_shown = sum(1 for s, _ in stems if s not in set(new_hidden))
+                self.notify(f"Vergleich: {n_shown}/{len(stems)} Tarife.", timeout=3)
+                self._reload_all()
+
+            self.push_screen(
+                CompareManagerScreen(stems, self._compare_hidden(), ref), _apply
+            )
 
         def action_compare_fulltext(self) -> None:
             """Open the per-category full-text modal: every Leistung/Ausschluss
@@ -2760,6 +2892,24 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     app.pop_screen()
                     await pilot.pause()
 
+                # --- Vergleich manager modal ([c]) — toggle/clear/include tariffs ---
+                mgr_details = load_all_details()
+                if mgr_details:
+                    mgr_ref = app._favorites.get("reference_stem")
+                    mgr_stems = sorted(
+                        ((stem, _col_label(stem)) for stem, _ in mgr_details),
+                        key=lambda sl: (sl[0] != mgr_ref, sl[0]),
+                    )
+                    await app.push_screen(
+                        CompareManagerScreen(mgr_stems, app._compare_hidden(), mgr_ref)
+                    )
+                    await pilot.pause()
+                    app.save_screenshot(
+                        filename="compare-manager.svg", path=str(screenshot_dir)
+                    )
+                    app.pop_screen()
+                    await pilot.pause()
+
                 # --- Modals over the market tab ([o] open-source, then [g] confirm) ---
                 tabs.active = "market"
                 await pilot.pause()
@@ -2800,7 +2950,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         asyncio.run(_shoot())
         print(
             "Saved screenshots (favorites/market/market-detail/vergleich/"
-            "vergleich-verbose/open/confirm .svg) to "
+            "vergleich-verbose/fulltext/compare-manager/open/confirm .svg) to "
             f"{screenshot_dir}"
         )
         return
