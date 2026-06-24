@@ -23,7 +23,8 @@ the source PDFs are already in data/raw/<stem>/. The extract model defaults to
 never harvested point you back to the browser "Tarifdetails" step. The Vergleich
 tab [x] shows an across-tariff coverage comparison (modules, coverage, and
 taxonomy-aligned Leistungen/Ausschlüsse) built from the analyzed records: [w]
-toggles the verbatim per-insurer wording (compact ↔ verbose), [c] hides/shows the
+toggles the verbatim per-insurer wording (compact ↔ verbose), [t] opens a modal with
+the full untruncated wording per category across all tariffs, [c] hides/shows the
 selected tariff in the comparison, and [o] opens a tariff's source documents online
 or as the local PDFs.
 """
@@ -682,7 +683,12 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
     from textual import on, work
     from textual.app import App, ComposeResult
     from textual.binding import Binding
-    from textual.containers import Container, ScrollableContainer, Vertical
+    from textual.containers import (
+        Container,
+        Horizontal,
+        ScrollableContainer,
+        Vertical,
+    )
     from textual.css.query import NoMatches
     from textual.reactive import reactive
     from textual.screen import ModalScreen
@@ -692,10 +698,12 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         Header,
         Input,
         Label,
+        OptionList,
         Static,
         TabbedContent,
         TabPane,
     )
+    from textual.widgets.option_list import Option
 
     # -----------------------------------------------------------------------
     # Helpers used inside the app
@@ -965,6 +973,80 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def action_cancel(self) -> None:
             self.dismiss(None)
 
+    class CompareTextScreen(ModalScreen[None]):
+        """Full, untruncated Leistungen/Ausschlüsse across all compared tariffs, one
+        category at a time. The Vergleich matrix stays compact (alignment); this is
+        where the verbatim wording is read side by side — including tariffs that did
+        not fit the matrix width. ↑↓ picks a category, the detail pane wraps the full
+        text. Returns None (read-only)."""
+
+        BINDINGS = [
+            Binding("escape", "close", "Close"),
+            Binding("q", "close", "Close"),
+        ]
+
+        def __init__(self, entries: list[dict], n_cols: int) -> None:
+            super().__init__()
+            self._entries = entries
+            self._n_cols = n_cols
+
+        def compose(self) -> ComposeResult:
+            with Container(id="fulltext-box"):
+                yield Static(
+                    "[bold]Volltext-Vergleich[/bold]   "
+                    f"[dim]{len(self._entries)} Kategorien · {self._n_cols} Tarife · "
+                    "↑↓ wählen · \\[Esc] schließen[/dim]",
+                    id="fulltext-head",
+                )
+                with Horizontal(id="fulltext-body"):
+                    yield OptionList(
+                        *(
+                            Option(
+                                f"[{e['color']}]{e['glyph']}[/{e['color']}] {_esc(e['label'])}"
+                            )
+                            for e in self._entries
+                        ),
+                        id="fulltext-list",
+                    )
+                    yield ScrollableContainer(
+                        Static("", id="fulltext-detail"), id="fulltext-detail-wrap"
+                    )
+
+        def on_mount(self) -> None:
+            # First option auto-highlights; render its detail right away.
+            if self._entries:
+                self._render_detail(0)
+
+        def on_option_list_option_highlighted(
+            self, event: OptionList.OptionHighlighted
+        ) -> None:
+            self._render_detail(event.option_index)
+
+        def _render_detail(self, idx: int) -> None:
+            if not (0 <= idx < len(self._entries)):
+                return
+            e = self._entries[idx]
+            lines = [
+                f"[bold {e['color']}]{e['glyph']} {_esc(e['label'])}[/bold {e['color']}]"
+                f"   [dim]({e['section']})[/dim]",
+                "",
+            ]
+            for label, verbatim in e["rows"]:
+                if verbatim:
+                    lines.append(f"[bold]{_esc(label)}[/bold]")
+                    lines.append(f"  {_esc(verbatim)}")
+                else:
+                    lines.append(f"[dim]{_esc(label)}: — nicht genannt[/dim]")
+                lines.append("")
+            try:
+                self.query_one("#fulltext-detail", Static).update("\n".join(lines))
+                self.query_one("#fulltext-detail-wrap").scroll_home(animate=False)
+            except NoMatches:
+                pass
+
+        def action_close(self) -> None:
+            self.dismiss(None)
+
     class HelpScreen(ModalScreen[None]):
         """Full keyboard reference, grouped. The footer shows only the essentials."""
 
@@ -992,6 +1074,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             ]),
             ("Vergleich \\[x]", [
                 ("w", "Wortlaut ein/aus (kompakt ↔ ausführlich)"),
+                ("t", "Volltext-Modal: ganze Texte je Kategorie, alle Tarife"),
                 ("c", "markierten Tarif aus-/einblenden"),
             ]),
             ("Markt", [
@@ -1039,6 +1122,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("G", "analyze_local", "Analyze local", show=False),
             Binding("c", "toggle_compare", "Compare on/off", show=False),
             Binding("w", "toggle_compare_wording", "Wording", show=False),
+            Binding("t", "compare_fulltext", "Volltext", show=False),
             Binding("o", "open_source", "Open source", show=False),
             Binding("f", "focus_filter", "Filter", show=False),
             Binding("escape", "clear_filter", "Clear filter", show=False),
@@ -1715,7 +1799,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             parts = [
                 "[bold]Tarif-Vergleich[/bold]   "
                 f"[dim]{len(shown)}/{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
-                f"\\[c] aus-/einblenden · \\[o] Quelle öffnen{hidden_hint}{overflow_hint}[/dim]",
+                f"\\[t] Volltext · \\[c] aus-/einblenden · \\[o] Quelle öffnen"
+                f"{hidden_hint}{overflow_hint}[/dim]",
                 self._render_module_matrix(shown, col_w),
                 self._render_coverage_matrix(shown, col_w),
                 self._render_category_matrix("leistung", shown, col_w),
@@ -1760,14 +1845,14 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         # subtext line and the [d] detail).
         _PARTIAL_CUES = ("nur ", "eingeschr", "außer", "ausser", "begrenzt", "teilweise")
 
-        def _render_category_matrix(self, kind: str, cols, col_w) -> str:
-            title = "LEISTUNGEN (Vergleich)" if kind == "leistung" else "AUSSCHLÜSSE (Vergleich)"
-            field = "leistungen" if kind == "leistung" else "ausschluesse"
-            glyph, color = ("✓", "green") if kind == "leistung" else ("✗", "red")
-            verbose = self._compare_verbose
-            total_w = VERGLEICH_LABEL_W + len(cols) * col_w  # subtext width budget
-
-            # Per column: category_key -> first verbatim hit, plus the unmatched bucket.
+        def _classify_columns(
+            self, cols, kind: str, field: str
+        ) -> tuple[list[dict[str, str]], list[list[str]], set[str]]:
+            """Map each column's verbatim items into taxonomy categories. Returns
+            (per_col_cat, per_col_sonst, present): per column the first verbatim hit
+            per category, the unmatched 'Sonstige' bucket, and the union of matched
+            category keys. Shared by the Vergleich matrix and the [t] full-text modal
+            so the two never disagree on what matched what."""
             per_col_cat: list[dict[str, str]] = []
             per_col_sonst: list[list[str]] = []
             present: set[str] = set()
@@ -1783,7 +1868,16 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         sonst.append(item)
                 per_col_cat.append(catmap)
                 per_col_sonst.append(sonst)
+            return per_col_cat, per_col_sonst, present
 
+        def _render_category_matrix(self, kind: str, cols, col_w) -> str:
+            title = "LEISTUNGEN (Vergleich)" if kind == "leistung" else "AUSSCHLÜSSE (Vergleich)"
+            field = "leistungen" if kind == "leistung" else "ausschluesse"
+            glyph, color = ("✓", "green") if kind == "leistung" else ("✗", "red")
+            verbose = self._compare_verbose
+            total_w = VERGLEICH_LABEL_W + len(cols) * col_w  # subtext width budget
+
+            per_col_cat, per_col_sonst, present = self._classify_columns(cols, kind, field)
             ordered = [k for k in ctax.ordered_keys(kind) if k in present]
             lines = [self._col_header(cols, col_w, title)]
 
@@ -1826,6 +1920,48 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     f"   [dim]({total_sonst} nicht zugeordnet{sonst_hint})[/dim]"
                 )
             return "\n".join(lines)
+
+        def _fulltext_entries(self) -> tuple[list[dict], int]:
+            """Build the [t] full-text modal payload: one entry per taxonomy category
+            present across the compared tariffs (Leistungen then Ausschlüsse), each
+            with the verbatim wording per tariff, plus a per-category 'Sonstige'
+            bucket. Uses the FULL column set (no width cap) — the modal is exactly
+            where the tariffs that did not fit the matrix become readable. Returns
+            (entries, n_cols)."""
+            cols = self._coverage_columns()  # full set, intentionally not width-capped
+            entries: list[dict] = []
+            for kind, field, glyph, color, section in (
+                ("leistung", "leistungen", "✓", "green", "Leistungen"),
+                ("ausschluss", "ausschluesse", "✗", "red", "Ausschlüsse"),
+            ):
+                per_col_cat, per_col_sonst, present = self._classify_columns(
+                    cols, kind, field
+                )
+                for key in (k for k in ctax.ordered_keys(kind) if k in present):
+                    rows = [
+                        (_col_label(stem), per_col_cat[i].get(key))
+                        for i, (stem, _rec) in enumerate(cols)
+                    ]
+                    entries.append({
+                        "section": section,
+                        "glyph": glyph,
+                        "color": color,
+                        "label": ctax.category_label(key),
+                        "rows": rows,
+                    })
+                if any(per_col_sonst):
+                    rows = [
+                        (_col_label(stem), " · ".join(per_col_sonst[i]) or None)
+                        for i, (stem, _rec) in enumerate(cols)
+                    ]
+                    entries.append({
+                        "section": section,
+                        "glyph": "•",
+                        "color": "yellow",
+                        "label": "Sonstige (nicht zugeordnet)",
+                        "rows": rows,
+                    })
+            return entries, len(cols)
 
         def _render_snapshot_pricediff(self) -> str:
             """The legacy market-price drift across snapshots, appended only once a
@@ -2154,6 +2290,21 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._save_favorites()
             self.notify(msg, timeout=4)
             self._reload_all()
+
+        def action_compare_fulltext(self) -> None:
+            """Open the per-category full-text modal: every Leistung/Ausschluss
+            verbatim across all compared tariffs, untruncated (the cross-tariff
+            companion to the [d] detail band, which is per-tariff only)."""
+            entries, n_cols = self._fulltext_entries()
+            if not entries:
+                self.notify(
+                    "Keine Leistungen/Ausschlüsse zum Anzeigen — erst Tarife "
+                    "analysieren (\\[g]).",
+                    severity="information",
+                    timeout=5,
+                )
+                return
+            self.push_screen(CompareTextScreen(entries, n_cols))
 
         def action_toggle_compare_wording(self) -> None:
             """Toggle the Vergleich between compact (glyph matrix only) and verbose
@@ -2599,6 +2750,15 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 app.save_screenshot(filename="vergleich-verbose.svg", path=str(screenshot_dir))
                 app._compare_verbose = False
                 app._populate_coverage()
+
+                # --- Vergleich full-text modal ([t]) — full wording per category ---
+                ft_entries, ft_ncols = app._fulltext_entries()
+                if ft_entries:
+                    await app.push_screen(CompareTextScreen(ft_entries, ft_ncols))
+                    await pilot.pause()
+                    app.save_screenshot(filename="fulltext.svg", path=str(screenshot_dir))
+                    app.pop_screen()
+                    await pilot.pause()
 
                 # --- Modals over the market tab ([o] open-source, then [g] confirm) ---
                 tabs.active = "market"

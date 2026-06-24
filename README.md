@@ -96,8 +96,11 @@ scripts/tui.py                                        interaktiver Browser über
   hinweg in einer Zeile steht, auch wenn sie anders heißt (`telefonische Rechtsberatung`
   ↔ `JuraTel®` ↔ `DMB-Hotline`). Default ist **kompakt** (nur die `✓/✗/~/—`-Matrix,
   Zeilen-Labels sauber gekürzt); **`[w]`** blendet den **Original-Wortlaut** je
-  Versicherer ein (eine Zeile pro Tarif, hart gekürzt → kein Umbruch). Nicht zugeordnete
-  Einträge landen sichtbar im **Sonstige**-Bucket (nie verworfen); `~` markiert
+  Versicherer ein (eine Zeile pro Tarif, hart gekürzt → kein Umbruch). Für den
+  **vollständigen, ungekürzten Text** öffnet **`[t]`** ein Volltext-Modal: links die
+  Kategorie-Liste (↑↓), rechts der ganze Wortlaut aller Tarife nebeneinander, umbrochen
+  — inkl. der Tarife, die wegen der Terminalbreite nicht in die Matrix passen. Nicht
+  zugeordnete Einträge landen sichtbar im **Sonstige**-Bucket (nie verworfen); `~` markiert
   Teil-Deckung (nur/eingeschr./außer/begrenzt). **`[c]`** blendet den markierten Tarif
   aus dem Vergleich aus bzw. wieder ein (persistiert als Ausschluss-Set `compare_hidden`,
   damit neu analysierte Tarife automatisch dazukommen). Erweitern = ein Objekt an die
