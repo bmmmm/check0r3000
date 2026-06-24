@@ -21,7 +21,7 @@
 // the per-module `level` caveat, and that document PDFs are third-party/gitignored).
 
 (() => {
-  const norm = (s) => (s || "").replace(/ /g, " "); // collapse NBSP (CHECK24 uses it around prices)
+  const norm = (s) => (s || "").replace(/[\u00a0\u202f]/g, " "); // collapse NBSP / narrow-NBSP (CHECK24 uses it around prices)
   const eur = (s) => (s == null ? null : Number(s.replace(/\./g, "").replace(",", ".")));
 
   // CHECK24 filestore "kind" path segment -> our schema sources.doctype.
@@ -78,8 +78,8 @@
     }
     const countEl = c.querySelector(".efeedback-button__count");
     const bewertung_anzahl = countEl
-      ? (parseInt(countEl.textContent.replace(/\./g, ""), 10) || null)
-      : null;
+      ? (parseInt(countEl.textContent.replace(/[^\d]/g, ""), 10) || null)
+      : null; // strip ALL non-digits: handles "4.713" and a parenthesised "(4.713)"
     const row = {
       position,
       insurer,
@@ -125,7 +125,11 @@
   const offerFor = (position) => {
     const r = rows.find((x) => x.position === position);
     if (!r) { console.warn(`no row at position ${position}`); return null; }
-    const today = new Date().toISOString().slice(0, 10);
+    // Local calendar date (toISOString is UTC and can read as yesterday/tomorrow
+    // near midnight); this only labels the offer's `quelle` provenance string.
+    const now = new Date();
+    const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 10);
     const offer = {
       quelle: `check24-Ergebnisliste ${today} — ${r.insurer} ${r.product}, Position ${r.position}`,
       doctype: "check24",
@@ -159,7 +163,13 @@
       const m = a.href.match(/\/filestore\/([^/]+)\/([0-9a-f]{16,})\//);
       if (!m) continue;
       const [, kind, hash] = m;
-      const name = decodeURIComponent(a.href.split("?")[0].split("/").pop()).replace(/\.pdf$/, "");
+      const rawName = a.href.split("?")[0].split("/").pop();
+      // decodeURIComponent throws on a malformed %-escape (e.g. a literal "%" in a
+      // filename like "100%_Schutz.pdf"); keep the raw segment rather than letting
+      // the URIError abort the entire document harvest.
+      let name;
+      try { name = decodeURIComponent(rawName); } catch { name = rawName; }
+      name = name.replace(/\.pdf$/, "");
       (byHash[hash] = byHash[hash] || { hash, file: name, docs: [] }).docs.push({
         doctype: KIND_TO_DOCTYPE[kind] || kind,
         kind,

@@ -67,7 +67,10 @@ content hashes."""
 
 
 def slug(s: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+    s = s.lower()
+    for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+        s = s.replace(a, b)
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
 
 
 def strip_fences(text: str) -> str:
@@ -78,20 +81,63 @@ def strip_fences(text: str) -> str:
     return t.strip()
 
 
+def _balanced_spans(t: str) -> list[str]:
+    """Every balanced top-level {...} span, respecting strings/escapes.
+
+    A greedy brace regex over-matches: a stray brace in prose (before OR after the
+    JSON), or a second object, makes one captured span unparseable. Tracking brace
+    depth — and skipping braces inside string literals — yields each complete
+    candidate object separately so the caller can pick the one that actually parses.
+    """
+    spans: list[str] = []
+    depth, start, in_str, esc = 0, None, False, False
+    for i, ch in enumerate(t):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}" and depth > 0:
+            depth -= 1
+            if depth == 0 and start is not None:
+                spans.append(t[start:i + 1])
+                start = None
+    return spans
+
+
 def coerce_json(text: str) -> dict:
     """Parse the model's reply into a dict, tolerating fences or surrounding prose.
 
-    Large inputs make models more likely to wrap the JSON in explanatory text; fall
-    back to the outermost brace span before giving up.
+    Large inputs make models more likely to wrap the JSON in explanatory text. If the
+    whole reply will not parse, scan for balanced brace spans and return the largest
+    one that parses to an object — robust against prose braces and a stray second
+    object, where a greedy outermost-span match silently produced garbage.
     """
     t = strip_fences(text)
     try:
         return json.loads(t)
     except json.JSONDecodeError:
-        m = re.search(r"\{.*\}", t, re.DOTALL)
-        if m:
-            return json.loads(m.group(0))
-        raise
+        pass
+    candidates: list[dict] = []
+    for span in _balanced_spans(t):
+        try:
+            obj = json.loads(span)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict):
+            candidates.append(obj)
+    if candidates:
+        return max(candidates, key=lambda d: len(json.dumps(d)))
+    raise json.JSONDecodeError("no parseable JSON object in model reply", t, 0)
 
 
 def build_payload(schema_text: str, docs: list[dict], root: Path,
@@ -147,7 +193,7 @@ def main() -> int:
     rc = 0
     for (insurer, tariff), docs in sorted(tariffs.items()):
         docs = sorted(docs, key=lambda d: d["doctype"])
-        sig = (PROMPT_VERSION + f"|filter={filter_tag}|"
+        sig = (PROMPT_VERSION + f"|model={args.model}|filter={filter_tag}|"
                + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs))
         input_hash = hashlib.sha256(sig.encode()).hexdigest()
         out_path = OUT / f"{slug(insurer)}__{slug(tariff)}.json"

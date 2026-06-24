@@ -30,6 +30,7 @@ RAW = ROOT / "data" / "raw"
 # Filename prefix (underscored, lowercased) -> canonical doctype.
 DOCTYPE_PREFIXES = [
     ("allgemeine_versicherungsbedingungen", "avb"),
+    ("besondere_versicherungsbedingungen", "avb_besondere"),
     ("produktinformationsblatt", "produktinfoblatt"),
     ("weitere_unterlagen", "weitere_unterlagen"),
     ("leistungsuebersicht", "leistungsuebersicht"),
@@ -45,6 +46,8 @@ KNOWN_INSURERS = {
     "concordia": "concordia", "wgv": "wgv", "huk": "huk", "allianz": "allianz",
     "itzehoer": "itzehoer", "jurpartner": "jurpartner", "nrv": "nrv",
     "neue": "nrv",  # "Neue Rechtsschutz-Versicherung"
+    "ergo": "ergo", "dmb": "dmb", "adac": "adac",
+    "bavariadirekt": "bavariadirekt", "bavaria": "bavariadirekt",
 }
 
 # Legal-form / boilerplate tokens dropped when deriving the tariff name.
@@ -56,7 +59,10 @@ LEGAL_STOPWORDS = {
 
 
 def slug(s: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", unquote(s).lower()).strip("-")
+    s = unquote(s).lower()
+    for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+        s = s.replace(a, b)
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
 
 
 def classify(pdf: Path) -> dict:

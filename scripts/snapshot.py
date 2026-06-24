@@ -46,6 +46,18 @@ def _eur(s: str) -> float | None:
         return None
 
 
+def _norm_key(s) -> str:
+    """Collapse NBSP / narrow-NBSP and whitespace runs for a stable snapshot key.
+
+    The JS scrape may leave a non-breaking space (CHECK24 uses it around prices and
+    Selbstbeteiligung) while the PSV path carries plain spaces. Without normalising,
+    the same tariff keys differently across the two inputs and a diff shows a phantom
+    add+remove for it."""
+    if s is None:
+        return ""
+    return " ".join(str(s).replace("\u00a0", " ").replace("\u202f", " ").split())
+
+
 def load_rows(path: Path) -> list[dict]:
     """Accept either a JSON array (window.check24Rows) or a pipe-separated harvest
     (position|insurer|product|tarifnote|monatlich_eur|selbstbeteiligung, '#' = comment)."""
@@ -72,7 +84,8 @@ def load_rows(path: Path) -> list[dict]:
     out = []
     for r in rows:
         rec = {k: r.get(k) for k in FIELDS}
-        rec["key"] = f"{rec['insurer']}|{rec['product']}|{rec['selbstbeteiligung']}"
+        rec["key"] = "|".join(_norm_key(rec.get(k))
+                              for k in ("insurer", "product", "selbstbeteiligung"))
         out.append(rec)
     return out
 
@@ -100,7 +113,9 @@ def _by_key(snap_path: Path) -> dict[str, dict]:
     # Keep the cheapest entry per key, so a duplicated key compares deterministically.
     out: dict[str, dict] = {}
     for t in data.get("tariffs", []):
-        k = t.get("key")
+        # Normalise here too so a snapshot written before the key-normalisation fix
+        # (NBSP still in its stored key) compares cleanly against a fresh one.
+        k = _norm_key(t.get("key"))
         if k not in out or (t.get("monatlich_eur") or 1e9) < (out[k].get("monatlich_eur") or 1e9):
             out[k] = t
     return out

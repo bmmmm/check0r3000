@@ -248,14 +248,18 @@ def offer_files() -> list[Path]:
 
 
 def clear_enriched() -> None:
-    """Remove stale enriched artifacts so a removed/renamed offer leaves no twin.
+    """Remove stale enriched *twins* (the <key>.json overlay outputs) so a
+    removed/renamed offer leaves no orphan record.
 
-    out/enriched/ is fully derived and gitignored; regenerating it from scratch on
-    every run keeps it idempotent (no cache) and prevents render from picking up a
-    stale enriched twin whose offer or pure record has since changed.
+    Scoped to *.json on purpose: render.py writes non-JSON artifacts (e.g.
+    marktanalyse.md, the rendered comparison) into out/enriched/ beside these
+    records, and a re-merge must never delete those. out/enriched/ is fully derived
+    and gitignored; regenerating the twins from scratch on every run keeps them
+    idempotent (no cache) and prevents render from picking up a stale twin whose
+    offer or pure record has since changed.
     """
     if ENRICHED.exists():
-        for p in ENRICHED.glob("*"):
+        for p in ENRICHED.glob("*.json"):
             if p.is_file():
                 p.unlink()
 
@@ -266,13 +270,16 @@ def run_merge() -> int:
     validator = Draft202012Validator(json.loads(OFFER_SCHEMA.read_text(encoding="utf-8")))
     offers = offer_files()
 
-    # Regenerate from scratch every run: clear stale twins first, then write the
-    # current set all-or-nothing (one bad offer must not leave a half-enriched mix).
-    clear_enriched()
     if not offers:
+        # A removed last offer should still leave no orphan twin behind.
+        clear_enriched()
         print("  no data/offers/*.json (besides the template) — skipping enrichment.")
         return 0
 
+    # All-or-nothing: validate and merge EVERY offer in memory FIRST; only once the
+    # whole set is known good do we clear the stale twins and write. A single bad
+    # offer must never empty out/enriched/ — clearing before validation once deleted
+    # the rendered analysis (marktanalyse.md) when a later offer failed.
     results: list[tuple[str, dict, list[str]]] = []
     for path in offers:
         key = path.stem
@@ -286,6 +293,7 @@ def run_merge() -> int:
         merged, overridden = merge_offer(key, offer, offer_bytes)
         results.append((key, merged, overridden))
 
+    clear_enriched()
     ENRICHED.mkdir(parents=True, exist_ok=True)
     for key, merged, overridden in results:
         out_path = ENRICHED / f"{key}.json"

@@ -76,12 +76,21 @@ def _sections(lines: list[str]) -> list[str]:
 
 
 def filter_text(text: str, context: int = 4, min_fraction: float = 0.15) -> str:
-    """Return a trimmed copy of `text`; never shrink below `min_fraction` of it."""
+    """Return a trimmed copy of `text`; never shrink below `min_fraction` of it.
+
+    If BOTH strategies collapse the document below the keep-floor — which happens
+    when no anchor keyword matches at all (an insurer whose wording avoids every
+    term in ANCHORS) — the trimmed result is near-empty placeholder text. Feeding
+    the model a content-free AVB yields an all-null record, so in that case keep the
+    original intact: an oversized prompt beats a blank one.
+    """
     lines = text.splitlines()
     candidates = [_window(lines, context), _sections(lines)]
     rendered = ["\n".join(c) for c in candidates]
     floor = len(text) * min_fraction
-    viable = [r for r in rendered if len(r) >= floor] or [max(rendered, key=len)]
+    viable = [r for r in rendered if len(r) >= floor]
+    if not viable:
+        return text
     return min(viable, key=len)
 
 

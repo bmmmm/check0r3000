@@ -65,10 +65,18 @@ ANALYZE_MODEL = os.environ.get("CHECK0R_ANALYZE_MODEL", "claude")
 
 
 def _find_latest_snapshot(snapshot_dir: Path) -> Path | None:
-    """Return the most-recent snapshot JSON by filename date, or None."""
+    """Return the most-recent snapshot JSON by filename date, or None.
+
+    snapshot.py names files YYYY-MM-DD.json, so a lexicographic sort is also
+    chronological — but only over date-named files. Restrict the glob to that
+    pattern so a stray non-date *.json (a backup, an export) can't sort last and
+    masquerade as the latest snapshot."""
     if not snapshot_dir.is_dir():
         return None
-    candidates = sorted(snapshot_dir.glob("*.json"))
+    import re
+
+    candidates = sorted(p for p in snapshot_dir.glob("*.json")
+                        if re.match(r"\d{4}-\d{2}-\d{2}", p.stem))
     return candidates[-1] if candidates else None
 
 
@@ -127,12 +135,21 @@ def _slug(insurer: str, product: str) -> str:
 
     def slugify(s: str) -> str:
         s = s.lower()
-        s = re.sub(r"[äöü]", lambda m: {"ä": "ae", "ö": "oe", "ü": "ue"}[m.group()], s)
+        s = re.sub(r"[äöüß]",
+                   lambda m: {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"}[m.group()], s)
         s = re.sub(r"[^a-z0-9]+", "-", s)
         s = s.strip("-")
         return s
 
     return f"{slugify(insurer)}__{slugify(product)}"
+
+
+def _as_dict(v: Any) -> dict:
+    return v if isinstance(v, dict) else {}
+
+
+def _as_list(v: Any) -> list:
+    return v if isinstance(v, list) else []
 
 
 def _record_from_data(
@@ -142,15 +159,16 @@ def _record_from_data(
         insurer=data.get("insurer", insurer),
         tariff=data.get("tariff", product),
         stand=data.get("stand"),
-        # `or {}` / `or []` (not the .get default): a model may emit an explicit JSON
-        # null for these — extract.py only warns on empty modules/coverage and writes
-        # the record anyway — and a null would crash the render sites (rec.modules.get).
-        modules=data.get("modules") or {},
-        coverage=data.get("coverage") or {},
-        leistungen=data.get("leistungen") or [],
-        ausschluesse=data.get("ausschluesse") or [],
-        besonderheiten=data.get("besonderheiten") or [],
-        beitrag=data.get("beitrag"),
+        # isinstance-guard, not `or {}`: a model may emit an explicit JSON null OR a
+        # wrong type (a list, a string) for these. extract.py only warns on empty
+        # modules/coverage and writes the record anyway, and any non-dict/non-list
+        # here crashes the render sites (rec.modules.get(...), for x in leistungen).
+        modules=_as_dict(data.get("modules")),
+        coverage=_as_dict(data.get("coverage")),
+        leistungen=_as_list(data.get("leistungen")),
+        ausschluesse=_as_list(data.get("ausschluesse")),
+        besonderheiten=_as_list(data.get("besonderheiten")),
+        beitrag=data.get("beitrag") if isinstance(data.get("beitrag"), dict) else None,
         is_enriched=is_enriched,
     )
 
@@ -273,7 +291,12 @@ def load_snapshot(path: Path) -> Snapshot | None:
             has_urls=stem is not None,
             has_pdf=bool(stem and _raw_dir_for_stem(stem).is_dir()),
             has_detail=has_detail,
-            has_offer=(REPO_ROOT / "data" / "offers" / f"{slug}.json").is_file(),
+            # Offers are named by the canonical stem (e.g. arag__premium-2026.json),
+            # not the loose DOM slug (arag__premium) — check the stem first so the
+            # indicator isn't always False; fall back to the slug for manifest-less rows.
+            has_offer=(bool(stem)
+                       and (REPO_ROOT / "data" / "offers" / f"{stem}.json").is_file())
+            or (REPO_ROOT / "data" / "offers" / f"{slug}.json").is_file(),
         )
         rows.append(row)
 
@@ -524,7 +547,10 @@ def _distinct_numbers(s: str, limit: int = 2) -> list[str]:
     import re
 
     out: list[str] = []
-    for n in re.findall(r"\d+", s or ""):
+    # Match a German-grouped number (1.000) as ONE token and drop the grouping
+    # dots, so "1.000 €" reads as "1000", not two numbers "1" and "000".
+    for raw in re.findall(r"\d{1,3}(?:\.\d{3})+|\d+", s or ""):
+        n = raw.replace(".", "")
         if n not in out:
             out.append(n)
         if len(out) >= limit:
@@ -535,11 +561,31 @@ def _distinct_numbers(s: str, limit: int = 2) -> list[str]:
 def _short_versicherungssumme(v: str | None) -> str:
     if not v:
         return "k.A."
+    import re
+
     low = v.lower()
-    if "unbegrenzt" in low:
-        # mark a star when the unlimited sum carries sub-limits / qualifiers.
+    # A finite per-variant cap must stay visible even when another variant is
+    # unlimited: "2000000 EUR (Smart); unbegrenzt (Best)" is NOT blanket-unlimited
+    # cover, and collapsing it to "unbegrenzt*" silently hid the Smart 2-Mio cap.
+    parts: list[str] = []
+    for raw in re.findall(r"\d{1,3}(?:\.\d{3})+|\d+", v):
+        n = int(raw.replace(".", ""))
+        if n >= 1_000_000:
+            token = f"{n / 1_000_000:g} Mio."
+        elif n >= 1_000:
+            token = f"{n // 1000} Tsd."
+        else:
+            token = str(n)
+        if token not in parts:
+            parts.append(token)
+    if "unbegrenzt" in low and "unbegr." not in parts:
+        parts.append("unbegr.")
+    if not parts:
+        return v
+    if parts == ["unbegr."]:
+        # purely unlimited; keep the familiar wording, star = carries qualifiers
         return "unbegrenzt*" if len(v.strip()) > len("unbegrenzt") + 1 else "unbegrenzt"
-    return v
+    return "/".join(parts)
 
 
 def _short_selbstbeteiligung(v: str | None) -> str:

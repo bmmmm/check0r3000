@@ -22,6 +22,7 @@ Run:
 from __future__ import annotations
 
 import argparse
+import http.client
 import sys
 import urllib.error
 import urllib.request
@@ -145,9 +146,15 @@ def download(url: str, dest: Path) -> str:
         with urllib.request.urlopen(req, timeout=60) as resp:
             ctype = resp.headers.get_content_type()
             data = resp.read()
-    except (urllib.error.URLError, TimeoutError) as e:
+    except (urllib.error.URLError, ValueError, TimeoutError,
+            http.client.IncompleteRead) as e:
+        # ValueError: malformed/scheme-less URL; IncompleteRead: truncated body.
+        # Mirror check(); one bad doc must not abort the whole --apply batch.
         return f"FAILED ({e})"
-    # Guard against an HTML error page served as 200 (expired link etc.).
+    # Guard against a truncated/empty body or an HTML error page served as 200
+    # (expired link etc.) — a 0-byte file must never be written out as "ok".
+    if not data:
+        return "FAILED (empty body — 0 bytes)"
     if ctype != "application/pdf" and data[:5] != b"%PDF-":
         return f"FAILED (not a PDF: {ctype})"
     tmp = dest.with_suffix(dest.suffix + ".part")  # atomic: don't leave a half file

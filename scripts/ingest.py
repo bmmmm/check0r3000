@@ -50,11 +50,13 @@ def main() -> int:
 
     records: list[dict] = []
     by_content: dict[str, list[str]] = defaultdict(list)
+    no_text: list[str] = []
 
     for pdf in pdfs:
         insurer, tariff = pdf.parts[-3], pdf.parts[-2]
         doctype = pdf.stem
         text, npages = extract_text(pdf)
+        stripped = text.strip()
         chash = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
         dest = OUT / insurer / tariff / f"{doctype}.txt"
@@ -67,12 +69,19 @@ def main() -> int:
             "tariff": tariff,
             "doctype": doctype,
             "pages": npages,
-            "text_chars": len(text.strip()),
+            "text_chars": len(stripped),
             "content_sha256": chash,
             "extracted_path": str(dest.relative_to(ROOT)),
         })
-        by_content[chash].append(ident)
-        print(f"  extracted  {ident:<48} {npages:>3}p  {len(text.strip()):>6}ch  {chash[:12]}")
+        # Only group documents that actually yielded text. A scanned/image-only PDF
+        # extracts to "" and every empty one hashes identically — grouping them
+        # would raise a bogus "byte-for-byte identical across tariffs" warning when
+        # the real problem is that the PDF needs OCR.
+        if stripped:
+            by_content[chash].append(ident)
+        else:
+            no_text.append(ident)
+        print(f"  extracted  {ident:<48} {npages:>3}p  {len(stripped):>6}ch  {chash[:12]}")
 
     # Duplicate report: same extracted content under more than one location.
     warnings = [
@@ -84,6 +93,11 @@ def main() -> int:
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"\n{len(records)} documents -> {OUT.relative_to(ROOT)}/manifest.json")
+    if no_text:
+        print(f"\n  WARNING: {len(no_text)} document(s) yielded NO extractable text "
+              f"(scanned / image-only PDF? likely needs OCR):")
+        for ident in no_text:
+            print(f"    {ident}")
     if warnings:
         print(f"\n  WARNING: {len(warnings)} document(s) are byte-for-byte identical across tariffs:")
         for w in warnings:

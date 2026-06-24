@@ -59,6 +59,7 @@ def parse_spec(spec: str) -> tuple[str, str | None, str | None]:
         provider, model = spec.split(":", 1)
     else:
         provider, model = "claude", spec
+    provider = provider.strip().lower()  # 'Claude:Opus' / 'OLLAMA:…' route the same
     if provider == "claude" and model.lower() in ("", "claude", "default"):
         model = None
     return provider, model, endpoint
