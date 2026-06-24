@@ -135,11 +135,14 @@ def _record_from_data(
         insurer=data.get("insurer", insurer),
         tariff=data.get("tariff", product),
         stand=data.get("stand"),
-        modules=data.get("modules", {}),
-        coverage=data.get("coverage", {}),
-        leistungen=data.get("leistungen", []),
-        ausschluesse=data.get("ausschluesse", []),
-        besonderheiten=data.get("besonderheiten", []),
+        # `or {}` / `or []` (not the .get default): a model may emit an explicit JSON
+        # null for these — extract.py only warns on empty modules/coverage and writes
+        # the record anyway — and a null would crash the render sites (rec.modules.get).
+        modules=data.get("modules") or {},
+        coverage=data.get("coverage") or {},
+        leistungen=data.get("leistungen") or [],
+        ausschluesse=data.get("ausschluesse") or [],
+        besonderheiten=data.get("besonderheiten") or [],
         beitrag=data.get("beitrag"),
         is_enriched=is_enriched,
     )
@@ -778,7 +781,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
                     "",
                     "[bold]Analyse ohne Download[/bold] — PDFs liegen lokal "
-                    f"([cyan]data/raw/{e.get('stem', '')}/[/cyan]).",
+                    f"([cyan]data/raw/{e.get('stem', '').replace('__', '/')}/[/cyan]).",
                     f"ingest → extract  [dim](Modell: {self._model})[/dim]",
                     "[dim]Extraktion ist ein Modell-Call.[/dim]",
                     "",
@@ -1701,12 +1704,12 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             for key, old_p, new_p, delta in sorted(changes, key=lambda x: x[3]):
                 sign = "+" if delta > 0 else ""
                 c = "bright_red" if delta > 0 else "bright_green"
-                lines.append(f"  {key[:50]:<50}  {old_p:.2f} → {new_p:.2f}  "
+                lines.append(f"  {_esc(key[:50].ljust(50))}  {old_p:.2f} → {new_p:.2f}  "
                              f"[{c}]{sign}{delta:.2f}[/{c}]")
             for k in added:
-                lines.append(f"  [bright_green]+[/bright_green] {k}")
+                lines.append(f"  [bright_green]+[/bright_green] {_esc(k)}")
             for k in removed:
-                lines.append(f"  [bright_red]−[/bright_red] {k}")
+                lines.append(f"  [bright_red]−[/bright_red] {_esc(k)}")
             if not (changes or added or removed):
                 lines.append("[dim italic]keine Änderungen zwischen den Snapshots.[/dim italic]")
             return "\n".join(lines)

@@ -11,7 +11,6 @@
         "telefon. rechtsberatung",
         "juratel",
         "dmb-hotline",
-        "hotline",
         "telefonberatung",
         "rechtsberatung am telefon",
         "anwaltshotline"
@@ -88,7 +87,6 @@
       "kind": "leistung",
       "synonyms": [
         "strafkaution",
-        "kaution",
         "zinsloses darlehen",
         "kaution als darlehen",
         "strafkaution als darlehen"
@@ -185,7 +183,6 @@
         "cybermobbing",
         "cyber-mobbing",
         "cyber-mobbing-soforthilfe",
-        "mobbing",
         "cyber-check",
         "cybercheck"
       ]
@@ -324,7 +321,6 @@
         "baufinanzierung",
         "kauf bebaubarer grundstücke",
         "kauf bebaubarer grundstuecke",
-        "errichtung",
         "planung von gebäuden",
         "baurisiko",
         "bau/erwerb/finanzierung von gebäuden",
@@ -429,7 +425,7 @@
         "lebenspartnerschaft",
         "scheidung",
         "ehe-rechtsschutz",
-        "unterhalt"
+        "unterhaltsrecht"
       ]
     },
     {
