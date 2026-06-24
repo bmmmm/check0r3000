@@ -12,6 +12,13 @@ Usage:
     uv run scripts/tui.py --selftest              # verify data loading, then exit 0
     uv run scripts/tui.py --screenshot DIR        # render each tab to SVG, then exit
     uv run scripts/tui.py --help                  # show this help
+
+Selecting a tariff (Market or Favorites) shows its harvested source documents in
+the detail panel. If they are not yet analyzed, [g] downloads them and runs the
+pipeline (fetch_docs --apply -> intake -> ingest -> extract) in the background,
+after a confirm. The extract model defaults to "claude"; override with the
+CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were never harvested point you
+back to the browser "Tarifdetails" step.
 """
 
 from __future__ import annotations
@@ -29,6 +36,11 @@ from typing import Any
 # ---------------------------------------------------------------------------
 
 REPO_ROOT = Path(__file__).parent.parent
+
+# Model spec for the [g] "download + analyze" pipeline's extract stage. Matches
+# extract.py's own default ("claude" = the claude CLI); override without editing
+# code via CHECK0R_ANALYZE_MODEL (e.g. a local mlx:/ollama: spec).
+ANALYZE_MODEL = os.environ.get("CHECK0R_ANALYZE_MODEL", "claude")
 
 
 # ---------------------------------------------------------------------------
@@ -255,6 +267,28 @@ def load_doc_index() -> dict[str, list[dict]]:
     return index
 
 
+def load_doc_by_tariff() -> dict[tuple[str, str], dict]:
+    """Map (insurer, product) normalised → the full manifest tariff entry (stem +
+    docs), so the Market view can resolve any selected row to its harvested source
+    PDFs. The stems are hand-curated (e.g. "…-oerag") and not reproducible from a
+    slug, so we match on the insurer/tariff strings the manifest itself records —
+    they come from the same CHECK24 DOM as the snapshot rows."""
+    path = REPO_ROOT / "data" / "sources" / "check24-documents.json"
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+    index: dict[tuple[str, str], dict] = {}
+    for t in data.get("tariffs", []):
+        ins = (t.get("insurer") or "").strip().casefold()
+        prod = (t.get("tariff") or "").strip().casefold()
+        if ins and prod:
+            index[(ins, prod)] = t
+    return index
+
+
 # Short doctype labels for the Favorites "Docs" column.
 _DOCTYPE_SHORT = {
     "avb": "AVB",
@@ -403,12 +437,13 @@ def run_selftest(snapshot_path: Path | None) -> int:
 
 
 def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) -> None:
-    from textual import on
+    from textual import on, work
     from textual.app import App, ComposeResult
     from textual.binding import Binding
     from textual.containers import Container, Horizontal, ScrollableContainer, Vertical
     from textual.css.query import NoMatches
     from textual.reactive import reactive
+    from textual.screen import ModalScreen
     from textual.widgets import (
         DataTable,
         Footer,
@@ -499,6 +534,49 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
     # The App
     # -----------------------------------------------------------------------
 
+    class ConfirmFetchScreen(ModalScreen[bool]):
+        """Deliberate gate before downloading third-party source PDFs and running
+        the analyze pipeline. Returns True on confirm, False on cancel."""
+
+        BINDINGS = [
+            Binding("enter", "confirm", "Download + analyze"),
+            Binding("y", "confirm", "Yes"),
+            Binding("escape", "cancel", "Cancel"),
+            Binding("n", "cancel", "No"),
+        ]
+
+        def __init__(self, entry: dict, model: str) -> None:
+            super().__init__()
+            self._entry = entry
+            self._model = model
+
+        def compose(self) -> ComposeResult:
+            e = self._entry
+            docs = e.get("docs", [])
+            lines = [
+                f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                "",
+                f"Download von [cyan]rechtsschutz.check24.de[/cyan]: "
+                f"[bold]{len(docs)}[/bold] PDF(s)",
+            ]
+            for dd in docs:
+                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                lines.append(f"  • [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:48]}")
+            lines += [
+                "",
+                f"dann: intake → ingest → extract  [dim](Modell: {self._model})[/dim]",
+                "[dim]Drittanbieter-Copyright — nur für den Eigengebrauch.[/dim]",
+                "",
+                "[bold]\\[↵/y][/bold] Download + Analyse     [bold]\\[Esc/n][/bold] Abbrechen",
+            ]
+            yield Container(Static("\n".join(lines)), id="confirm-box")
+
+        def action_confirm(self) -> None:
+            self.dismiss(True)
+
+        def action_cancel(self) -> None:
+            self.dismiss(False)
+
     class CheckApp(App):
         """check0r3000 — Rechtsschutz-Vergleich TUI."""
 
@@ -516,6 +594,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("m", "switch_tab('market')", "Market", show=True),
             Binding("d", "switch_tab('detail')", "Detail", show=True),
             Binding("x", "switch_tab('diff')", "Diff", show=True),
+            Binding("g", "fetch_docs", "Get docs", show=True),
             Binding("r", "refresh_data", "Reload"),
         ]
 
@@ -534,7 +613,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._q1 = self._median = self._q3 = 0.0
             self._favorites: dict[str, Any] = {}
             self._doc_index: dict[str, list[dict]] = {}
+            self._doc_by_tariff: dict[tuple[str, str], dict] = {}
             self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
+            self._active_row: SnapshotRow | None = None
 
         # --- Lifecycle ---
 
@@ -559,6 +640,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 self._q1, self._median, self._q3 = _price_quartiles(self._snapshot.rows)
             self._favorites = load_favorites()
             self._doc_index = load_doc_index()
+            self._doc_by_tariff = load_doc_by_tariff()
 
         # --- Layout ---
 
@@ -902,6 +984,26 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         # --- Detail panel (sidebar) ---
 
+        def _doc_entry(self, row: SnapshotRow) -> dict | None:
+            """Resolve a snapshot row to its harvested manifest entry (stem + docs).
+            Exact (insurer, product) first; fall back to a unique product match —
+            the manifest sometimes records the underwriter in the insurer field
+            ("BavariaDirekt / ÖRAG") where the row only says "BavariaDirekt"."""
+            ins = row.insurer.strip().casefold()
+            prod = row.product.strip().casefold()
+            entry = self._doc_by_tariff.get((ins, prod))
+            if entry is not None:
+                return entry
+            # Fallback: same product, and the insurers overlap one way or the other
+            # ("BavariaDirekt" ⊂ "BavariaDirekt / ÖRAG"). The substring guard keeps a
+            # coincidental product-name clash across unrelated insurers from matching.
+            hits = [
+                v
+                for (i, p), v in self._doc_by_tariff.items()
+                if p == prod and (ins in i or i in ins)
+            ]
+            return hits[0] if len(hits) == 1 else None
+
         def _render_detail_sidebar(self, row: SnapshotRow) -> str:
             detail = _load_detail(row.insurer, row.product)
             lines: list[str] = []
@@ -969,7 +1071,31 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 lines.append(f"SB:       {row.selbstbeteiligung or '—'}")
                 lines.append("")
                 lines.append("[dim italic]No detailed record ingested yet.[/dim italic]")
-                lines.append("[dim]Run the pipeline to extract tariff details.[/dim]")
+
+            # --- Source documents + on-demand pull ([g]) ---
+            entry = self._doc_entry(row)
+            lines.append("")
+            if entry and entry.get("docs"):
+                lines.append("[underline]Quelldokumente[/underline]")
+                for dd in entry["docs"]:
+                    lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                    fname = (dd.get("file") or "")[:44]
+                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+                if detail:
+                    lines.append("[bright_green]  ✓ analysiert — Tab Detail \\[d][/bright_green]")
+                else:
+                    lines.append(
+                        "[bright_yellow]  \\[g] herunterladen + analysieren[/bright_yellow]"
+                    )
+                    lines.append(
+                        f"  [dim]→ fetch_docs.py {entry.get('stem')} --apply"
+                        " → intake → ingest → extract[/dim]"
+                    )
+            elif not detail:
+                lines.append(
+                    "[dim]Quell-PDFs noch nicht geharvestet — Browser-Schritt"
+                    " (Tarifdetails öffnen) nötig.[/dim]"
+                )
 
             return "\n".join(lines)
 
@@ -1142,6 +1268,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             )
             if row is None:
                 return
+            self._active_row = row  # target for the [g] download/analyze action
 
             # Update sidebar detail
             try:
@@ -1174,11 +1301,13 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     "[dim]The curated list or the snapshot has drifted — refresh "
                     "config/favorites.json or re-run scripts/snapshot.py.[/dim]"
                 )
+                self._active_row = None
                 try:
                     self.query_one("#fav-detail-content", Static).update(msg)
                 except NoMatches:
                     pass
                 return
+            self._active_row = row  # target for the [g] download/analyze action
             try:
                 self.query_one("#fav-detail-content", Static).update(
                     self._render_favorite_detail(row, fav)
@@ -1256,6 +1385,100 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._populate_market_table()
             self._update_header()
 
+        # --- On-demand: download + analyze the selected tariff ([g]) ---
+
+        def action_fetch_docs(self) -> None:
+            """Resolve the selected row to its harvested source PDFs and, after a
+            confirm, download + run the analyze pipeline in the background."""
+            row = self._active_row
+            if row is None:
+                self.notify("Erst eine Zeile wählen (↵).", severity="warning")
+                return
+            entry = self._doc_entry(row)
+            if not entry or not entry.get("docs"):
+                self.notify(
+                    "Keine geharvesteten Quell-URLs — erst Browser-Schritt "
+                    "(Tarifdetails öffnen).",
+                    severity="warning",
+                    timeout=6,
+                )
+                return
+            if _load_detail(row.insurer, row.product):
+                self.notify(
+                    "Schon analysiert — Tab Detail [d].", severity="information"
+                )
+                return
+
+            def _go(confirmed: bool | None) -> None:
+                if confirmed:
+                    self._run_pipeline(entry, row)
+
+            self.push_screen(ConfirmFetchScreen(entry, ANALYZE_MODEL), _go)
+
+        @work(thread=True, exclusive=True, group="pipeline")
+        def _run_pipeline(self, entry: dict, row: SnapshotRow) -> None:
+            """Run fetch_docs --apply → intake → ingest → extract for one tariff.
+            Runs off the UI thread; status is posted back via call_from_thread."""
+            import subprocess
+
+            stem = entry.get("stem", "")
+            steps = [
+                ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--apply"]),
+                ("Intake", ["uv", "run", "scripts/intake.py", "--apply"]),
+                ("Ingest", ["uv", "run", "scripts/ingest.py"]),
+                ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
+            ]
+            self.call_from_thread(
+                self.notify, f"Pipeline gestartet: {stem} …", timeout=4
+            )
+            for name, cmd in steps:
+                try:
+                    proc = subprocess.run(
+                        cmd,
+                        cwd=str(REPO_ROOT),
+                        capture_output=True,
+                        text=True,
+                        timeout=600,
+                    )
+                except (subprocess.TimeoutExpired, OSError) as exc:
+                    self.call_from_thread(
+                        self.notify,
+                        f"{name} fehlgeschlagen: {exc}",
+                        severity="error",
+                        timeout=8,
+                    )
+                    return
+                if proc.returncode != 0:
+                    detail = (proc.stderr or proc.stdout or "").strip().splitlines()
+                    tail = detail[-1] if detail else f"exit {proc.returncode}"
+                    self.call_from_thread(
+                        self.notify,
+                        f"{name} fehlgeschlagen: {tail}",
+                        severity="error",
+                        timeout=10,
+                    )
+                    return
+                self.call_from_thread(self.notify, f"{name} ✓", timeout=2)
+            self.call_from_thread(self._after_pipeline, row)
+
+        def _after_pipeline(self, row: SnapshotRow) -> None:
+            """Reload data so the freshly extracted record shows, then refresh panels."""
+            self._load_data()
+            self._populate_market_table()
+            self._populate_favorites_table()
+            for query, render in (
+                ("#detail-content", self._render_detail_sidebar),
+                ("#detail-full-content", self._render_detail_full),
+            ):
+                try:
+                    self.query_one(query, Static).update(render(row))
+                except NoMatches:
+                    pass
+            self.notify(
+                f"Analyse fertig: {row.insurer} {row.product} — Tab Detail [d].",
+                timeout=8,
+            )
+
     app = CheckApp(snapshot_path=snapshot_path)
 
     if screenshot_dir is not None:
@@ -1306,11 +1529,21 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 await pilot.pause()
                 app.save_screenshot(filename="detail.svg", path=str(screenshot_dir))
 
-                # --- Market: prime sidebar with the first row ---
+                # --- Market: prime sidebar with a harvested row if available, so
+                # the [g] download/analyze affordance is visible in the shot ---
                 if app._snapshot and app._snapshot.rows:
+                    market_row = next(
+                        (
+                            r
+                            for r in app._snapshot.rows
+                            if app._doc_entry(r) is not None
+                            and not _load_detail(r.insurer, r.product)
+                        ),
+                        app._snapshot.rows[0],
+                    )
                     try:
                         app.query_one("#detail-content", Static).update(
-                            app._render_detail_sidebar(app._snapshot.rows[0])
+                            app._render_detail_sidebar(market_row)
                         )
                     except Exception:
                         pass
@@ -1323,8 +1556,27 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 await pilot.pause()
                 app.save_screenshot(filename="diff.svg", path=str(screenshot_dir))
 
+                # --- Confirm modal ([g] gate) over the market tab ---
+                tabs.active = "market"
+                await pilot.pause()
+                sample = next(
+                    (
+                        app._doc_entry(r)
+                        for r in app._snapshot.rows
+                        if app._doc_entry(r) is not None
+                    ),
+                    None,
+                ) if app._snapshot else None
+                if sample is not None:
+                    await app.push_screen(ConfirmFetchScreen(sample, ANALYZE_MODEL))
+                    await pilot.pause()
+                    app.save_screenshot(filename="confirm.svg", path=str(screenshot_dir))
+
         asyncio.run(_shoot())
-        print(f"Saved screenshots (favorites/detail/market/diff .svg) to {screenshot_dir}")
+        print(
+            "Saved screenshots (favorites/detail/market/diff/confirm .svg) to "
+            f"{screenshot_dir}"
+        )
         return
 
     app.run()

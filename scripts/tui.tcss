@@ -163,6 +163,27 @@ DataTable > .datatable--odd-row {
     color: $text;
 }
 
+/* ── Confirm modal (download + analyze) ─────────────────────────────────── */
+
+ConfirmFetchScreen {
+    align: center middle;
+    background: $surface 60%;
+}
+
+#confirm-box {
+    width: 74;
+    height: auto;
+    padding: 1 2;
+    border: thick #c9a227;
+    background: $surface-darken-1;
+    color: $text;
+}
+
+#confirm-box Static {
+    width: 1fr;
+    height: auto;
+}
+
 /* ── Scrollbars ─────────────────────────────────────────────────────────── */
 
 ScrollableContainer {

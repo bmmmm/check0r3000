@@ -84,6 +84,13 @@ scripts/tui.py                                        interaktiver Browser über
   (alle Tarife, sortier-/filterbar), **Detail** (eingelesener Datensatz) und **Diff**
   (Snapshot-Vergleich). `--selftest` prüft das Laden ohne UI; `--screenshot DIR`
   rendert jeden Tab als SVG.
+- **Tarif auswählen → Quelldokumente + `[g]`**: Wählt man einen Tarif (Market oder
+  Favorites), zeigt das Detail-Panel seine gesicherten Quell-PDFs. Sind sie noch nicht
+  analysiert, lädt **`[g]`** sie nach Bestätigung herunter und fährt die Pipeline
+  (`fetch_docs --apply → intake → ingest → extract`) im Hintergrund — danach erscheint
+  der Datensatz im Detail-Tab. Das `extract`-Modell ist per `CHECK0R_ANALYZE_MODEL`
+  überschreibbar (Default `claude`). Tarife ohne gesicherte URLs verweisen auf den
+  Browser-Schritt „Tarifdetails".
 
 ```sh
 uv run scripts/check24_query.py --all-insurers   # Result-URL für alle Versicherer
