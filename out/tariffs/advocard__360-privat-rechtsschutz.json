@@ -1,96 +1,119 @@
 {
   "insurer": "ADVOCARD Rechtsschutzversicherung AG",
   "tariff": "ADVOCARD-360°-PRIVAT",
-  "stand": "04.2024",
+  "stand": "01.2026 (ARB 2024)",
   "modules": {
     "privat": {
       "included": true,
       "level": null,
-      "note": "Baustein P / § 30 A; Schadenersatz, Vertrags-/Sachenrecht, Steuer, Sozial, Verwaltung, Straf"
+      "note": "Privat-Rechtsschutz inkl. erneuerbare Energien bis 25.000 €"
     },
     "beruf": {
       "included": true,
       "level": null,
-      "note": "Baustein B / § 30 B; Arbeits-RS für Nichtselbstständige"
+      "note": "nicht-selbstständige Tätigkeit (Arbeits-, Disziplinar-/Standes-RS)"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": "Baustein V / § 30 C; inkl. Carsharing, Fahrrad, E-Scooter"
+      "note": "alle Kfz zu Lande, ÖPNV, Fußgänger/Radfahrer"
     },
     "wohnen_immobilien": {
       "included": true,
       "level": null,
-      "note": "Baustein W / § 30 D; selbstgenutzte Gebäude in DE; Einliegerwohnung als Vermieter mitversichert"
+      "note": "selbst bewohnte Immobilien; kein Wohnungseigentumsrecht"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "§ 33 / § 30 H; VS-Summe 100.000 EUR je Fall; inkl. Identity Protection"
+      "note": "ADVOCARD-Internet-Rechtsschutz, eigene VS 100.000 €"
     },
     "steuer": {
       "included": true,
       "level": null,
-      "note": "§ 2 e); in Privat, Beruf, Verkehr, Wohnen enthalten; nur dt. Finanz-/Verwaltungsgerichte"
+      "note": "nur vor dt. Finanz-/Verwaltungsgerichten (§ 2e)"
     },
     "sozialgericht": {
       "included": true,
       "level": null,
-      "note": "§ 2 f); vor dt. Sozialgerichten und in Widerspruchsverfahren"
+      "note": "vor dt. Sozialgerichten (§ 2f)"
     },
     "verwaltungsrecht": {
       "included": true,
       "level": null,
-      "note": "§ 2 g); Verkehr ohne Wartezeit, nicht-verkehrsrechtlich 3 Monate Wartezeit"
+      "note": "§ 2g bb (nicht-verkehrsrechtlich) + § 2g aa im Verkehr"
     }
   },
   "coverage": {
-    "versicherungssumme": "unbegrenzt; Ausnahme Internet-RS 100.000 EUR je Fall; Außerhalb Geltungsbereich max. 1.000.000 EUR",
-    "selbstbeteiligung": "wählbar 150 oder 300 EUR (Schadenfreiheitsrabatt reduziert SB schrittweise auf 0 EUR)",
+    "versicherungssumme": "unbegrenzt je Rechtsschutzfall (einzelne Bereiche limitiert)",
+    "selbstbeteiligung": "wählbar 150 oder 300 EUR; per Schadenfreiheitsrabatt bis 0 EUR reduzierbar",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "Schadenersatz-RS (§ 2 a)",
-      "Verwaltungs-RS Verkehr (§ 2 g aa)",
-      "Disziplinar- und Standes-RS (§ 2 h)",
-      "Straf-RS (§ 2 i)",
-      "Ordnungswidrigkeiten-RS (§ 2 j)",
-      "Telefonische/Online-Rechtsberatung"
+      "Schadenersatz-RS (§ 2a)",
+      "Verkehrs-Straf-/OWi-RS, Verkehrs-Verwaltungs-RS",
+      "Disziplinar-/Standes-RS, Straf-RS (§ 2h, 2i)",
+      "telefon./Online-Rechtsberatung (keine Wartezeit)",
+      "Familien-/Erbrecht-Beratung (§ 2k aa/bb)",
+      "Opfer-RS, Spezial-Straf-RS, Vorsorge-Beratung",
+      "Kfz-Vertrags-/Steuer-/Sozialsachen",
+      "Scheidung/Familienrecht: 1 Jahr",
+      "Studienplatzvergabe: 1 Jahr"
     ],
-    "geltungsbereich": "Europa inkl. Mittelmeeranrainer, Kanarische Inseln, Madeira; weltweit bei vorübergehendem Auslandsaufenthalt",
-    "vertragslaufzeit": "1 oder 3 Jahre"
+    "geltungsbereich": "Europa, Mittelmeer-Anliegerstaaten, Kanaren, Madeira; weltweit temporär bis 1 Mio. EUR; Steuer/Sozial/Verwaltung/Opfer nur dt. Gerichte",
+    "vertragslaufzeit": "1 oder 3 Jahre, Verlängerung jeweils 1 Jahr"
   },
   "leistungen": [
-    "Telefonische Rechtsberatung",
+    "telefonische Rechtsberatung",
     "Online-Rechtsberatung per Chat",
-    "Außergerichtliche Mediation (bis 180 EUR/Stunde, keine SB)",
+    "Mediation (max. 180 €/Std.)",
     "Strafkaution als zinsloses Darlehen",
-    "Identity Protection Portal (Dark-/Deep-/Public-Web-Monitoring, Security-Software)",
-    "Vorsorgliche anwaltliche Beratung (bis 1.000 EUR, keine SB)",
-    "Übersetzungskosten im Ausland",
-    "Schadenfreiheitsrabatt ab 3. schadenfreiem Versicherungsjahr",
-    "Beitragsfreistellung bei Arbeitslosigkeit",
-    "Psychologische Erstberatung bei Cybermobbing",
-    "Rechtsschutz für Opfer von Gewaltstraftaten (§ 2 l)"
+    "vorsorgliche anwaltliche Beratung (bis 1.000 €/Jahr)",
+    "Erstberatung Familien-/Erbrecht (bis 1.000 €)",
+    "Identity Protection / Online-Monitoring",
+    "psychologische Erstberatung bei Cybermobbing",
+    "Gebärdendolmetscher",
+    "Online-Checks & Vorsorge-/Testaments-Generator",
+    "Fluggast- und Reisemängelhilfe",
+    "Schadenfreiheitsrabatt (SB-Reduktion)",
+    "Beitragsfreistellung bei Arbeitslosigkeit (max. 1 Jahr)",
+    "erneuerbare Energien/E-Ladestation (bis 25.000 €)",
+    "Auslands-Anwalts-, Reise- und Dolmetscherkosten"
   ],
   "ausschluesse": [
-    "Kauf/Verkauf/Finanzierung zu bebauender Grundstücke",
-    "Patent- und Markenrecht",
-    "Kapitalanlagestreitigkeiten (Erwerb, Veräußerung, Verwaltung, Finanzierung)",
-    "Spiel-/Wettverträge und Gewinnzusagen",
-    "Familien-/Erbrecht weitgehend ausgeschlossen (nur § 2 k mit Höchstbetrag)",
-    "Vorsätzlich begangene Straftaten",
-    "Krieg, Aufruhr, innere Unruhen",
-    "Wohnungseigentumsrecht (Streit mit Miteigentümern)"
+    "Baufinanzierung / Kauf bebaubarer Grundstücke",
+    "Errichtung/Planung von Gebäuden",
+    "Kapitalanlagen (Erwerb/Verwaltung/Finanzierung)",
+    "Patent-/Marken-/Urheberrecht / geistiges Eigentum",
+    "Kartell- und Wettbewerbsrecht",
+    "Spiel-/Wett-/Spekulationsgeschäfte",
+    "Familien-/Erbrecht (außer § 2k Beratung/Scheidung begrenzt)",
+    "Verfassungs- und internationale Gerichte",
+    "Insolvenz über eigenes Vermögen",
+    "Enteignung/Planfeststellung/Baurecht (BauGB)",
+    "Halte-/Parkverstöße",
+    "Asyl- und Ausländerrecht",
+    "vorsätzliche Straftaten / Verbrechen",
+    "Krieg/innere Unruhen/Nuklearschäden",
+    "Abwehr von Schadenersatzansprüchen (außer Vertragsverletzung)"
   ],
   "besonderheiten": [
-    "ADVOCARD-360°-PRIVAT: Komplettpaket aus 5 Bereichen (Privat, Beruf, Verkehr, Wohnen, Internet)",
-    "Identity Protection inkl. Dark-Web-Monitoring und Reputationsmanagement",
-    "Differenzdeckung für Wechsler von Vorversicherer möglich",
-    "SB-Schadenfreiheitsrabatt: sinkt ab 3. Jahr schrittweise bis auf 0 EUR",
-    "Rechtsschutz für Kleingewerbe (Nebentätigkeit bis 22.000 EUR Umsatz) in Bausteinen inkludierbar",
-    "Online-Services: Mietvertrag-Check, Vorsorgevollmacht-Generator, Zeugnis-Check, Kündigungsschutz-Check"
+    "Versicherungssumme grundsätzlich unbegrenzt (Teilbereiche limitiert)",
+    "Familienrecht stark eingeschränkt: nur Beratung + Scheidung max. 2.000 €, 1 Jahr Wartezeit",
+    "Schadenfreiheitsrabatt senkt Selbstbeteiligung bis auf 0 €",
+    "360°-Pakete bündeln alle Bausteine (Privat/Gewerbe)",
+    "Internet-Rechtsschutz mit eigener VS 100.000 €",
+    "Identity Protection (Europ Assistance) inklusive",
+    "Differenzdeckung zum Vorversicherer möglich",
+    "Kleingewerbe bis 22.000 € Jahresumsatz mitversichert",
+    "Tarifvarianten: Single/Paar/Familie/Senioren/Beamte",
+    "Beitragsrabatte: 5 % Jahreszahlung, 5 % Sofortrabatt schadenfrei",
+    "umfangreiche Online-Self-Service-Tools (Checks/Generatoren)",
+    "24/7-Hotline"
   ],
   "beitrag": null,
+  "_input_hash": "9108634d7189f55c9625febe987a21c67c75179808082a2a5ba2cf5f0cf63479",
+  "_model": "claude",
+  "_filter": "none",
   "sources": [
     {
       "doctype": "avb",
@@ -100,8 +123,5 @@
       "doctype": "produktinfoblatt",
       "content_sha256": "3f59b041e5545823b4e7d46aad1cc5118975fd7e604ce2dab5efbfb2155f8aec"
     }
-  ],
-  "_input_hash": "20e89c0af8b6eed91a71b62be4cfcaa418133884679d28a740af1c833e05f7b7",
-  "_model": "sonnet",
-  "_filter": "avb-filter"
+  ]
 }

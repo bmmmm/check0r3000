@@ -1,108 +1,102 @@
 {
   "insurer": "ARAG SE",
-  "tariff": "Aktiv-Rechtsschutz",
-  "stand": "02.2022",
+  "tariff": "Aktiv-Rechtsschutz (ARB 2026)",
+  "stand": "03.2026",
   "modules": {
     "privat": {
       "included": true,
       "level": null,
-      "note": "Basis/Komfort/Premium wählbar (§§ 26b, 26, 26p ARB 2026)"
+      "note": "Aktiv-Rechtsschutz für Privatpersonen, Risiken des täglichen Lebens (§ 26/26 b/26 p)"
     },
     "beruf": {
       "included": true,
       "level": null,
-      "note": "Als Teilbereich in §§ 26, 26p; separater Vereins-RS §24"
+      "note": "Arbeits-Rechtsschutz, beruflich nicht selbstständig; abwählbarer Baustein (§ 2 b, § 26 Abs. 1 b)"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": "Basis/Komfort/Premium wählbar (§§ 21b, 21, 21p ARB 2026)"
+      "note": "Verkehrsbereich bzw. eigener Aktiv-Rechtsschutz Verkehr (§ 21/21 b/21 p, § 26 Abs. 1 d)"
     },
     "wohnen_immobilien": {
       "included": true,
       "level": null,
-      "note": "Als Teilbereich in §26 oder separat §§ 29b, 29, 29p ARB 2026"
+      "note": "Wohnungs-/Grundstücks-Rechtsschutz; Immobilienbereich bzw. Aktiv-Rechtsschutz Immobilie (§ 2 c, § 29/29 b/29 p)"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "web@ktiv Basis/Komfort/Premium optional zubuchbar (Sonderbedingungen 12, 12a, 12b)"
+      "note": "Optionaler Baustein ARAG web@ktiv (Basis/Komfort/Premium, Sonderbedingung 12/12 a/12 b)"
     },
     "steuer": {
       "included": true,
       "level": null,
-      "note": "§ 2e ARB; in allen Hauptmodulen enthalten, vor deutschen Finanz- und Verwaltungsgerichten"
+      "note": "Steuer-Rechtsschutz vor Finanz-/Verwaltungsgerichten (§ 2 e)"
     },
     "sozialgericht": {
       "included": true,
       "level": null,
-      "note": "§ 2f ARB; vor deutschen Sozialgerichten und im Widerspruchsverfahren"
+      "note": "Sozial-Rechtsschutz vor Sozialgerichten (§ 2 f)"
     },
     "verwaltungsrecht": {
       "included": true,
       "level": null,
-      "note": "§ 2g ARB; verkehrsrechtlich und nicht-verkehrsrechtlich (Letzteres mit 3 Monaten Wartezeit)"
+      "note": "Verwaltungs-Rechtsschutz Verkehrs- und Nichtverkehrssachen (§ 2 g)"
     }
   },
   "coverage": {
-    "versicherungssumme": "unbegrenzt (Europa, alle Stufen); weltweit je nach Modul und Stufe begrenzt (z. B. 200.000 EUR Basis)",
-    "selbstbeteiligung": "wählbar; Aktiv-RS Basis für Selbstständige (§ 28b): 300 EUR fest; Komfort/Premium: kein Abzug bei anwaltlicher Erstberatung",
+    "versicherungssumme": "unbegrenzt in Europa (Kaution und weltweit je nach Variante begrenzt)",
+    "selbstbeteiligung": null,
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "Verkehrs-Rechtsschutz (keine Wartezeit)",
-      "Schadenersatz-Rechtsschutz (keine Wartezeit)",
-      "Mediation § 5a (keine Wartezeit)",
-      "DirektSchutz / Differenzdeckung (keine Wartezeit)",
-      "Unterhalts-Rechtsschutz: 12 Monate",
-      "Ehe-Rechtsschutz vor Gerichten: 36 Monate",
-      "Bauherren-Rechtsschutz: 6 Monate",
-      "Vorsorge-Rechtsschutz (Klausel 7): 6 Monate"
+      "keine Wartezeit: Schadenersatz, Verkehr, Straf/OWi",
+      "keine Wartezeit: Mediation",
+      "6 Monate: Bauherren-Rechtsschutz, Vorsorge-Rechtsschutz",
+      "1 Jahr: Unterhalts-Rechtsschutz, Erb-Rechtsschutz",
+      "3 Jahre: Ehe-Rechtsschutz, Studienplatzklagen"
     ],
-    "geltungsbereich": "Europa (geografisch), Mittelmeeranrainer, Kanaren, Madeira, Azoren; weltweit bei vorübergehendem Aufenthalt bis 12 Monate",
-    "vertragslaufzeit": "1 oder 3 Jahre"
+    "geltungsbereich": "Europa, Mittelmeer-Anrainer, Kanaren, Madeira, Azoren; weltweit temporär bis 1 Jahr Aufenthalt",
+    "vertragslaufzeit": "1 oder 3 Jahre, danach stillschweigende Verlängerung um je 1 Jahr"
   },
   "leistungen": [
-    "ARAG JuraTel® telefonische Rechtsberatung (in über 20 europ. Ländern + USA)",
-    "Mediation außergerichtlich (bis 3.000 EUR/Mediation, 6.000 EUR/Kalenderjahr)",
+    "telefonische Rechtsberatung (ARAG JuraTel®)",
+    "Mediation bis 3.000 €/Fall, 6.000 €/Jahr",
+    "Mobiler Anwalt (Hausbesuch)",
     "Strafkaution als zinsloses Darlehen",
-    "Mobiler Anwalt – Hausbesuch (Komfort/Premium)",
-    "Kautionszahlung und Dolmetscherkosten im Ausland",
-    "Psychologische Soforthilfe nach Verkehrsunfall (Premium)",
-    "Sachverständigenkosten außergerichtlich",
-    "Online-Forderungsmanagement für Vermieter und Selbstständige",
-    "Kennzeichen-Wiederbeschaffung (Premium, Klausel 11)",
-    "Leistungsupdate-Garantie beitragsneutral (Klausel 8)",
-    "Beratungs-Rechtsschutz Familien-/Lebenspartnerschafts-/Erbrecht inkl. Patientenverfügung (§ 2k)",
-    "Vertrags- und Arbeitszeugnischeck JuraCheck® (Sonderbedingung 13/16)",
-    "Webcheck und Onlinerechtsberatung (JuraCheck/web@ktiv)",
-    "Darknet-Monitoring (web@ktiv Komfort/Premium)",
-    "Vorversicherungsgarantie (Premium, § 26p/28p)",
-    "DirektSchutz: Sofortschutz für Autokauf, Mietverträge, rückwirkende Mediation (Premium-Annex)"
+    "Online-Rechtsberatung und Dokumenten-Center",
+    "telefonische psychologische Soforthilfe",
+    "Vermittlung von Legal-Tech-Dienstleistern",
+    "Vertrags- und Arbeitszeugnis-Check (ARAG JuraCheck®)",
+    "Übersetzung und Dolmetscher im Ausland",
+    "freie Anwaltswahl",
+    "Schieds-/Stichentscheid bei Deckungsablehnung"
   ],
   "ausschluesse": [
-    "Streitigkeiten aus Baufinanzierung und Immobilienfonds-Beteiligung",
-    "Patent-, Marken- und sonstiges Immaterialgüterrecht (außer Beratungs-RS im Premium Selbstständige)",
-    "Spiel- und Wettverträge, Gewinnzusagen",
-    "Krieg, Aufruhr, Nuklear- und Bergbauschäden",
-    "Vorsätzliche rechtswidrige Handlungen des Versicherungsnehmers (§ 3 Abs. 4 ARB)",
-    "Geltendmachung fremder Ansprüche, Bürgschaftsstreitigkeiten (§ 3 Abs. 3d ARB)",
-    "Verbrechen (Straftaten mit Mindestfreiheitsstrafe 1 Jahr)",
-    "Kartellrecht",
-    "Rechtsschutzfall vor Versicherungsbeginn (Vorvertraglichkeit, § 4 Abs. 4 ARB)",
-    "Selbstständige Tätigkeit im Privat-RS (mit Ausnahmen für Privatfahrzeuge und Nebentätigkeit)"
+    "Baufinanzierung und Errichtung/Kauf bebaubarer Grundstücke",
+    "Kapitalanlagegeschäfte",
+    "Patent-, Marken-, Urheber-, Designrecht (geistiges Eigentum)",
+    "Kartell- und Wettbewerbsrecht",
+    "Familien-/Lebenspartnerschafts-/Erbrecht (nur Beratungs-Rechtsschutz)",
+    "Spiel-/Wettverträge, Gewinnzusagen",
+    "Verfassungsgerichte und internationale Gerichtshöfe",
+    "vorsätzlich begangene Straftaten",
+    "eigenes Insolvenzverfahren des Versicherungsnehmers",
+    "Asyl- und Ausländerrecht",
+    "Enteignung/Planfeststellung (außer Premium)"
   ],
   "besonderheiten": [
-    "Dreistufiges Leistungssystem Basis/Komfort/Premium für alle Hauptmodule separat wählbar",
-    "Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren ununterbrochener Versicherung (§ 4 Abs. 6 ARB)",
-    "Vorversicherungsgarantie in Premium: Regulierung nach Bedingungen des nahtlosen Vorvertrags",
-    "Kein Selbstbeteiligungs-Abzug bei anwaltlicher Erstberatung (Komfort/Premium, § 5 Abs. 3c ARB)",
-    "web@ktiv inkl. Vermögensschaden-Erstattung (3.000 EUR/Fall) und Elektronik-Schutz (5.000 EUR/Fall) als eigenständiges Modul",
-    "Erweiterter Straf-Rechtsschutz optional zubuchbar bis 300.000 EUR Versicherungssumme",
-    "Wirtschaftsmediation für Selbstständige über Sonderbedingungen eingeschlossen",
-    "Top-Schutzbrief und Fahrzeug-Schutzbrief als optionale Assistance-Annexe",
-    "Wartezeit bei Ehe-Rechtsschutz 3 Jahre (Schutz vor Zweckabschlüssen)"
+    "drei Leistungsstufen Basis/Komfort/Premium wählbar",
+    "Update-Garantie für beitragsneutrale Leistungserweiterungen",
+    "Vorsorge-Rechtsschutz für neu hinzukommende Risiken",
+    "Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren",
+    "Vorversicherungs-Garantie (Premium)",
+    "Schutzbrief-Bausteine inkl. Auslandskrankenschutz",
+    "Bündelrabatte bei Kombination mehrerer Bausteine"
   ],
   "beitrag": null,
+  "_input_hash": "0961fe4ca36b54a9e7bfa0144a6f072e6a7c7fe0f823d9b970d29e1f4bbfbdbb",
+  "_model": "claude",
+  "_filter": "none",
   "sources": [
     {
       "doctype": "avb",
@@ -116,8 +110,5 @@
       "doctype": "weitere_unterlagen",
       "content_sha256": "6abaeef287ab921ae35ee3f0bdf66304abe80ad913f5f43b4e6b04331151c049"
     }
-  ],
-  "_input_hash": "9930d97765bc00e2bd77732b6c1085988197e000058c7d8503d89708867b8004",
-  "_model": "sonnet",
-  "_filter": "avb-filter"
+  ]
 }
