@@ -21,7 +21,7 @@ background, after a confirm; [G] runs the same analysis WITHOUT the download whe
 the source PDFs are already in data/raw/<stem>/. The extract model defaults to
 "claude"; override with the CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were
 never harvested point you back to the browser "Tarifdetails" step. The Vergleich
-tab [x] shows an across-tariff coverage comparison (modules, coverage, and
+tab [v] shows an across-tariff coverage comparison (modules, coverage, and
 taxonomy-aligned Leistungen/Ausschlüsse) built from the analyzed records: [w]
 toggles the verbatim per-insurer wording (compact ↔ verbose), [t] opens a modal with
 the full untruncated wording per category across all tariffs, [c] hides/shows the
@@ -1251,7 +1251,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         GROUPS = [
             ("Navigation", [
-                ("v / m / x", "Favoriten / Markt / Vergleich"),
+                ("y / x / v", "Favoriten / Markt / Vergleich"),
                 ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
                 ("d", "Detail-Band unter der Tabelle ein/aus"),
             ]),
@@ -1263,7 +1263,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 ("u", "Favorit an/aus"),
                 ("D", "lokale Daten löschen (Umfang im Dialog)"),
             ]),
-            ("Vergleich \\[x]", [
+            ("Vergleich \\[v]", [
                 ("c", "Vergleich verwalten — Tarife ein-/ausblenden, leeren, alle"),
                 ("w", "Wortlaut ein/aus (kompakt ↔ ausführlich)"),
                 ("t", "Volltext-Modal: ganze Texte je Kategorie, alle Tarife"),
@@ -1302,9 +1302,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         BINDINGS = [
             # Footer (show=True): only the most-used keys; [?] lists everything.
-            Binding("v", "switch_tab('favorites')", "Favorites", show=True),
-            Binding("m", "switch_tab('market')", "Market", show=True),
-            Binding("x", "switch_tab('diff')", "Vergleich", show=True),
+            Binding("y", "switch_tab('favorites')", "Favorites", show=True),
+            Binding("x", "switch_tab('market')", "Market", show=True),
+            Binding("v", "switch_tab('diff')", "Vergleich", show=True),
             Binding("d", "toggle_detail", "Details", show=True),
             Binding("g", "fetch_docs", "Get docs", show=True),
             Binding("question_mark", "help", "Help", show=True, key_display="?"),
@@ -1385,7 +1385,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def compose(self) -> ComposeResult:
             yield Header(show_clock=True)
             with TabbedContent(id="tabs", initial="favorites"):
-                with TabPane("★ Favorites [v]", id="favorites"):
+                with TabPane("★ Favorites [y]", id="favorites"):
                     yield Label("", id="fav-knockout")
                     with Vertical(id="fav-layout"):
                         yield DataTable(id="fav-table", cursor_type="row", zebra_stripes=True)
@@ -1394,7 +1394,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                                 "Select a favorite to see full details, SB variants and documents.",
                                 id="fav-detail-content",
                             )
-                with TabPane("Market [m]", id="market"):
+                with TabPane("Market [x]", id="market"):
                     yield Input(
                         placeholder="Filter by insurer or product…",
                         id="filter-input",
@@ -1404,7 +1404,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         yield DataTable(id="market-table", cursor_type="row", zebra_stripes=True)
                         with ScrollableContainer(id="detail-panel", classes="detail-band"):
                             yield Static("Select a row to see details.", id="detail-content")
-                with TabPane("Vergleich [x]", id="diff"):
+                with TabPane("Vergleich [v]", id="diff"):
                     with ScrollableContainer(id="diff-panel"):
                         yield Static("Loading diff…", id="diff-content")
             yield Footer()
@@ -1668,7 +1668,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             if detail_rec is not None:
                 lines.append(
                     "[bold underline]Tarifdetails[/bold underline]   "
-                    "[dim](\\[o] Quelle öffnen · \\[x] Vergleich)[/dim]"
+                    "[dim](\\[o] Quelle öffnen · \\[v] Vergleich)[/dim]"
                 )
                 lines += self._record_body_lines(detail_rec)
             else:
@@ -2298,22 +2298,27 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def on_tabbed_content_tab_activated(
             self, event: TabbedContent.TabActivated
         ) -> None:
-            """Move focus to the activated tab's primary DataTable. Without this,
-            Textual focuses the first focusable widget in the new pane — on the
+            """Move focus to the activated tab's primary scrollable widget. Without
+            this, Textual focuses the first focusable widget in the new pane — on the
             Market tab that is the dock-top #filter-input, which then swallows the
-            global single-letter shortcuts (v/m/x/…) as filter text instead of
-            switching tabs. That is the 'm flickers but does not switch' bug: the
-            keypress filtered the table rather than navigating. The filter stays
-            reachable with [f]."""
+            global single-letter shortcuts (y/x/v/…) as filter text instead of
+            switching tabs. The filter stays reachable with [f].
+
+            The Vergleich tab MUST be in this map too: otherwise switching to it left
+            focus stranded on the now-hidden source table, so the next tab shortcut
+            (and arrow-scrolling the diff) did not register — the 'x does not switch
+            from Favorites' bug. Every tab now lands focus on a stable, non-Input
+            widget of its own pane."""
             try:
                 active = self.query_one("#tabs", TabbedContent).active
             except NoMatches:
                 return
-            target = {"favorites": "#fav-table", "market": "#market-table"}.get(active)
+            target = {"favorites": "#fav-table", "market": "#market-table",
+                      "diff": "#diff-panel"}.get(active)
             if not target:
                 return
             try:
-                self.query_one(target, DataTable).focus()
+                self.query_one(target).focus()
             except NoMatches:
                 pass
 
