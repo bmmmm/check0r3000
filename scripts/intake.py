@@ -65,6 +65,17 @@ def slug(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
 
 
+def is_pdf(p: Path) -> bool:
+    """Cheap content gate: a real PDF is non-empty and starts with the %PDF- magic
+    bytes. Guards against a 0-byte/truncated download or an HTML error page saved
+    under a .pdf name (the suffix alone proves nothing)."""
+    try:
+        with p.open("rb") as f:
+            return f.read(5) == b"%PDF-"
+    except OSError:
+        return False
+
+
 def classify(pdf: Path) -> dict:
     # URL-decode (%C2%B0 -> °) and unify spaces/underscores so filenames with
     # blanks, mixed separators or download-encoding all parse the same way.
@@ -74,7 +85,10 @@ def classify(pdf: Path) -> dict:
     doctype = None
     remainder = stem
     for prefix, dt in DOCTYPE_PREFIXES:
-        if low.startswith(prefix):
+        # Require a separator after the prefix (stem has spaces/underscores collapsed
+        # to single '_'), so 'produktinformationsblattes_…' does not match and leak a
+        # mangled fragment into the tariff slug.
+        if low == prefix or low.startswith(prefix + "_"):
             doctype = dt
             remainder = stem[len(prefix):].lstrip("_ -")
             break
@@ -86,8 +100,13 @@ def classify(pdf: Path) -> dict:
         if key in KNOWN_INSURERS:
             insurer_slug, insurer_kw = KNOWN_INSURERS[key], key
             break
-    if insurer_slug is None and tokens:
-        insurer_slug, insurer_kw = slug(tokens[0]), tokens[0].lower()
+    if insurer_slug is None:
+        # Fall back to the first NON-boilerplate token, not tokens[0]: a name starting
+        # with a legal-form word ('Deutschland_…', 'Versicherung_…') would otherwise
+        # become the insurer slug. If every token is boilerplate, stay None -> 'unbekannt'.
+        guess = next((t for t in tokens if t.lower() not in LEGAL_STOPWORDS), None)
+        if guess:
+            insurer_slug, insurer_kw = slug(guess), guess.lower()
 
     tariff_tokens = [
         t for t in tokens
@@ -123,7 +142,17 @@ def import_files(paths: list[str], move: bool) -> int:
             print(f"  ! kein PDF, übersprungen: {src.name}", file=sys.stderr)
             rc = 1
             continue
+        if not is_pdf(src):
+            print(f"  ! kein gültiges PDF (leer/kein %PDF-Header), übersprungen: "
+                  f"{src.name}", file=sys.stderr)
+            rc = 1
+            continue
         dest = INBOX / src.name  # keep original filename so classify() can parse it
+        if dest.exists():
+            print(f"  ! existiert schon in der Inbox, übersprungen (kein Überschreiben): "
+                  f"{src.name}", file=sys.stderr)
+            rc = 1
+            continue
         if move:
             shutil.move(str(src), str(dest))
         else:
@@ -159,14 +188,21 @@ def main() -> int:
 
     plans = [classify(p) for p in pdfs]
 
-    # Detect target collisions.
+    # Detect target collisions (within this batch) and content / on-disk problems.
     seen: dict[Path, Path] = {}
     for p in plans:
+        if not is_pdf(p["src"]):
+            p["warns"].append("kein gültiges PDF (leer/kein %PDF-Header)")
         if p["target"] in seen:
             p["warns"].append(f"KOLLISION mit {seen[p['target']].name}")
         else:
             seen[p["target"]] = p["src"]
+        # An already-sorted file at the target must not be silently overwritten:
+        # shutil.move clobbers a destination FILE, destroying a non-regenerable PDF.
+        if p["target"].exists():
+            p["warns"].append(f"ZIEL existiert bereits: {p['target'].relative_to(ROOT)}")
 
+    blockers = ("unbekannter Dokumenttyp", "KOLLISION", "ZIEL existiert", "kein gültiges PDF")
     print(f"{'DRY-RUN' if not args.apply else 'APPLY'} — {len(plans)} Datei(en):\n")
     rc = 0
     for p in plans:
@@ -174,7 +210,7 @@ def main() -> int:
         print(f"    -> {p['target'].relative_to(ROOT)}")
         for w in p["warns"]:
             print(f"    ! {w}")
-        if any("unbekannter Dokumenttyp" in w or "KOLLISION" in w for w in p["warns"]):
+        if any(b in w for w in p["warns"] for b in blockers):
             rc = 1
             print("    (übersprungen)" if args.apply else "")
             continue

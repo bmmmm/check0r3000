@@ -141,7 +141,12 @@ def merge_offer(key: str, offer: dict, offer_bytes: bytes) -> tuple[dict, list[s
 
     # --- beitrag: replace the null premium wholesale; never clobber an LLM price ---
     bt = offer.get("beitrag")
-    if bt:
+    if bt is not None:
+        # A present-but-empty beitrag (schema allows {}) used to be skipped silently by
+        # `if bt:`, so a user who wrote the block got no premium and a success report.
+        if bt.get("monatlich_eur") is None and bt.get("jaehrlich_eur") is None:
+            fail(f"{key}: data/offers/{key}.json has an empty beitrag block (no "
+                 f"monatlich_eur/jaehrlich_eur). Remove it or fill in a premium.")
         if not is_empty_beitrag(source.get("beitrag")):
             fail(f"{key}: out/tariffs record already has a non-null beitrag "
                  f"({source.get('beitrag')!r}). Overlay refuses to overwrite a price "
@@ -162,12 +167,21 @@ def merge_offer(key: str, offer: dict, offer_bytes: bytes) -> tuple[dict, list[s
         overridden.append("beitrag")
 
     # --- module levels: only on included modules whose level is not already set ---
+    # The pure twin is LLM-extracted and written without schema validation (extract.py),
+    # so guard its shape here with an actionable error rather than crashing on a dict
+    # index when a degraded/hand-edited record has modules:null or a non-dict module.
     mods = merged.setdefault("modules", {})
+    if not isinstance(mods, dict):
+        fail(f"{key}: out/tariffs/{key}.json has a malformed 'modules' "
+             f"({type(mods).__name__}, expected an object). Re-run scripts/extract.py.")
     for m, pick in (offer.get("modules") or {}).items():
         if m not in mods:
             fail(f"{key}: offer sets a level for module '{m}', but the tariff record "
                  f"has no such module. Overlay never creates modules (the 'included' "
                  f"flag is the AVB-derived fact). Known modules: {', '.join(sorted(mods))}.")
+        if not isinstance(mods[m], dict):
+            fail(f"{key}: module '{m}' in the tariff record is not an object "
+                 f"({type(mods[m]).__name__}); the twin is malformed — re-run extract.")
         if not mods[m].get("included"):
             fail(f"{key}: offer sets level '{pick['level']}' for module '{m}', but the "
                  f"tariff record marks it included=false (the AVB does not cover it). "
@@ -222,6 +236,11 @@ def self_check(key: str, source: dict, merged: dict, overridden: list[str],
 
     # No module inclusion flag may flip (explicit, beyond the containment diff).
     for m, mod in (source.get("modules") or {}).items():
+        # A module the offer never referenced is not guarded in merge_offer; tolerate a
+        # malformed twin here too instead of crashing on .get before the schema gate.
+        if not isinstance(mod, dict) or not isinstance(merged["modules"].get(m), dict):
+            fail(f"{key}: modules.{m} is not an object in the tariff record — the twin "
+                 f"is malformed; re-run scripts/extract.py.")
         if mod.get("included") != merged["modules"][m].get("included"):
             fail(f"{key}: overlay changed modules.{m}.included — forbidden.")
 

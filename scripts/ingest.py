@@ -51,19 +51,34 @@ def main() -> int:
     records: list[dict] = []
     by_content: dict[str, list[str]] = defaultdict(list)
     no_text: list[str] = []
+    failed: list[str] = []
 
     for pdf in pdfs:
         insurer, tariff = pdf.parts[-3], pdf.parts[-2]
         doctype = pdf.stem
-        text, npages = extract_text(pdf)
+        ident = f"{insurer}/{tariff}/{doctype}"
+        # Isolate per-file failures: one encrypted/corrupt/0-byte PDF must not abort
+        # the whole batch (mirroring fetch_docs/check) and lose the manifest for every
+        # other document. pypdf raises a wide family (FileNotDecryptedError,
+        # EmptyFileError, PdfReadError, ...) — name the file so the error is actionable.
+        try:
+            text, npages = extract_text(pdf)
+        except Exception as e:  # noqa: BLE001
+            print(f"  SKIPPED    {ident:<48} extract failed: {type(e).__name__}: {e}",
+                  file=sys.stderr)
+            failed.append(ident)
+            continue
         stripped = text.strip()
         chash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        # Dedup grouping keys on the *stripped* text, so two copies of one generic
+        # package that differ only in trailing page whitespace still group; the record
+        # keeps the raw-text hash (extract.py caches on it, whitespace-sensitive).
+        dhash = hashlib.sha256(stripped.encode("utf-8")).hexdigest()
 
         dest = OUT / insurer / tariff / f"{doctype}.txt"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(text, encoding="utf-8")
 
-        ident = f"{insurer}/{tariff}/{doctype}"
         records.append({
             "insurer": insurer,
             "tariff": tariff,
@@ -75,10 +90,10 @@ def main() -> int:
         })
         # Only group documents that actually yielded text. A scanned/image-only PDF
         # extracts to "" and every empty one hashes identically — grouping them
-        # would raise a bogus "byte-for-byte identical across tariffs" warning when
-        # the real problem is that the PDF needs OCR.
+        # would raise a bogus "identical across tariffs" warning when the real problem
+        # is that the PDF needs OCR.
         if stripped:
-            by_content[chash].append(ident)
+            by_content[dhash].append(ident)
         else:
             no_text.append(ident)
         print(f"  extracted  {ident:<48} {npages:>3}p  {len(stripped):>6}ch  {chash[:12]}")
@@ -90,16 +105,27 @@ def main() -> int:
     ]
 
     manifest = {"documents": records, "duplicate_content": warnings}
-    (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    # Atomic write: a kill mid-write would otherwise truncate the only manifest into
+    # invalid JSON that crashes every downstream json.load (extract.py / eval.py).
+    manifest_path = OUT / "manifest.json"
+    tmp = manifest_path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(manifest_path)
 
     print(f"\n{len(records)} documents -> {OUT.relative_to(ROOT)}/manifest.json")
+    if failed:
+        print(f"\n  WARNING: {len(failed)} document(s) could not be read and were "
+              f"skipped (encrypted, corrupt, or 0-byte — decrypt or re-download):")
+        for ident in failed:
+            print(f"    {ident}")
     if no_text:
         print(f"\n  WARNING: {len(no_text)} document(s) yielded NO extractable text "
               f"(scanned / image-only PDF? likely needs OCR):")
         for ident in no_text:
             print(f"    {ident}")
     if warnings:
-        print(f"\n  WARNING: {len(warnings)} document(s) are byte-for-byte identical across tariffs:")
+        print(f"\n  WARNING: {len(warnings)} document(s) have identical extracted "
+              f"content (whitespace-normalized) across tariffs:")
         for w in warnings:
             print(f"    {w['content_sha256'][:12]}  =  {', '.join(w['locations'])}")
         print("  -> these tariffs share a generic document package; the real differentiator")

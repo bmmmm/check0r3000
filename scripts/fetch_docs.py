@@ -57,12 +57,36 @@ def load_manifest() -> list[dict]:
         sys.exit(f"{MANIFEST.relative_to(ROOT)} is a bare list (raw check24Docs() output, "
                  f"grouped by hash). Wrap it as {{\"tariffs\": [{{stem, insurer, tariff, "
                  f"docs:[{{doctype, url}}]}}]}} — see data/offers/README.md.")
-    return data.get("tariffs", [])
+    tariffs = data.get("tariffs", [])
+    # The manifest is hand-reshaped from the browser harvest, with no schema gate.
+    # Validate the shape once here so a typo fails with an actionable message instead
+    # of a mid-batch traceback (download/urlsplit assume docs is a list, url a string).
+    for t in tariffs:
+        if not isinstance(t, dict):
+            sys.exit(f"Malformed manifest: a tariff entry is not an object "
+                     f"({type(t).__name__}).")
+        docs = t.get("docs")
+        if docs is not None and not isinstance(docs, list):
+            sys.exit(f"Malformed manifest entry {t.get('stem')!r}: 'docs' must be a list.")
+        for doc in (docs or []):
+            if not isinstance(doc, dict) or not isinstance(doc.get("url", ""), str):
+                sys.exit(f"Malformed manifest entry {t.get('stem')!r}: each doc must be "
+                         f"{{doctype, url}} with a string url — fix "
+                         f"data/sources/check24-documents.json.")
+    return tariffs
 
 
 def select(tariffs: list[dict], stems: list[str], insurer: str | None) -> list[dict]:
     if stems:
-        bystem = {t.get("stem"): t for t in tariffs}
+        # stem is the primary key (it names data/offers/ and data/raw/); a duplicate
+        # would silently shadow one entry in a dict comprehension, so reject it.
+        bystem: dict[str, dict] = {}
+        for t in tariffs:
+            s = t.get("stem")
+            if s in bystem:
+                sys.exit(f"Duplicate stem {s!r} in the manifest — stems must be unique. "
+                         f"Fix data/sources/check24-documents.json.")
+            bystem[s] = t
         picked, missing = [], []
         for s in stems:
             (picked.append(bystem[s]) if s in bystem else missing.append(s))
@@ -145,6 +169,7 @@ def download(url: str, dest: Path) -> str:
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             ctype = resp.headers.get_content_type()
+            clen = resp.headers.get("Content-Length")
             data = resp.read()
     except (urllib.error.URLError, ValueError, TimeoutError,
             http.client.IncompleteRead) as e:
@@ -155,6 +180,11 @@ def download(url: str, dest: Path) -> str:
     # (expired link etc.) — a 0-byte file must never be written out as "ok".
     if not data:
         return "FAILED (empty body — 0 bytes)"
+    # A clean short read (server closed without IncompleteRead, e.g. no chunked
+    # framing) would otherwise be cached as complete and never re-fetched. If the
+    # server declared a length, require the body to match it.
+    if clen and clen.isdigit() and len(data) != int(clen):
+        return f"FAILED (short body: got {len(data)} of {clen} bytes)"
     if ctype != "application/pdf" and data[:5] != b"%PDF-":
         return f"FAILED (not a PDF: {ctype})"
     tmp = dest.with_suffix(dest.suffix + ".part")  # atomic: don't leave a half file

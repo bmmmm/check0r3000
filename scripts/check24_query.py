@@ -72,9 +72,16 @@ def decode_discounts(pairs: list[tuple[str, str]]) -> list[str]:
         return []
     try:
         items = json.loads(raw.replace("&quot;", '"'))
-        return [d.get("name") for d in items if d.get("value") == "yes"]
     except (json.JSONDecodeError, AttributeError):
         return []
+    if isinstance(items, dict):
+        items = [items]
+    if not isinstance(items, list):
+        return []
+    # Guard per element so one wrong-shape entry cannot drop the whole list and make
+    # --show silently disagree with the URL it emits.
+    return [d.get("name") for d in items
+            if isinstance(d, dict) and d.get("value") == "yes"]
 
 
 def show(pairs: list[tuple[str, str]]) -> None:
@@ -106,14 +113,20 @@ def show(pairs: list[tuple[str, str]]) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Build a CHECK24 RSV result URL from the profile.")
-    ap.add_argument("--all-insurers", action="store_true",
-                    help="drop provider_filter/tariff_package/tariff_position -> every insurer")
-    ap.add_argument("--provider", metavar="ID",
-                    help="pin one insurer by provider_filter id (drops tariff_package)")
+    # --all-insurers and --provider are contradictory (one widens, one pins): make them
+    # mutually exclusive so passing both fails loudly instead of silently re-pinning.
+    g = ap.add_mutually_exclusive_group()
+    g.add_argument("--all-insurers", action="store_true",
+                   help="drop provider_filter/tariff_package/tariff_position -> every insurer")
+    g.add_argument("--provider", metavar="ID",
+                   help="pin one insurer by provider_filter id (drops tariff_package)")
     ap.add_argument("--position", metavar="N", help="set tariff_position")
     ap.add_argument("--costsharing", metavar="V", help="set costsharing (SB tolerance)")
     ap.add_argument("--show", action="store_true", help="print decoded levers instead of a URL")
     args = ap.parse_args()
+
+    if args.provider is not None and not args.provider.strip():
+        ap.error("--provider needs an id; use --all-insurers to drop the pin")
 
     profile, _ = load_profile()
     base = profile.get("base_url")
@@ -130,9 +143,11 @@ def main() -> int:
         # result list is meaningless once the provider changes.
         pairs = [(k, v) for k, v in pairs if k not in ("tariff_package", "tariff_position")]
         pairs = set_param(pairs, "provider_filter", args.provider)
-    if args.position:
+    # Distinguish "flag absent" (None) from "explicit blank" ('') so --position '' can
+    # intentionally clear a pin instead of being silently swallowed by a truthiness test.
+    if args.position is not None:
         pairs = set_param(pairs, "tariff_position", args.position)
-    if args.costsharing:
+    if args.costsharing is not None:
         pairs = set_param(pairs, "costsharing", args.costsharing)
 
     if args.show:

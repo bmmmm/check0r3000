@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -36,12 +37,21 @@ FIELDS = ("position", "insurer", "product", "tarifnote", "monatlich_eur",
           "selbstbeteiligung", "bewertung", "bewertung_anzahl")
 
 
-def _eur(s: str) -> float | None:
-    s = (s or "").strip()
+def _eur(s) -> float | None:
+    """Parse a German price token to a float. Mirrors check24_scrape.js eur(): drops
+    the currency symbol / NBSP and German formatting (dot thousands, comma decimal),
+    so a hand-authored PSV price like '12,90 €' or '1.234,56' parses instead of
+    silently becoming None. A plain number passes through unchanged."""
+    if isinstance(s, (int, float)) and not isinstance(s, bool):
+        return float(s)
+    s = str(s) if s is not None else ""
+    # Keep only digits and the two separators; this also drops the
+    # currency symbol, NBSP, narrow-NBSP and plain spaces in one shot.
+    s = re.sub(r"[^\d.,]", "", s)
     if not s:
         return None
     try:
-        return float(s.replace(",", "."))
+        return float(s.replace(".", "").replace(",", "."))
     except ValueError:
         return None
 
@@ -67,6 +77,10 @@ def load_rows(path: Path) -> list[dict]:
         data = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(data, list):
             sys.exit(f"{path} is not a JSON array of rows.")
+        bad = [i for i, r in enumerate(data) if not isinstance(r, dict)]
+        if bad:
+            sys.exit(f"{path}: row(s) at index {bad[:5]} are not JSON objects "
+                     f"(each row must be {{position, insurer, ...}}).")
         rows = data
     else:
         rows = []
@@ -84,6 +98,11 @@ def load_rows(path: Path) -> list[dict]:
     out = []
     for r in rows:
         rec = {k: r.get(k) for k in FIELDS}
+        # The PSV path already coerces the price via _eur; a JSON scrape may carry it
+        # as a string ("12,90"). Normalise both paths to float|None so diff arithmetic
+        # (abs(o - n)) can never hit a string and crash.
+        if isinstance(rec.get("monatlich_eur"), str):
+            rec["monatlich_eur"] = _eur(rec["monatlich_eur"])
         rec["key"] = "|".join(_norm_key(rec.get(k))
                               for k in ("insurer", "product", "selbstbeteiligung"))
         out.append(rec)
@@ -92,12 +111,28 @@ def load_rows(path: Path) -> list[dict]:
 
 def build(args) -> int:
     rows = load_rows(Path(args.rows))
-    date = args.date or datetime.date.today().isoformat()
+    # Validate/normalise the date so the filename is always canonical zero-padded ISO
+    # — the prev-snapshot tip below compares names lexicographically.
+    if args.date:
+        try:
+            date = datetime.date.fromisoformat(args.date).isoformat()
+        except ValueError:
+            sys.exit(f"--date must be ISO YYYY-MM-DD, got {args.date!r}.")
+    else:
+        date = datetime.date.today().isoformat()
     snap = {"date": date, "profile": args.label or "", "source": args.source,
             "count": len(rows), "tariffs": rows}
     SNAPDIR.mkdir(parents=True, exist_ok=True)
     dest = SNAPDIR / f"{date}.json"
-    dest.write_text(json.dumps(snap, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if dest.exists():
+        print(f"note: overwriting existing snapshot {dest.relative_to(ROOT)}.",
+              file=sys.stderr)
+    # Atomic write: a crash (Ctrl-C, disk full, kill) mid-write must not truncate the
+    # only copy of a dated, non-regenerable snapshot. Write a temp twin on the same
+    # filesystem, then rename it into place.
+    tmp = dest.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(snap, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(dest)
     dupes = len(rows) - len({r["key"] for r in rows})
     print(f"Wrote {dest.relative_to(ROOT)} — {len(rows)} tariffs"
           + (f" ({dupes} share a key: same product+Selbstbeteiligung)" if dupes else ""))

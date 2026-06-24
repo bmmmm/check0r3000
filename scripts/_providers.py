@@ -95,9 +95,13 @@ def _run_claude(model: str | None, instruction: str, payload: str, timeout: int)
         outer = json.loads(proc.stdout)
     except json.JSONDecodeError:
         return _err("claude output not JSON", wall)
+    if not isinstance(outer, dict):
+        return _err("claude output not a JSON object", wall)
 
-    usage = outer.get("usage") or {}
+    usage = outer.get("usage")
+    usage = usage if isinstance(usage, dict) else {}
     mu = next(iter((outer.get("modelUsage") or {}).values()), {})
+    mu = mu if isinstance(mu, dict) else {}
     res = {
         "text": outer.get("result"),
         "error": None,
@@ -109,7 +113,10 @@ def _run_claude(model: str | None, instruction: str, payload: str, timeout: int)
         "context_window": mu.get("contextWindow"),
     }
     if outer.get("is_error"):
-        res["error"] = str(outer.get("api_error_status") or outer.get("result"))[:300]
+        detail = outer.get("api_error_status") or outer.get("result")
+        res["error"] = (str(detail)[:300] if detail else
+                        "claude reported is_error with no detail "
+                        "(empty api_error_status/result)")
         res["text"] = None
     return res
 
@@ -153,9 +160,13 @@ def _run_openai(provider: str, model: str | None, endpoint: str | None,
         return _err(f"{provider} returned non-JSON ({url})", time.monotonic() - t0)
     wall = time.monotonic() - t0
     try:
-        text = data["choices"][0]["message"]["content"]
+        choice = data["choices"][0]
     except (KeyError, IndexError, TypeError):
         return _err(f"{provider} response missing choices: {str(data)[:200]}", wall)
+    try:
+        text = choice["message"]["content"]
+    except (KeyError, TypeError):
+        return _err(f"{provider} response missing message content: {str(choice)[:200]}", wall)
     usage = data.get("usage") or {}
     return {
         "text": text,

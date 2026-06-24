@@ -19,6 +19,7 @@ rather than mangled. Reduction is reported via `stats()`.
 from __future__ import annotations
 
 import re
+import sys
 
 # Topic anchors: the schema fields we actually compare on. Lowercase, regex.
 ANCHORS = [
@@ -36,10 +37,16 @@ _SECTION_HEADER = re.compile(r"^\s*§\s*\d+")
 GAP = "[…]"
 
 
+def _fold(s: str) -> str:
+    """Fold ß -> ss for matching only. re.IGNORECASE treats 'ß' and 'ss' as distinct,
+    so a pre-reform spelling ('Ausschluß') would miss the ss-spelled anchors."""
+    return s.replace("ß", "ss")
+
+
 def _window(lines: list[str], context: int) -> list[str]:
     keep = [False] * len(lines)
     for i, ln in enumerate(lines):
-        if _PAT.search(ln):
+        if _PAT.search(_fold(ln)):
             for j in range(max(0, i - context), min(len(lines), i + context + 1)):
                 keep[j] = True
     out: list[str] = []
@@ -68,7 +75,7 @@ def _sections(lines: list[str]) -> list[str]:
         blocks.append(cur)
     out: list[str] = []
     for b in blocks:
-        if _PAT.search("\n".join(b)):
+        if _PAT.search(_fold("\n".join(b))):
             out.extend(b)
         elif not (out and out[-1] == GAP):
             out.append(GAP)
@@ -84,12 +91,27 @@ def filter_text(text: str, context: int = 4, min_fraction: float = 0.15) -> str:
     the model a content-free AVB yields an all-null record, so in that case keep the
     original intact: an oversized prompt beats a blank one.
     """
+    # PDF extraction hyphenates words across line breaks ("Versicherungs-\nsumme"); a
+    # split anchor then matches nothing and the clause is dropped. Rejoin a word broken
+    # by hyphen+newline where the continuation starts lowercase (legal-typography
+    # hyphenation); a capital/non-letter continuation is a real compound, left intact.
+    text = re.sub(r"([A-Za-z\xc0-\xff])-\n([a-z\xe0-\xff])", r"\1\2", text)
     lines = text.splitlines()
     candidates = [_window(lines, context), _sections(lines)]
     rendered = ["\n".join(c) for c in candidates]
     floor = len(text) * min_fraction
     viable = [r for r in rendered if len(r) >= floor]
     if not viable:
+        # Both strategies fell below the keep-floor. If the doc has at least one anchor,
+        # a sub-floor trim still beats handing a small/local model an oversized AVB it
+        # cannot fit — return the smallest candidate and say so. Only a genuinely
+        # anchor-free doc (nothing to trim toward) keeps the original.
+        if _PAT.search(_fold(text)):
+            best = min(rendered, key=len)
+            print(f"_filter: both strategies fell below the {min_fraction:.0%} keep-floor; "
+                  f"returning the {len(best)}-char trim of {len(text)} (sparse anchors — "
+                  f"verify the model still sees the key clauses).", file=sys.stderr)
+            return best
         return text
     return min(viable, key=len)
 
