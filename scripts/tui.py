@@ -686,6 +686,45 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def action_cancel(self) -> None:
             self.dismiss(None)
 
+    class QueryUrlScreen(ModalScreen[None]):
+        """Show the decoded CHECK24 query levers and where the full result URLs were
+        written, for the manual browser + scrape-snippet workflow."""
+
+        BINDINGS = [
+            Binding("escape", "close", "Close"),
+            Binding("enter", "close", "Close"),
+            Binding("q", "close", "Close"),
+        ]
+
+        def __init__(self, levers: str, url_file: str, is_example: bool) -> None:
+            super().__init__()
+            self._levers = levers
+            self._url_file = url_file
+            self._is_example = is_example
+
+        def compose(self) -> ComposeResult:
+            lines = [
+                "[bold]CHECK24-Query bauen[/bold]",
+                "[dim]Im Browser öffnen → scripts/check24_scrape.js in die DevTools-"
+                "Konsole einfügen → snapshot.py / check24Docs.[/dim]",
+                "",
+                f"[underline]URLs geschrieben[/underline]: [cyan]{self._url_file}[/cyan]",
+                "[dim]   (gespeicherte Query + Variante 'alle Versicherer')[/dim]",
+            ]
+            if self._levers:
+                lines += ["", "[underline]Levers[/underline]", self._levers.replace("[", "\\[")]
+            if self._is_example:
+                lines += [
+                    "",
+                    "[yellow]! Beispielprofil (Fake-Daten) — config/check24-profile.json "
+                    "anlegen.[/yellow]",
+                ]
+            lines += ["", "[bold]\\[Esc][/bold] Schließen"]
+            yield Container(Static("\n".join(lines)), id="query-box")
+
+        def action_close(self) -> None:
+            self.dismiss(None)
+
     class CheckApp(App):
         """check0r3000 — Rechtsschutz-Vergleich TUI."""
 
@@ -704,6 +743,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("d", "toggle_detail", "Details", show=True),
             Binding("x", "switch_tab('diff')", "Diff", show=True),
             Binding("g", "fetch_docs", "Get docs", show=True),
+            Binding("b", "build_query", "Query-URL", show=False),
             Binding("u", "toggle_favorite", "Favorit", show=False),
             Binding("R", "set_reference", "Referenz", show=False),
             Binding("D", "delete_data", "Daten löschen", show=False),
@@ -1451,6 +1491,69 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         def action_refresh_data(self) -> None:
             self._reload_all()
+
+        # --- Build the CHECK24 result URL ([b]) ---
+
+        def action_build_query(self) -> None:
+            """Rebuild the CHECK24 result URL(s) from the saved profile and write them
+            to tmp/ for the manual browser + scrape workflow (no headless path — bot
+            gating). Reuses scripts/check24_query.py for the lever decode."""
+            import contextlib
+            import importlib.util
+            import io
+            from urllib.parse import parse_qsl, urlencode
+
+            qpath = REPO_ROOT / "scripts" / "check24_query.py"
+            try:
+                spec = importlib.util.spec_from_file_location("check24_query", qpath)
+                cq = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(cq)
+            except Exception as exc:  # noqa: BLE001 — surface any load failure to the user
+                self.notify(f"check24_query.py nicht ladbar: {exc}", severity="error", timeout=6)
+                return
+
+            ppath = REPO_ROOT / "config" / "check24-profile.json"
+            epath = REPO_ROOT / "config" / "check24-profile.example.json"
+            is_example = False
+            if ppath.is_file():
+                profile = json.loads(ppath.read_text())
+            elif epath.is_file():
+                profile = json.loads(epath.read_text())
+                is_example = True
+            else:
+                self.notify(
+                    "Kein Query-Profil (config/check24-profile.json).",
+                    severity="error",
+                    timeout=6,
+                )
+                return
+
+            base = profile.get("base_url")
+            query = profile.get("query")
+            if not base or query is None:
+                self.notify("Profil ohne base_url/query.", severity="error", timeout=6)
+                return
+
+            pairs = parse_qsl(query, keep_blank_values=True)
+            saved_url = base + "?" + urlencode(pairs)
+            all_url = base + "?" + urlencode([(k, v) for k, v in pairs if k not in cq.PIN_KEYS])
+
+            buf = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(buf):
+                    cq.show(pairs)
+                levers = buf.getvalue().strip()
+            except Exception:  # noqa: BLE001 — the decode is best-effort context only
+                levers = ""
+
+            out = REPO_ROOT / "tmp" / "check24-query.txt"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(
+                f"# saved query\n{saved_url}\n\n# all insurers (provider/package pins dropped)\n"
+                f"{all_url}\n",
+                encoding="utf-8",
+            )
+            self.push_screen(QueryUrlScreen(levers, str(out.relative_to(REPO_ROOT)), is_example))
 
         # --- Favorites management ([u] toggle, [D] delete) ---
 
