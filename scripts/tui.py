@@ -48,7 +48,10 @@ import coverage_taxonomy as ctax  # noqa: E402
 # Repo layout
 # ---------------------------------------------------------------------------
 
-REPO_ROOT = Path(__file__).parent.parent
+# .resolve() so the repo root is found even when tui.py is launched through a
+# symlink (e.g. ~/.local/bin/check0r3000 -> scripts/tui.py): __file__ is then the
+# symlink path, and without resolving, REPO_ROOT would point next to the symlink.
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Model spec for the [g] "download + analyze" pipeline's extract stage. Matches
 # extract.py's own default ("claude" = the claude CLI); override without editing
@@ -1209,7 +1212,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
     class CheckApp(App):
         """check0r3000 — Rechtsschutz-Vergleich TUI."""
 
-        CSS_PATH = Path(__file__).parent / "tui.tcss"
+        CSS_PATH = Path(__file__).resolve().parent / "tui.tcss"  # resolve: survives symlink launch
         TITLE = "check0r3000 — Rechtsschutz-Vergleich"
 
         BINDINGS = [

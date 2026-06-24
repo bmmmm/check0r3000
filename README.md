@@ -130,6 +130,15 @@ uv run scripts/fetch_docs.py --check             # sind alle Doc-URLs erreichbar
 uv run scripts/tui.py                            # interaktiver Vergleich
 ```
 
+`scripts/tui.py` hat eine `uv`-Shebang und löst seine Datenpfade relativ zur eigenen
+(aufgelösten) Position auf — ein Symlink auf dem PATH startet die TUI also aus jedem
+Verzeichnis:
+
+```sh
+ln -s "$(pwd)/scripts/tui.py" ~/.local/bin/check0r3000   # einmalig, ~/.local/bin auf PATH
+check0r3000                                              # danach von überall
+```
+
 ## Nachbauen / einen Versicherer hinzufügen
 
 Voraussetzungen: [`uv`](https://docs.astral.sh/uv/) und die `claude`-CLI auf dem PATH.
