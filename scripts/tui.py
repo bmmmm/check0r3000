@@ -705,6 +705,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("x", "switch_tab('diff')", "Diff", show=True),
             Binding("g", "fetch_docs", "Get docs", show=True),
             Binding("u", "toggle_favorite", "Favorit", show=False),
+            Binding("R", "set_reference", "Referenz", show=False),
             Binding("D", "delete_data", "Daten löschen", show=False),
             Binding("r", "refresh_data", "Reload", show=False),
         ]
@@ -800,25 +801,51 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         # --- Favorites board ---
 
-        def _reference_fav(self) -> dict | None:
-            ref_stem = self._favorites.get("reference_stem")
-            return next(
-                (
-                    f for f in self._favorites.get("favorites", [])
-                    if f.get("reference") or f.get("stem") == ref_stem
-                ),
-                None,
+        def _is_reference(self, fav: dict) -> bool:
+            """A favorite is the reference iff its stem is the configured reference_stem.
+            (reference_stem is the single source of truth — set live with [R].)"""
+            rs = self._favorites.get("reference_stem")
+            return bool(rs and fav.get("stem") == rs)
+
+        def _reference_sb(self) -> str:
+            """The reference SB band — explicit reference_sb, else the reference
+            favorite's show_sb (back-compat with the pre-[R] config)."""
+            sb = (self._favorites.get("reference_sb") or "").strip()
+            if sb:
+                return sb
+            rs = self._favorites.get("reference_stem")
+            rf = next(
+                (f for f in self._favorites.get("favorites", []) if f.get("stem") == rs), None
             )
+            return (rf.get("show_sb") or "").strip() if rf else ""
+
+        def _reference_row(self) -> SnapshotRow | None:
+            """The snapshot row that is the comparison baseline. Resolves
+            reference_stem against the snapshot (so the reference need NOT be a
+            favorite), picking the reference SB band, else the cheapest variant."""
+            if not self._snapshot:
+                return None
+            rs = self._favorites.get("reference_stem")
+            if not rs:
+                return None
+            variants = [r for r in self._snapshot.rows if r.stem == rs]
+            if not variants:
+                return None
+            ref_sb = self._reference_sb()
+            if ref_sb:
+                match = next(
+                    (r for r in variants if r.selbstbeteiligung.strip() == ref_sb), None
+                )
+                if match is not None:
+                    return match
+            priced = [r for r in variants if r.monatlich_eur is not None]
+            return min(priced, key=lambda r: r.monatlich_eur) if priced else variants[0]
 
         def _reference_info(self) -> tuple[float | None, str | None]:
-            """(monthly premium, SB band) of the reference favorite (current tariff)."""
-            if not self._snapshot:
-                return None, None
-            ref_fav = self._reference_fav()
-            if ref_fav is not None:
-                row, _ = match_favorite(self._snapshot, ref_fav)
-                if row and row.monatlich_eur is not None:
-                    return row.monatlich_eur, row.selbstbeteiligung
+            """(monthly premium, SB band) of the reference tariff (current contract)."""
+            row = self._reference_row()
+            if row is not None and row.monatlich_eur is not None:
+                return row.monatlich_eur, row.selbstbeteiligung
             return None, None
 
         @staticmethod
@@ -865,14 +892,14 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 ko_text = self._favorites.get("knockout", "")
                 if ko_text:
                     parts.append(f"⊘ {ko_text}")
-                ref_fav = self._reference_fav()
-                if ref_fav is not None and ref_price is not None:
+                ref_row = self._reference_row()
+                if ref_row is not None and ref_price is not None:
                     parts.append(
-                        f"◆ Referenz: {ref_fav.get('insurer')} {ref_fav.get('product')} "
-                        f"(SB {ref_sb}, €{ref_price:.2f}/mo) — Δ vergleicht dagegen; "
-                        f"≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
+                        f"◆ Referenz: {ref_row.insurer} {ref_row.product} "
+                        f"(SB {ref_sb}, €{ref_price:.2f}/mo) — \\[R] setzt eine andere; "
+                        f"Δ vergleicht dagegen, ≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
                     )
-                parts.append("↵ Zeile wählen → Detail, SB-Varianten & Dokumente")
+                parts.append("↵ Zeile wählen → Detail · \\[R] Referenz · \\[u] Favorit")
                 parts.append(STATUS_LEGEND)
                 ko.update("\n".join(parts))
             except NoMatches:
@@ -913,10 +940,10 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     )
                     continue
 
-                if fav.get("recommended"):
-                    star = "[bright_green]▶[/bright_green]"
-                elif fav.get("reference"):
+                if self._is_reference(fav):
                     star = "[bright_yellow]◆[/bright_yellow]"
+                elif fav.get("recommended"):
+                    star = "[bright_green]▶[/bright_green]"
                 else:
                     star = "[yellow]★[/yellow]"
 
@@ -926,7 +953,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 pc = _price_color(row.monatlich_eur, self._q1, self._q3)
                 price_col = f"[{pc}]{price_str}[/{pc}]"
 
-                if fav.get("reference"):
+                if self._is_reference(fav):
                     delta_col = "[dim]— (Referenz)[/dim]"
                 else:
                     delta_col = self._delta_cell(
@@ -948,14 +975,14 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             lines: list[str] = []
             lines.append(f"[bold]{row.insurer}[/bold] — [italic]{row.product}[/italic]")
             tag = fav.get("tag", "")
-            if tag:
-                if fav.get("recommended"):
-                    marker, mcolor = "▶", "bright_green"
-                elif fav.get("reference"):
+            if tag or self._is_reference(fav):
+                if self._is_reference(fav):
                     marker, mcolor = "◆", "bright_yellow"
+                elif fav.get("recommended"):
+                    marker, mcolor = "▶", "bright_green"
                 else:
                     marker, mcolor = "★", "yellow"
-                lines.append(f"[{mcolor}]{marker} {tag}[/{mcolor}]")
+                lines.append(f"[{mcolor}]{marker} {tag or 'Referenz'}[/{mcolor}]")
             lines.append("")
 
             nc = _tarifnote_color(row.tarifnote)
@@ -966,7 +993,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 f"(SB {row.selbstbeteiligung or '—'})"
             )
             ref_price, ref_sb = self._reference_info()
-            if ref_price is not None and row.monatlich_eur is not None and not fav.get("reference"):
+            if ref_price is not None and row.monatlich_eur is not None and not self._is_reference(fav):
                 d = row.monatlich_eur - ref_price
                 if abs(d) < 0.005:
                     lines.append("vs. Referenz: [dim]±0 €/mo[/dim]")
@@ -1479,6 +1506,36 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 favs.append(entry)
                 self._save_favorites()
                 self.notify(f"Zu Favoriten hinzugefügt: {insurer} {product}", timeout=4)
+            self._reload_all()
+
+        def action_set_reference(self) -> None:
+            """Make the active row the comparison baseline; every Δ recomputes against
+            it. Writes reference_stem + reference_sb to config/favorites.json."""
+            ident = self._active_identity()
+            if ident is None:
+                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+                return
+            insurer, product, stem = ident
+            if not stem:
+                self.notify(
+                    "Referenz braucht einen kanonischen stem (Tarif ohne Manifest-Eintrag).",
+                    severity="warning",
+                    timeout=6,
+                )
+                return
+            sb = self._active_row.selbstbeteiligung if self._active_row else ""
+            if not sb and self._active_fav:
+                sb = self._active_fav.get("show_sb", "")
+            self._favorites["reference_stem"] = stem
+            self._favorites["reference_sb"] = sb
+            # Retire the legacy per-favorite flag — reference_stem is now canonical.
+            for f in self._favorites.get("favorites", []):
+                f.pop("reference", None)
+            self._save_favorites()
+            self.notify(
+                f"Referenz: {insurer} {product} (SB {sb or '—'}) — Δ neu berechnet.",
+                timeout=5,
+            )
             self._reload_all()
 
         def action_delete_data(self) -> None:
