@@ -1,0 +1,123 @@
+{
+  "insurer": "ADAC Versicherung AG",
+  "tariff": "ADAC Rechtsschutz",
+  "stand": "01.03.2022",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Privat-Rechtsschutz (wählbarer Baustein)"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Berufs-Rechtsschutz, nur nichtselbständiger Bereich"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrs-Rechtsschutz; Fahrzeug-/Fahrer-/Personen-Verkehrs-Varianten"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohn-Rechtsschutz, selbstgenutzte Wohneinheit; Premium: alle selbstgenutzten Einheiten"
+    },
+    "internet_web": {
+      "included": false,
+      "level": null,
+      "note": "kein eigener Baustein; nur Beratungs-Rechtsschutz bei privaten Urheberrechtsverstößen im Internet"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Teil des Privat-Rechtsschutz; ab gerichtlichem Verfahren, Premium ab außergerichtlich"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz vor deutschen Sozialgerichten; ab gerichtlichem Verfahren, Premium ab außergerichtlich"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz vor deutschen Verwaltungsgerichten; ab gerichtlichem Verfahren, Premium ab außergerichtlich"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt (Europa); außerhalb Europa 300000 EUR",
+    "selbstbeteiligung": "wählbar: ohne, 150 oder 250 EUR",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz",
+      "Schadenersatz-Rechtsschutz",
+      "Straf-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz",
+      "Beratungs-Rechtsschutz",
+      "Vorversicherung lückenlos"
+    ],
+    "geltungsbereich": "geografisches Europa, Mittelmeeranrainer, Kanaren/Azoren/Madeira; außerhalb weltweit temporär (6 Mon., Premium 12 Mon.) bis 300000 EUR",
+    "vertragslaufzeit": "1 Jahr, jährliche Verlängerung"
+  },
+  "leistungen": [
+    "telefonische/online Rechtsberatung",
+    "Vertrags-Check (Dokumentenprüfung)",
+    "Rechtsgeneratoren (Testament, Vorsorgeverfügung)",
+    "Mediation bis 1000 EUR",
+    "Schieds-/Schlichtungsverfahren bis 1000 EUR",
+    "Strafkaution als zinsloses Darlehen bis 300000 EUR",
+    "Opfer-Rechtsschutz als Nebenkläger",
+    "Beratungs-Rechtsschutz Familien-/Erbrecht (250 EUR, Premium 1000 EUR)",
+    "Übersetzung/Dolmetscher im Ausland",
+    "freie Anwaltswahl",
+    "Selbstbeteiligungs-Nachlass bei Schadenfreiheit (50%/100%)",
+    "Verkehrsanwalt ab 100 km Entfernung"
+  ],
+  "ausschluesse": [
+    "gewerbliche/freiberufliche/selbständige Tätigkeit",
+    "Baurisiko (Kauf bebaubarer Grundstücke, Bau/Finanzierung von Gebäuden)",
+    "Kapitalanlagen/Wertpapiere (Premium: Vertragsrecht bis 10000 EUR)",
+    "Familien- und Erbrecht (nur Beratung)",
+    "Patent-/Urheber-/Marken-/Geschmacksmusterrecht",
+    "Kartell- und Wettbewerbsrecht",
+    "Spiel-/Wett-/Spekulationsgeschäfte",
+    "Insolvenzverfahren über eigenes Vermögen",
+    "Asyl- und Ausländerrecht",
+    "Verfassungs-/internationale Gerichte",
+    "kollektives Arbeits-/Dienstrecht",
+    "Recht der Handelsgesellschaften",
+    "Vermietung von Wohnraum (als Vermieter)",
+    "Halt-/Parkverstöße (Ausnahme: Premium)",
+    "Enteignung/Planfeststellung/Baurecht"
+  ],
+  "besonderheiten": [
+    "zwei Varianten: Exklusiv oder Premium",
+    "Premium: erweiterte Familie (Eltern/Großeltern/Enkel)",
+    "Premium: außergerichtlicher Schutz Steuer/Sozial/Verwaltung",
+    "Premium: Schutz bei nur vorsätzlichen Vergehen rückwirkend",
+    "Premium: 12 Monate Auslandsschutz",
+    "Tarifvariante ADAC Rechtsschutz 60+",
+    "günstiger für ADAC-Mitglieder",
+    "Innovationsklausel/Leistungsupdate",
+    "Einzel- oder Familienvertrag wählbar",
+    "Leistungsbearbeitung durch ADAC RSR GmbH"
+  ],
+  "beitrag": null,
+  "_input_hash": "369ea741669236494ecdcbbc6ae15c0553ec350d727d8a5130f31c2e58be6378",
+  "_model": "claude",
+  "_filter": "none",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "898bc16ad6310899b2e7dca18f38f91acdc30917eb22a7b2bc551519ccffa774"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "2dd24f0e0ac5470d590288b147be2f4ba976783b79b88265b04b5caa9890407e"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "05ce3daa62f4243efcfef3c39a1f4b42c7d41c91c9d41dc98b4006fdfe7dcb2b"
+    }
+  ]
+}

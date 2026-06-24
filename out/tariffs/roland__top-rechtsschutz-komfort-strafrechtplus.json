@@ -1,0 +1,118 @@
+{
+  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
+  "tariff": "Top-Rechtsschutz Komfort",
+  "stand": "01.2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": "Komfort",
+      "note": null
+    },
+    "beruf": {
+      "included": true,
+      "level": "Komfort",
+      "note": "berufliche, nicht selbstständige Tätigkeit"
+    },
+    "verkehr": {
+      "included": true,
+      "level": "Komfort",
+      "note": "keine Wartezeit im Verkehrsbereich"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": "Komfort",
+      "note": "Immobilien-RS stets Bestandteil des Pakets"
+    },
+    "internet_web": {
+      "included": true,
+      "level": "Komfort",
+      "note": "Internet-RS Komfort bis 1.250 EUR/Jahr"
+    },
+    "steuer": {
+      "included": true,
+      "level": "Komfort",
+      "note": "inkl. vorgerichtliches Widerspruchsverfahren"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": "Komfort",
+      "note": "inkl. Widerspruchsverfahren"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": "Komfort",
+      "note": "privat und verkehrsrechtlich"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "wählbar (Flex-SB oder feste Selbstbeteiligung)",
+    "wartezeit_monate": 6,
+    "wartezeit_ausnahmen": [
+      "Verkehrsbereich: keine Wartezeit",
+      "Schadenersatz-, Straf-, Ordnungswidrigkeiten-RS: keine",
+      "Eherecht: 1 Jahr",
+      "Studienplatzklagen: 3 Jahre"
+    ],
+    "geltungsbereich": "Europa, Mittelmeer-Anrainer, Kanaren, Madeira, Azoren; weltweit temporär (bis 1 Jahr Auslandsaufenthalt)",
+    "vertragslaufzeit": "1, 2, 3, 4 oder 5 Jahre"
+  },
+  "leistungen": [
+    "telefonische Rechtsberatung (JurLine)",
+    "Online-Rechtsberatung",
+    "Mediation / außergerichtliche Konfliktbeilegung",
+    "Vertrags- und Dokumentencheck",
+    "Strafkaution als zinsloses Darlehen (bis 500.000 EUR)",
+    "Bonus-Rechtsberatung nach 3 schadenfreien Jahren",
+    "Internet- und Daten-Rechtsschutz",
+    "Opfer-Rechtsschutz",
+    "Familien-, Ehe- und Erbrecht (Beratung)",
+    "Rechtsschutz in Betreuungsverfahren",
+    "Online-Schutz-Radar / Webseiten-Prüfung"
+  ],
+  "ausschluesse": [
+    "Baurisiko / Baufinanzierung",
+    "Kapitalanlagen",
+    "Patent-, Marken-, Urheberrecht / geistiges Eigentum",
+    "Kartell- und Wettbewerbsrecht",
+    "Insolvenzverfahren",
+    "Spiel-/Wettverträge, Gewinnzusagen",
+    "Asyl-/Ausländer-/Migrationsrecht",
+    "Verfassungs- und internationale Gerichte",
+    "Vorsatzstraftaten",
+    "gewerbliche/selbstständige Tätigkeit (im Privat-RS)"
+  ],
+  "besonderheiten": [
+    "Bausteinprinzip, frei kombinierbar",
+    "Leistungs-Update-Garantie (neueste ARB bei gleichem Beitrag)",
+    "Flex-Selbstbeteiligung: SB-Halbierung bei Vorab-Kontakt",
+    "Strafkaution Komfort bis 500.000 EUR",
+    "Zahlungspause bei Arbeitslosigkeit (bis 1 Jahr beitragsfrei)",
+    "Differenzdeckung zum Vorversicherer möglich",
+    "Junge-Leute-Tarif (Nachlass bis 35 J.)",
+    "Tarif-Besonderheit: 6 Monate Wartezeit statt 3",
+    "Versicherungssumme unbegrenzt"
+  ],
+  "beitrag": null,
+  "_input_hash": "cb78ade20afee553e3beaeb279b555fff51db0f18aac9e0b54b54822b94f6f8a",
+  "_model": "claude",
+  "_filter": "none",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "cdf6c776341c6e20ad1055baeb5ede5abae97d14587b61e0d8727adf8d3ab0b3"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "571eb91075528a76d968db0576ae640a5e05cf63200b7a26151b91c45f8aebc4"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "db9e5d24a2bd8d9bd42823cfa4a69c83bb7a613a610c1090c3ca4a5ec547d4a6"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "ff54d5234ca4059c95120ab9d28b508c2324a3fc11e44cbd4efe7b63f7a97193"
+    }
+  ]
+}

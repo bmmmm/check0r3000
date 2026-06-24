@@ -1,0 +1,124 @@
+{
+  "insurer": "Württembergische Versicherung AG",
+  "tariff": "Adam Riese Rechtsschutz XXL (AVB RS XXL 2023)",
+  "stand": "01.05.2023",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Privat-Rechtsschutz (Ziffer 25): Schadenersatz, Vertrags-/Sachenrecht, Straf, OWi, Beratung, Opfer, Betreuung, Antidiskriminierung"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz (nichtselbstständig); Aufhebungsvertrag bis 1.000 EUR, Manager-RS bis Streitwert 30.000 EUR; Wartezeit 6 Monate"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrsbereich als Eigentümer/Halter/Fahrer; auch Fahrgast/Fußgänger/Radfahrer; XXL mit Vertrags-RS bis Neuwert 150.000 EUR"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Bausteine Wohnen und Vermietung (Ziffer 29), VS je 1.000.000 EUR; Vermieter mit Inkasso und Bonitätsprüfung"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "im Baustein Privat enthalten: Reputations-RS, Identitätsmissbrauch, Urheberrecht im Internet; XXL aktiver Cyber-Strafrechtsschutz"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz vor deutschen Finanz-/Verwaltungsgerichten; XXL bereits ab vorgeschaltetem Einspruchsverfahren"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozialgerichts-Rechtsschutz; XXL bereits ab vorgeschaltetem Widerspruchsverfahren"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz Verkehrs- und Nichtverkehrssachen vor deutschen Verwaltungsgerichten/-behörden"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt; weltweit 1.200.000 EUR; Vermietung/Wohnen je 1.000.000 EUR",
+    "selbstbeteiligung": "variabel in 150-EUR-Schritten; Min/Max laut Versicherungsschein; sinkt mit Schadenfreiheit",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "keine Wartezeit: Schadenersatz, Verkehr, Straf, OWi",
+      "keine Wartezeit: Beratung, Opfer, telefonische Beratung",
+      "6 Monate: Arbeits-Rechtsschutz",
+      "keine Wartezeit bei nahtloser Vorversicherung",
+      "keine Wartezeit: Serviceleistungen, aktiver Straf-RS"
+    ],
+    "geltungsbereich": "Europa (geografisch), Mittelmeer-Anrainer, Kanaren, Azoren, Madeira, Französisch-Guayana, Guadeloupe, Martinique, Réunion; Steuer/Sozial/Verwaltung/Opfer nur Deutschland; weltweit temporär bis 36 Monate",
+    "vertragslaufzeit": "1 Jahr, danach stillschweigende Verlängerung um je 1 Jahr"
+  },
+  "leistungen": [
+    "telefonische Rechtsberatung (auch ohne Versicherungsfall)",
+    "Mediation bis 3.000 EUR/Fall",
+    "freie Anwaltswahl",
+    "Strafkaution als zinsloses Darlehen (XXL europaweit unbegrenzt)",
+    "mobiler Anwalt (Hausbesuch)",
+    "Beratungs-RS Familien-/Erbrecht bis 500 EUR/Fall",
+    "Beratungs-RS private Bausachen bis 500 EUR/Jahr",
+    "Opfer-Rechtsschutz (Gewaltstraftaten, Nebenklage)",
+    "psychologische Soforthilfe am Telefon",
+    "Suche und Löschung rufschädigender Inhalte im Internet",
+    "Vorsorgeverfügung/Patientenverfügung (1x/Jahr)",
+    "Nachlassregelung/digitaler Nachlass (1x/Jahr)",
+    "Vertragscheck Miet-/Arbeitsverträge (1x/Jahr)",
+    "Nebenkostenprüfung als Mieter (1x/Jahr)",
+    "Übersetzungs- und Dolmetscherkosten im Ausland"
+  ],
+  "ausschluesse": [
+    "Baufinanzierung und Erwerb/Errichtung bebaubarer Grundstücke",
+    "Kapitalanlagen (Erwerb/Verwaltung/Finanzierung)",
+    "geistiges Eigentum (Patent/Marke/Urheber/Design)",
+    "Kartell- und Wettbewerbsrecht",
+    "Familien-/Lebenspartnerschafts-/Erbrecht (nur Beratung)",
+    "Spiel-/Wett-/Spekulationsgeschäfte, Gewinnzusagen",
+    "Verfassungsgerichte und internationale Gerichtshöfe",
+    "eigenes Insolvenzverfahren",
+    "Asyl-/Ausländerrecht, Studienplatzvergabe",
+    "Halt-/Parkverstöße (außer OWi-RS mit Punkten)",
+    "kollektives Arbeits-/Dienstrecht",
+    "Abwehr von Schadenersatzansprüchen",
+    "vorsätzlich begangene Straftaten"
+  ],
+  "besonderheiten": [
+    "drei Tarifstufen L/XL/XXL (dieser Tarif = XXL)",
+    "digitaler Versicherer Adam Riese (Marke der Württembergischen)",
+    "Update-Garantie für günstigere Bedingungen (5 Jahre)",
+    "variable Selbstbeteiligung (sinkt mit Schadenfreiheit, je 150 EUR)",
+    "telefonische Beratung auch in nicht versicherten Bereichen",
+    "XXL: Pflegeberatung inkl. Mitversicherung der Eltern",
+    "XXL: aktiver Cyber-Strafrechtsschutz",
+    "XXL: Erschließungs-/Anliegerabgaben bis 25.000 EUR",
+    "erweiterter Straf-Rechtsschutz optional zubuchbar (bis 400.000 EUR)",
+    "Klauseln Single/Alleinerziehende/Paare wählbar",
+    "weltweiter Schutz bis 36 Monate Auslandsaufenthalt"
+  ],
+  "beitrag": null,
+  "_input_hash": "39ec614c18a933d5b53975e3ad3f256c84f0fdb5b36966537e8e5c4ccabe7c75",
+  "_model": "claude",
+  "_filter": "none",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "d048287c6a0e6d2d769b2a2e23e11ae4de70e9e7594a38a843cbda5c8ae6809d"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "48faf0e3f816e4f23901f7540145375d4f63e0f4086ae44c255098069c4c0944"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "fcd8ade07659a4a2173921c72a3fb2eb25c3ef4f30addafbf500b7b67a9cdd0b"
+    }
+  ]
+}
