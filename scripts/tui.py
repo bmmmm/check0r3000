@@ -456,11 +456,13 @@ def _bewertung_cell(row: SnapshotRow) -> str:
 VERGLEICH_LABEL_W = 30  # width of the left-hand row-label column
 
 
-def _vergleich_col_w(ncols: int) -> int:
-    """Per-tariff column width, shrinking as more tariffs are compared."""
+def _vergleich_col_w(ncols: int, avail: int = 130) -> int:
+    """Per-tariff column width, shrinking as more tariffs are compared. `avail` is the
+    usable render width — the label column plus all tariff columns must fit inside it,
+    so the matrix rows never exceed the terminal and wrap."""
     if ncols <= 0:
         return 16
-    return max(13, min(24, (130 - VERGLEICH_LABEL_W) // ncols))
+    return max(13, min(24, (avail - VERGLEICH_LABEL_W) // ncols))
 
 
 def _esc(s: str) -> str:
@@ -1578,27 +1580,28 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 note_str = mod.get("note") or ""
                 lines.append(f"  {label:<22} {badge_str}")
                 if included and note_str:
-                    lines.append(f"    [dim]{note_str}[/dim]")
+                    lines.append(f"    [dim]{_esc(note_str)}[/dim]")
             lines.append("")
 
-            # Coverage
+            # Coverage — every value is model-emitted free text, so escape '[' (a
+            # literal bracket would otherwise be eaten by / break Rich markup).
             cov = detail.coverage
             if cov:
                 lines.append("[bold underline]Deckung[/bold underline]")
                 if cov.get("versicherungssumme"):
-                    lines.append(f"  Versicherungssumme:  {cov['versicherungssumme']}")
+                    lines.append(f"  Versicherungssumme:  {_esc(str(cov['versicherungssumme']))}")
                 if cov.get("selbstbeteiligung"):
-                    lines.append(f"  Selbstbeteiligung:   {cov['selbstbeteiligung']}")
+                    lines.append(f"  Selbstbeteiligung:   {_esc(str(cov['selbstbeteiligung']))}")
                 if cov.get("wartezeit_monate") is not None:
                     lines.append(f"  Wartezeit:           {cov['wartezeit_monate']} Monate")
                 if cov.get("wartezeit_ausnahmen"):
                     lines.append("  Wartezeit-Ausnahmen:")
                     for ex in cov["wartezeit_ausnahmen"]:
-                        lines.append(f"    • {ex}")
+                        lines.append(f"    • {_esc(str(ex))}")
                 if cov.get("geltungsbereich"):
-                    lines.append(f"  Geltungsbereich:     {cov['geltungsbereich']}")
+                    lines.append(f"  Geltungsbereich:     {_esc(str(cov['geltungsbereich']))}")
                 if cov.get("vertragslaufzeit"):
-                    lines.append(f"  Vertragslaufzeit:    {cov['vertragslaufzeit']}")
+                    lines.append(f"  Vertragslaufzeit:    {_esc(str(cov['vertragslaufzeit']))}")
                 lines.append("")
 
             # Premium
@@ -1611,7 +1614,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 if y is not None:
                     lines.append(f"  € {y:.2f} / Jahr")
                 if detail.beitrag.get("quelle"):
-                    lines.append(f"  Quelle: {detail.beitrag['quelle']}")
+                    lines.append(f"  Quelle: {_esc(str(detail.beitrag['quelle']))}")
                 lines.append("")
 
             # Leistungen
@@ -1659,7 +1662,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         def _col_header(self, cols: list[tuple[str, DetailRecord]], col_w: int,
                         title: str) -> str:
-            head = title.ljust(VERGLEICH_LABEL_W)
+            head = _pad_cell(title, VERGLEICH_LABEL_W)  # same truncation rule as rows
             for stem, _ in cols:
                 lbl = _col_label(stem) + (" (Ref)" if self._is_ref_col(stem) else "")
                 head += _pad_cell(lbl, col_w)
@@ -1689,19 +1692,34 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     )
                 return
 
-            col_w = _vergleich_col_w(len(cols))
+            # Cap the columns to what fits the panel at the minimum column width: more
+            # tariffs than fit would push every matrix row past the terminal edge and
+            # wrap, re-breaking the alignment this view exists to provide. The reference
+            # column is leftmost (sorted first), so it always survives the cap; the rest
+            # can be chosen via [c]. avail falls back to 130 before the first layout pass.
+            width = self.size.width or 130
+            avail = max(60, width - 6)
+            max_cols = max(1, (avail - VERGLEICH_LABEL_W) // 13)
+            shown = cols[:max_cols]
+            overflow = len(cols) - len(shown)
+            col_w = _vergleich_col_w(len(shown), avail)
+
             mode = "Wortlaut an \\[w]" if self._compare_verbose else "kompakt · \\[w] Wortlaut"
             hidden_hint = (
                 f" · [yellow]{n_hidden} ausgeblendet \\[c][/yellow]" if n_hidden else ""
             )
+            overflow_hint = (
+                f" · [yellow]+{overflow} passen nicht — \\[c] ausblenden / Terminal "
+                f"breiter[/yellow]" if overflow else ""
+            )
             parts = [
                 "[bold]Tarif-Vergleich[/bold]   "
-                f"[dim]{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
-                f"\\[c] Tarif aus-/einblenden · \\[o] Quelle öffnen{hidden_hint}[/dim]",
-                self._render_module_matrix(cols, col_w),
-                self._render_coverage_matrix(cols, col_w),
-                self._render_category_matrix("leistung", cols, col_w),
-                self._render_category_matrix("ausschluss", cols, col_w),
+                f"[dim]{len(shown)}/{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
+                f"\\[c] aus-/einblenden · \\[o] Quelle öffnen{hidden_hint}{overflow_hint}[/dim]",
+                self._render_module_matrix(shown, col_w),
+                self._render_coverage_matrix(shown, col_w),
+                self._render_category_matrix("leistung", shown, col_w),
+                self._render_category_matrix("ausschluss", shown, col_w),
                 "[dim]Legende: [green]✓[/green] enthalten · [red]✗[/red] ausgeschlossen · "
                 "[yellow]~[/yellow] teilweise (nur/eingeschr./außer/begrenzt) · "
                 "[dim]—[/dim] nicht genannt[/dim]",
@@ -1787,7 +1805,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 # Verbose only: each insurer's own wording on its OWN line, hard-
                 # truncated so it never wraps into the next row. This is the naming
                 # difference made visible (compact mode keeps just the glyph matrix).
-                if verbose and len(wordings) >= 2:
+                if verbose and wordings:
                     for lbl, txt in wordings:
                         sub = _trunc(f"{lbl}: {txt}", total_w - 3)
                         lines.append(f"   [dim]{sub}[/dim]")
@@ -1898,6 +1916,11 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def on_filter_changed(self, event: Input.Changed) -> None:
             self.filter_text = event.value
             self._populate_market_table()
+
+        def on_resize(self, event) -> None:
+            """Re-render the Vergleich matrix on resize so its width-capped columns
+            track the new terminal size instead of leaving a stale layout."""
+            self._populate_coverage()
 
         # --- Actions ---
 
