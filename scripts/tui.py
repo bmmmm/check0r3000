@@ -725,6 +725,54 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def action_close(self) -> None:
             self.dismiss(None)
 
+    class HelpScreen(ModalScreen[None]):
+        """Full keyboard reference, grouped. The footer shows only the essentials."""
+
+        BINDINGS = [
+            Binding("escape", "close", "Close"),
+            Binding("question_mark", "close", "Close"),
+            Binding("q", "close", "Close"),
+            Binding("enter", "close", "Close"),
+        ]
+
+        GROUPS = [
+            ("Navigation", [
+                ("v / m / x", "Favoriten / Markt / Diff"),
+                ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
+                ("d", "Detail-Band unter der Tabelle ein/aus"),
+            ]),
+            ("Tarif-Aktionen (markierte Zeile)", [
+                ("g", "Quell-PDFs laden + analysieren"),
+                ("R", "als Referenz setzen — Δ rechnet neu"),
+                ("u", "Favorit an/aus"),
+                ("D", "lokale Daten löschen (Umfang im Dialog)"),
+            ]),
+            ("Markt", [
+                ("f", "Filter (Versicherer / Produkt)"),
+                ("Esc", "Filter leeren"),
+                ("s / n / p", "Sortierung: €/Monat · Note · Position"),
+            ]),
+            ("Werkzeuge", [
+                ("b", "CHECK24-Query-URL bauen"),
+                ("r", "Daten neu laden"),
+                ("?", "diese Hilfe"),
+                ("q", "Beenden"),
+            ]),
+        ]
+
+        def compose(self) -> ComposeResult:
+            lines = ["[bold]check0r3000 — Shortcuts[/bold]", ""]
+            for title, items in self.GROUPS:
+                lines.append(f"[underline]{title}[/underline]")
+                for key, desc in items:
+                    lines.append(f"  [bold cyan]{key:<13}[/bold cyan] {desc}")
+                lines.append("")
+            lines.append("[bold]\\[Esc][/bold] Schließen")
+            yield Container(Static("\n".join(lines)), id="help-box")
+
+        def action_close(self) -> None:
+            self.dismiss(None)
+
     class CheckApp(App):
         """check0r3000 — Rechtsschutz-Vergleich TUI."""
 
@@ -732,21 +780,24 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         TITLE = "check0r3000 — Rechtsschutz-Vergleich"
 
         BINDINGS = [
-            Binding("q", "quit", "Quit"),
-            Binding("f", "focus_filter", "Filter", show=True),
-            Binding("escape", "clear_filter", "Clear filter"),
-            Binding("s", "sort_price", "Sort €", show=True),
-            Binding("n", "sort_note", "Sort note", show=True),
-            Binding("p", "sort_position", "Sort #", show=True),
+            # Footer (show=True): only the most-used keys; [?] lists everything.
             Binding("v", "switch_tab('favorites')", "Favorites", show=True),
             Binding("m", "switch_tab('market')", "Market", show=True),
-            Binding("d", "toggle_detail", "Details", show=True),
             Binding("x", "switch_tab('diff')", "Diff", show=True),
+            Binding("d", "toggle_detail", "Details", show=True),
             Binding("g", "fetch_docs", "Get docs", show=True),
+            Binding("question_mark", "help", "Help", show=True, key_display="?"),
+            Binding("q", "quit", "Quit", show=True),
+            # Context / power keys — documented in [?], hidden from the footer.
+            Binding("f", "focus_filter", "Filter", show=False),
+            Binding("escape", "clear_filter", "Clear filter", show=False),
+            Binding("s", "sort_price", "Sort €", show=False),
+            Binding("n", "sort_note", "Sort note", show=False),
+            Binding("p", "sort_position", "Sort #", show=False),
             Binding("b", "build_query", "Query-URL", show=False),
-            Binding("u", "toggle_favorite", "Favorit", show=False),
-            Binding("R", "set_reference", "Referenz", show=False),
-            Binding("D", "delete_data", "Daten löschen", show=False),
+            Binding("u", "toggle_favorite", "Favorite", show=False),
+            Binding("R", "set_reference", "Reference", show=False),
+            Binding("D", "delete_data", "Delete data", show=False),
             Binding("r", "refresh_data", "Reload", show=False),
         ]
 
@@ -1491,6 +1542,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         def action_refresh_data(self) -> None:
             self._reload_all()
+
+        def action_help(self) -> None:
+            self.push_screen(HelpScreen())
 
         # --- Build the CHECK24 result URL ([b]) ---
 
