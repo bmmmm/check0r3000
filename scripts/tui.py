@@ -457,11 +457,20 @@ def _vergleich_col_w(ncols: int) -> int:
     return max(13, min(24, (130 - VERGLEICH_LABEL_W) // ncols))
 
 
+def _esc(s: str) -> str:
+    """Escape a literal '[' so data text can't be parsed as Textual markup. A lone
+    ']' is harmless, so only '[' needs escaping."""
+    return (s or "").replace("[", r"\[")
+
+
 def _pad_cell(plain: str, width: int, color: str | None = None) -> str:
-    """Truncate/pad PLAIN text to `width`, then wrap in one colour tag if given."""
+    """Truncate/pad PLAIN text to `width`, then escape and wrap in one colour tag.
+
+    Escaping happens AFTER the width math (a trailing '\\[' renders as one visible
+    '[', so padding the unescaped string keeps columns aligned)."""
     if len(plain) > width:
         plain = plain[: max(1, width - 1)] + "…"
-    cell = plain.ljust(width)
+    cell = _esc(plain.ljust(width))
     return f"[{color}]{cell}[/{color}]" if color else cell
 
 
@@ -1659,15 +1668,17 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 # Show the actual wording each insurer uses when ≥2 tariffs share the
                 # category — this is the naming difference made visible.
                 if len(wordings) >= 2:
-                    sub = " · ".join(f"{lbl}: {txt[:30]}" for lbl, txt in wordings)
-                    lines.append(f"   [dim]{sub[:148]}[/dim]")
+                    raw = " · ".join(f"{lbl}: {txt[:30]}" for lbl, txt in wordings)
+                    lines.append(f"   [dim]{_esc(raw[:148])}[/dim]")
 
             total_sonst = sum(len(s) for s in per_col_sonst)
             if total_sonst:
                 for i, (stem, _rec) in enumerate(cols):
                     if per_col_sonst[i]:
                         items = " · ".join(x[:34] for x in per_col_sonst[i])
-                        lines.append(f"   [dim]… Sonstige ({_col_label(stem)}): {items[:140]}[/dim]")
+                        lines.append(
+                            f"   [dim]… Sonstige ({_col_label(stem)}): {_esc(items[:140])}[/dim]"
+                        )
                 lines.append(f"   [dim]({total_sonst} nicht zugeordnet über alle Tarife)[/dim]")
             return "\n".join(lines)
 
