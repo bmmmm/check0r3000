@@ -81,10 +81,25 @@ scripts/tui.py                                        interaktiver Browser über
 - **`scripts/tui.py`** (das einzige Skript mit `textual`-Dependency) bietet drei Tabs:
   **★ Favorites** (kuratierte Shortlist aus `config/favorites.json` mit Note/Preis/SB,
   Δ vs. Referenz, SB-Varianten und den gesicherten Dokument-URLs), **Market** (alle
-  Tarife, sortier-/filterbar) und **Diff** (Snapshot-Vergleich). Jeder Tarif zeigt einen
+  Tarife, sortier-/filterbar) und **Vergleich** (`[x]`, der angebotsübergreifende
+  Deckungs-Vergleich — s.u.). Jeder Tarif zeigt einen
   **Status** (`✓ analysiert · ↓ PDF lokal · ○ URLs · gelistet`) und zwei getrennte
   Bewertungs-Spalten: **Note** (CHECK24-Experten-Tarifnote) und **Bew.** (Kundenbewertung
   /5). `--selftest` prüft das Laden ohne UI; `--screenshot DIR` rendert jeden Tab als SVG.
+- **Vergleich-Tab (`[x]`)** stellt alle analysierten Tarife nebeneinander (Spalten =
+  Tarife, Referenz `[R]` ganz links als Basis): eine **Module-Matrix** (8 Lebensbereiche
+  mit Stufen-Badge), eine **Deckungs-Matrix** (VS / SB / Wartezeit / Geltungsbereich /
+  Laufzeit, je Feld kurz-normalisiert), und **Leistungen/Ausschlüsse-Matrizen**. Letztere
+  lösen das Benennungs-Problem: `scripts/coverage_taxonomy.py` ordnet jeden Freitext-Eintrag
+  über die kuratierte Taxonomie `config/coverage_taxonomy.json` einer kanonischen Kategorie
+  zu (deterministisch, **ohne Modell-Call**), sodass dieselbe Leistung über Versicherer
+  hinweg in einer Zeile steht, auch wenn sie anders heißt (`telefonische Rechtsberatung`
+  ↔ `JuraTel®` ↔ `DMB-Hotline`). Jede Kategorie zeigt den **Original-Wortlaut** je Tarif
+  als Subtext; nicht zugeordnete Einträge landen sichtbar im **Sonstige**-Bucket (nie
+  verworfen); `~` markiert Teil-Deckung (nur/eingeschr./außer/begrenzt). Erweitern =
+  ein Objekt an die Taxonomie anhängen (`coverage_taxonomy.py --selftest` pinnt die
+  Cross-Tarif-Zuordnung). Der frühere Snapshot-Preis-Diff hängt nur noch an, sobald ein
+  zweiter Snapshot existiert.
 - **Identität über den `stem`**: jeder Tarif hat einen kanonischen `stem`
   (`<versicherer>__<tarif>`, aus `data/sources/check24-documents.json`). TUI-Lookup,
   Pipeline-Output und Doc-Manifest hängen alle daran — `[g]` schreibt direkt nach
@@ -93,7 +108,8 @@ scripts/tui.py                                        interaktiver Browser über
   **`[d]`** Detail-Band unter der Tabelle ein/aus (Default aus → volle Tabellenbreite);
   **`[g]`** lädt + analysiert nach Bestätigung (Pipeline `fetch_docs --into-raw → ingest
   → extract` im Hintergrund; Modell per `CHECK0R_ANALYZE_MODEL`, Default `claude`);
-  **`[R]`** setzt die markierte Zeile als Δ-Referenz; **`[u]`** Favorit an/aus;
+  **`[G]`** nur analysieren ohne Download (`ingest → extract`), wenn die PDFs schon unter
+  `data/raw/<stem>/` liegen; **`[R]`** setzt die markierte Zeile als Δ-Referenz; **`[u]`** Favorit an/aus;
   **`[D]`** lokale Daten löschen (mit Umfang-Auswahl); **`[b]`** baut die CHECK24-URL.
   Tarife ohne gesicherte URLs verweisen auf den Browser-Schritt „Tarifdetails".
 
