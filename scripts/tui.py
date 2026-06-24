@@ -22,7 +22,10 @@ the source PDFs are already in data/raw/<stem>/. The extract model defaults to
 "claude"; override with the CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were
 never harvested point you back to the browser "Tarifdetails" step. The Vergleich
 tab [x] shows an across-tariff coverage comparison (modules, coverage, and
-taxonomy-aligned Leistungen/Ausschlüsse) built from the analyzed records.
+taxonomy-aligned Leistungen/Ausschlüsse) built from the analyzed records: [w]
+toggles the verbatim per-insurer wording (compact ↔ verbose), [c] hides/shows the
+selected tariff in the comparison, and [o] opens a tariff's source documents online
+or as the local PDFs.
 """
 
 from __future__ import annotations
@@ -477,6 +480,22 @@ def _pad_cell(plain: str, width: int, color: str | None = None) -> str:
     return f"[{color}]{cell}[/{color}]" if color else cell
 
 
+def _pad_label(plain: str) -> str:
+    """Truncate+pad a row label to the fixed left column. Category names run up to
+    ~49 chars; without truncation they overflow VERGLEICH_LABEL_W and shove every
+    tariff cell out of alignment, which is exactly the misalignment seen in the
+    matrices. Truncating here keeps the glyph columns flush."""
+    return _pad_cell(plain, VERGLEICH_LABEL_W)
+
+
+def _trunc(plain: str, width: int) -> str:
+    """Escape + hard-truncate a free-text continuation line to `width` so it never
+    wraps onto the next row (wrapping is what makes the verbose subtext unreadable)."""
+    if len(plain) > width:
+        plain = plain[: max(1, width - 1)] + "…"
+    return _esc(plain)
+
+
 def _col_label(stem: str) -> str:
     """Short column header from a stem's insurer part (arag -> ARAG, advocard ->
     Advocard)."""
@@ -893,6 +912,57 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def action_close(self) -> None:
             self.dismiss(None)
 
+    class OpenSourceScreen(ModalScreen[str | None]):
+        """Choose how to read a tariff's source documents: online in the browser, or
+        the local PDFs from disk. Returns 'online' | 'disk' | None."""
+
+        BINDINGS = [
+            Binding("1", "pick('online')", "Online"),
+            Binding("2", "pick('disk')", "Disk"),
+            Binding("escape", "cancel", "Cancel"),
+            Binding("q", "cancel", "Cancel"),
+        ]
+
+        def __init__(self, label: str, docs: list[dict], has_urls: bool,
+                     n_pdfs: int, stem: str) -> None:
+            super().__init__()
+            self._label = label
+            self._docs = docs
+            self._has_urls = has_urls
+            self._n_pdfs = n_pdfs
+            self._stem = stem
+
+        def compose(self) -> ComposeResult:
+            i, _, t = self._stem.partition("__")
+            lines = [f"[bold]Quelle öffnen — {self._label}[/bold]", ""]
+            if self._docs:
+                lines.append("[underline]Dokumente[/underline]")
+                for dd in self._docs:
+                    lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:50]}")
+                lines.append("")
+            online = (
+                "[bold]\\[1][/bold] Online im Browser"
+                if self._has_urls else "[dim]\\[1] Online — keine URLs hinterlegt[/dim]"
+            )
+            disk = (
+                f"[bold]\\[2][/bold] Lokale PDFs ({self._n_pdfs}) — "
+                f"[cyan]data/raw/{i}/{t}/[/cyan]"
+                if self._n_pdfs else "[dim]\\[2] Lokale PDFs — keine vorhanden (\\[g] lädt)[/dim]"
+            )
+            lines += [online, disk, "", "[bold]\\[Esc][/bold] Abbrechen"]
+            yield Container(Static("\n".join(lines)), id="open-box")
+
+        def action_pick(self, choice: str) -> None:
+            if choice == "online" and not self._has_urls:
+                return
+            if choice == "disk" and not self._n_pdfs:
+                return
+            self.dismiss(choice)
+
+        def action_cancel(self) -> None:
+            self.dismiss(None)
+
     class HelpScreen(ModalScreen[None]):
         """Full keyboard reference, grouped. The footer shows only the essentials."""
 
@@ -912,9 +982,15 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             ("Tarif-Aktionen (markierte Zeile)", [
                 ("g", "Quell-PDFs laden + analysieren"),
                 ("G", "nur analysieren (PDFs lokal, kein Download)"),
+                ("o", "Quelle öffnen (online im Browser / lokale PDFs)"),
                 ("R", "als Referenz setzen — Δ rechnet neu"),
                 ("u", "Favorit an/aus"),
+                ("c", "aus Vergleich \\[x] aus-/einblenden"),
                 ("D", "lokale Daten löschen (Umfang im Dialog)"),
+            ]),
+            ("Vergleich \\[x]", [
+                ("w", "Wortlaut ein/aus (kompakt ↔ ausführlich)"),
+                ("c", "markierten Tarif aus-/einblenden"),
             ]),
             ("Markt", [
                 ("f", "Filter (Versicherer / Produkt)"),
@@ -959,6 +1035,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("q", "quit", "Quit", show=True),
             # Context / power keys — documented in [?], hidden from the footer.
             Binding("G", "analyze_local", "Analyze local", show=False),
+            Binding("c", "toggle_compare", "Compare on/off", show=False),
+            Binding("w", "toggle_compare_wording", "Wording", show=False),
+            Binding("o", "open_source", "Open source", show=False),
             Binding("f", "focus_filter", "Filter", show=False),
             Binding("escape", "clear_filter", "Clear filter", show=False),
             Binding("s", "sort_price", "Sort €", show=False),
@@ -991,6 +1070,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
             self._active_row: SnapshotRow | None = None
             self._active_fav: dict | None = None
+            # Vergleich tab view state: compact by default (clean ✓/✗/~/— matrix);
+            # [w] expands the verbatim per-insurer wording under each category.
+            self._compare_verbose: bool = False
 
         # --- Lifecycle ---
 
@@ -1285,7 +1367,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
                 lines.append("")
 
-            has_detail = _load_detail(row.insurer, row.product) is not None
+            detail_rec = _load_detail(row.insurer, row.product)
+            has_detail = detail_rec is not None
             docs = self._doc_index.get(fav.get("stem", ""), [])
             if docs:
                 lines.append("[underline]Quelldokumente (URLs gesichert)[/underline]")
@@ -1304,10 +1387,12 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     )
                 lines.append("")
 
-            if has_detail:
+            if detail_rec is not None:
                 lines.append(
-                    "[bright_green]✓ Detail-Datensatz eingelesen — Module oben.[/bright_green]"
+                    "[bold underline]Tarifdetails[/bold underline]   "
+                    "[dim](\\[o] Quelle öffnen · \\[x] Vergleich)[/dim]"
                 )
+                lines += self._record_body_lines(detail_rec)
             else:
                 lines.append(
                     "[dim italic]Noch keine AVB/PIB eingelesen — \\[g] lädt + analysiert "
@@ -1473,9 +1558,19 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             if detail.stand:
                 lines.append(f"Stand: {detail.stand}")
             lines.append("")
+            lines += self._record_body_lines(detail)
+            return "\n".join(lines)
+
+        def _record_body_lines(self, detail: DetailRecord) -> list[str]:
+            """Modules → coverage → premium → benefits → exclusions → highlights.
+            Shared by the Market detail band and the Favorites band (when a record
+            exists), so an analyzed favorite shows the same full tariff detail instead
+            of a 'Module oben' pointer to a module list that the Favorites band never
+            actually rendered."""
+            lines: list[str] = []
 
             # Modules
-            lines.append("[bold underline]Modules[/bold underline]")
+            lines.append("[bold underline]Module[/bold underline]")
             for mod_key, label in MODULE_LABELS.items():
                 mod = detail.modules.get(mod_key, {})
                 included = mod.get("included", False)
@@ -1489,7 +1584,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             # Coverage
             cov = detail.coverage
             if cov:
-                lines.append("[bold underline]Coverage[/bold underline]")
+                lines.append("[bold underline]Deckung[/bold underline]")
                 if cov.get("versicherungssumme"):
                     lines.append(f"  Versicherungssumme:  {cov['versicherungssumme']}")
                 if cov.get("selbstbeteiligung"):
@@ -1508,45 +1603,53 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
             # Premium
             if detail.beitrag:
-                lines.append("[bold underline]Premium[/bold underline]")
+                lines.append("[bold underline]Beitrag[/bold underline]")
                 m = detail.beitrag.get("monatlich_eur")
                 y = detail.beitrag.get("jaehrlich_eur")
                 if m is not None:
-                    lines.append(f"  [bright_green]€ {m:.2f} / month[/bright_green]")
+                    lines.append(f"  [bright_green]€ {m:.2f} / Monat[/bright_green]")
                 if y is not None:
-                    lines.append(f"  € {y:.2f} / year")
+                    lines.append(f"  € {y:.2f} / Jahr")
                 if detail.beitrag.get("quelle"):
-                    lines.append(f"  Source: {detail.beitrag['quelle']}")
+                    lines.append(f"  Quelle: {detail.beitrag['quelle']}")
                 lines.append("")
 
             # Leistungen
             if detail.leistungen:
-                lines.append("[bold underline]Leistungen (benefits)[/bold underline]")
+                lines.append("[bold underline]Leistungen[/bold underline]")
                 for item in detail.leistungen:
-                    lines.append(f"  [green]✓[/green] {item}")
+                    lines.append(f"  [green]✓[/green] {_esc(item)}")
                 lines.append("")
 
             # Ausschlüsse
             if detail.ausschluesse:
-                lines.append("[bold underline]Ausschlüsse (exclusions)[/bold underline]")
+                lines.append("[bold underline]Ausschlüsse[/bold underline]")
                 for item in detail.ausschluesse:
-                    lines.append(f"  [red]✗[/red] {item}")
+                    lines.append(f"  [red]✗[/red] {_esc(item)}")
                 lines.append("")
 
             # Besonderheiten
             if detail.besonderheiten:
-                lines.append("[bold underline]Besonderheiten (highlights)[/bold underline]")
+                lines.append("[bold underline]Besonderheiten[/bold underline]")
                 for item in detail.besonderheiten:
-                    lines.append(f"  [yellow]★[/yellow] {item}")
+                    lines.append(f"  [yellow]★[/yellow] {_esc(item)}")
 
-            return "\n".join(lines)
+            return lines
 
         # --- Vergleich tab (cross-tariff coverage comparison) ---
 
+        def _compare_hidden(self) -> set[str]:
+            """Stems the user has removed from the Vergleich via [c]. An exclude-set
+            (not an include-set) so newly analyzed tariffs join the comparison
+            automatically; [c] toggles a stem in/out."""
+            return set(self._favorites.get("compare_hidden") or [])
+
         def _coverage_columns(self) -> list[tuple[str, DetailRecord]]:
             """Analyzed records as (stem, record), reference_stem first then by stem
-            — so the current contract ([R]) is always the leftmost baseline column."""
-            cols = load_all_details()
+            — so the current contract ([R]) is always the leftmost baseline column.
+            Stems hidden via [c] are dropped."""
+            hidden = self._compare_hidden()
+            cols = [c for c in load_all_details() if c[0] not in hidden]
             ref = self._favorites.get("reference_stem")
             cols.sort(key=lambda sr: (sr[0] != ref, sr[0]))
             return cols
@@ -1569,20 +1672,32 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 return
 
             cols = self._coverage_columns()
+            n_hidden = len(self._compare_hidden())
             if not cols:
-                widget.update(
-                    "[dim italic]Noch keine analysierten Tarife.\n"
-                    "Markiere im Markt/Favoriten einen Tarif und drücke \\[g] (Download "
-                    "+ Analyse) oder \\[G] (nur Analyse, PDFs lokal) — dann erscheint hier "
-                    "der angebotsübergreifende Leistungsvergleich.[/dim italic]"
-                )
+                if n_hidden:
+                    widget.update(
+                        f"[dim italic]Alle Tarife aus dem Vergleich ausgeblendet "
+                        f"({n_hidden} versteckt).\nIm Markt/Favoriten einen Tarif wählen "
+                        "und \\[c] drücken, um ihn wieder einzublenden.[/dim italic]"
+                    )
+                else:
+                    widget.update(
+                        "[dim italic]Noch keine analysierten Tarife.\n"
+                        "Markiere im Markt/Favoriten einen Tarif und drücke \\[g] (Download "
+                        "+ Analyse) oder \\[G] (nur Analyse, PDFs lokal) — dann erscheint hier "
+                        "der angebotsübergreifende Leistungsvergleich.[/dim italic]"
+                    )
                 return
 
             col_w = _vergleich_col_w(len(cols))
+            mode = "Wortlaut an \\[w]" if self._compare_verbose else "kompakt · \\[w] Wortlaut"
+            hidden_hint = (
+                f" · [yellow]{n_hidden} ausgeblendet \\[c][/yellow]" if n_hidden else ""
+            )
             parts = [
                 "[bold]Tarif-Vergleich[/bold]   "
-                f"[dim]{len(cols)} analysierte Tarife · Spalten = Tarife · Referenz "
-                "\\[R] ganz links als Basis[/dim]",
+                f"[dim]{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
+                f"\\[c] Tarif aus-/einblenden · \\[o] Quelle öffnen{hidden_hint}[/dim]",
                 self._render_module_matrix(cols, col_w),
                 self._render_coverage_matrix(cols, col_w),
                 self._render_category_matrix("leistung", cols, col_w),
@@ -1599,7 +1714,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def _render_module_matrix(self, cols, col_w) -> str:
             lines = [self._col_header(cols, col_w, "MODULE (Lebensbereiche)")]
             for key, label in MODULE_LABELS.items():
-                row = label.ljust(VERGLEICH_LABEL_W)
+                row = _pad_label(label)
                 for stem, rec in cols:
                     plain, color = _module_cell(rec.modules.get(key, {}))
                     row += _pad_cell(plain, col_w, color)
@@ -1616,7 +1731,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             ]
             lines = [self._col_header(cols, col_w, "DECKUNG")]
             for label, fn in rows:
-                row = label.ljust(VERGLEICH_LABEL_W)
+                row = _pad_label(label)
                 for stem, rec in cols:
                     row += _pad_cell(fn(rec.coverage or {}), col_w)
                 lines.append(row)
@@ -1631,6 +1746,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             title = "LEISTUNGEN (Vergleich)" if kind == "leistung" else "AUSSCHLÜSSE (Vergleich)"
             field = "leistungen" if kind == "leistung" else "ausschluesse"
             glyph, color = ("✓", "green") if kind == "leistung" else ("✗", "red")
+            verbose = self._compare_verbose
+            total_w = VERGLEICH_LABEL_W + len(cols) * col_w  # subtext width budget
 
             # Per column: category_key -> first verbatim hit, plus the unmatched bucket.
             per_col_cat: list[dict[str, str]] = []
@@ -1653,8 +1770,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             lines = [self._col_header(cols, col_w, title)]
 
             for key in ordered:
-                label = ctax.category_label(key)
-                row = label.ljust(VERGLEICH_LABEL_W)
+                row = _pad_label(ctax.category_label(key))
                 wordings: list[tuple[str, str]] = []
                 for i, (stem, rec) in enumerate(cols):
                     verbatim = per_col_cat[i].get(key)
@@ -1668,21 +1784,29 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         row += _pad_cell(glyph, col_w, color)
                     wordings.append((_col_label(stem), verbatim))
                 lines.append(row)
-                # Show the actual wording each insurer uses when ≥2 tariffs share the
-                # category — this is the naming difference made visible.
-                if len(wordings) >= 2:
-                    raw = " · ".join(f"{lbl}: {txt[:30]}" for lbl, txt in wordings)
-                    lines.append(f"   [dim]{_esc(raw[:148])}[/dim]")
+                # Verbose only: each insurer's own wording on its OWN line, hard-
+                # truncated so it never wraps into the next row. This is the naming
+                # difference made visible (compact mode keeps just the glyph matrix).
+                if verbose and len(wordings) >= 2:
+                    for lbl, txt in wordings:
+                        sub = _trunc(f"{lbl}: {txt}", total_w - 3)
+                        lines.append(f"   [dim]{sub}[/dim]")
 
             total_sonst = sum(len(s) for s in per_col_sonst)
             if total_sonst:
-                for i, (stem, _rec) in enumerate(cols):
-                    if per_col_sonst[i]:
-                        items = " · ".join(x[:34] for x in per_col_sonst[i])
-                        lines.append(
-                            f"   [dim]… Sonstige ({_col_label(stem)}): {_esc(items[:140])}[/dim]"
-                        )
-                lines.append(f"   [dim]({total_sonst} nicht zugeordnet über alle Tarife)[/dim]")
+                if verbose:
+                    for i, (stem, _rec) in enumerate(cols):
+                        if per_col_sonst[i]:
+                            full = _trunc(
+                                f"… Sonstige ({_col_label(stem)}): "
+                                + " · ".join(per_col_sonst[i]),
+                                total_w - 3,
+                            )
+                            lines.append(f"   [dim]{full}[/dim]")
+                sonst_hint = "" if verbose else " — \\[w] zeigt sie"
+                lines.append(
+                    f"   [dim]({total_sonst} nicht zugeordnet{sonst_hint})[/dim]"
+                )
             return "\n".join(lines)
 
         def _render_snapshot_pricediff(self) -> str:
@@ -1979,6 +2103,103 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 timeout=5,
             )
             self._reload_all()
+
+        def action_toggle_compare(self) -> None:
+            """Hide/show the active tariff in the Vergleich tab. Persisted as an
+            exclude-set (compare_hidden) in config/favorites.json."""
+            ident = self._active_identity()
+            if ident is None:
+                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+                return
+            insurer, product, stem = ident
+            if not stem:
+                self.notify(
+                    "Kein kanonischer stem — dieser Tarif lässt sich nicht im Vergleich "
+                    "verwalten.",
+                    severity="warning",
+                    timeout=6,
+                )
+                return
+            hidden = self._compare_hidden()
+            if stem in hidden:
+                hidden.discard(stem)
+                msg = f"Wieder im Vergleich: {insurer} {product}"
+            else:
+                hidden.add(stem)
+                msg = f"Aus Vergleich entfernt: {insurer} {product}"
+            self._favorites["compare_hidden"] = sorted(hidden)
+            self._save_favorites()
+            self.notify(msg, timeout=4)
+            self._reload_all()
+
+        def action_toggle_compare_wording(self) -> None:
+            """Toggle the Vergleich between compact (glyph matrix only) and verbose
+            (each insurer's verbatim wording under every shared category)."""
+            self._compare_verbose = not self._compare_verbose
+            self._populate_coverage()
+            self.notify(
+                "Vergleich: Wortlaut " + ("an" if self._compare_verbose else "aus"),
+                timeout=3,
+            )
+            self.action_switch_tab("diff")  # make the change visible immediately
+
+        def action_open_source(self) -> None:
+            """Open the active tariff's source documents — online (browser) or the
+            local PDFs (data/raw/<stem>/) — to read the original."""
+            ident = self._active_identity()
+            if ident is None:
+                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+                return
+            insurer, product, stem = ident
+            entry = self._doc_by_stem.get(stem) if stem else None
+            docs = (entry or {}).get("docs", [])
+            raw_dir = _raw_dir_for_stem(stem) if stem else None
+            n_pdfs = len(list(raw_dir.glob("*.pdf"))) if raw_dir and raw_dir.is_dir() else 0
+            has_urls = any(d.get("url") for d in docs)
+            if not has_urls and not n_pdfs:
+                self.notify(
+                    "Keine Quell-URLs und keine lokalen PDFs für diese Zeile.",
+                    severity="warning",
+                    timeout=6,
+                )
+                return
+            label = f"{insurer} {product}"
+
+            def _go(choice: str | None) -> None:
+                if choice == "online":
+                    self._open_external([d["url"] for d in docs if d.get("url")])
+                elif choice == "disk" and raw_dir is not None:
+                    self._open_external([str(raw_dir)])
+
+            self.push_screen(
+                OpenSourceScreen(label, docs, has_urls, n_pdfs, stem or ""), _go
+            )
+
+        def _open_external(self, targets: list[str]) -> None:
+            """Hand off URLs / paths to the OS opener (browser / Finder). Best-effort:
+            a missing opener or a launch error is surfaced, never fatal."""
+            import shutil
+            import subprocess
+
+            if not targets:
+                self.notify("Nichts zu öffnen.", severity="information")
+                return
+            opener = "open" if sys.platform == "darwin" else (
+                shutil.which("xdg-open") or "xdg-open"
+            )
+            opened = 0
+            for t in targets:
+                try:
+                    subprocess.Popen(
+                        [opener, t],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    opened += 1
+                except OSError as exc:
+                    self.notify(f"Öffnen fehlgeschlagen: {exc}", severity="error", timeout=6)
+                    return
+            self.notify(f"{opened} geöffnet.", timeout=3)
 
         def action_delete_data(self) -> None:
             """Delete a tariff's locally stored data, with a scope chosen in a modal."""
@@ -2293,11 +2514,18 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 # --- Favorites: reveal the detail band on the first favorite ---
                 tabs.active = "favorites"
                 await pilot.pause()
+                # Prefer an analyzed favorite so the shot shows the full record body
+                # (the band that used to read "Module oben" and render nothing).
                 first_fav = None
                 for _k, (row, fav) in app._fav_rows.items():
-                    if row is not None:
+                    if row is not None and _load_detail(row.insurer, row.product):
                         first_fav = (row, fav)
                         break
+                if first_fav is None:
+                    for _k, (row, fav) in app._fav_rows.items():
+                        if row is not None:
+                            first_fav = (row, fav)
+                            break
                 if first_fav is not None:
                     app._active_row, app._active_fav = first_fav
                     try:
@@ -2307,6 +2535,16 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     app._show_detail()
                 await pilot.pause()
                 app.save_screenshot(filename="favorites.svg", path=str(screenshot_dir))
+                # Scroll the band to the record body (Module/Deckung/Leistungen) — the
+                # part that used to be a dead "Module oben" pointer — and capture it.
+                try:
+                    band = app.query_one("#fav-detail")
+                    band.scroll_end(animate=False)
+                    await pilot.pause()
+                    app.save_screenshot(filename="favorites-body.svg", path=str(screenshot_dir))
+                    band.scroll_home(animate=False)
+                except Exception:
+                    pass
 
                 # --- Market: first the default (collapsed) view — full-width table,
                 # no band — then reveal it with the [g] affordance visible. ---
@@ -2328,14 +2566,41 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 await pilot.pause()
                 app.save_screenshot(filename="market-detail.svg", path=str(screenshot_dir))
 
-                # --- Vergleich (coverage comparison) ---
+                # --- Vergleich (coverage comparison) — compact, then verbose ---
                 tabs.active = "diff"
                 await pilot.pause()
                 app.save_screenshot(filename="vergleich.svg", path=str(screenshot_dir))
+                app._compare_verbose = True
+                app._populate_coverage()
+                await pilot.pause()
+                app.save_screenshot(filename="vergleich-verbose.svg", path=str(screenshot_dir))
+                app._compare_verbose = False
+                app._populate_coverage()
 
-                # --- Confirm modal ([g] gate) over the market tab ---
+                # --- Modals over the market tab ([o] open-source, then [g] confirm) ---
                 tabs.active = "market"
                 await pilot.pause()
+                osrow = next(
+                    (r for r in app._snapshot.rows
+                     if r.stem and app._doc_by_stem.get(r.stem)),
+                    None,
+                ) if app._snapshot else None
+                if osrow is not None:
+                    entry = app._doc_by_stem.get(osrow.stem) or {}
+                    docs = entry.get("docs", [])
+                    raw = _raw_dir_for_stem(osrow.stem)
+                    n_pdfs = len(list(raw.glob("*.pdf"))) if raw.is_dir() else 0
+                    await app.push_screen(
+                        OpenSourceScreen(
+                            f"{osrow.insurer} {osrow.product}", docs,
+                            any(d.get("url") for d in docs), n_pdfs, osrow.stem,
+                        )
+                    )
+                    await pilot.pause()
+                    app.save_screenshot(filename="open.svg", path=str(screenshot_dir))
+                    app.pop_screen()
+                    await pilot.pause()
+
                 sample = next(
                     (
                         app._doc_entry(r)
@@ -2351,7 +2616,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         asyncio.run(_shoot())
         print(
-            "Saved screenshots (favorites/market/market-detail/vergleich/confirm .svg) to "
+            "Saved screenshots (favorites/market/market-detail/vergleich/"
+            "vergleich-verbose/open/confirm .svg) to "
             f"{screenshot_dir}"
         )
         return

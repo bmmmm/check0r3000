@@ -210,6 +210,28 @@ QueryUrlScreen {
     height: auto;
 }
 
+/* ── Open-source modal ([o]) ────────────────────────────────────────────── */
+
+OpenSourceScreen {
+    align: center middle;
+    background: $surface 60%;
+}
+
+#open-box {
+    width: 74;
+    height: auto;
+    max-height: 80%;
+    padding: 1 2;
+    border: thick #5ba0d0;
+    background: $surface-darken-1;
+    color: $text;
+}
+
+#open-box Static {
+    width: 1fr;
+    height: auto;
+}
+
 /* ── Help modal ([?]) ───────────────────────────────────────────────────── */
 
 HelpScreen {
