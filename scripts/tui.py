@@ -32,6 +32,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+# coverage_taxonomy lives alongside this script (stdlib-only); make scripts/
+# importable whether tui.py is run as a file or via `uv run`.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import coverage_taxonomy as ctax  # noqa: E402
+
 # ---------------------------------------------------------------------------
 # Repo layout
 # ---------------------------------------------------------------------------
@@ -180,6 +185,33 @@ def _load_detail(insurer: str, product: str) -> DetailRecord | None:
             except (json.JSONDecodeError, OSError):
                 pass
     return None
+
+
+def load_all_details() -> list[tuple[str, DetailRecord]]:
+    """Every analyzed tariff record on disk, as (stem, record).
+
+    Globs out/enriched then out/tariffs, deduping by stem with enriched preferred
+    (mirroring _detail_path_for_stem), skipping bookkeeping files (_-prefixed). This
+    is exactly the set the Vergleich view compares — adding favorites and analyzing
+    them via [g]/[G] grows it with no schema change.
+    """
+    out: dict[str, DetailRecord] = {}
+    for sub, is_enriched in (("enriched", True), ("tariffs", False)):
+        directory = REPO_ROOT / "out" / sub
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.glob("*.json")):
+            stem = path.stem
+            if stem.startswith("_") or stem in out:
+                continue
+            try:
+                data = json.loads(path.read_text())
+            except (json.JSONDecodeError, OSError):
+                continue
+            out[stem] = _record_from_data(
+                data, is_enriched, data.get("insurer", ""), data.get("tariff", "")
+            )
+    return list(out.items())
 
 
 def _tracked_keys() -> set[str]:
@@ -403,6 +435,101 @@ def _bewertung_cell(row: SnapshotRow) -> str:
     val = f"{v:.1f}".replace(".", ",")
     cnt = f" [dim]({row.bewertung_anzahl})[/dim]" if row.bewertung_anzahl else ""
     return f"[{color}]{val}★[/{color}]{cnt}"
+
+
+# ---------------------------------------------------------------------------
+# Coverage-comparison (Vergleich tab) rendering helpers — pure, no Textual.
+# Cells are padded on PLAIN text then optionally wrapped in one colour tag, so
+# trailing (invisible) coloured spaces keep columns aligned without markup-width
+# math. Glyphs used (✓ ✗ ★ — €) are all terminal width 1.
+# ---------------------------------------------------------------------------
+
+VERGLEICH_LABEL_W = 30  # width of the left-hand row-label column
+
+
+def _vergleich_col_w(ncols: int) -> int:
+    """Per-tariff column width, shrinking as more tariffs are compared."""
+    if ncols <= 0:
+        return 16
+    return max(13, min(24, (130 - VERGLEICH_LABEL_W) // ncols))
+
+
+def _pad_cell(plain: str, width: int, color: str | None = None) -> str:
+    """Truncate/pad PLAIN text to `width`, then wrap in one colour tag if given."""
+    if len(plain) > width:
+        plain = plain[: max(1, width - 1)] + "…"
+    cell = plain.ljust(width)
+    return f"[{color}]{cell}[/{color}]" if color else cell
+
+
+def _col_label(stem: str) -> str:
+    """Short column header from a stem's insurer part (arag -> ARAG, advocard ->
+    Advocard)."""
+    head = stem.split("__")[0]
+    return head.upper() if len(head) <= 4 else head[:1].upper() + head[1:]
+
+
+def _module_cell(mod: dict[str, Any]) -> tuple[str, str]:
+    """(plain, colour) for one module in a tariff column."""
+    if not mod.get("included"):
+        return "—", "dim"
+    return {
+        "Premium": ("★★★ Premium", "bright_green"),
+        "Komfort": ("★★ Komfort", "yellow"),
+        "Basis": ("★ Basis", "white"),
+    }.get(mod.get("level"), ("✓", "cyan"))
+
+
+def _distinct_numbers(s: str, limit: int = 2) -> list[str]:
+    import re
+
+    out: list[str] = []
+    for n in re.findall(r"\d+", s or ""):
+        if n not in out:
+            out.append(n)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _short_versicherungssumme(v: str | None) -> str:
+    if not v:
+        return "k.A."
+    low = v.lower()
+    if "unbegrenzt" in low:
+        # mark a star when the unlimited sum carries sub-limits / qualifiers.
+        return "unbegrenzt*" if len(v.strip()) > len("unbegrenzt") + 1 else "unbegrenzt"
+    return v
+
+
+def _short_selbstbeteiligung(v: str | None) -> str:
+    if not v:
+        return "k.A."
+    nums = _distinct_numbers(v, limit=2)
+    return ("/".join(nums) + " €") if nums else v
+
+
+def _short_geltungsbereich(v: str | None) -> str:
+    if not v:
+        return "k.A."
+    low = v.lower()
+    if "europa" in low:
+        return "Europa+ww. temp." if ("weltweit" in low or "ww" in low) else "Europa"
+    return v
+
+
+def _short_vertragslaufzeit(v: str | None) -> str:
+    if not v:
+        return "k.A."
+    low = v.lower()
+    tag = ", tägl." if ("täglich" in low or "taeglich" in low) else ""
+    nums = _distinct_numbers(v, limit=2)
+    return ("/".join(nums) + " J." + tag) if nums else v
+
+
+def _short_wartezeit(cov: dict[str, Any]) -> str:
+    m = cov.get("wartezeit_monate")
+    return f"{m} Mon." if m is not None else "k.A."
 
 
 def _price_quartiles(rows: list[SnapshotRow]) -> tuple[float, float, float]:
@@ -1236,8 +1363,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     key=r.key or f"{r.position}",
                 )
 
-            # update diff tab while we're refreshing
-            self._populate_diff()
+            # rebuild the Vergleich tab while we're refreshing
+            self._populate_coverage()
 
         # --- Detail panel (sidebar) ---
 
@@ -1381,68 +1508,176 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
             return "\n".join(lines)
 
-        # --- Diff tab ---
+        # --- Vergleich tab (cross-tariff coverage comparison) ---
 
-        def _populate_diff(self) -> None:
+        def _coverage_columns(self) -> list[tuple[str, DetailRecord]]:
+            """Analyzed records as (stem, record), reference_stem first then by stem
+            — so the current contract ([R]) is always the leftmost baseline column."""
+            cols = load_all_details()
+            ref = self._favorites.get("reference_stem")
+            cols.sort(key=lambda sr: (sr[0] != ref, sr[0]))
+            return cols
+
+        def _is_ref_col(self, stem: str) -> bool:
+            return stem == self._favorites.get("reference_stem")
+
+        def _col_header(self, cols: list[tuple[str, DetailRecord]], col_w: int,
+                        title: str) -> str:
+            head = title.ljust(VERGLEICH_LABEL_W)
+            for stem, _ in cols:
+                lbl = _col_label(stem) + (" (Ref)" if self._is_ref_col(stem) else "")
+                head += _pad_cell(lbl, col_w)
+            return f"[bold underline]{head}[/bold underline]"
+
+        def _populate_coverage(self) -> None:
             try:
-                diff_widget: Static = self.query_one("#diff-content", Static)
+                widget: Static = self.query_one("#diff-content", Static)
             except NoMatches:
                 return
 
-            if len(self._all_snapshots) < 2:
-                diff_widget.update(
-                    "[dim italic]Only one snapshot available — nothing to diff.\n"
-                    "Run the snapshot pipeline again on a different day to see price changes.[/dim italic]"
+            cols = self._coverage_columns()
+            if not cols:
+                widget.update(
+                    "[dim italic]Noch keine analysierten Tarife.\n"
+                    "Markiere im Markt/Favoriten einen Tarif und drücke \\[g] (Download "
+                    "+ Analyse) oder \\[G] (nur Analyse, PDFs lokal) — dann erscheint hier "
+                    "der angebotsübergreifende Leistungsvergleich.[/dim italic]"
                 )
                 return
 
-            # Compare oldest vs. newest
+            col_w = _vergleich_col_w(len(cols))
+            parts = [
+                "[bold]Tarif-Vergleich[/bold]   "
+                f"[dim]{len(cols)} analysierte Tarife · Spalten = Tarife · Referenz "
+                "\\[R] ganz links als Basis[/dim]",
+                self._render_module_matrix(cols, col_w),
+                self._render_coverage_matrix(cols, col_w),
+                self._render_category_matrix("leistung", cols, col_w),
+                self._render_category_matrix("ausschluss", cols, col_w),
+                "[dim]Legende: [green]✓[/green] enthalten · [red]✗[/red] ausgeschlossen · "
+                "[yellow]~[/yellow] teilweise (nur/eingeschr./außer/begrenzt) · "
+                "[dim]—[/dim] nicht genannt[/dim]",
+            ]
+            tail = self._render_snapshot_pricediff()
+            if tail:
+                parts.append(tail)
+            widget.update("\n\n".join(parts))
+
+        def _render_module_matrix(self, cols, col_w) -> str:
+            lines = [self._col_header(cols, col_w, "MODULE (Lebensbereiche)")]
+            for key, label in MODULE_LABELS.items():
+                row = label.ljust(VERGLEICH_LABEL_W)
+                for stem, rec in cols:
+                    plain, color = _module_cell(rec.modules.get(key, {}))
+                    row += _pad_cell(plain, col_w, color)
+                lines.append(row)
+            return "\n".join(lines)
+
+        def _render_coverage_matrix(self, cols, col_w) -> str:
+            rows = [
+                ("Versicherungssumme", lambda c: _short_versicherungssumme(c.get("versicherungssumme"))),
+                ("Selbstbeteiligung", lambda c: _short_selbstbeteiligung(c.get("selbstbeteiligung"))),
+                ("Wartezeit", lambda c: _short_wartezeit(c)),
+                ("Geltungsbereich", lambda c: _short_geltungsbereich(c.get("geltungsbereich"))),
+                ("Vertragslaufzeit", lambda c: _short_vertragslaufzeit(c.get("vertragslaufzeit"))),
+            ]
+            lines = [self._col_header(cols, col_w, "DECKUNG")]
+            for label, fn in rows:
+                row = label.ljust(VERGLEICH_LABEL_W)
+                for stem, rec in cols:
+                    row += _pad_cell(fn(rec.coverage or {}), col_w)
+                lines.append(row)
+            return "\n".join(lines)
+
+        # Conservative partial-coverage cues: a matched item whose wording carries one
+        # of these is shown as ~ rather than a flat ✓/✗ (the full wording is in the
+        # subtext line and the [d] detail).
+        _PARTIAL_CUES = ("nur ", "eingeschr", "außer", "ausser", "begrenzt", "teilweise")
+
+        def _render_category_matrix(self, kind: str, cols, col_w) -> str:
+            title = "LEISTUNGEN (Vergleich)" if kind == "leistung" else "AUSSCHLÜSSE (Vergleich)"
+            field = "leistungen" if kind == "leistung" else "ausschluesse"
+            glyph, color = ("✓", "green") if kind == "leistung" else ("✗", "red")
+
+            # Per column: category_key -> first verbatim hit, plus the unmatched bucket.
+            per_col_cat: list[dict[str, str]] = []
+            per_col_sonst: list[list[str]] = []
+            present: set[str] = set()
+            for stem, rec in cols:
+                catmap: dict[str, str] = {}
+                sonst: list[str] = []
+                for item in getattr(rec, field) or []:
+                    key = ctax.classify(item, kind)
+                    if key:
+                        catmap.setdefault(key, item)
+                        present.add(key)
+                    else:
+                        sonst.append(item)
+                per_col_cat.append(catmap)
+                per_col_sonst.append(sonst)
+
+            ordered = [k for k in ctax.ordered_keys(kind) if k in present]
+            lines = [self._col_header(cols, col_w, title)]
+
+            for key in ordered:
+                label = ctax.category_label(key)
+                row = label.ljust(VERGLEICH_LABEL_W)
+                wordings: list[tuple[str, str]] = []
+                for i, (stem, rec) in enumerate(cols):
+                    verbatim = per_col_cat[i].get(key)
+                    if verbatim is None:
+                        row += _pad_cell("—", col_w, "dim")
+                        continue
+                    low = verbatim.lower()
+                    if any(cue in low for cue in self._PARTIAL_CUES):
+                        row += _pad_cell("~", col_w, "yellow")
+                    else:
+                        row += _pad_cell(glyph, col_w, color)
+                    wordings.append((_col_label(stem), verbatim))
+                lines.append(row)
+                # Show the actual wording each insurer uses when ≥2 tariffs share the
+                # category — this is the naming difference made visible.
+                if len(wordings) >= 2:
+                    sub = " · ".join(f"{lbl}: {txt[:30]}" for lbl, txt in wordings)
+                    lines.append(f"   [dim]{sub[:148]}[/dim]")
+
+            total_sonst = sum(len(s) for s in per_col_sonst)
+            if total_sonst:
+                for i, (stem, _rec) in enumerate(cols):
+                    if per_col_sonst[i]:
+                        items = " · ".join(x[:34] for x in per_col_sonst[i])
+                        lines.append(f"   [dim]… Sonstige ({_col_label(stem)}): {items[:140]}[/dim]")
+                lines.append(f"   [dim]({total_sonst} nicht zugeordnet über alle Tarife)[/dim]")
+            return "\n".join(lines)
+
+        def _render_snapshot_pricediff(self) -> str:
+            """The legacy market-price drift across snapshots, appended only once a
+            second snapshot exists (silently omitted otherwise)."""
+            if len(self._all_snapshots) < 2:
+                return ""
             _, old_path = self._all_snapshots[0]
             _, new_path = self._all_snapshots[-1]
             old_snap = load_snapshot(old_path)
             new_snap = load_snapshot(new_path)
-
             if old_snap is None or new_snap is None:
-                diff_widget.update("[red]Failed to load snapshots for diff.[/red]")
-                return
-
+                return ""
             changes, added, removed = _compute_diff(old_snap, new_snap)
-
-            lines: list[str] = []
-            lines.append(
-                f"[bold]Snapshot diff:[/bold]  "
-                f"[dim]{old_snap.date}[/dim] → [bold]{new_snap.date}[/bold]"
-            )
-            lines.append("")
-
-            if changes:
-                lines.append(f"[underline]Price changes ({len(changes)})[/underline]")
-                for key, old_p, new_p, delta in sorted(changes, key=lambda x: x[3]):
-                    sign = "+" if delta > 0 else ""
-                    color = "bright_red" if delta > 0 else "bright_green"
-                    lines.append(
-                        f"  {key[:50]:<50}  "
-                        f"{old_p:.2f} → {new_p:.2f}  "
-                        f"[{color}]{sign}{delta:.2f}[/{color}]"
-                    )
-                lines.append("")
-
-            if added:
-                lines.append(f"[underline bright_green]New tariffs ({len(added)})[/underline bright_green]")
-                for k in added:
-                    lines.append(f"  [bright_green]+[/bright_green] {k}")
-                lines.append("")
-
-            if removed:
-                lines.append(f"[underline bright_red]Removed tariffs ({len(removed)})[/underline bright_red]")
-                for k in removed:
-                    lines.append(f"  [bright_red]−[/bright_red] {k}")
-                lines.append("")
-
-            if not changes and not added and not removed:
-                lines.append("[dim italic]No changes detected between snapshots.[/dim italic]")
-
-            diff_widget.update("\n".join(lines))
+            lines = [
+                f"[bold underline]Preisänderungen (Snapshots)[/bold underline]   "
+                f"[dim]{old_snap.date} → {new_snap.date}[/dim]"
+            ]
+            for key, old_p, new_p, delta in sorted(changes, key=lambda x: x[3]):
+                sign = "+" if delta > 0 else ""
+                c = "bright_red" if delta > 0 else "bright_green"
+                lines.append(f"  {key[:50]:<50}  {old_p:.2f} → {new_p:.2f}  "
+                             f"[{c}]{sign}{delta:.2f}[/{c}]")
+            for k in added:
+                lines.append(f"  [bright_green]+[/bright_green] {k}")
+            for k in removed:
+                lines.append(f"  [bright_red]−[/bright_red] {k}")
+            if not (changes or added or removed):
+                lines.append("[dim italic]keine Änderungen zwischen den Snapshots.[/dim italic]")
+            return "\n".join(lines)
 
         # --- Event handlers ---
 
