@@ -393,6 +393,18 @@ STATUS_LEGEND = (
 )
 
 
+def _bewertung_cell(row: SnapshotRow) -> str:
+    """CHECK24 customer rating (0-5 stars), distinct from the expert Tarifnote.
+    Shows '—' until a scrape with rating support has populated the snapshot."""
+    if row.bewertung is None:
+        return "[dim]—[/dim]"
+    v = row.bewertung
+    color = "bright_green" if v >= 4.5 else "yellow" if v >= 3.5 else "bright_red"
+    val = f"{v:.1f}".replace(".", ",")
+    cnt = f" [dim]({row.bewertung_anzahl})[/dim]" if row.bewertung_anzahl else ""
+    return f"[{color}]{val}★[/{color}]{cnt}"
+
+
 def _price_quartiles(rows: list[SnapshotRow]) -> tuple[float, float, float]:
     """Return (q1, median, q3) for monatlich_eur, ignoring None."""
     prices = sorted(r.monatlich_eur for r in rows if r.monatlich_eur is not None)
@@ -971,7 +983,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 return
 
             table.clear(columns=True)
-            table.add_columns("★", "Insurer", "Product", "Note", "€/mo", "SB", "Δ ref", "Status")
+            table.add_columns("★", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB", "Δ ref", "Status")
             self._fav_rows = {}
 
             ref_price, ref_sb = self._reference_info()
@@ -1025,7 +1037,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         "[dim]?[/dim]",
                         fav.get("insurer") or "",
                         fav.get("product") or "",
-                        "—", "—", "—", "—",
+                        "—", "—", "—", "—", "—",
                         self._docs_label(fav.get("stem", "")),
                         key=key,
                     )
@@ -1057,8 +1069,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
                 docs_cell = f"{_status_glyph(row)} {self._docs_label(fav.get('stem', ''))}"
                 table.add_row(
-                    star, row.insurer, row.product, note_col, price_col,
-                    sb_cell, delta_col, docs_cell,
+                    star, row.insurer, row.product, note_col, _bewertung_cell(row),
+                    price_col, sb_cell, delta_col, docs_cell,
                     key=key,
                 )
 
@@ -1077,7 +1089,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             lines.append("")
 
             nc = _tarifnote_color(row.tarifnote)
-            lines.append(f"Tarifnote : [{nc}]{row.tarifnote or '—'}[/{nc}]")
+            lines.append(f"Tarifnote : [{nc}]{row.tarifnote or '—'}[/{nc}]   [dim](Experten-Note)[/dim]")
+            if row.bewertung is not None:
+                lines.append(f"Bewertung : {_bewertung_cell(row)}   [dim](Kundenbewertung /5)[/dim]")
             price = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
             lines.append(
                 f"€/Monat   : [bright_green]{price}[/bright_green]   "
@@ -1180,7 +1194,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 return
 
             table.clear(columns=True)
-            table.add_columns("#", "St", "Insurer", "Product", "Note", "€/mo", "SB")
+            table.add_columns("#", "St", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB")
 
             rows = self._visible_rows()
             row_count_label = self.query_one("#filter-input", Input)
@@ -1216,6 +1230,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     r.insurer,
                     r.product,
                     note_col,
+                    _bewertung_cell(r),
                     price_col,
                     r.selbstbeteiligung or "—",
                     key=r.key or f"{r.position}",
@@ -1474,7 +1489,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         @on(DataTable.HeaderSelected, "#market-table")
         def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
-            col_map = {0: "position", 2: "insurer", 4: "note", 5: "price"}
+            col_map = {0: "position", 2: "insurer", 4: "note", 6: "price"}
             col = col_map.get(event.column_index)
             if col is None:
                 return

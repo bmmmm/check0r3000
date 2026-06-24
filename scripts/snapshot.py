@@ -29,7 +29,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SNAPDIR = ROOT / "data" / "snapshots"
-FIELDS = ("position", "insurer", "product", "tarifnote", "monatlich_eur", "selbstbeteiligung")
+# tarifnote = CHECK24 expert grade; bewertung/_anzahl = customer rating (stars + count).
+# The PSV path carries only the first six; the JSON scrape may add the rating fields
+# (null where absent).
+FIELDS = ("position", "insurer", "product", "tarifnote", "monatlich_eur",
+          "selbstbeteiligung", "bewertung", "bewertung_anzahl")
 
 
 def _eur(s: str) -> float | None:

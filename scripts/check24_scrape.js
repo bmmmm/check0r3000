@@ -61,11 +61,21 @@
     seen.add(key);
 
     const grab = (re) => { const m = t.match(re); return m ? m[1].trim() : null; };
+    // Customer rating (Kundenbewertung, 0-5 stars) is distinct from the expert
+    // Tarifnote (a 1,0-best grade). Best-effort: anchor on "Bewertung"/"/5"/"von 5"
+    // so we never mistake the Tarifnote for it. The count comes from "(N Bewertungen)".
+    // If CHECK24 only shows the rating on the tariff detail page these stay null.
+    const ratingStr =
+      grab(/Kundenbewertung[:\s]*([\d],[\d])/i) ||
+      grab(/([\d],[\d])\s*(?:\/|von)\s*5/i);
+    const countStr = grab(/([\d.]+)\s*(?:Kunden)?(?:bewertungen|meinungen)/i);
     const row = {
       position,
       insurer,
       product,
       tarifnote: grab(/([\d],[\d])\s*\n?\s*Tarifnote/) || grab(/Tarifnote[:\s]*([\d],[\d])/),
+      bewertung: ratingStr ? Number(ratingStr.replace(",", ".")) : null,
+      bewertung_anzahl: countStr ? parseInt(countStr.replace(/\./g, ""), 10) : null,
       monatlich_eur: eur(priceStr),
       selbstbeteiligung: grab(/Selbstbeteiligung[:\s]*([^\n]+)/),
       deckungssumme: grab(/Deckungssumme[:\s]*([^\n]+)/),
@@ -84,6 +94,17 @@
   if (priceSignals && rows.length < priceSignals) {
     console.warn(`check24_scrape: scraped ${rows.length} rows but found ${priceSignals} price `
       + `labels — markup may have shifted, some tariffs were dropped silently.`);
+  }
+
+  // Customer-rating coverage: if NO card yielded one, the rating likely lives only on
+  // the tariff detail page (not the result list) or its markup differs from the
+  // heuristics above. Warn so it is not silently lost — bewertung stays null and the
+  // TUI shows "—" for it.
+  const rated = rows.filter((r) => r.bewertung != null).length;
+  if (rows.length && !rated) {
+    console.warn(`check24_scrape: parsed 0 customer ratings from ${rows.length} cards — the `
+      + `Kundenbewertung may be detail-page-only or use different markup; tune the rating `
+      + `regexes in this file. (Expert Tarifnote is unaffected.)`);
   }
 
   // Build an offer skeleton for one row, ready to drop into data/offers/<key>.json.
