@@ -1,0 +1,26 @@
+{
+  "_note": "check24 RSV provider_filter ID -> insurer name. Public, non-PII. Pin one insurer with `check24_query.py --provider <id>`. `providers` maps the numeric filter IDs we know; `insurers_seen` is the display-name list from the all-insurer scan (their IDs still need a one-time harvest of the page's provider filter UI).",
+  "source": "rechtsschutz.check24.de/rsv/vergleichsergebnis/ — all-insurer scan + provider filter",
+  "harvested": "2026-06-24",
+  "providers": {
+    "11": "ARAG SE"
+  },
+  "insurers_seen": [
+    "ADAC",
+    "ARAG",
+    "Adam Riese",
+    "Advocard",
+    "Badische",
+    "BavariaDirekt",
+    "DEVK",
+    "DMB Rechtsschutz",
+    "ERGO",
+    "KS/Auxilia",
+    "ROLAND",
+    "S-Direkt",
+    "WECOYA",
+    "agencio",
+    "sia Digital"
+  ],
+  "_todo": "Harvest provider_filter IDs for the insurers above (only 11=ARAG known). They are not in the result URL — they come from the comparison page's provider filter control."
+}

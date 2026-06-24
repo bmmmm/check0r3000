@@ -1,0 +1,5 @@
+{
+  "_note": "Tracked placeholder. Copy to check24-profile.json (gitignored) and replace birthdate/zipcode with your real values. Levers map to schema-relevant inputs; the rest is reproduced verbatim by scripts/check24_query.py so your check24 defaults survive. birthdate/zipcode below are deliberately fake.",
+  "base_url": "https://rechtsschutz.check24.de/rsv/vergleichsergebnis/",
+  "query": "performance_filter_selected=true&tariff_package=[]&provider_filter=11&paymentperiod=month&costsharing=1000&maritalstatus=couple&employmentstatus=employee&employmentstatus_partner=employee&birthdate=01.01.1990&zipcode=10115&preinsurance=no&stiftung_warentest=yes&module_priv=yes&module_job=yes&module_traffic=yes&module_living=yes&module_rental=no&sortfield=popularity&sortorder=asc&bahnCard=yes&greenEnergyCustomer=yes&tariff_position=4"
+}
