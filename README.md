@@ -80,17 +80,22 @@ scripts/tui.py                                        interaktiver Browser über
   Dokument-URLs erreichbar sind — **ohne** ein (urheberrechtlich geschütztes) PDF zu laden.
 - **`scripts/tui.py`** (das einzige Skript mit `textual`-Dependency) bietet drei Tabs:
   **★ Favorites** (kuratierte Shortlist aus `config/favorites.json` mit Note/Preis/SB,
-  Δ vs. aktuellem Tarif, SB-Varianten und den gesicherten Dokument-URLs), **Market**
-  (alle Tarife, sortier-/filterbar) und **Diff** (Snapshot-Vergleich). `--selftest`
-  prüft das Laden ohne UI; `--screenshot DIR` rendert jeden Tab als SVG.
-- **Navigieren → `[d]` Details → Quelldokumente + `[g]`**: Eine Zeile per Pfeiltasten
-  oder Klick auswählen; **`[d]`** blendet ein Detail-Band unter der Tabelle ein/aus
-  (Tarif-Module, Coverage, Beitrag und die gesicherten Quell-PDFs). Standardmäßig ist
-  das Band ausgeblendet, damit die Tabelle die volle Breite hat. Sind die Dokumente noch
-  nicht analysiert, lädt **`[g]`** sie nach Bestätigung herunter und fährt die Pipeline
-  (`fetch_docs --apply → intake → ingest → extract`) im Hintergrund — danach füllt sich
-  das Band. Das `extract`-Modell ist per `CHECK0R_ANALYZE_MODEL` überschreibbar (Default
-  `claude`). Tarife ohne gesicherte URLs verweisen auf den Browser-Schritt „Tarifdetails".
+  Δ vs. Referenz, SB-Varianten und den gesicherten Dokument-URLs), **Market** (alle
+  Tarife, sortier-/filterbar) und **Diff** (Snapshot-Vergleich). Jeder Tarif zeigt einen
+  **Status** (`✓ analysiert · ↓ PDF lokal · ○ URLs · gelistet`) und zwei getrennte
+  Bewertungs-Spalten: **Note** (CHECK24-Experten-Tarifnote) und **Bew.** (Kundenbewertung
+  /5). `--selftest` prüft das Laden ohne UI; `--screenshot DIR` rendert jeden Tab als SVG.
+- **Identität über den `stem`**: jeder Tarif hat einen kanonischen `stem`
+  (`<versicherer>__<tarif>`, aus `data/sources/check24-documents.json`). TUI-Lookup,
+  Pipeline-Output und Doc-Manifest hängen alle daran — `[g]` schreibt direkt nach
+  `data/raw/<stem>/`, sodass `out/.../<stem>.json` garantiert gefunden wird.
+- **`[?]` zeigt alle Shortcuts** (der Footer nur die wichtigsten). Zentrale Tasten:
+  **`[d]`** Detail-Band unter der Tabelle ein/aus (Default aus → volle Tabellenbreite);
+  **`[g]`** lädt + analysiert nach Bestätigung (Pipeline `fetch_docs --into-raw → ingest
+  → extract` im Hintergrund; Modell per `CHECK0R_ANALYZE_MODEL`, Default `claude`);
+  **`[R]`** setzt die markierte Zeile als Δ-Referenz; **`[u]`** Favorit an/aus;
+  **`[D]`** lokale Daten löschen (mit Umfang-Auswahl); **`[b]`** baut die CHECK24-URL.
+  Tarife ohne gesicherte URLs verweisen auf den Browser-Schritt „Tarifdetails".
 
 ```sh
 uv run scripts/check24_query.py --all-insurers   # Result-URL für alle Versicherer
