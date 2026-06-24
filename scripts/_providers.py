@@ -23,6 +23,7 @@ stdlib only: the OpenAI-compatible path uses urllib, no requests/httpx.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import time
 import urllib.error
@@ -31,10 +32,22 @@ import urllib.request
 # Provider alias -> default OpenAI-compatible base URL (override with @endpoint).
 DEFAULT_ENDPOINTS = {
     "ollama": "http://localhost:11434/v1",
-    "mlx": "http://127.0.0.1:8080/v1",
-    "omlx": "http://127.0.0.1:8080/v1",
+    "mlx": "http://127.0.0.1:8080/v1",   # mlx_lm.server default
+    "omlx": "http://127.0.0.1:8000/v1",  # oMLX default (key-gated; see _api_key)
     "vllm": "http://localhost:8000/v1",
 }
+
+
+def _api_key(provider: str) -> str | None:
+    """Bearer token for a key-gated OpenAI-compatible backend, from the environment
+    only. Checked in order: <PROVIDER>_API_KEY (e.g. OMLX_API_KEY), then
+    OPENAI_API_KEY. Never hardcoded, never logged. Servers needing no key work
+    without one (no header is sent)."""
+    for var in (f"{provider.upper()}_API_KEY", "OPENAI_API_KEY"):
+        v = os.environ.get(var)
+        if v:
+            return v
+    return None
 
 
 def parse_spec(spec: str) -> tuple[str, str | None, str | None]:
@@ -118,12 +131,21 @@ def _run_openai(provider: str, model: str | None, endpoint: str | None,
         "temperature": 0,
         "stream": False,
     }).encode("utf-8")
-    req = urllib.request.Request(url, data=body,
-                                 headers={"Content-Type": "application/json"})
+    headers = {"Content-Type": "application/json"}
+    key = _api_key(provider)
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    req = urllib.request.Request(url, data=body, headers=headers)
     t0 = time.monotonic()
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:200] if e.fp else ""
+        hint = (f" — set {provider.upper()}_API_KEY (or OPENAI_API_KEY)"
+                if e.code == 401 else "")
+        return _err(f"{provider} HTTP {e.code} ({url}): {detail}{hint}",
+                    time.monotonic() - t0)
     except (urllib.error.URLError, TimeoutError) as e:
         return _err(f"{provider} request failed ({url}): {e}", time.monotonic() - t0)
     except json.JSONDecodeError:

@@ -58,8 +58,8 @@
     },
 
     "beitrag": {
-      "type": "object",
-      "description": "Premium. Usually NOT in AVB/PIB — comes from the check24 result table or a personal offer. Leave null if absent.",
+      "type": ["object", "null"],
+      "description": "Premium. Usually NOT in AVB/PIB — comes from the check24 result table or a personal offer. Leave null (or all sub-fields null) if absent.",
       "additionalProperties": false,
       "properties": {
         "monatlich_eur": { "type": ["number", "null"] },

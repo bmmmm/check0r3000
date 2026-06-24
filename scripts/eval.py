@@ -27,8 +27,10 @@ Run:  uv run scripts/eval.py
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import re
+import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -43,6 +45,9 @@ import _providers  # noqa: E402
 EXTRACTED = ROOT / "data" / "extracted"
 SCHEMA = ROOT / "schema" / "tariff.schema.json"
 EVAL_OUT = ROOT / "tmp" / "eval"
+# Durable, committable benchmark digest (correctness is reproducible; cost/latency
+# are indicative snapshots). The full per-run records stay in tmp/eval (gitignored).
+BENCH_OUT = ROOT / "benchmarks"
 
 # --- Ground truth from the Produktinformationsblätter (the consumer summary) ----
 # Sum insured, deductible and premium are explicitly NOT stated as values in the
@@ -153,13 +158,14 @@ def score(record: dict, source_text: str, schema: dict) -> dict:
 
 
 def run_job(tariff_key: str, docs: list[dict], model: str, schema_text: str,
-            schema: dict, transform=None, filter_tag: str = "none") -> dict:
+            schema: dict, transform=None, filter_tag: str = "none",
+            run_idx: int = 0, n_repeat: int = 1) -> dict:
     variant = "+".join(d["doctype"] for d in docs)
     source_text = docs_text(docs, transform)  # ground against what was actually fed
     payload = extract.build_payload(schema_text, docs, ROOT, transform)
 
     res = _providers.run(model, extract.INSTRUCTION, payload)
-    base = {"tariff": tariff_key, "model": model, "variant": variant,
+    base = {"tariff": tariff_key, "model": model, "variant": variant, "run": run_idx,
             "filter": filter_tag, "payload_chars": len(payload),
             "cost_usd": res["cost_usd"], "wall_s": res["wall_s"], "api_s": res["api_s"],
             "input_tokens": res["input_tokens"], "output_tokens": res["output_tokens"],
@@ -173,8 +179,10 @@ def run_job(tariff_key: str, docs: list[dict], model: str, schema_text: str,
         return {**base, "status": "error", "error": f"record not JSON: {e}"}
 
     EVAL_OUT.joinpath("records").mkdir(parents=True, exist_ok=True)
-    rec_name = (f"{tariff_key.replace(' / ', '~')}~{variant}~{filter_tag}~"
-                f"{safe_name(model)}.json")
+    # Keep the 4-segment name parseable by rescore(); distinguish repeat runs by
+    # suffixing the model token only (rescore treats it as just a label).
+    token = safe_name(model) + (f"__r{run_idx}" if n_repeat > 1 else "")
+    rec_name = f"{tariff_key.replace(' / ', '~')}~{variant}~{filter_tag}~{token}.json"
     (EVAL_OUT / "records" / rec_name).write_text(
         json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -248,14 +256,119 @@ def rescore(docs_by_tariff: dict, schema: dict) -> list[dict]:
         if tariff_key not in docs_by_tariff:
             print(f"  skip {f.name}: no docs for '{tariff_key}'")
             continue
+        # Repeat runs are saved as `<model>__r{idx}`; recover the plain model alias
+        # (and the run index) so offline aggregation/variance groups them as one model.
+        run_idx = 0
+        mr = re.search(r"__r(\d+)$", model)
+        if mr:
+            run_idx, model = int(mr.group(1)), model[:mr.start()]
         fed_types = set(variant.split("+"))
         transform = extract.avb_transform if filter_tag != "none" else None
         fed = [d for d in docs_by_tariff[tariff_key] if d["doctype"] in fed_types]
         record = json.loads(f.read_text(encoding="utf-8"))
         results.append({"tariff": tariff_key, "model": model, "status": "ok",
-                        "variant": variant, "filter": filter_tag,
+                        "variant": variant, "filter": filter_tag, "run": run_idx,
                         **score(record, docs_text(fed, transform), schema)})
     return results
+
+
+def aggregate(results: list[dict]) -> list[dict]:
+    """Collapse repeat runs into one row per (tariff, model, input).
+
+    Faithful/schema counts are over all runs (an errored run is a failure);
+    module spread and cost/latency means are over the successful runs.
+    """
+    # Group on the RAW (variant, filter), not the truncated display label, so
+    # filtered and unfiltered runs of a long-variant tariff never collide.
+    groups: dict[tuple, list[dict]] = {}
+    for r in results:
+        key = (r["tariff"], r["model"], r.get("variant", ""), r.get("filter", "none"))
+        groups.setdefault(key, []).append(r)
+    rows = []
+    for (tariff, model, _variant, _filter), runs in sorted(groups.items()):
+        inp = _input_label(runs[0])
+        ok = [r for r in runs if r["status"] == "ok"]
+        mods = [len(r.get("modules_included", [])) for r in ok]
+        costs = [r["cost_usd"] for r in runs if r.get("cost_usd") is not None]
+        walls = [r["wall_s"] for r in runs if isinstance(r.get("wall_s"), (int, float))]
+        rows.append({
+            "tariff": tariff, "model": model, "input": inp,
+            "runs": len(runs), "ok": len(ok),
+            "schema_ok": sum(1 for r in ok if r.get("schema_valid")),
+            "faithful": sum(1 for r in ok if r.get("faithful")),
+            "modules_min": min(mods) if mods else 0,
+            "modules_max": max(mods) if mods else 0,
+            "unsupported_max": max((r.get("unsupported_claims", 0) for r in ok), default=0),
+            "cost_usd": round(sum(costs) / len(costs), 4) if costs else None,
+            "wall_s": round(sum(walls) / len(walls), 1) if walls else None,
+        })
+    return rows
+
+
+def _modules_cell(r: dict) -> str:
+    return (str(r["modules_max"]) if r["modules_min"] == r["modules_max"]
+            else f"{r['modules_min']}-{r['modules_max']}")
+
+
+def print_variance(rows: list[dict]) -> None:
+    """Per (tariff, model, input): how stable repeated runs are (the key risk of
+    cheap, non-deterministic models)."""
+    print(f"\nVariance over repeated runs (faithful = grounded & complete):")
+    print(f"{'tariff':<26} {'model':<18} {'input':<12} {'runs':>4} "
+          f"{'schema':>7} {'faith':>7} {'modules':>8} {'~cost':>7}")
+    print("-" * 94)
+    for r in rows:
+        cost = f"${r['cost_usd']:.3f}" if r["cost_usd"] is not None else "-"
+        schema = f"{r['schema_ok']}/{r['runs']}"
+        faith = f"{r['faithful']}/{r['runs']}"
+        print(f"{r['tariff']:<26} {r['model']:<18} {r['input']:<12} {r['runs']:>4} "
+              f"{schema:>7} {faith:>7} {_modules_cell(r):>8} {cost:>7}")
+
+
+def _git_rev() -> str:
+    try:
+        return subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+                              capture_output=True, text=True, timeout=5).stdout.strip() or "?"
+    except Exception:
+        return "?"
+
+
+def save_summary(rows: list[dict], models: list[str], repeat: int) -> None:
+    """Write a durable, committable digest to benchmarks/ (correctness reproducible;
+    cost/latency are indicative snapshots, raw per-run records stay in tmp/eval)."""
+    BENCH_OUT.mkdir(parents=True, exist_ok=True)
+    date = datetime.date.today().isoformat()
+    rev = _git_rev()
+
+    lines = ["# Benchmark — Extraktionsmodelle", "",
+             f"_Snapshot {date}, commit `{rev}`, {repeat} Lauf/Läufe je Zelle. "
+             "**Korrektheit** (Schema/Faithful/Module) ist reproduzierbar; "
+             "**Kosten/Latenz** sind konto- und laufzeitspezifische Momentaufnahmen — "
+             "nur als Größenordnung lesen. Rohdaten je Lauf: `tmp/eval/` (gitignored)._",
+             "",
+             "| Tarif | Modell | Input | Läufe | Schema | Faithful | Module | Halluz. | ~Kosten | ~wall_s |",
+             "|---|---|---|---|---|---|---|---|---|---|"]
+    for r in rows:
+        cost = f"${r['cost_usd']:.3f}" if r["cost_usd"] is not None else "–"
+        wall = f"{r['wall_s']:.1f}" if r["wall_s"] is not None else "–"
+        lines.append(f"| {r['tariff']} | {r['model']} | {r['input']} | {r['runs']} | "
+                     f"{r['schema_ok']}/{r['runs']} | {r['faithful']}/{r['runs']} | "
+                     f"{_modules_cell(r)} | {r['unsupported_max']} | {cost} | {wall} |")
+    lines += ["",
+              "_Faithful = schema-valid **und** jeder behauptete Wert im gefütterten "
+              "Quelltext belegt **und** Pflichtfelder gesetzt. Halluz. = max. Anzahl "
+              "nicht belegbarer Wertbehauptungen pro Lauf. Das Grounding ist substring-/"
+              "ziffern-basiert: ausführliche Paraphrasen ohne wörtliche Zahl können als "
+              "'nicht belegt' markiert werden, obwohl korrekt (eher bei reicheren "
+              "Modell-Antworten) — als robusteres Signal `regression.py` gegen die "
+              "dokument-gegroundeten Invarianten aus `golden.json` nutzen._", ""]
+
+    (BENCH_OUT / "results.md").write_text("\n".join(lines), encoding="utf-8")
+    (BENCH_OUT / "results.json").write_text(json.dumps(
+        {"generated": date, "commit": rev, "models": models, "repeat": repeat,
+         "rows": rows}, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"\nDurable summary -> {(BENCH_OUT / 'results.md').relative_to(ROOT)}"
+          f"  +  {(BENCH_OUT / 'results.json').name}")
 
 
 def main() -> int:
@@ -272,6 +385,12 @@ def main() -> int:
                          "(see scripts/_filter.py)")
     ap.add_argument("--rescore", action="store_true",
                     help="re-score saved records in tmp/eval/records (offline, no API)")
+    ap.add_argument("--repeat", type=int, default=1,
+                    help="run each (tariff x model) job N times to measure run-to-run "
+                         "variance (cheap models drift in completeness)")
+    ap.add_argument("--save-summary", action="store_true",
+                    help="write a durable digest to benchmarks/ (results.md + .json) "
+                         "for tracking model quality over time")
     args = ap.parse_args()
     models = [m.strip() for m in args.models.split(",") if m.strip()]
     doc_filter = {d.strip() for d in args.docs.split(",")} if args.docs else None
@@ -306,6 +425,12 @@ def main() -> int:
             for tariff, info in cm.items():
                 print(f"  {tariff}: " + ("agree" if not info["module_disagreements"]
                       else ", ".join(info["module_disagreements"])))
+        rows = aggregate(results)
+        if any(r["runs"] > 1 for r in rows):
+            print_variance(rows)
+        if args.save_summary:
+            save_summary(rows, sorted({r["model"] for r in rows}),
+                         max((r["runs"] for r in rows), default=1))
         return 0
 
     # Build the fed-document subset (--docs); sources for grounding stay full.
@@ -314,10 +439,13 @@ def main() -> int:
         feed = [d for d in docs if not doc_filter or d["doctype"] in doc_filter]
         feeds[key] = sorted(feed, key=lambda d: d["doctype"])
 
-    jobs = [(key, feeds[key], m) for key in sorted(feeds) for m in models if feeds[key]]
+    repeat = max(1, args.repeat)
+    jobs = [(key, feeds[key], m, r) for key in sorted(feeds) for m in models
+            for r in range(repeat) if feeds[key]]
     docs_label = args.docs or "all"
-    print(f"Running {len(jobs)} job(s): {len(feeds)} tariff(s) x {len(models)} model(s), "
-          f"docs={docs_label}, filter={'on' if args.filter else 'off'}, in parallel.")
+    print(f"Running {len(jobs)} job(s): {len(feeds)} tariff(s) x {len(models)} model(s) "
+          f"x {repeat} run(s), docs={docs_label}, filter={'on' if args.filter else 'off'}, "
+          f"in parallel.")
     for key in sorted(feeds):
         approx = len(extract.build_payload(schema_text, feeds[key], ROOT, transform)) // 4
         kinds = ",".join(d["doctype"] for d in feeds[key])
@@ -325,8 +453,9 @@ def main() -> int:
     print()
 
     with ThreadPoolExecutor(max_workers=min(8, len(jobs))) as ex:
-        futures = [ex.submit(run_job, key, docs, m, schema_text, schema, transform, filter_tag)
-                   for key, docs, m in jobs]
+        futures = [ex.submit(run_job, key, docs, m, schema_text, schema, transform,
+                             filter_tag, r, repeat)
+                   for key, docs, m, r in jobs]
         results = [f.result() for f in futures]
 
     print_table(results)
@@ -341,6 +470,12 @@ def main() -> int:
                     print(f"    {mod}: " + ", ".join(f"{m}={'Y' if v else 'n'}" for m, v in votes.items()))
             else:
                 print(f"  {tariff}: modules agree across {', '.join(info['models'])}")
+
+    rows = aggregate(results)
+    if repeat > 1:
+        print_variance(rows)
+    if args.save_summary:
+        save_summary(rows, models, repeat)
 
     EVAL_OUT.mkdir(parents=True, exist_ok=True)
     (EVAL_OUT / "results.json").write_text(

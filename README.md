@@ -13,8 +13,9 @@ Kein OCR, kein poppler, keine schweren Frameworks.
 ## Was getrackt wird (und was nicht)
 
 Die Original-PDFs der Versicherer sind **fremdes Urheberrecht** und werden **nicht**
-eingecheckt (`.gitignore`). Getrackt werden nur das Tooling, das Vergleichsschema und
-die **abgeleiteten Ergebnisse** (Fakten als JSON + die Vergleichsprosa in `out/`).
+eingecheckt (`.gitignore`). Getrackt werden nur das Tooling, das Vergleichsschema, die
+**abgeleiteten Ergebnisse** (Fakten als JSON + die Vergleichsprosa in `out/`) und der
+**Benchmark** (`benchmarks/`: dokument-gegroundete Golden-Invarianten + Modell-Digest).
 Damit bleibt das Repo öffentlich teilbar und trotzdem nachbaubar.
 
 Keine Secrets, nur relative Pfade — bewusst von Anfang an.
@@ -34,6 +35,7 @@ data/extracted/…txt + manifest.json       (lokal, gitignored)
         │    --model    claude:opus | haiku | ollama:llama3.1:8b | mlx:…@http://…
         ▼
 out/tariffs/*.json                         (getrackt: Fakten)
+        │  scripts/regression.py (stdlib)     golden.json-Invarianten, exit≠0 bei Drift
         │  scripts/render.py   (Modell)       Matrix + Vor/Nachteile
         ▼
 out/vergleich.md  +  out/index.html        (getrackt: Ergebnis)
@@ -97,11 +99,15 @@ Jede Stufe, die ein Modell nutzt (`extract`, `render`, `eval`), nimmt einen
 |---|---|
 | `haiku`, `claude:opus`, `claude` | Anthropic `claude`-CLI (Cloud) |
 | `ollama:llama3.1:8b` | Ollama, OpenAI-kompatibel, Default `http://localhost:11434/v1` |
-| `mlx:<id>` | oMLX / `mlx_lm.server`, Default `http://127.0.0.1:8080/v1` |
+| `mlx:<id>` | `mlx_lm.server`, Default `http://127.0.0.1:8080/v1` |
+| `omlx:Qwen3.5-9B-MLX-4bit` | oMLX, Default `http://127.0.0.1:8000/v1` (API-Key-gated) |
 | `openai:<m>@http://host:port/v1` | beliebiger OpenAI-kompatibler Server |
 
-Lokale Backends melden keine Kosten (`cost_usd = null`). Nur stdlib (`urllib`),
-keine zusätzliche Dependency.
+Key-gated lokale Server (z. B. oMLX) bekommen einen Bearer-Token aus der Umgebung:
+`OMLX_API_KEY` (allgemein `<PROVIDER>_API_KEY`, Fallback `OPENAI_API_KEY`) — nie im Code,
+nie geloggt; in `~/.env` setzen. Server ohne Key-Pflicht laufen ohne Header. Lokale
+Backends melden keine Kosten (`cost_usd = null`). Nur stdlib (`urllib`), keine
+zusätzliche Dependency.
 
 ## Benchmark (Modell- & Input-Vergleich)
 
@@ -119,12 +125,17 @@ für dieses Repo:
 ```sh
 uv run scripts/eval.py                                   # haiku/sonnet/opus, volle Docs
 uv run scripts/eval.py --models haiku --filter           # getrimmte AVB
-uv run scripts/eval.py --models haiku,ollama:llama3.1:8b  # Cloud vs. lokal
+uv run scripts/eval.py --models haiku,omlx:Qwen3.5-9B-MLX-4bit --filter   # Cloud vs. lokal
 uv run scripts/eval.py --docs produktinfoblatt           # nur Teil-Dokumente
+uv run scripts/eval.py --models haiku,sonnet --filter --repeat 3 --save-summary  # Varianz + durable Digest
 uv run scripts/eval.py --rescore                          # Records offline neu bewerten (kostenlos)
 ```
 
-Ergebnisse landen in `tmp/eval/` (gitignored, weil konto-/zeitspezifisch).
+Ergebnisse je Lauf landen in `tmp/eval/` (gitignored, weil konto-/zeitspezifisch).
+Mit `--save-summary` schreibt `eval.py` zusätzlich einen **getrackten** Digest nach
+`benchmarks/results.md` (+`.json`): die Korrektheits-Achse ist reproduzierbar, Kosten und
+Latenz sind als Momentaufnahme markiert. `--repeat N` führt jede Zelle N-mal aus und zeigt
+die **Run-to-Run-Varianz** — genau die Schwäche, die einen Single-Run-Vergleich täuscht.
 `eval.py` braucht zusätzlich `jsonschema` (via uv-Inline-Deps automatisch).
 
 **Was der Benchmark hier gezeigt hat:** Der Input-Umfang schlägt die Modellwahl.
@@ -133,6 +144,45 @@ treu und ~7× günstiger als Opus; die volle 174-Seiten-AVB sprengt dagegen das
 200k-Fenster von Haiku/Sonnet. Günstige Modelle schwanken aber run-to-run stärker
 in der Vollständigkeit — für stabile Ergebnisse `--model sonnet` oder mehrfach
 laufen lassen.
+
+## Regression: merken wir, wenn die Extraktion bricht?
+
+Ja. `benchmarks/golden.json` pinnt pro Tarif die **dokument-gegroundeten Invarianten**
+— die Fakten, die in den Unterlagen wirklich stehen (Module enthalten, `unbegrenzt`,
+Wartezeit 3, ADVOCARD-Selbstbeteiligung 150/300 …) **und** die, die dort bewusst *nicht*
+stehen und `null` bleiben müssen (Beitrag, gewählte Stufe). Jede Invariante nennt ihren
+Beleg; jede ist gegen den echten Quelltext geprüft.
+
+```sh
+uv run scripts/regression.py   # prüft out/tariffs/*.json gegen golden.json, exit≠0 bei Drift
+```
+
+`pipeline.sh` ruft den Check am Ende automatisch auf (nicht-fatal, aber laut). So fällt ein
+Modell-/Prompt-Wechsel auf, der Felder fallen lässt, eine Stufe halluziniert, die Identität
+auf `null` setzt oder einen Beitrag erfindet — statt still einen schlechteren
+`out/tariffs/*.json` auszuliefern. Genau das hat der Check beim Bau gefangen: zwei
+schema-Defekte im damaligen Output (Pipeline-Meta-Keys + `beitrag: null` statt Objekt).
+Schema ändern → Invarianten in `golden.json` nachziehen.
+
+## Prompt-Selbstverbesserung — sinnvoll?
+
+Ein **autonomer** Optimier-Loop (Prompt mutieren → scoren → besten behalten) lohnt hier
+**noch nicht**: es gibt keine externe Ground-Truth, und die heuristischen Metriken (Schema,
+Ziffern-Grounding, Cross-Model-Agreement) sind *Proxys*, die ein Optimierer austricksen kann
+— überall `null` schlägt den Halluzinations-Guard, sagt aber nichts aus. Bei nur zwei
+Tarifen würde er zusätzlich overfitten. Der Prompt ist außerdem schon durch echte
+Fehlermodi hand-gehärtet (Stufe-Halluzination, erfundene Provenance, fallengelassene Felder).
+
+Was stattdessen trägt — und gebaut ist:
+
+- **`golden.json`** ist die hand-kuratierte Ground-Truth, die den Heuristiken fehlt; die
+  Regression-Prüfung fängt Verschlechterungen automatisch.
+- **`--repeat N`** misst die Run-to-Run-Varianz billiger Modelle und legt sie im Digest ab.
+- **Cross-Model-Disagreement** markiert die unsicheren Stellen (z. B. ARAG `internet_web`)
+  als Inspektions-Signal, statt sie zu verstecken.
+
+Ein echter Optimierer lohnt erst ab ~10–20 Tarifen mit kuratierter Golden-Menge — dann als
+A/B-Lauf zweier Prompt-Versionen mit menschlicher Freigabe, nie als stiller Loop.
 
 ## Was die Unterlagen NICHT enthalten
 

@@ -1,0 +1,67 @@
+{
+  "generated": "2026-06-24",
+  "commit": "6491d32",
+  "models": [
+    "haiku",
+    "sonnet"
+  ],
+  "repeat": 3,
+  "rows": [
+    {
+      "tariff": "advocard / 360-privat-rechtsschutz",
+      "model": "haiku",
+      "input": "avb+pib/filt",
+      "runs": 3,
+      "ok": 3,
+      "schema_ok": 3,
+      "faithful": 2,
+      "modules_min": 0,
+      "modules_max": 8,
+      "unsupported_max": 1,
+      "cost_usd": 0.1648,
+      "wall_s": 121.1
+    },
+    {
+      "tariff": "advocard / 360-privat-rechtsschutz",
+      "model": "sonnet",
+      "input": "avb+pib/filt",
+      "runs": 3,
+      "ok": 3,
+      "schema_ok": 3,
+      "faithful": 3,
+      "modules_min": 8,
+      "modules_max": 8,
+      "unsupported_max": 0,
+      "cost_usd": 0.5123,
+      "wall_s": 99.1
+    },
+    {
+      "tariff": "arag / premium-2026",
+      "model": "haiku",
+      "input": "avb+pib+weit",
+      "runs": 3,
+      "ok": 3,
+      "schema_ok": 3,
+      "faithful": 3,
+      "modules_min": 7,
+      "modules_max": 8,
+      "unsupported_max": 0,
+      "cost_usd": 0.2535,
+      "wall_s": 100.4
+    },
+    {
+      "tariff": "arag / premium-2026",
+      "model": "sonnet",
+      "input": "avb+pib+weit",
+      "runs": 3,
+      "ok": 3,
+      "schema_ok": 3,
+      "faithful": 1,
+      "modules_min": 8,
+      "modules_max": 8,
+      "unsupported_max": 1,
+      "cost_usd": 0.7709,
+      "wall_s": 124.0
+    }
+  ]
+}

@@ -41,7 +41,7 @@ SCHEMA = ROOT / "schema" / "tariff.schema.json"
 OUT = ROOT / "out" / "tariffs"
 
 # Bump when the prompt/schema semantics change to invalidate all caches.
-PROMPT_VERSION = "3"
+PROMPT_VERSION = "4"
 
 INSTRUCTION = """You are extracting structured, comparable facts from a German \
 legal-protection-insurance (Rechtsschutzversicherung) document set.

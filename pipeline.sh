@@ -34,4 +34,11 @@ echo "==> render (matrix + pros/cons -> out/)"
 # shellcheck disable=SC2086
 uv run scripts/render.py $MODEL_ARGS
 
+echo "==> regression check (document-grounded golden invariants)"
+# Non-fatal: the output is already written; surface drift loudly but don't abort.
+# (Run scripts/regression.py standalone for a hard pass/fail gate, e.g. in CI.)
+if uv run scripts/regression.py; then :; else
+  echo "WARNING: extraction no longer matches benchmarks/golden.json — review out/tariffs." >&2
+fi
+
 echo "==> done. See out/vergleich.md and out/index.html"
