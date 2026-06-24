@@ -47,6 +47,16 @@ TabPane {
     border: tall #5ba0d0;
 }
 
+/* Data-availability legend above the Market table */
+#market-legend {
+    dock: top;
+    height: 1;
+    margin: 1 0 0 0;
+    padding: 0 1;
+    color: $text-muted;
+    background: $surface-darken-1;
+}
+
 /* ── Favorites tab layout ───────────────────────────────────────────────── */
 
 #fav-knockout {

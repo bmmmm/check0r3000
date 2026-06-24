@@ -374,6 +374,25 @@ def match_favorite(
     return chosen, variants
 
 
+# Data-availability status, from "we only read the listing" to "fully analyzed".
+# The glyphs are explained by STATUS_LEGEND, shown above the Market table.
+def _status_glyph(row: SnapshotRow) -> str:
+    if row.has_detail:
+        return "[bright_green]✓[/bright_green]"
+    if row.has_pdf:
+        return "[cyan]↓[/cyan]"
+    if row.has_urls:
+        return "[yellow]○[/yellow]"
+    return "[dim]·[/dim]"
+
+
+STATUS_LEGEND = (
+    "[bold]Status[/bold]  [bright_green]✓[/bright_green] analysiert   "
+    "[cyan]↓[/cyan] PDF lokal   [yellow]○[/yellow] URLs (\\[g] lädt + analysiert)   "
+    "[dim]·[/dim] nur gelistet"
+)
+
+
 def _price_quartiles(rows: list[SnapshotRow]) -> tuple[float, float, float]:
     """Return (q1, median, q3) for monatlich_eur, ignoring None."""
     prices = sorted(r.monatlich_eur for r in rows if r.monatlich_eur is not None)
@@ -714,6 +733,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         placeholder="Filter by insurer or product…",
                         id="filter-input",
                     )
+                    yield Label(STATUS_LEGEND, id="market-legend")
                     with Vertical(id="market-layout"):
                         yield DataTable(id="market-table", cursor_type="row", zebra_stripes=True)
                         with ScrollableContainer(id="detail-panel", classes="detail-band"):
@@ -789,7 +809,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 return
 
             table.clear(columns=True)
-            table.add_columns("★", "Insurer", "Product", "Note", "€/mo", "SB", "Δ ref", "Docs")
+            table.add_columns("★", "Insurer", "Product", "Note", "€/mo", "SB", "Δ ref", "Status")
             self._fav_rows = {}
 
             ref_price, ref_sb = self._reference_info()
@@ -809,6 +829,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         f"≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
                     )
                 parts.append("↵ Zeile wählen → Detail, SB-Varianten & Dokumente")
+                parts.append(STATUS_LEGEND)
                 ko.update("\n".join(parts))
             except NoMatches:
                 pass
@@ -872,9 +893,10 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 if len(variants) > 1:
                     sb_cell = f"{sb_cell} [dim]·{len(variants)}▾[/dim]"
 
+                docs_cell = f"{_status_glyph(row)} {self._docs_label(fav.get('stem', ''))}"
                 table.add_row(
                     star, row.insurer, row.product, note_col, price_col,
-                    sb_cell, delta_col, self._docs_label(fav.get("stem", "")),
+                    sb_cell, delta_col, docs_cell,
                     key=key,
                 )
 
@@ -996,7 +1018,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 return
 
             table.clear(columns=True)
-            table.add_columns("#", "★", "Insurer", "Product", "Note", "€/mo", "SB")
+            table.add_columns("#", "St", "Insurer", "Product", "Note", "€/mo", "SB")
 
             rows = self._visible_rows()
             row_count_label = self.query_one("#filter-input", Input)
@@ -1004,14 +1026,16 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             row_count_label.placeholder = (
                 f"Filter by insurer or product… ({len(rows)} shown)"
             )
+            try:
+                date = self._snapshot.date if self._snapshot else "?"
+                self.query_one("#market-legend", Label).update(
+                    f"{STATUS_LEGEND}   [dim]· gelesen am {date}[/dim]"
+                )
+            except NoMatches:
+                pass
 
             for r in rows:
-                # star / tracked indicator
-                star = ""
-                if r.has_offer:
-                    star = "[bright_green]◉[/bright_green]"
-                elif r.has_detail:
-                    star = "[cyan]○[/cyan]"
+                star = _status_glyph(r)
 
                 note_col = (
                     f"[{_tarifnote_color(r.tarifnote)}]{r.tarifnote}[/{_tarifnote_color(r.tarifnote)}]"
