@@ -1,0 +1,555 @@
+{
+  "version": 1,
+  "_doc": "Ordering = match precedence: classify() assigns the FIRST category (in file order) any of whose synonyms is a normalized substring of the item. Put specific multi-word synonyms before generic stems. benefit_categories match leistungen[], exclusion_categories match ausschluesse[] - kept separate so a benefit keyword can never match an exclusion. Synonyms are pre-normalized (lowercase; umlauts present in BOTH ae and ae-folded spellings; brand suffixes like '(ARAG JuraTel)' and status glyphs are stripped from the item before matching). Unmatched items are NOT dropped - they surface in a per-tariff 'Sonstige' bucket. Extend by appending one object; no code change needed.",
+  "benefit_categories": [
+    {
+      "key": "telefonische_rechtsberatung",
+      "label_de": "Telefonische Rechtsberatung",
+      "kind": "leistung",
+      "synonyms": [
+        "telefonische rechtsberatung",
+        "telefon. rechtsberatung",
+        "juratel",
+        "dmb-hotline",
+        "hotline",
+        "telefonberatung",
+        "rechtsberatung am telefon",
+        "anwaltshotline"
+      ]
+    },
+    {
+      "key": "online_rechtsberatung",
+      "label_de": "Online-/Chat-Rechtsberatung",
+      "kind": "leistung",
+      "synonyms": [
+        "online-rechtsberatung",
+        "online rechtsberatung",
+        "rechtsberatung per chat",
+        "dokumenten-center",
+        "dokumenten center",
+        "online-beratung"
+      ]
+    },
+    {
+      "key": "vorsorgliche_anwaltliche_beratung",
+      "label_de": "Vorsorgliche anwaltliche Beratung",
+      "kind": "leistung",
+      "synonyms": [
+        "vorsorgliche anwaltliche beratung",
+        "vorsorgeberatung",
+        "vorsorge-beratung",
+        "vorsorgliche beratung",
+        "praeventivberatung"
+      ]
+    },
+    {
+      "key": "beratung_familien_erbrecht",
+      "label_de": "Beratung Familien-/Erbrecht",
+      "kind": "leistung",
+      "synonyms": [
+        "erstberatung familien-/erbrecht",
+        "familien-/erbrecht-beratung",
+        "familien-/erbrecht beratungsschutz",
+        "familien-/erbrecht-beratungsschutz",
+        "familienrecht-beratung",
+        "erbrecht-beratung",
+        "beratungs-rechtsschutz familien",
+        "familien-/erbrecht beratung"
+      ]
+    },
+    {
+      "key": "mediation",
+      "label_de": "Mediation",
+      "kind": "leistung",
+      "synonyms": [
+        "mediation",
+        "mediator",
+        "aussergerichtliche streitbeilegung",
+        "konfliktmediation"
+      ]
+    },
+    {
+      "key": "vertrags_zeugnis_check",
+      "label_de": "Vertrags-/Zeugnis-Check",
+      "kind": "leistung",
+      "synonyms": [
+        "vertrags- und arbeitszeugnis-check",
+        "juracheck",
+        "vertrags-check",
+        "arbeitszeugnis-check",
+        "zeugnis-check",
+        "vertragscheck",
+        "dokumenten-check"
+      ]
+    },
+    {
+      "key": "strafkaution_darlehen",
+      "label_de": "Strafkaution (zinsloses Darlehen)",
+      "kind": "leistung",
+      "synonyms": [
+        "strafkaution",
+        "kaution",
+        "zinsloses darlehen",
+        "kaution als darlehen",
+        "strafkaution als darlehen"
+      ]
+    },
+    {
+      "key": "freie_anwaltswahl",
+      "label_de": "Freie Anwaltswahl",
+      "kind": "leistung",
+      "synonyms": [
+        "freie anwaltswahl",
+        "anwaltswahl",
+        "freie wahl des anwalts",
+        "anwalt nach wahl"
+      ]
+    },
+    {
+      "key": "mobiler_anwalt_hausbesuch",
+      "label_de": "Mobiler Anwalt / Hausbesuch",
+      "kind": "leistung",
+      "synonyms": [
+        "mobiler anwalt",
+        "hausbesuch",
+        "anwalt vor ort",
+        "anwalt zuhause"
+      ]
+    },
+    {
+      "key": "schieds_stichentscheid",
+      "label_de": "Schieds-/Stichentscheid bei Deckungsablehnung",
+      "kind": "leistung",
+      "synonyms": [
+        "schieds-/stichentscheid",
+        "stichentscheid",
+        "schiedsentscheid",
+        "schiedsgutachten",
+        "deckungsablehnung",
+        "gutachterverfahren"
+      ]
+    },
+    {
+      "key": "legal_tech_vermittlung",
+      "label_de": "Legal-Tech-Vermittlung",
+      "kind": "leistung",
+      "synonyms": [
+        "legal-tech",
+        "legal tech",
+        "vermittlung von legal-tech",
+        "legal-tech-dienstleister",
+        "rechtsdienstleister-vermittlung"
+      ]
+    },
+    {
+      "key": "spezial_straf_rechtsschutz",
+      "label_de": "Spezial-Straf-Rechtsschutz",
+      "kind": "leistung",
+      "synonyms": [
+        "spezial-straf-rechtsschutz",
+        "spezial-straf",
+        "spezialstrafrechtsschutz",
+        "vorsatzdelikte bis verurteilung",
+        "vorsatz bis verurteilung"
+      ]
+    },
+    {
+      "key": "opfer_rechtsschutz",
+      "label_de": "Opfer-Rechtsschutz / Nebenklage",
+      "kind": "leistung",
+      "synonyms": [
+        "opfer-rechtsschutz",
+        "opfer-rs",
+        "nebenklage",
+        "opferrechtsschutz",
+        "gewaltopfer"
+      ]
+    },
+    {
+      "key": "psychologische_soforthilfe",
+      "label_de": "Psychologische Soforthilfe",
+      "kind": "leistung",
+      "synonyms": [
+        "psychologische erstberatung",
+        "psychologische soforthilfe",
+        "telefonische psychologische",
+        "psychologische beratung",
+        "psychologische hilfe"
+      ]
+    },
+    {
+      "key": "cybermobbing_hilfe",
+      "label_de": "Cyber-Mobbing-Soforthilfe",
+      "kind": "leistung",
+      "synonyms": [
+        "cybermobbing",
+        "cyber-mobbing",
+        "cyber-mobbing-soforthilfe",
+        "mobbing",
+        "cyber-check",
+        "cybercheck"
+      ]
+    },
+    {
+      "key": "identity_protection",
+      "label_de": "Identity Protection / Online-Monitoring",
+      "kind": "leistung",
+      "synonyms": [
+        "identity protection",
+        "identitätsschutz",
+        "identitaetsschutz",
+        "online-monitoring",
+        "online monitoring",
+        "darknet-monitoring",
+        "datenmissbrauch-überwachung"
+      ]
+    },
+    {
+      "key": "urheberrecht_internet_beratung",
+      "label_de": "Urheberrechts-Beratung im Internet",
+      "kind": "leistung",
+      "synonyms": [
+        "urheberrechts-beratung im internet",
+        "urheberrecht im internet",
+        "abmahnung",
+        "urheberrechtsverstoss",
+        "filesharing-beratung"
+      ]
+    },
+    {
+      "key": "vorsorge_testaments_assistent",
+      "label_de": "Vorsorge-/Testaments-Assistent & Online-Checks",
+      "kind": "leistung",
+      "synonyms": [
+        "vorsorge-/testaments-assistent",
+        "testaments-assistent",
+        "testaments-generator",
+        "vorsorge-generator",
+        "online-checks",
+        "online checks",
+        "online-self-service",
+        "vorsorgevollmacht",
+        "patientenverfügung"
+      ]
+    },
+    {
+      "key": "fluggast_reisemaengelhilfe",
+      "label_de": "Fluggast-/Reisemängelhilfe",
+      "kind": "leistung",
+      "synonyms": [
+        "fluggast",
+        "reisemängelhilfe",
+        "reisemangel",
+        "flugverspätung",
+        "fluggastrechte",
+        "reiserecht-hilfe"
+      ]
+    },
+    {
+      "key": "auslands_anwalt_reisekosten",
+      "label_de": "Auslands-Anwalts-/Reisekosten",
+      "kind": "leistung",
+      "synonyms": [
+        "auslands-anwalts-",
+        "reisekostenübernahme",
+        "reisekosten",
+        "auslandskosten",
+        "anwaltskosten ausland",
+        "reisekosten zum versicherungsnehmer"
+      ]
+    },
+    {
+      "key": "uebersetzung_dolmetscher",
+      "label_de": "Übersetzung/Dolmetscher im Ausland",
+      "kind": "leistung",
+      "synonyms": [
+        "übersetzung",
+        "uebersetzung",
+        "dolmetscher",
+        "übersetzungskosten",
+        "uebersetzungskosten",
+        "dolmetscherkosten",
+        "gebärdendolmetscher",
+        "gebaerdendolmetscher"
+      ]
+    },
+    {
+      "key": "erneuerbare_energien_pv",
+      "label_de": "Erneuerbare Energien / PV-Anlagen",
+      "kind": "leistung",
+      "synonyms": [
+        "erneuerbare energien",
+        "e-ladestation",
+        "solar",
+        "pv-anlage",
+        "pv-anlagen",
+        "photovoltaik",
+        "wallbox",
+        "ladestation",
+        "solaranlage"
+      ]
+    },
+    {
+      "key": "schadenfreiheit_bonus",
+      "label_de": "Schadenfreiheits-Bonus / SB-Reduktion",
+      "kind": "leistung",
+      "synonyms": [
+        "schadenfreiheitsrabatt",
+        "schadenfreiheits-beratungsbonus",
+        "sb-reduktion",
+        "schadenfreiheit",
+        "no-claims",
+        "beratungsbonus"
+      ]
+    },
+    {
+      "key": "beitragsfreistellung_arbeitslosigkeit",
+      "label_de": "Beitragsfreistellung bei Arbeitslosigkeit",
+      "kind": "leistung",
+      "synonyms": [
+        "beitragsfreistellung",
+        "beitragsbefreiung",
+        "arbeitslosigkeit",
+        "erwerbsminderung",
+        "stundung bei arbeitslosigkeit"
+      ]
+    }
+  ],
+  "exclusion_categories": [
+    {
+      "key": "ausschluss_baufinanzierung",
+      "label_de": "Baufinanzierung / Grundstückskauf",
+      "kind": "ausschluss",
+      "synonyms": [
+        "baufinanzierung",
+        "kauf bebaubarer grundstücke",
+        "kauf bebaubarer grundstuecke",
+        "errichtung",
+        "planung von gebäuden",
+        "baurisiko",
+        "bau/erwerb/finanzierung von gebäuden",
+        "erwerb von gebäuden",
+        "neubau",
+        "baumassnahme",
+        "grundstückskauf"
+      ]
+    },
+    {
+      "key": "ausschluss_baurecht_enteignung",
+      "label_de": "Bau-/Planungsrecht & Enteignung",
+      "kind": "ausschluss",
+      "synonyms": [
+        "enteignung",
+        "planfeststellung",
+        "baurecht",
+        "baugb",
+        "öffentliches baurecht",
+        "planungsrecht"
+      ]
+    },
+    {
+      "key": "ausschluss_kapitalanlage",
+      "label_de": "Kapitalanlagen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "kapitalanlage",
+        "kapitalanlagen",
+        "kapitalanlagegeschäfte",
+        "kapitalanlagegeschaefte",
+        "erwerb/verwaltung/finanzierung",
+        "effekten",
+        "wertpapiere",
+        "fonds",
+        "anlagegeschäft"
+      ]
+    },
+    {
+      "key": "ausschluss_krypto",
+      "label_de": "Kryptowährungen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "kryptowährungen",
+        "kryptowaehrungen",
+        "krypto",
+        "bitcoin",
+        "krypto-assets",
+        "digitale währungen"
+      ]
+    },
+    {
+      "key": "ausschluss_spiel_wett_spekulation",
+      "label_de": "Spiel-/Wett-/Spekulationsgeschäfte",
+      "kind": "ausschluss",
+      "synonyms": [
+        "spiel-/wett",
+        "spiel-",
+        "wettverträge",
+        "spekulationsgeschäfte",
+        "spekulationsgeschaefte",
+        "gewinnzusagen",
+        "glücksspiel",
+        "termingeschäft"
+      ]
+    },
+    {
+      "key": "ausschluss_geistiges_eigentum",
+      "label_de": "Patent-/Marken-/Urheberrecht (geistiges Eigentum)",
+      "kind": "ausschluss",
+      "synonyms": [
+        "patent-",
+        "marken-",
+        "urheberrecht",
+        "designrecht",
+        "geistiges eigentum",
+        "patent/marken",
+        "gewerblicher rechtsschutz",
+        "markenrecht"
+      ]
+    },
+    {
+      "key": "ausschluss_kartell_wettbewerb",
+      "label_de": "Kartell-/Wettbewerbsrecht",
+      "kind": "ausschluss",
+      "synonyms": [
+        "kartell",
+        "wettbewerbsrecht",
+        "kartell- und wettbewerbsrecht",
+        "kartell-/wettbewerbsrecht",
+        "uwg"
+      ]
+    },
+    {
+      "key": "ausschluss_familien_erbrecht",
+      "label_de": "Familien-/Erbrecht (nur Beratung)",
+      "kind": "ausschluss",
+      "synonyms": [
+        "familien-/erbrecht",
+        "familienrecht",
+        "erbrecht",
+        "lebenspartnerschaft",
+        "scheidung",
+        "ehe-rechtsschutz",
+        "unterhalt"
+      ]
+    },
+    {
+      "key": "ausschluss_verfassung_internationale_gerichte",
+      "label_de": "Verfassungs-/internationale Gerichte",
+      "kind": "ausschluss",
+      "synonyms": [
+        "verfassungsgericht",
+        "verfassungs- und internationale gerichte",
+        "verfassungs-/internationale gerichte",
+        "internationale gerichtshöfe",
+        "internationale gerichtshoefe",
+        "egmh",
+        "eugh",
+        "bundesverfassungsgericht"
+      ]
+    },
+    {
+      "key": "ausschluss_vorsaetzliche_straftaten",
+      "label_de": "Vorsätzliche Straftaten / Verbrechen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "vorsätzliche straftaten",
+        "vorsaetzliche straftaten",
+        "vorsätzlich begangene straftaten",
+        "verbrechen",
+        "vorsatzdelikt",
+        "vorsätzlich begangen"
+      ]
+    },
+    {
+      "key": "ausschluss_eigene_insolvenz",
+      "label_de": "Eigene Insolvenz",
+      "kind": "ausschluss",
+      "synonyms": [
+        "insolvenz über eigenes vermögen",
+        "eigenes insolvenzverfahren",
+        "insolvenz",
+        "eigeninsolvenz",
+        "verbraucherinsolvenz"
+      ]
+    },
+    {
+      "key": "ausschluss_asyl_auslaenderrecht",
+      "label_de": "Asyl-/Ausländerrecht",
+      "kind": "ausschluss",
+      "synonyms": [
+        "asyl-",
+        "ausländerrecht",
+        "auslaenderrecht",
+        "asyl- und ausländerrecht",
+        "asyl-/ausländerrecht",
+        "aufenthaltsrecht",
+        "migrationsrecht"
+      ]
+    },
+    {
+      "key": "ausschluss_sozialhilfe_grundsicherung",
+      "label_de": "Sozialhilfe/Grundsicherung (SGB II/XII)",
+      "kind": "ausschluss",
+      "synonyms": [
+        "sozialhilfe",
+        "grundsicherung",
+        "sgb ii",
+        "sgb xii",
+        "bürgergeld",
+        "hartz"
+      ]
+    },
+    {
+      "key": "ausschluss_gewerblich_selbstaendig",
+      "label_de": "Gewerbliche/selbständige Tätigkeit",
+      "kind": "ausschluss",
+      "synonyms": [
+        "gewerbliche",
+        "selbständige tätigkeit",
+        "selbstaendige taetigkeit",
+        "freiberuflich",
+        "gewerblich/selbständig",
+        "selbständigkeit",
+        "freiberufler"
+      ]
+    },
+    {
+      "key": "ausschluss_halte_parkverstoesse",
+      "label_de": "Halte-/Parkverstöße",
+      "kind": "ausschluss",
+      "synonyms": [
+        "halte-",
+        "parkverstöße",
+        "parkverstoesse",
+        "halte-/parkverstöße",
+        "ruhender verkehr",
+        "falschparken"
+      ]
+    },
+    {
+      "key": "ausschluss_schadenersatz_abwehr",
+      "label_de": "Abwehr von Schadenersatzansprüchen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "abwehr von schadenersatzansprüchen",
+        "schadenersatzabwehr",
+        "abwehr schadenersatz",
+        "passiv-rechtsschutz"
+      ]
+    },
+    {
+      "key": "ausschluss_krieg_kernenergie",
+      "label_de": "Krieg/innere Unruhen/Nuklearschäden",
+      "kind": "ausschluss",
+      "synonyms": [
+        "krieg",
+        "innere unruhen",
+        "nuklearschäden",
+        "nuklearschaeden",
+        "kernenergie",
+        "höhere gewalt",
+        "terror"
+      ]
+    }
+  ]
+}
