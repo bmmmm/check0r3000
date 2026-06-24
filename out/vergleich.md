@@ -4,7 +4,7 @@ _2 Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergeb
 
 ## Leistungsmatrix
 
-| Merkmal | ADVOCARD Rechtsschutzversicherung AG — Rechtsschutzversicherung | ARAG SE — Aktiv-Rechtsschutz 2026 |
+| Merkmal | ADVOCARD Rechtsschutzversicherung AG — ADVOCARD-360°-PRIVAT | ARAG SE — Aktiv-Rechtsschutz |
 |---|---|---|
 | Privat | ✓ | ✓ |
 | Beruf | ✓ | ✓ |
@@ -14,76 +14,85 @@ _2 Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergeb
 | Steuer | ✓ | ✓ |
 | Sozialgericht | ✓ | ✓ |
 | Verwaltung | ✓ | ✓ |
-| Versicherungssumme | unbegrenzt (mit Ausnahmen je Bereich) | unbegrenzt |
-| Selbstbeteiligung | 0 EUR, 150 EUR oder 300 EUR (wählbar) | wählbar |
+| Versicherungssumme | unbegrenzt; Ausnahme Internet-RS 100.000 EUR je Fall; Außerhalb Geltungsbereich max. 1.000.000 EUR | unbegrenzt (Europa, alle Stufen); weltweit je nach Modul und Stufe begrenzt (z. B. 200.000 EUR Basis) |
+| Selbstbeteiligung | wählbar 150 oder 300 EUR (Schadenfreiheitsrabatt reduziert SB schrittweise auf 0 EUR) | wählbar; Aktiv-RS Basis für Selbstständige (§ 28b): 300 EUR fest; Komfort/Premium: kein Abzug bei anwaltlicher Erstberatung |
 | Wartezeit (Monate) | 3 | 3 |
-| Geltungsbereich | Europa, Mittelmeeranrainer, Kanarische Inseln, Madeira; weltweit bis 1 Mio EUR | Europa, Anliegerstaaten des Mittelmeers, Kanarische Inseln, Madeira, Azoren; weltweit bis zu einem Jahr Aufenthalt im Ausland |
+| Geltungsbereich | Europa inkl. Mittelmeeranrainer, Kanarische Inseln, Madeira; weltweit bei vorübergehendem Auslandsaufenthalt | Europa (geografisch), Mittelmeeranrainer, Kanaren, Madeira, Azoren; weltweit bei vorübergehendem Aufenthalt bis 12 Monate |
 | Laufzeit | 1 oder 3 Jahre | 1 oder 3 Jahre |
 | Beitrag/Monat (EUR) | – | – |
 
 
 ## Details je Tarif
 
-### ADVOCARD Rechtsschutzversicherung AG — Rechtsschutzversicherung
+### ADVOCARD Rechtsschutzversicherung AG — ADVOCARD-360°-PRIVAT
 
-**Leistungen:** Telefonische Rechtsberatung; Online-Rechtsberatung per Chat; Mediation bis 180 EUR/Stunde; Vorsorgliche anwaltliche Beratung; Strafkaution als zinsloses Darlehen; Übernahme von Übersetzungskosten im Ausland; Identity Protection (360°-Pakete); Psychologische Unterstützung bei Cyber-Mobbing
+**Leistungen:** Telefonische Rechtsberatung; Online-Rechtsberatung per Chat; Außergerichtliche Mediation (bis 180 EUR/Stunde, keine SB); Strafkaution als zinsloses Darlehen; Identity Protection Portal (Dark-/Deep-/Public-Web-Monitoring, Security-Software); Vorsorgliche anwaltliche Beratung (bis 1.000 EUR, keine SB); Übersetzungskosten im Ausland; Schadenfreiheitsrabatt ab 3. schadenfreiem Versicherungsjahr; Beitragsfreistellung bei Arbeitslosigkeit; Psychologische Erstberatung bei Cybermobbing; Rechtsschutz für Opfer von Gewaltstraftaten (§ 2 l)
 
-**Ausschlüsse:** Baufinanzierung; Patent- und Markenrecht; Kapitalanlage-Streitigkeiten; Spiel- und Wettverträge; Familienrecht-Streitigkeiten; Erbrecht-Streitigkeiten; Kriegs- und innere Unruhen; Vorsätzliche Straftaten des Versicherten
+**Ausschlüsse:** Kauf/Verkauf/Finanzierung zu bebauender Grundstücke; Patent- und Markenrecht; Kapitalanlagestreitigkeiten (Erwerb, Veräußerung, Verwaltung, Finanzierung); Spiel-/Wettverträge und Gewinnzusagen; Familien-/Erbrecht weitgehend ausgeschlossen (nur § 2 k mit Höchstbetrag); Vorsätzlich begangene Straftaten; Krieg, Aufruhr, innere Unruhen; Wohnungseigentumsrecht (Streit mit Miteigentümern)
 
-**Besonderheiten:** Modular aufgebaut mit kombinierbar Bausteinen; Komplettangebote 360°-PRIVAT und 360°-GEWERBE; Schadenfreiheitsrabatt ab 3. Versicherungsjahr; Beitragsfreistellung bei Arbeitslosigkeit möglich; Differenzdeckung beim Wechsel von Versicherer; Identity Protection und Cyber-Mobbing-Support
+**Besonderheiten:** ADVOCARD-360°-PRIVAT: Komplettpaket aus 5 Bereichen (Privat, Beruf, Verkehr, Wohnen, Internet); Identity Protection inkl. Dark-Web-Monitoring und Reputationsmanagement; Differenzdeckung für Wechsler von Vorversicherer möglich; SB-Schadenfreiheitsrabatt: sinkt ab 3. Jahr schrittweise bis auf 0 EUR; Rechtsschutz für Kleingewerbe (Nebentätigkeit bis 22.000 EUR Umsatz) in Bausteinen inkludierbar; Online-Services: Mietvertrag-Check, Vorsorgevollmacht-Generator, Zeugnis-Check, Kündigungsschutz-Check
 
 
-### ARAG SE — Aktiv-Rechtsschutz 2026
+### ARAG SE — Aktiv-Rechtsschutz
 
-**Leistungen:** Telefonische Rechtsberatung ARAG JuraTel®; Mediation inkl. außergerichtliche Sachverständigenkosten; Mobiler Anwalt (Besuch bei Ihnen zu Hause); ARAG Dokumenten-Center; Anwaltsempfehlung; Außergerichtliche Tätigkeiten des Anwalts; Sachverständigenkosten bei Mediation; Psychologische Soforthilfe in Krisensituationen
+**Leistungen:** ARAG JuraTel® telefonische Rechtsberatung (in über 20 europ. Ländern + USA); Mediation außergerichtlich (bis 3.000 EUR/Mediation, 6.000 EUR/Kalenderjahr); Strafkaution als zinsloses Darlehen; Mobiler Anwalt – Hausbesuch (Komfort/Premium); Kautionszahlung und Dolmetscherkosten im Ausland; Psychologische Soforthilfe nach Verkehrsunfall (Premium); Sachverständigenkosten außergerichtlich; Online-Forderungsmanagement für Vermieter und Selbstständige; Kennzeichen-Wiederbeschaffung (Premium, Klausel 11); Leistungsupdate-Garantie beitragsneutral (Klausel 8); Beratungs-Rechtsschutz Familien-/Lebenspartnerschafts-/Erbrecht inkl. Patientenverfügung (§ 2k); Vertrags- und Arbeitszeugnischeck JuraCheck® (Sonderbedingung 13/16); Webcheck und Onlinerechtsberatung (JuraCheck/web@ktiv); Darknet-Monitoring (web@ktiv Komfort/Premium); Vorversicherungsgarantie (Premium, § 26p/28p); DirektSchutz: Sofortschutz für Autokauf, Mietverträge, rückwirkende Mediation (Premium-Annex)
 
-**Ausschlüsse:** Baufinanzierung und Grundstückserwerb/Veräußerung; Patent-, Urheber-, Marken- und Designrechte; Spiel- und Wettverträge oder Gewinnzusagen; Kartell- und Wettbewerbsrecht; Versicherungsverträge (mit Ausnahmen); Ehe- und Unterhaltssachen ohne entsprechende Zusatzversicherung; Kriegsereignisse, Aufruhr, Streik, Erdbeben; Angelegenheiten, bei denen Versicherter vorsätzlich handelt
+**Ausschlüsse:** Streitigkeiten aus Baufinanzierung und Immobilienfonds-Beteiligung; Patent-, Marken- und sonstiges Immaterialgüterrecht (außer Beratungs-RS im Premium Selbstständige); Spiel- und Wettverträge, Gewinnzusagen; Krieg, Aufruhr, Nuklear- und Bergbauschäden; Vorsätzliche rechtswidrige Handlungen des Versicherungsnehmers (§ 3 Abs. 4 ARB); Geltendmachung fremder Ansprüche, Bürgschaftsstreitigkeiten (§ 3 Abs. 3d ARB); Verbrechen (Straftaten mit Mindestfreiheitsstrafe 1 Jahr); Kartellrecht; Rechtsschutzfall vor Versicherungsbeginn (Vorvertraglichkeit, § 4 Abs. 4 ARB); Selbstständige Tätigkeit im Privat-RS (mit Ausnahmen für Privatfahrzeuge und Nebentätigkeit)
 
-**Besonderheiten:** Leistungsupdate-Garantie für beitragsfreie Leistungserweiterungen; Verzicht auf Selbstbeteiligungsabzug bei Erledigung durch Erstberatung; Vorversicherungs-Garantie bei Wechsel vom Vorversicherer; Differenzdeckung möglich; Mehrfachversicherungsschutz in verschiedenen Lebensbereichen kombinierbar; Flexible Auswahl einzelner Deckungsbereiche
+**Besonderheiten:** Dreistufiges Leistungssystem Basis/Komfort/Premium für alle Hauptmodule separat wählbar; Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren ununterbrochener Versicherung (§ 4 Abs. 6 ARB); Vorversicherungsgarantie in Premium: Regulierung nach Bedingungen des nahtlosen Vorvertrags; Kein Selbstbeteiligungs-Abzug bei anwaltlicher Erstberatung (Komfort/Premium, § 5 Abs. 3c ARB); web@ktiv inkl. Vermögensschaden-Erstattung (3.000 EUR/Fall) und Elektronik-Schutz (5.000 EUR/Fall) als eigenständiges Modul; Erweiterter Straf-Rechtsschutz optional zubuchbar bis 300.000 EUR Versicherungssumme; Wirtschaftsmediation für Selbstständige über Sonderbedingungen eingeschlossen; Top-Schutzbrief und Fahrzeug-Schutzbrief als optionale Assistance-Annexe; Wartezeit bei Ehe-Rechtsschutz 3 Jahre (Schutz vor Zweckabschlüssen)
 
 
 ## Vor- & Nachteile im Vergleich
 
-### ADVOCARD Rechtsschutzversicherung AG — Rechtsschutzversicherung
+### ADVOCARD Rechtsschutzversicherung AG — ADVOCARD-360°-PRIVAT
 
 **Vorteile:**
-- Konkrete Selbstbeteiligung-Optionen (0 EUR, 150 EUR, 300 EUR wählbar) – keine Ambiguität
-- Weltweit bis 1 Mio EUR Deckung mit klarer Summe, nicht nur vage Aufenthaltsdauer
-- Identity Protection und psychologische Unterstützung bei Cyber-Mobbing im Leistungsumfang
-- Beitragsfreistellung bei Arbeitslosigkeit möglich
-- Schadenfreiheitsrabatt ab dem 3. Versicherungsjahr
+- Internet-RS inkl. Identity Protection (Dark-/Deep-/Public-Web-Monitoring) ist fester Paketbestandteil — bei ARAG nur kostenpflichtiger Zusatzbaustein
+- Schadenfreiheitsrabatt senkt die Selbstbeteiligung ab dem 3. schadensfreien Jahr schrittweise auf 0 EUR — bei ARAG nicht vorgesehen
+- Vorsorgliche anwaltliche Beratung bis 1.000 EUR ohne Anrechnung der Selbstbeteiligung
+- Rechtsschutz für Opfer von Gewaltstraftaten (§ 2 l) explizit eingeschlossen
+- Psychologische Erstberatung bei Cybermobbing als dedizierte Leistung
+- Kleingewerbe-Nebentätigkeit bis 22.000 EUR Jahresumsatz direkt in den Bausteinen einbeziehbar
+- Klares Komplettpaket ohne Stufenauswahl: geringere Entscheidungskomplexität
 
 **Nachteile:**
-- Versicherungssumme „mit Ausnahmen je Bereich" – weniger transparent als uneingeschränkte Unbegrenztheit
-- Familienrecht und Erbrecht komplett ausgeschlossen (nicht mal Beratung)
-- Mediation auf 180 EUR/Stunde begrenzt
-- Weniger Wartezeit-Ausnahmen als ARAG (z.B. keine Wartezeit-Entfall für Mediation)
+- Mediation nur bis 180 EUR/Stunde gedeckt — ARAG übernimmt bis 3.000 EUR je Mediationsverfahren (bis 6.000 EUR/Kalenderjahr)
+- Kein mobiler Anwalt / kein Hausbesuch — bei ARAG ab Komfort-Stufe enthalten
+- Kein Leistungsupdate-Garantie (beitragsneutrale Bedingungsverbesserung) erkennbar
+- Kein Verzicht auf die Einrede der Vorvertraglichkeit nach mehrjähriger Laufzeit — ARAG gewährt diesen Verzicht nach 3 Jahren
+- Kein erweiterter Straf-RS bis 300.000 EUR optional buchbar
+- Weltweite Aufenthaltsdauer nicht explizit auf 12 Monate begrenzt — Umfang im Ausland damit weniger klar definiert als bei ARAG
+- Kein dreistufiges System: weniger Möglichkeit, Leistung und Beitrag individuell abzustufen
 
 ---
 
-### ARAG SE — Aktiv-Rechtsschutz 2026
+### ARAG SE — Aktiv-Rechtsschutz (ARB 2026)
 
 **Vorteile:**
-- Unbegrenzte Versicherungssumme ohne genannte Ausnahmen – maximale Transparenz
-- Wartezeit komplett entfällt für Verkehr und Mediation
-- Ehe- und Unterhaltssachen gegen Zusatzversicherung verfügbar (nicht grundsätzlich ausgeschlossen)
-- Leistungsupdate-Garantie – Leistungserweiterungen ohne Aufpreis
-- Verzicht auf Selbstbeteiligung bei Erledigung durch Erstberatung
-- Vorversicherungs-Garantie beim Versichererwechsel
-- Mobiler Anwalt (Hausbesuch)
-- ARAG Dokumenten-Center
+- Mediationsdeckung deutlich großzügiger: bis 3.000 EUR je Mediationsverfahren, 6.000 EUR/Kalenderjahr (vs. ADVOCARD 180 EUR/Stunde)
+- Mobiler Anwalt / Hausbesuch ab Komfort-Stufe — bei ADVOCARD nicht vorhanden
+- Leistungsupdate-Garantie: Bedingungsverbesserungen werden beitragsneutral übernommen
+- Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren ununterbrochener Versicherung
+- Erweiterter Straf-RS bis 300.000 EUR optional zubuchbar
+- web@ktiv (Internet-RS) mit Vermögensschaden-Erstattung 3.000 EUR/Fall und Elektronik-Schutz 5.000 EUR/Fall — inhaltlich reicher als ADVOCARD-Internet-RS (100.000 EUR VS, ohne separate Sachschadenkomponente)
+- Weltweiter Schutz bei vorübergehendem Aufenthalt explizit bis 12 Monate
+- DirektSchutz (Sofortschutz für Autokauf und Mietverträge, rückwirkende Mediation) in Premium
+- Vorversicherungsgarantie in Premium: Regulierung nach Bedingungen des nahtlosen Vorvertrags
+- Dreistufiges System (Basis/Komfort/Premium) erlaubt passgenaue Beitragsoptimierung
+- Wirtschaftsmediation für Selbstständige über Sonderbedingungen eingeschlossen
 
 **Nachteile:**
-- Selbstbeteiligung nur als „wählbar" angegeben – konkrete Optionen nicht dokumentiert
-- Weltweit-Deckung begrenzt auf „bis zu einem Jahr Aufenthalt" (weniger kalkulierbar als EUR-Summe)
-- Längere Wartezeiten für sensible Bereiche: Ehesachen 3 Jahre, Unterhaltssachen 1 Jahr, Bauherren 6 Monate
-- Keine Identity Protection oder Cyber-Mobbing-Support genannt
-- Keine Beitragsfreistellung bei Arbeitslosigkeit erwähnt
+- Internet-RS (web@ktiv) ist kein fester Paketbestandteil, sondern optionaler Zusatzbaustein — wer digitalen Schutz will, muss ihn explizit hinzubuchen und zahlt extra
+- Kein Identity Protection Portal (Dark-/Deep-/Public-Web-Monitoring) im Standard enthalten
+- Kein Schadenfreiheitsrabatt mit SB-Reduktion auf 0 EUR erkennbar
+- Keine vorsorgliche anwaltliche Beratung bis 1.000 EUR ohne SB-Anrechnung
+- Ehe-RS-Wartezeit 3 Jahre — wer in absehbarer Zeit Familienkonflikte absichern will, ist kurzfristig nicht geschützt
+- Dreistufiges Tarifsystem erfordert mehr Auswahlaufwand; falsche Stufenwahl kann zu Unterversicherung führen
 
 ---
 
 ### Fazit
 
-**ADVOCARD** passt für digital-aktive Einzelpersonen und Kleinunternehmer, die Wert auf **klare Kostentransparenz** (Selbstbeteiligung, Weltdeckung) und **Cyber-Schutz** legen.
+**ADVOCARD-360°-PRIVAT** passt für Privatpersonen, die ein sofort aktiviertes Komplettpaket ohne Modulauswahl wollen und Wert auf digitalen Identitätsschutz (Dark-Web-Monitoring, Cybermobbing-Beratung) als Standard legen — und die über mehrere schadensfreie Jahre die Selbstbeteiligung auf null senken möchten.
 
-**ARAG** ist besser für **Familien oder Paare** mit Hausbesitz, die flexible Ehe-/Unterhaltssachen brauchen, viel Wert auf **praktische Service-Leistungen** (mobiler Anwalt, Dokumenten-Center) legen und bei Versichererwechsel **Schutzgarantien** bevorzugen.
+**ARAG Aktiv-Rechtsschutz** ist die bessere Wahl für alle, die höhere Mediationsbudgets brauchen, einen mobilen Anwalt schätzen, sich langfristig die Einrede der Vorvertraglichkeit absichern wollen oder als Selbstständige eine flexible Stufenlösung mit Wirtschaftsmediation suchen. Der erweiterte Straf-RS bis 300.000 EUR ist ein zusätzliches Alleinstellungsmerkmal für exponierte Berufsgruppen.
