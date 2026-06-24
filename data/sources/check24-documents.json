@@ -1,0 +1,290 @@
+{
+  "quelle": "check24 rsv vergleichsergebnis (all insurers, couple profile), Tarifdetails harvest 2026-06-24",
+  "host": "https://rechtsschutz.check24.de",
+  "harvested": "2026-06-24",
+  "note": "Source-PDF URLs only (PDFs are third-party/copyright -> data/inbox is gitignored). URLs reconstructed from host+kind+hash+filename. fetch_docs.py downloads on demand.",
+  "tariffs": [
+    {
+      "stem": "roland__top-rechtsschutz-komfort-strafrechtplus",
+      "insurer": "ROLAND",
+      "tariff": "Top-Rechtsschutz Komfort + StrafrechtPlus",
+      "position": 1,
+      "hash": "f19283364cc2e16de04d27fa6d670ae7",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort_+_StrafrechtPlus",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/f19283364cc2e16de04d27fa6d670ae7/Allgemeine_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort_+_StrafrechtPlus.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort_+_StrafrechtPlus",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/f19283364cc2e16de04d27fa6d670ae7/Produktinformationsblatt_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort_+_StrafrechtPlus.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort_+_StrafrechtPlus",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/f19283364cc2e16de04d27fa6d670ae7/Besondere_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort_+_StrafrechtPlus.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort_+_StrafrechtPlus",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/f19283364cc2e16de04d27fa6d670ae7/Weitere_Unterlagen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort_+_StrafrechtPlus.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "bavariadirekt__rundum-schutz-oerag",
+      "insurer": "BavariaDirekt / ÖRAG",
+      "tariff": "Rundum-Schutz (ÖRAG Rechtsschutz)",
+      "position": 2,
+      "hash": "64405c8df442f401df0a166138938a81",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/64405c8df442f401df0a166138938a81/Allgemeine_Versicherungsbedingungen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/64405c8df442f401df0a166138938a81/Produktinformationsblatt_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/64405c8df442f401df0a166138938a81/Besondere_Versicherungsbedingungen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/64405c8df442f401df0a166138938a81/Weitere_Unterlagen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_(%C3%96RAG_Rechtsschutz).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "roland__top-rechtsschutz-premium",
+      "insurer": "ROLAND",
+      "tariff": "Top-Rechtsschutz Premium",
+      "position": 3,
+      "hash": "93ddab39006292dbfef078bfbdb4f51d",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/93ddab39006292dbfef078bfbdb4f51d/Allgemeine_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/93ddab39006292dbfef078bfbdb4f51d/Produktinformationsblatt_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/93ddab39006292dbfef078bfbdb4f51d/Weitere_Unterlagen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "adac__rs-exklusiv-nicht-mitglieder",
+      "insurer": "ADAC",
+      "tariff": "RS Exklusiv für Nicht-Mitglieder",
+      "position": 36,
+      "hash": "db87766f4d405eb66d49f86e432df790",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ADAC_Versicherung_AG_RS_Exklusiv_für_Nicht-Mitglieder",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/db87766f4d405eb66d49f86e432df790/Allgemeine_Versicherungsbedingungen_ADAC_Versicherung_AG_RS_Exklusiv_f%C3%BCr_Nicht-Mitglieder.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ADAC_Versicherung_AG_RS_Exklusiv_für_Nicht-Mitglieder",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/db87766f4d405eb66d49f86e432df790/Produktinformationsblatt_ADAC_Versicherung_AG_RS_Exklusiv_f%C3%BCr_Nicht-Mitglieder.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ADAC_Versicherung_AG_RS_Exklusiv_für_Nicht-Mitglieder",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/db87766f4d405eb66d49f86e432df790/Weitere_Unterlagen_ADAC_Versicherung_AG_RS_Exklusiv_f%C3%BCr_Nicht-Mitglieder.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "adam-riese__xxl",
+      "insurer": "Adam Riese",
+      "tariff": "XXL",
+      "position": 47,
+      "hash": "85ff6769a6e7c3a12d94afac892acd40",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Adam_Riese_GmbH_XXL",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/85ff6769a6e7c3a12d94afac892acd40/Allgemeine_Versicherungsbedingungen_Adam_Riese_GmbH_XXL.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Adam_Riese_GmbH_XXL",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/85ff6769a6e7c3a12d94afac892acd40/Produktinformationsblatt_Adam_Riese_GmbH_XXL.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Adam_Riese_GmbH_XXL",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/85ff6769a6e7c3a12d94afac892acd40/Weitere_Unterlagen_Adam_Riese_GmbH_XXL.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "arag__premium-flex-2026",
+      "insurer": "ARAG",
+      "tariff": "Premium Flex (2026)",
+      "position": 55,
+      "hash": "f3aac5605c7d49da3b62d81db2493f4c",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ARAG_SE_Premium_Flex__(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/f3aac5605c7d49da3b62d81db2493f4c/Allgemeine_Versicherungsbedingungen_ARAG_SE_Premium_Flex__(2026).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ARAG_SE_Premium_Flex__(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/f3aac5605c7d49da3b62d81db2493f4c/Produktinformationsblatt_ARAG_SE_Premium_Flex__(2026).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ARAG_SE_Premium_Flex__(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/f3aac5605c7d49da3b62d81db2493f4c/Weitere_Unterlagen_ARAG_SE_Premium_Flex__(2026).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "dmb__klaro",
+      "insurer": "DMB Rechtsschutz",
+      "tariff": "Klaro",
+      "position": 63,
+      "hash": "48efc72e157ab99acd23966b37ba9deb",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_DMB_Rechtsschutz_AG_Klaro",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/48efc72e157ab99acd23966b37ba9deb/Allgemeine_Versicherungsbedingungen_DMB_Rechtsschutz_AG_Klaro.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_DMB_Rechtsschutz_AG_Klaro",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/48efc72e157ab99acd23966b37ba9deb/Produktinformationsblatt_DMB_Rechtsschutz_AG_Klaro.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_DMB_Rechtsschutz_AG_Klaro",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/48efc72e157ab99acd23966b37ba9deb/Weitere_Unterlagen_DMB_Rechtsschutz_AG_Klaro.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "arag__premium-2026",
+      "insurer": "ARAG",
+      "tariff": "Premium (2026)",
+      "position": 69,
+      "hash": "573073a71eda539485f23327498fb714",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ARAG_SE_Premium_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/573073a71eda539485f23327498fb714/Allgemeine_Versicherungsbedingungen_ARAG_SE_Premium_(2026).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ARAG_SE_Premium_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/573073a71eda539485f23327498fb714/Produktinformationsblatt_ARAG_SE_Premium_(2026).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ARAG_SE_Premium_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/573073a71eda539485f23327498fb714/Weitere_Unterlagen_ARAG_SE_Premium_(2026).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "advocard__360-privat-rechtsschutz",
+      "insurer": "Advocard",
+      "tariff": "360° Privat-Rechtsschutz",
+      "position": 84,
+      "hash": "042d8c99b25c15ea1ab438023956cef6",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ADVOCARD_Rechtsschutzversicherung_AG_360°_Privat-Rechtsschutz",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/042d8c99b25c15ea1ab438023956cef6/Allgemeine_Versicherungsbedingungen_ADVOCARD_Rechtsschutzversicherung_AG_360%C2%B0_Privat-Rechtsschutz.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ADVOCARD_Rechtsschutzversicherung_AG_360°_Privat-Rechtsschutz",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/042d8c99b25c15ea1ab438023956cef6/Produktinformationsblatt_ADVOCARD_Rechtsschutzversicherung_AG_360%C2%B0_Privat-Rechtsschutz.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "ergo__best",
+      "insurer": "ERGO",
+      "tariff": "Best",
+      "position": 133,
+      "hash": "0af294cc754df393c4c3b23f704bc35c",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ERGO_Versicherung_AG_Best",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/0af294cc754df393c4c3b23f704bc35c/Allgemeine_Versicherungsbedingungen_ERGO_Versicherung_AG_Best.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ERGO_Versicherung_AG_Best",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/0af294cc754df393c4c3b23f704bc35c/Produktinformationsblatt_ERGO_Versicherung_AG_Best.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_ERGO_Versicherung_AG_Best",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/0af294cc754df393c4c3b23f704bc35c/Besondere_Versicherungsbedingungen_ERGO_Versicherung_AG_Best.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ERGO_Versicherung_AG_Best",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/0af294cc754df393c4c3b23f704bc35c/Weitere_Unterlagen_ERGO_Versicherung_AG_Best.pdf"
+        }
+      ]
+    }
+  ]
+}
