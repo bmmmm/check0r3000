@@ -1,0 +1,15 @@
+{
+  "_note": "Curated shortlist for the TUI 'Favorites' board. Tracked and PII-free: only insurer/product/SB-band/tag/stem. All prices and Tarifnoten are read from the (gitignored) snapshot at render time, never stored here. `show_sb` pins the Selbstbeteiligung band to display for an apples-to-apples comparison; the TUI falls back to the cheapest matching variant if that band is absent from the snapshot. `stem` links a favorite to its source-document URLs in data/sources/check24-documents.json.",
+  "knockout": "Tariffs carrying a '+ Familienrecht' bundle are excluded: Familienrechtsschutz (divorce / custody cover) is not needed for a couple without children. Confirmed by the user 2026-06-24 (example knocked out: ARAG Premium + Familienrecht).",
+  "reference_stem": "arag__premium-2026",
+  "favorites": [
+    {"stem": "roland__top-rechtsschutz-premium", "insurer": "ROLAND", "product": "Top-Rechtsschutz Premium", "show_sb": "150 - 300 €", "tag": "best value @ note 1,0", "recommended": true},
+    {"stem": "adam-riese__xxl", "insurer": "Adam Riese", "product": "XXL", "show_sb": "150 - 300 €", "tag": "note 1,0, low SB"},
+    {"stem": "roland__top-rechtsschutz-komfort-strafrechtplus", "insurer": "ROLAND", "product": "Top-Rechtsschutz Komfort + StrafrechtPlus", "show_sb": "150 - 300 €", "tag": "cheapest strong pick (note 1,2)"},
+    {"stem": "bavariadirekt__rundum-schutz-oerag", "insurer": "BavariaDirekt", "product": "Rundum-Schutz (ÖRAG Rechtsschutz)", "show_sb": "150 - 300 €", "tag": "cheapest overall (note 1,3)"},
+    {"stem": "ergo__best", "insurer": "ERGO", "product": "Best", "show_sb": "0 - 250 €", "tag": "lowest SB (note 1,4)"},
+    {"stem": "advocard__360-privat-rechtsschutz", "insurer": "Advocard", "product": "360° Privat-Rechtsschutz", "show_sb": "0 - 300 €", "tag": "low SB, already ingested (note 1,5)"},
+    {"stem": "dmb__klaro", "insurer": "DMB Rechtsschutz", "product": "Klaro", "show_sb": "0 - 300 €", "tag": "low SB budget (note 1,7)"},
+    {"stem": "arag__premium-2026", "insurer": "ARAG", "product": "Premium (2026)", "show_sb": "250 €", "tag": "your current reference", "reference": true}
+  ]
+}

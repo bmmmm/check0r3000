@@ -10,6 +10,7 @@ Usage:
     uv run scripts/tui.py                         # launch interactive UI
     uv run scripts/tui.py --snapshot PATH         # load a specific snapshot JSON
     uv run scripts/tui.py --selftest              # verify data loading, then exit 0
+    uv run scripts/tui.py --screenshot DIR        # render each tab to SVG, then exit
     uv run scripts/tui.py --help                  # show this help
 """
 
@@ -225,6 +226,72 @@ def load_all_snapshots() -> list[tuple[str, Path]]:
     return pairs
 
 
+def load_favorites() -> dict[str, Any]:
+    """Load the curated shortlist from config/favorites.json (PII-free), or {}."""
+    path = REPO_ROOT / "config" / "favorites.json"
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def load_doc_index() -> dict[str, list[dict]]:
+    """Map a tariff stem → its persisted source-document descriptors (from the
+    manifest), so the Favorites view can show which AVB/PIB URLs we have on file."""
+    path = REPO_ROOT / "data" / "sources" / "check24-documents.json"
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+    index: dict[str, list[dict]] = {}
+    for t in data.get("tariffs", []):
+        stem = t.get("stem")
+        if stem:
+            index[stem] = t.get("docs", [])
+    return index
+
+
+# Short doctype labels for the Favorites "Docs" column.
+_DOCTYPE_SHORT = {
+    "avb": "AVB",
+    "produktinfoblatt": "PIB",
+    "weitere_unterlagen": "Weit.",
+}
+
+
+def match_favorite(
+    snapshot: Snapshot, fav: dict[str, Any]
+) -> tuple[SnapshotRow | None, list[SnapshotRow]]:
+    """Resolve one favorite to a representative snapshot row + all its SB variants.
+
+    Matches on exact insurer + product. Picks the variant whose Selbstbeteiligung
+    equals the favorite's ``show_sb`` (apples-to-apples band); falls back to the
+    cheapest priced variant when that band is not in the snapshot.
+    """
+    ins = fav.get("insurer", "").strip()
+    prod = fav.get("product", "").strip()
+    variants = [
+        r for r in snapshot.rows
+        if r.insurer.strip() == ins and r.product.strip() == prod
+    ]
+    if not variants:
+        return None, []
+    show_sb = (fav.get("show_sb") or "").strip()
+    chosen = None
+    if show_sb:
+        chosen = next(
+            (r for r in variants if r.selbstbeteiligung.strip() == show_sb), None
+        )
+    if chosen is None:
+        priced = [r for r in variants if r.monatlich_eur is not None]
+        chosen = min(priced, key=lambda r: r.monatlich_eur) if priced else variants[0]
+    return chosen, variants
+
+
 def _price_quartiles(rows: list[SnapshotRow]) -> tuple[float, float, float]:
     """Return (q1, median, q3) for monatlich_eur, ignoring None."""
     prices = sorted(r.monatlich_eur for r in rows if r.monatlich_eur is not None)
@@ -297,6 +364,35 @@ def run_selftest(snapshot_path: Path | None) -> int:
     else:
         print("  only one snapshot — diff view shows empty-state message")
 
+    # 5. Favorites board
+    favs = load_favorites()
+    fav_list = favs.get("favorites", [])
+    doc_index = load_doc_index()
+    print(f"[favorites] config/favorites.json: {len(fav_list)} entries")
+    if fav_list and snapshot_path is not None:
+        snap = load_snapshot(snapshot_path)
+        unmatched = 0
+        for fav in fav_list:
+            row, variants = match_favorite(snap, fav) if snap else (None, [])
+            n_docs = len(doc_index.get(fav.get("stem", ""), []))
+            ins = (fav.get("insurer") or "")[:14]
+            prod = (fav.get("product") or "")[:34]
+            if row is not None:
+                price = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
+                print(
+                    f"  ✓ {ins:<14} {prod:<34} "
+                    f"note {row.tarifnote}  €{price:<7} SB {row.selbstbeteiligung:<14} "
+                    f"({len(variants)} variants, {n_docs} docs)"
+                )
+            else:
+                unmatched += 1
+                print(f"  ! {ins:<14} {prod} — no snapshot match")
+        if unmatched:
+            # A favorite is curated config; the snapshot is regenerable data. An
+            # unmatched favorite means the LIST is stale (or the snapshot drifted),
+            # not that the loader is broken — warn, do not fail the loader selftest.
+            print(f"  => {unmatched} favorite(s) unmatched — refresh favorites.json or the snapshot")
+
     print("=== selftest PASSED ===")
     return 0
 
@@ -306,7 +402,7 @@ def run_selftest(snapshot_path: Path | None) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _launch_app(snapshot_path: Path | None) -> None:
+def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) -> None:
     from textual import on
     from textual.app import App, ComposeResult
     from textual.binding import Binding
@@ -416,8 +512,9 @@ def _launch_app(snapshot_path: Path | None) -> None:
             Binding("s", "sort_price", "Sort €", show=True),
             Binding("n", "sort_note", "Sort note", show=True),
             Binding("p", "sort_position", "Sort #", show=True),
-            Binding("d", "switch_tab('detail')", "Detail", show=True),
+            Binding("v", "switch_tab('favorites')", "Favorites", show=True),
             Binding("m", "switch_tab('market')", "Market", show=True),
+            Binding("d", "switch_tab('detail')", "Detail", show=True),
             Binding("x", "switch_tab('diff')", "Diff", show=True),
             Binding("r", "refresh_data", "Reload"),
         ]
@@ -435,11 +532,15 @@ def _launch_app(snapshot_path: Path | None) -> None:
             self._all_snapshots: list[tuple[str, Path]] = []
             self._detail: DetailRecord | None = None
             self._q1 = self._median = self._q3 = 0.0
+            self._favorites: dict[str, Any] = {}
+            self._doc_index: dict[str, list[dict]] = {}
+            self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
 
         # --- Lifecycle ---
 
         def on_mount(self) -> None:
             self._load_data()
+            self._populate_favorites_table()
             self._populate_market_table()
             self._update_header()
 
@@ -456,12 +557,23 @@ def _launch_app(snapshot_path: Path | None) -> None:
             self._all_snapshots = load_all_snapshots()
             if self._snapshot:
                 self._q1, self._median, self._q3 = _price_quartiles(self._snapshot.rows)
+            self._favorites = load_favorites()
+            self._doc_index = load_doc_index()
 
         # --- Layout ---
 
         def compose(self) -> ComposeResult:
             yield Header(show_clock=True)
-            with TabbedContent(id="tabs", initial="market"):
+            with TabbedContent(id="tabs", initial="favorites"):
+                with TabPane("★ Favorites [v]", id="favorites"):
+                    yield Label("", id="fav-knockout")
+                    with Horizontal(id="fav-layout"):
+                        yield DataTable(id="fav-table", cursor_type="row", zebra_stripes=True)
+                        with ScrollableContainer(id="fav-detail"):
+                            yield Static(
+                                "Select a favorite to see full details, SB variants and documents.",
+                                id="fav-detail-content",
+                            )
                 with TabPane("Market [m]", id="market"):
                     yield Input(
                         placeholder="Filter by insurer or product…",
@@ -489,6 +601,224 @@ def _launch_app(snapshot_path: Path | None) -> None:
                 )
             else:
                 self.sub_title = "No snapshot loaded — place files in data/snapshots/"
+
+        # --- Favorites board ---
+
+        def _reference_fav(self) -> dict | None:
+            ref_stem = self._favorites.get("reference_stem")
+            return next(
+                (
+                    f for f in self._favorites.get("favorites", [])
+                    if f.get("reference") or f.get("stem") == ref_stem
+                ),
+                None,
+            )
+
+        def _reference_info(self) -> tuple[float | None, str | None]:
+            """(monthly premium, SB band) of the reference favorite (current tariff)."""
+            if not self._snapshot:
+                return None, None
+            ref_fav = self._reference_fav()
+            if ref_fav is not None:
+                row, _ = match_favorite(self._snapshot, ref_fav)
+                if row and row.monatlich_eur is not None:
+                    return row.monatlich_eur, row.selbstbeteiligung
+            return None, None
+
+        @staticmethod
+        def _delta_cell(
+            price: float | None, sb: str | None, ref_price: float | None, ref_sb: str | None
+        ) -> str:
+            """Δ vs the reference premium. Prefixes ≈ when the SB band differs (so the
+            comparison is not 1:1) and renders an exact match as a neutral ±0."""
+            if ref_price is None or price is None:
+                return "[dim]—[/dim]"
+            d = price - ref_price
+            if abs(d) < 0.005:
+                return "[dim]±0[/dim]"
+            pct = d / ref_price * 100 if ref_price else 0.0
+            color = "bright_green" if d < 0 else "bright_red"
+            sign = "" if d < 0 else "+"
+            approx = "≈" if (sb or "") != (ref_sb or "") else ""
+            return f"[{color}]{approx}{sign}{d:.2f} ({sign}{pct:.0f}%)[/{color}]"
+
+        def _docs_label(self, stem: str) -> str:
+            seen: list[str] = []
+            for dd in self._doc_index.get(stem, []):
+                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                if lbl and lbl not in seen:
+                    seen.append(lbl)
+            return "·".join(seen) if seen else "[dim]—[/dim]"
+
+        def _populate_favorites_table(self) -> None:
+            try:
+                table: DataTable = self.query_one("#fav-table", DataTable)
+            except NoMatches:
+                return
+
+            table.clear(columns=True)
+            table.add_columns("★", "Insurer", "Product", "Note", "€/mo", "SB", "Δ ref", "Docs")
+            self._fav_rows = {}
+
+            ref_price, ref_sb = self._reference_info()
+
+            # Banner: knock-out rule + the reference anchor + a drill-in hint.
+            try:
+                ko = self.query_one("#fav-knockout", Label)
+                parts: list[str] = []
+                ko_text = self._favorites.get("knockout", "")
+                if ko_text:
+                    parts.append(f"⊘ {ko_text}")
+                ref_fav = self._reference_fav()
+                if ref_fav is not None and ref_price is not None:
+                    parts.append(
+                        f"◆ Referenz: {ref_fav.get('insurer')} {ref_fav.get('product')} "
+                        f"(SB {ref_sb}, €{ref_price:.2f}/mo) — Δ vergleicht dagegen; "
+                        f"≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
+                    )
+                parts.append("↵ Zeile wählen → Detail, SB-Varianten & Dokumente")
+                ko.update("\n".join(parts))
+            except NoMatches:
+                pass
+
+            if not self._snapshot:
+                return
+
+            # Resolve, then order by Tarifnote then price (best decision first).
+            entries: list[tuple[dict, SnapshotRow | None, list[SnapshotRow]]] = []
+            for fav in self._favorites.get("favorites", []):
+                row, variants = match_favorite(self._snapshot, fav)
+                entries.append((fav, row, variants))
+
+            def _sort_key(e: tuple[dict, SnapshotRow | None, list]) -> tuple[float, float]:
+                _f, r, _v = e
+                if r is None:
+                    return (9999.0, 9999.0)
+                try:
+                    note = float((r.tarifnote or "").replace(",", "."))
+                except (ValueError, AttributeError):
+                    note = 9999.0
+                return (note, r.monatlich_eur if r.monatlich_eur is not None else 9999.0)
+
+            entries.sort(key=_sort_key)
+
+            for idx, (fav, row, variants) in enumerate(entries):
+                key = f"fav-{idx}"  # unique per board row, never collides
+                self._fav_rows[key] = (row, fav)
+                if row is None:
+                    table.add_row(
+                        "[dim]?[/dim]",
+                        fav.get("insurer") or "",
+                        fav.get("product") or "",
+                        "—", "—", "—", "—",
+                        self._docs_label(fav.get("stem", "")),
+                        key=key,
+                    )
+                    continue
+
+                if fav.get("recommended"):
+                    star = "[bright_green]▶[/bright_green]"
+                elif fav.get("reference"):
+                    star = "[bright_yellow]◆[/bright_yellow]"
+                else:
+                    star = "[yellow]★[/yellow]"
+
+                nc = _tarifnote_color(row.tarifnote)
+                note_col = f"[{nc}]{row.tarifnote}[/{nc}]" if row.tarifnote else "—"
+                price_str = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
+                pc = _price_color(row.monatlich_eur, self._q1, self._q3)
+                price_col = f"[{pc}]{price_str}[/{pc}]"
+
+                if fav.get("reference"):
+                    delta_col = "[dim]— (Referenz)[/dim]"
+                else:
+                    delta_col = self._delta_cell(
+                        row.monatlich_eur, row.selbstbeteiligung, ref_price, ref_sb
+                    )
+
+                sb_cell = row.selbstbeteiligung or "—"
+                if len(variants) > 1:
+                    sb_cell = f"{sb_cell} [dim]·{len(variants)}▾[/dim]"
+
+                table.add_row(
+                    star, row.insurer, row.product, note_col, price_col,
+                    sb_cell, delta_col, self._docs_label(fav.get("stem", "")),
+                    key=key,
+                )
+
+        def _render_favorite_detail(self, row: SnapshotRow, fav: dict) -> str:
+            lines: list[str] = []
+            lines.append(f"[bold]{row.insurer}[/bold] — [italic]{row.product}[/italic]")
+            tag = fav.get("tag", "")
+            if tag:
+                if fav.get("recommended"):
+                    marker, mcolor = "▶", "bright_green"
+                elif fav.get("reference"):
+                    marker, mcolor = "◆", "bright_yellow"
+                else:
+                    marker, mcolor = "★", "yellow"
+                lines.append(f"[{mcolor}]{marker} {tag}[/{mcolor}]")
+            lines.append("")
+
+            nc = _tarifnote_color(row.tarifnote)
+            lines.append(f"Tarifnote : [{nc}]{row.tarifnote or '—'}[/{nc}]")
+            price = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
+            lines.append(
+                f"€/Monat   : [bright_green]{price}[/bright_green]   "
+                f"(SB {row.selbstbeteiligung or '—'})"
+            )
+            ref_price, ref_sb = self._reference_info()
+            if ref_price is not None and row.monatlich_eur is not None and not fav.get("reference"):
+                d = row.monatlich_eur - ref_price
+                if abs(d) < 0.005:
+                    lines.append("vs. Referenz: [dim]±0 €/mo[/dim]")
+                else:
+                    pct = d / ref_price * 100 if ref_price else 0.0
+                    color = "bright_green" if d < 0 else "bright_red"
+                    sign = "" if d < 0 else "+"
+                    lines.append(
+                        f"vs. Referenz: [{color}]{sign}{d:.2f} €/mo ({sign}{pct:.0f}%)[/{color}]"
+                    )
+                    if (row.selbstbeteiligung or "") != (ref_sb or ""):
+                        lines.append(
+                            f"  [yellow]≈ andere SB-Stufe[/yellow] [dim]({row.selbstbeteiligung} "
+                            f"vs. Referenz {ref_sb}) — nicht 1:1[/dim]"
+                        )
+            lines.append("")
+
+            _, variants = match_favorite(self._snapshot, fav)
+            if len(variants) > 1:
+                lines.append("[underline]SB-Varianten[/underline]")
+                for v in sorted(
+                    variants, key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0
+                ):
+                    p = f"{v.monatlich_eur:.2f}" if v.monatlich_eur is not None else "—"
+                    mark = " [bright_yellow]◀ shown[/bright_yellow]" if v.key == row.key else ""
+                    lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
+                lines.append("")
+
+            docs = self._doc_index.get(fav.get("stem", ""), [])
+            if docs:
+                lines.append("[underline]Quelldokumente (URLs gesichert)[/underline]")
+                for dd in docs:
+                    lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                    fname = (dd.get("file") or "")[:54]
+                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+                lines.append(
+                    f"  [dim]→ uv run scripts/fetch_docs.py {fav.get('stem')} --apply[/dim]"
+                )
+                lines.append("")
+
+            if _load_detail(row.insurer, row.product):
+                lines.append(
+                    "[bright_green]✓ Detail-Datensatz vorhanden — siehe Tab Detail [d][/bright_green]"
+                )
+            else:
+                lines.append(
+                    "[dim italic]Noch keine AVB/PIB eingelesen — download + intake.py "
+                    "für den Modul-Vergleich.[/dim italic]"
+                )
+            return "\n".join(lines)
 
         # --- Market table ---
 
@@ -824,6 +1154,42 @@ def _launch_app(snapshot_path: Path | None) -> None:
             except NoMatches:
                 pass
 
+        @on(DataTable.RowSelected, "#fav-table")
+        def on_fav_selected(self, event: DataTable.RowSelected) -> None:
+            key = str(event.row_key.value) if event.row_key.value is not None else None
+            if not key:
+                return
+            entry = self._fav_rows.get(key)
+            if entry is None:
+                return
+            row, fav = entry
+            if row is None:
+                msg = (
+                    f"[bold]{fav.get('insurer', '')}[/bold] — "
+                    f"[italic]{fav.get('product', '')}[/italic]\n\n"
+                    "[yellow]No matching row in the current snapshot.[/yellow]\n"
+                    "[dim]The curated list or the snapshot has drifted — refresh "
+                    "config/favorites.json or re-run scripts/snapshot.py.[/dim]"
+                )
+                try:
+                    self.query_one("#fav-detail-content", Static).update(msg)
+                except NoMatches:
+                    pass
+                return
+            try:
+                self.query_one("#fav-detail-content", Static).update(
+                    self._render_favorite_detail(row, fav)
+                )
+            except NoMatches:
+                pass
+            # also prime the full Detail tab so [d] shows the same tariff
+            try:
+                self.query_one("#detail-full-content", Static).update(
+                    self._render_detail_full(row)
+                )
+            except NoMatches:
+                pass
+
         @on(DataTable.HeaderSelected, "#market-table")
         def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
             col_map = {0: "position", 2: "insurer", 4: "note", 5: "price"}
@@ -883,10 +1249,81 @@ def _launch_app(snapshot_path: Path | None) -> None:
 
         def action_refresh_data(self) -> None:
             self._load_data()
+            self._populate_favorites_table()
             self._populate_market_table()
             self._update_header()
 
     app = CheckApp(snapshot_path=snapshot_path)
+
+    if screenshot_dir is not None:
+        import asyncio
+
+        async def _shoot() -> None:
+            screenshot_dir.mkdir(parents=True, exist_ok=True)
+            async with app.run_test(size=(140, 48)) as pilot:
+                await pilot.pause()
+                tabs = app.query_one("#tabs", TabbedContent)
+
+                # --- Favorites: prime sidebar + detail from the first favorite ---
+                tabs.active = "favorites"
+                await pilot.pause()
+                first_fav = None
+                for _k, (row, fav) in app._fav_rows.items():
+                    if row is not None:
+                        first_fav = (row, fav)
+                        break
+                if first_fav is not None:
+                    row, fav = first_fav
+                    try:
+                        app.query_one("#fav-detail-content", Static).update(
+                            app._render_favorite_detail(row, fav)
+                        )
+                        app.query_one("#fav-table", DataTable).move_cursor(row=0)
+                    except Exception:
+                        pass
+                await pilot.pause()
+                app.save_screenshot(filename="favorites.svg", path=str(screenshot_dir))
+
+                # --- Detail: prime with an ingested favorite if available ---
+                ingested = None
+                for _k, (row, fav) in app._fav_rows.items():
+                    if _load_detail(row.insurer, row.product):
+                        ingested = row
+                        break
+                if ingested is None and first_fav is not None:
+                    ingested = first_fav[0]
+                if ingested is not None:
+                    try:
+                        app.query_one("#detail-full-content", Static).update(
+                            app._render_detail_full(ingested)
+                        )
+                    except Exception:
+                        pass
+                tabs.active = "detail"
+                await pilot.pause()
+                app.save_screenshot(filename="detail.svg", path=str(screenshot_dir))
+
+                # --- Market: prime sidebar with the first row ---
+                if app._snapshot and app._snapshot.rows:
+                    try:
+                        app.query_one("#detail-content", Static).update(
+                            app._render_detail_sidebar(app._snapshot.rows[0])
+                        )
+                    except Exception:
+                        pass
+                tabs.active = "market"
+                await pilot.pause()
+                app.save_screenshot(filename="market.svg", path=str(screenshot_dir))
+
+                # --- Diff ---
+                tabs.active = "diff"
+                await pilot.pause()
+                app.save_screenshot(filename="diff.svg", path=str(screenshot_dir))
+
+        asyncio.run(_shoot())
+        print(f"Saved screenshots (favorites/detail/market/diff .svg) to {screenshot_dir}")
+        return
+
     app.run()
 
 
@@ -918,6 +1355,13 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Load data files, print a summary, and exit 0 without launching the UI.",
     )
+    parser.add_argument(
+        "--screenshot",
+        metavar="DIR",
+        type=Path,
+        default=None,
+        help="Render each tab to SVG in DIR (headless), then exit without an interactive UI.",
+    )
     return parser.parse_args()
 
 
@@ -925,6 +1369,8 @@ def main() -> None:
     args = _parse_args()
     if args.selftest:
         sys.exit(run_selftest(args.snapshot))
+    elif args.screenshot is not None:
+        _launch_app(args.snapshot, screenshot_dir=args.screenshot)
     else:
         _launch_app(args.snapshot)
 

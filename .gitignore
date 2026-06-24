@@ -51,3 +51,7 @@ __pycache__/
 # data/offers/ — a per-user, machine-regenerable artifact, never a shareable
 # deliverable. Keep it out of git even though the rest of out/ is tracked.
 out/enriched/
+
+# TUI screenshots embed the snapshot prices (tied to the personal profile) —
+# regenerable via `tui.py --screenshot`, kept local.
+out/screenshots/

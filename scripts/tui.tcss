@@ -47,6 +47,45 @@ TabPane {
     border: tall #5ba0d0;
 }
 
+/* ── Favorites tab layout ───────────────────────────────────────────────── */
+
+#fav-knockout {
+    dock: top;
+    height: auto;
+    width: 1fr;
+    margin: 1 0 0 0;
+    padding: 0 1;
+    color: #c9a227;
+    background: $surface-darken-1;
+}
+
+#fav-layout {
+    height: 1fr;
+    margin-top: 1;
+}
+
+/* Favorites board — a touch wider sidebar than Market for the rich detail */
+#fav-table {
+    width: 60%;
+    height: 1fr;
+    border: tall #8a6d1f;
+    scrollbar-color: #8a6d1f;
+    scrollbar-background: $surface-darken-1;
+}
+
+#fav-detail {
+    width: 40%;
+    height: 1fr;
+    border: tall #8a6d1f;
+    padding: 1 2;
+    background: $surface-darken-1;
+    margin-left: 1;
+}
+
+#fav-detail-content {
+    color: $text;
+}
+
 /* ── Market tab layout ──────────────────────────────────────────────────── */
 
 #market-layout {

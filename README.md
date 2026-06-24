@@ -54,6 +54,44 @@ Geltungsbereich, Modul-§§) — deterministisch, ohne Modell (`scripts/_filter.
 Das bringt eine 200k-Token-AVB auf ~75k herunter, sodass sie in das 200k-Fenster
 kleiner/günstiger/lokaler Modelle passt, ohne die Fakten zu verlieren.
 
+## Marktübersicht & TUI (ohne Modell)
+
+Neben der Doku-Pipeline gibt es einen leichten, modellfreien Zweig, um den **ganzen
+Markt** im Blick zu behalten — kein DB-Engine, nur Dateien:
+
+```
+config/check24-profile.json     (gitignored, PII)   dein Query verbatim
+        │  scripts/check24_query.py                  Result-URL aus dem Profil bauen
+        ▼                                             (--all-insurers, --provider, --show)
+[CHECK24-Ergebnisseite]
+        │  scripts/check24_scrape.js (DevTools)       Zeilen + Quell-PDF-URLs scrapen
+        ▼
+data/snapshots/<datum>.json       (gitignored)       scripts/snapshot.py: ganze Liste je Tag
+data/sources/check24-documents.json (getrackt)       nur die AVB/PIB-URLs, nie die PDFs
+        │  scripts/fetch_docs.py --check              URLs erreichbar? (lädt nichts)
+        │  scripts/fetch_docs.py <stem> --apply       on demand nach data/inbox/ ziehen
+        ▼
+scripts/tui.py                                        interaktiver Browser über alles
+```
+
+- **`scripts/snapshot.py`** ist die Änderungs-DB: ein datierter Snapshot pro Lauf,
+  `--diff ALT NEU` zeigt Preisänderungen / neu / weg.
+- **`scripts/fetch_docs.py --check`** prüft per HEAD/Range-Request, ob die gesicherten
+  Dokument-URLs erreichbar sind — **ohne** ein (urheberrechtlich geschütztes) PDF zu laden.
+- **`scripts/tui.py`** (das einzige Skript mit `textual`-Dependency) bietet vier Tabs:
+  **★ Favorites** (kuratierte Shortlist aus `config/favorites.json` mit Note/Preis/SB,
+  Δ vs. aktuellem Tarif, SB-Varianten und den gesicherten Dokument-URLs), **Market**
+  (alle Tarife, sortier-/filterbar), **Detail** (eingelesener Datensatz) und **Diff**
+  (Snapshot-Vergleich). `--selftest` prüft das Laden ohne UI; `--screenshot DIR`
+  rendert jeden Tab als SVG.
+
+```sh
+uv run scripts/check24_query.py --all-insurers   # Result-URL für alle Versicherer
+uv run scripts/snapshot.py rows.psv              # Snapshot bauen   (--diff alt neu)
+uv run scripts/fetch_docs.py --check             # sind alle Doc-URLs erreichbar?
+uv run scripts/tui.py                            # interaktiver Vergleich
+```
+
 ## Nachbauen / einen Versicherer hinzufügen
 
 Voraussetzungen: [`uv`](https://docs.astral.sh/uv/) und die `claude`-CLI auf dem PATH.

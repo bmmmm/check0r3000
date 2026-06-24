@@ -10,6 +10,7 @@ without retyping the form. Nothing here touches a model.
 | `check24-profile.json` | **no** (gitignored) | Your real quote: `base_url` + the exact CHECK24 `query` string. Contains birthdate + zipcode (PII). |
 | `check24-profile.example.json` | yes | Placeholder twin with fake birthdate/zipcode. Copy it to `check24-profile.json` and edit. |
 | `check24-providers.json` | yes | `provider_filter` ID → insurer name. Public; used to pin one insurer by id. |
+| `favorites.json` | yes | Curated shortlist for the TUI Favorites board. PII-free by contract: only insurer/product/SB-band/tag/stem (+ `recommended`/`reference` flags). No prices — those are read from the gitignored snapshot at render time. |
 
 ## Building a result URL — `scripts/check24_query.py`
 
@@ -42,3 +43,12 @@ A result page lists tariffs in the DOM (no JSON API — the query *is* the paylo
 source-PDF URLs. Those URLs are persisted (not the PDFs) in
 `data/sources/check24-documents.json`; `scripts/fetch_docs.py` downloads selected ones
 into `data/inbox/` on demand, where `intake.py` classifies them.
+
+```sh
+uv run scripts/fetch_docs.py --check              # probe every saved URL is reachable (no download)
+uv run scripts/fetch_docs.py <stem>               # dry-run: show what one tariff would fetch
+uv run scripts/fetch_docs.py <stem> --apply       # actually download (third-party copyright)
+```
+
+`--check` sends only HEAD / 0-byte-range requests, so it verifies "could we download
+this?" without pulling any copyrighted PDF.
