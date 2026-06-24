@@ -78,19 +78,19 @@ scripts/tui.py                                        interaktiver Browser über
   `--diff ALT NEU` zeigt Preisänderungen / neu / weg.
 - **`scripts/fetch_docs.py --check`** prüft per HEAD/Range-Request, ob die gesicherten
   Dokument-URLs erreichbar sind — **ohne** ein (urheberrechtlich geschütztes) PDF zu laden.
-- **`scripts/tui.py`** (das einzige Skript mit `textual`-Dependency) bietet vier Tabs:
+- **`scripts/tui.py`** (das einzige Skript mit `textual`-Dependency) bietet drei Tabs:
   **★ Favorites** (kuratierte Shortlist aus `config/favorites.json` mit Note/Preis/SB,
   Δ vs. aktuellem Tarif, SB-Varianten und den gesicherten Dokument-URLs), **Market**
-  (alle Tarife, sortier-/filterbar), **Detail** (eingelesener Datensatz) und **Diff**
-  (Snapshot-Vergleich). `--selftest` prüft das Laden ohne UI; `--screenshot DIR`
-  rendert jeden Tab als SVG.
-- **Tarif auswählen → Quelldokumente + `[g]`**: Wählt man einen Tarif (Market oder
-  Favorites), zeigt das Detail-Panel seine gesicherten Quell-PDFs. Sind sie noch nicht
-  analysiert, lädt **`[g]`** sie nach Bestätigung herunter und fährt die Pipeline
-  (`fetch_docs --apply → intake → ingest → extract`) im Hintergrund — danach erscheint
-  der Datensatz im Detail-Tab. Das `extract`-Modell ist per `CHECK0R_ANALYZE_MODEL`
-  überschreibbar (Default `claude`). Tarife ohne gesicherte URLs verweisen auf den
-  Browser-Schritt „Tarifdetails".
+  (alle Tarife, sortier-/filterbar) und **Diff** (Snapshot-Vergleich). `--selftest`
+  prüft das Laden ohne UI; `--screenshot DIR` rendert jeden Tab als SVG.
+- **Navigieren → `[d]` Details → Quelldokumente + `[g]`**: Eine Zeile per Pfeiltasten
+  oder Klick auswählen; **`[d]`** blendet ein Detail-Band unter der Tabelle ein/aus
+  (Tarif-Module, Coverage, Beitrag und die gesicherten Quell-PDFs). Standardmäßig ist
+  das Band ausgeblendet, damit die Tabelle die volle Breite hat. Sind die Dokumente noch
+  nicht analysiert, lädt **`[g]`** sie nach Bestätigung herunter und fährt die Pipeline
+  (`fetch_docs --apply → intake → ingest → extract`) im Hintergrund — danach füllt sich
+  das Band. Das `extract`-Modell ist per `CHECK0R_ANALYZE_MODEL` überschreibbar (Default
+  `claude`). Tarife ohne gesicherte URLs verweisen auf den Browser-Schritt „Tarifdetails".
 
 ```sh
 uv run scripts/check24_query.py --all-insurers   # Result-URL für alle Versicherer

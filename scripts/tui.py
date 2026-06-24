@@ -13,12 +13,13 @@ Usage:
     uv run scripts/tui.py --screenshot DIR        # render each tab to SVG, then exit
     uv run scripts/tui.py --help                  # show this help
 
-Selecting a tariff (Market or Favorites) shows its harvested source documents in
-the detail panel. If they are not yet analyzed, [g] downloads them and runs the
-pipeline (fetch_docs --apply -> intake -> ingest -> extract) in the background,
-after a confirm. The extract model defaults to "claude"; override with the
-CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were never harvested point you
-back to the browser "Tarifdetails" step.
+Navigate a tariff (Market or Favorites) with the arrow keys or a click; press [d]
+to toggle a detail band below the table (tariff modules, coverage, premium and the
+harvested source documents). If the documents are not yet analyzed, [g] downloads
+them and runs the pipeline (fetch_docs --apply -> intake -> ingest -> extract) in
+the background, after a confirm. The extract model defaults to "claude"; override
+with the CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were never harvested
+point you back to the browser "Tarifdetails" step.
 """
 
 from __future__ import annotations
@@ -440,7 +441,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
     from textual import on, work
     from textual.app import App, ComposeResult
     from textual.binding import Binding
-    from textual.containers import Container, Horizontal, ScrollableContainer, Vertical
+    from textual.containers import Container, ScrollableContainer, Vertical
     from textual.css.query import NoMatches
     from textual.reactive import reactive
     from textual.screen import ModalScreen
@@ -592,7 +593,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("p", "sort_position", "Sort #", show=True),
             Binding("v", "switch_tab('favorites')", "Favorites", show=True),
             Binding("m", "switch_tab('market')", "Market", show=True),
-            Binding("d", "switch_tab('detail')", "Detail", show=True),
+            Binding("d", "toggle_detail", "Details", show=True),
             Binding("x", "switch_tab('diff')", "Diff", show=True),
             Binding("g", "fetch_docs", "Get docs", show=True),
             Binding("r", "refresh_data", "Reload"),
@@ -616,6 +617,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._doc_by_tariff: dict[tuple[str, str], dict] = {}
             self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
             self._active_row: SnapshotRow | None = None
+            self._active_fav: dict | None = None
 
         # --- Lifecycle ---
 
@@ -649,9 +651,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             with TabbedContent(id="tabs", initial="favorites"):
                 with TabPane("★ Favorites [v]", id="favorites"):
                     yield Label("", id="fav-knockout")
-                    with Horizontal(id="fav-layout"):
+                    with Vertical(id="fav-layout"):
                         yield DataTable(id="fav-table", cursor_type="row", zebra_stripes=True)
-                        with ScrollableContainer(id="fav-detail"):
+                        with ScrollableContainer(id="fav-detail", classes="detail-band"):
                             yield Static(
                                 "Select a favorite to see full details, SB variants and documents.",
                                 id="fav-detail-content",
@@ -661,13 +663,10 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         placeholder="Filter by insurer or product…",
                         id="filter-input",
                     )
-                    with Horizontal(id="market-layout"):
+                    with Vertical(id="market-layout"):
                         yield DataTable(id="market-table", cursor_type="row", zebra_stripes=True)
-                        with ScrollableContainer(id="detail-panel"):
+                        with ScrollableContainer(id="detail-panel", classes="detail-band"):
                             yield Static("Select a row to see details.", id="detail-content")
-                with TabPane("Detail [d]", id="detail"):
-                    with ScrollableContainer(id="detail-full-panel"):
-                        yield Static("Select a tariff in the Market tab first.", id="detail-full-content")
                 with TabPane("Diff [x]", id="diff"):
                     with ScrollableContainer(id="diff-panel"):
                         yield Static("Loading diff…", id="diff-content")
@@ -879,6 +878,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
                 lines.append("")
 
+            has_detail = _load_detail(row.insurer, row.product) is not None
             docs = self._doc_index.get(fav.get("stem", ""), [])
             if docs:
                 lines.append("[underline]Quelldokumente (URLs gesichert)[/underline]")
@@ -886,19 +886,24 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
                     fname = (dd.get("file") or "")[:54]
                     lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
-                lines.append(
-                    f"  [dim]→ uv run scripts/fetch_docs.py {fav.get('stem')} --apply[/dim]"
-                )
+                if not has_detail:
+                    lines.append(
+                        "[bright_yellow]  \\[g] herunterladen + analysieren[/bright_yellow]"
+                    )
+                    lines.append(
+                        f"  [dim]→ fetch_docs.py {fav.get('stem')} --apply"
+                        " → intake → ingest → extract[/dim]"
+                    )
                 lines.append("")
 
-            if _load_detail(row.insurer, row.product):
+            if has_detail:
                 lines.append(
-                    "[bright_green]✓ Detail-Datensatz vorhanden — siehe Tab Detail [d][/bright_green]"
+                    "[bright_green]✓ Detail-Datensatz eingelesen — Module oben.[/bright_green]"
                 )
             else:
                 lines.append(
-                    "[dim italic]Noch keine AVB/PIB eingelesen — download + intake.py "
-                    "für den Modul-Vergleich.[/dim italic]"
+                    "[dim italic]Noch keine AVB/PIB eingelesen — \\[g] lädt + analysiert "
+                    "sie für den Modul-Vergleich.[/dim italic]"
                 )
             return "\n".join(lines)
 
@@ -1004,85 +1009,23 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             ]
             return hits[0] if len(hits) == 1 else None
 
-        def _render_detail_sidebar(self, row: SnapshotRow) -> str:
-            detail = _load_detail(row.insurer, row.product)
-            lines: list[str] = []
-
-            if detail:
-                # Escape the literal brackets (\[ ... ]) so the surrounding
-                # square brackets are not parsed as an opening markup tag — a
-                # bare "[" abutting "[bright_green]" breaks the markup lexer.
-                badge = (
-                    "[bright_green]\\[enriched][/bright_green]"
-                    if detail.is_enriched
-                    else "[cyan]\\[tariff][/cyan]"
-                )
-                lines.append(f"[bold]{detail.insurer}[/bold]  {badge}")
-                lines.append(f"[italic]{detail.tariff}[/italic]")
-                if detail.stand:
-                    lines.append(f"Stand: {detail.stand}")
-                lines.append("")
-
-                # Modules
-                lines.append("[underline]Modules[/underline]")
-                for mod_key, label in MODULE_LABELS.items():
-                    mod = detail.modules.get(mod_key, {})
-                    if mod.get("included"):
-                        lines.append(f"  {label:<20} {_module_badge(mod)}")
-                lines.append("")
-
-                # Coverage
-                cov = detail.coverage
-                if cov:
-                    lines.append("[underline]Coverage[/underline]")
-                    if cov.get("versicherungssumme"):
-                        lines.append(f"  VS-Summe:   {cov['versicherungssumme']}")
-                    if cov.get("selbstbeteiligung"):
-                        lines.append(f"  SB:         {cov['selbstbeteiligung']}")
-                    if cov.get("wartezeit_monate") is not None:
-                        lines.append(f"  Wartezeit:  {cov['wartezeit_monate']} Monate")
-                    if cov.get("geltungsbereich"):
-                        lines.append(f"  Geltung:    {cov['geltungsbereich']}")
-                    lines.append("")
-
-                # Premium
-                if detail.beitrag and detail.beitrag.get("monatlich_eur") is not None:
-                    p = detail.beitrag["monatlich_eur"]
-                    lines.append(f"[bold bright_green]€ {p:.2f}/mo[/bold bright_green]")
-                    if detail.beitrag.get("quelle"):
-                        lines.append(f"  Source: {detail.beitrag['quelle'][:60]}…")
-                    lines.append("")
-
-                # Besonderheiten (top 3 to keep sidebar compact)
-                if detail.besonderheiten:
-                    lines.append("[underline]Highlights[/underline]")
-                    for b in detail.besonderheiten[:3]:
-                        lines.append(f"  • {b}")
-                    if len(detail.besonderheiten) > 3:
-                        lines.append(f"  … (+{len(detail.besonderheiten) - 3} more, see Detail tab)")
-            else:
-                lines.append(f"[bold]{row.insurer}[/bold]")
-                lines.append(f"[italic]{row.product}[/italic]")
-                lines.append("")
-                lines.append(f"Note:     {row.tarifnote or '—'}")
-                lines.append(
-                    f"€/mo:     {row.monatlich_eur:.2f}" if row.monatlich_eur else "€/mo: —"
-                )
-                lines.append(f"SB:       {row.selbstbeteiligung or '—'}")
-                lines.append("")
-                lines.append("[dim italic]No detailed record ingested yet.[/dim italic]")
-
-            # --- Source documents + on-demand pull ([g]) ---
+        def _render_docs_block(
+            self, row: SnapshotRow, detail: DetailRecord | None
+        ) -> str:
+            """The harvested source-document list + the on-demand [g] pull hint.
+            Shared by the Market and Favorites detail bands. Returns "" if there is
+            nothing to say (a tariff with no harvested URLs that is already
+            analyzed)."""
             entry = self._doc_entry(row)
-            lines.append("")
+            lines: list[str] = []
             if entry and entry.get("docs"):
                 lines.append("[underline]Quelldokumente[/underline]")
                 for dd in entry["docs"]:
                     lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                    fname = (dd.get("file") or "")[:44]
+                    fname = (dd.get("file") or "")[:60]
                     lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
                 if detail:
-                    lines.append("[bright_green]  ✓ analysiert — Tab Detail \\[d][/bright_green]")
+                    lines.append("[bright_green]  ✓ analysiert[/bright_green]")
                 else:
                     lines.append(
                         "[bright_yellow]  \\[g] herunterladen + analysieren[/bright_yellow]"
@@ -1096,8 +1039,17 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     "[dim]Quell-PDFs noch nicht geharvestet — Browser-Schritt"
                     " (Tarifdetails öffnen) nötig.[/dim]"
                 )
-
             return "\n".join(lines)
+
+        def _render_market_detail(self, row: SnapshotRow) -> str:
+            """Full tariff detail (modules, coverage, premium, benefits, exclusions)
+            plus the source-document / [g] block, for the inline Market band."""
+            detail = _load_detail(row.insurer, row.product)
+            parts = [self._render_detail_full(row)]
+            docs = self._render_docs_block(row, detail)
+            if docs:
+                parts.append(docs)
+            return "\n\n".join(parts)
 
         # --- Full detail tab ---
 
@@ -1254,38 +1206,25 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         # --- Event handlers ---
 
-        @on(DataTable.RowSelected, "#market-table")
-        def on_row_selected(self, event: DataTable.RowSelected) -> None:
+        @on(DataTable.RowHighlighted, "#market-table")
+        def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
+            """A single click / arrow move highlights a row — track it as the active
+            target and refresh the (possibly hidden) detail band live."""
             key = str(event.row_key.value) if event.row_key.value is not None else None
             self.selected_row_key = key
-
             if not self._snapshot or key is None:
                 return
-
-            # Find the matching row
             row = next(
                 (r for r in self._snapshot.rows if (r.key or str(r.position)) == key), None
             )
             if row is None:
                 return
             self._active_row = row  # target for the [g] download/analyze action
+            self._active_fav = None
+            self._refresh_market_detail()
 
-            # Update sidebar detail
-            try:
-                sidebar: Static = self.query_one("#detail-content", Static)
-                sidebar.update(self._render_detail_sidebar(row))
-            except NoMatches:
-                pass
-
-            # Update full detail tab
-            try:
-                full: Static = self.query_one("#detail-full-content", Static)
-                full.update(self._render_detail_full(row))
-            except NoMatches:
-                pass
-
-        @on(DataTable.RowSelected, "#fav-table")
-        def on_fav_selected(self, event: DataTable.RowSelected) -> None:
+        @on(DataTable.RowHighlighted, "#fav-table")
+        def on_fav_highlighted(self, event: DataTable.RowHighlighted) -> None:
             key = str(event.row_key.value) if event.row_key.value is not None else None
             if not key:
                 return
@@ -1293,34 +1232,20 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             if entry is None:
                 return
             row, fav = entry
-            if row is None:
-                msg = (
-                    f"[bold]{fav.get('insurer', '')}[/bold] — "
-                    f"[italic]{fav.get('product', '')}[/italic]\n\n"
-                    "[yellow]No matching row in the current snapshot.[/yellow]\n"
-                    "[dim]The curated list or the snapshot has drifted — refresh "
-                    "config/favorites.json or re-run scripts/snapshot.py.[/dim]"
-                )
-                self._active_row = None
-                try:
-                    self.query_one("#fav-detail-content", Static).update(msg)
-                except NoMatches:
-                    pass
-                return
-            self._active_row = row  # target for the [g] download/analyze action
-            try:
-                self.query_one("#fav-detail-content", Static).update(
-                    self._render_favorite_detail(row, fav)
-                )
-            except NoMatches:
-                pass
-            # also prime the full Detail tab so [d] shows the same tariff
-            try:
-                self.query_one("#detail-full-content", Static).update(
-                    self._render_detail_full(row)
-                )
-            except NoMatches:
-                pass
+            self._active_row = row  # may be None (favorite not in snapshot)
+            self._active_fav = fav
+            self._refresh_fav_detail()
+
+        # Enter / click-on-highlighted: open the detail band on the row.
+        @on(DataTable.RowSelected, "#market-table")
+        def on_market_selected(self, event: DataTable.RowSelected) -> None:
+            self.on_market_highlighted(event)  # ensure active row is current
+            self._show_detail()
+
+        @on(DataTable.RowSelected, "#fav-table")
+        def on_fav_selected(self, event: DataTable.RowSelected) -> None:
+            self.on_fav_highlighted(event)
+            self._show_detail()
 
         @on(DataTable.HeaderSelected, "#market-table")
         def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
@@ -1385,6 +1310,96 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._populate_market_table()
             self._update_header()
 
+        # --- Inline detail band (toggled with [d]) ---
+
+        def _detail_band_for_tab(self) -> tuple[str, str] | None:
+            """(#band-container, #content-static) for the active tab, or None when
+            the active tab has no detail band (e.g. Diff)."""
+            try:
+                active = self.query_one("#tabs", TabbedContent).active
+            except NoMatches:
+                return None
+            if active == "favorites":
+                return "#fav-detail", "#fav-detail-content"
+            if active == "market":
+                return "#detail-panel", "#detail-content"
+            return None
+
+        def _render_active_into(self, ids: tuple[str, str]) -> None:
+            """Render the current active row/favorite into a band's Static."""
+            band_id, content_id = ids
+            try:
+                content = self.query_one(content_id, Static)
+            except NoMatches:
+                return
+            if band_id == "#fav-detail":
+                fav, row = self._active_fav, self._active_row
+                if fav is None:
+                    content.update("[dim]Favoriten-Zeile wählen (Pfeile / Klick).[/dim]")
+                elif row is None:
+                    content.update(
+                        f"[bold]{fav.get('insurer', '')}[/bold] — "
+                        f"[italic]{fav.get('product', '')}[/italic]\n\n"
+                        "[yellow]Kein passender Tarif im aktuellen Snapshot.[/yellow]\n"
+                        "[dim]Liste oder Snapshot ist veraltet — config/favorites.json "
+                        "oder scripts/snapshot.py auffrischen.[/dim]"
+                    )
+                else:
+                    content.update(self._render_favorite_detail(row, fav))
+            else:  # market band
+                row = self._active_row
+                if row is None:
+                    content.update("[dim]Markt-Zeile wählen (Pfeile / Klick).[/dim]")
+                else:
+                    content.update(self._render_market_detail(row))
+
+        def action_toggle_detail(self) -> None:
+            """Show/hide the inline detail band below the active tab's table."""
+            ids = self._detail_band_for_tab()
+            if ids is None:
+                self.notify("Kein Detail-Panel auf diesem Tab.", severity="information")
+                return
+            band_id, _ = ids
+            try:
+                band = self.query_one(band_id)
+            except NoMatches:
+                return
+            band.display = not band.display
+            if band.display:
+                self._render_active_into(ids)
+                band.scroll_home(animate=False)
+
+        def _show_detail(self) -> None:
+            """Reveal the active tab's detail band and render the active row (used by
+            Enter / click-on-highlighted)."""
+            ids = self._detail_band_for_tab()
+            if ids is None:
+                return
+            band_id, _ = ids
+            try:
+                band = self.query_one(band_id)
+            except NoMatches:
+                return
+            band.display = True
+            self._render_active_into(ids)
+
+        def _refresh_market_detail(self) -> None:
+            """Re-render the Market band live — only when it is currently shown."""
+            try:
+                band = self.query_one("#detail-panel")
+            except NoMatches:
+                return
+            if band.display:
+                self._render_active_into(("#detail-panel", "#detail-content"))
+
+        def _refresh_fav_detail(self) -> None:
+            try:
+                band = self.query_one("#fav-detail")
+            except NoMatches:
+                return
+            if band.display:
+                self._render_active_into(("#fav-detail", "#fav-detail-content"))
+
         # --- On-demand: download + analyze the selected tariff ([g]) ---
 
         def action_fetch_docs(self) -> None:
@@ -1405,7 +1420,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 return
             if _load_detail(row.insurer, row.product):
                 self.notify(
-                    "Schon analysiert — Tab Detail [d].", severity="information"
+                    "Schon analysiert — [d] zeigt die Details.", severity="information"
                 )
                 return
 
@@ -1466,16 +1481,11 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             self._load_data()
             self._populate_market_table()
             self._populate_favorites_table()
-            for query, render in (
-                ("#detail-content", self._render_detail_sidebar),
-                ("#detail-full-content", self._render_detail_full),
-            ):
-                try:
-                    self.query_one(query, Static).update(render(row))
-                except NoMatches:
-                    pass
+            # Re-render whichever detail band is currently shown.
+            self._refresh_market_detail()
+            self._refresh_fav_detail()
             self.notify(
-                f"Analyse fertig: {row.insurer} {row.product} — Tab Detail [d].",
+                f"Analyse fertig: {row.insurer} {row.product} — [d] zeigt die Details.",
                 timeout=8,
             )
 
@@ -1490,7 +1500,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 await pilot.pause()
                 tabs = app.query_one("#tabs", TabbedContent)
 
-                # --- Favorites: prime sidebar + detail from the first favorite ---
+                # --- Favorites: reveal the detail band on the first favorite ---
                 tabs.active = "favorites"
                 await pilot.pause()
                 first_fav = None
@@ -1499,38 +1509,17 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         first_fav = (row, fav)
                         break
                 if first_fav is not None:
-                    row, fav = first_fav
+                    app._active_row, app._active_fav = first_fav
                     try:
-                        app.query_one("#fav-detail-content", Static).update(
-                            app._render_favorite_detail(row, fav)
-                        )
                         app.query_one("#fav-table", DataTable).move_cursor(row=0)
                     except Exception:
                         pass
+                    app._show_detail()
                 await pilot.pause()
                 app.save_screenshot(filename="favorites.svg", path=str(screenshot_dir))
 
-                # --- Detail: prime with an ingested favorite if available ---
-                ingested = None
-                for _k, (row, fav) in app._fav_rows.items():
-                    if _load_detail(row.insurer, row.product):
-                        ingested = row
-                        break
-                if ingested is None and first_fav is not None:
-                    ingested = first_fav[0]
-                if ingested is not None:
-                    try:
-                        app.query_one("#detail-full-content", Static).update(
-                            app._render_detail_full(ingested)
-                        )
-                    except Exception:
-                        pass
-                tabs.active = "detail"
-                await pilot.pause()
-                app.save_screenshot(filename="detail.svg", path=str(screenshot_dir))
-
-                # --- Market: prime sidebar with a harvested row if available, so
-                # the [g] download/analyze affordance is visible in the shot ---
+                # --- Market: first the default (collapsed) view — full-width table,
+                # no band — then reveal it with the [g] affordance visible. ---
                 if app._snapshot and app._snapshot.rows:
                     market_row = next(
                         (
@@ -1541,15 +1530,13 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         ),
                         app._snapshot.rows[0],
                     )
-                    try:
-                        app.query_one("#detail-content", Static).update(
-                            app._render_detail_sidebar(market_row)
-                        )
-                    except Exception:
-                        pass
+                    app._active_row, app._active_fav = market_row, None
                 tabs.active = "market"
                 await pilot.pause()
                 app.save_screenshot(filename="market.svg", path=str(screenshot_dir))
+                app._show_detail()
+                await pilot.pause()
+                app.save_screenshot(filename="market-detail.svg", path=str(screenshot_dir))
 
                 # --- Diff ---
                 tabs.active = "diff"
@@ -1574,7 +1561,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         asyncio.run(_shoot())
         print(
-            "Saved screenshots (favorites/detail/market/diff/confirm .svg) to "
+            "Saved screenshots (favorites/market/market-detail/diff/confirm .svg) to "
             f"{screenshot_dir}"
         )
         return

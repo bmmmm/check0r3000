@@ -62,11 +62,12 @@ TabPane {
 #fav-layout {
     height: 1fr;
     margin-top: 1;
+    layout: vertical;
 }
 
-/* Favorites board — a touch wider sidebar than Market for the rich detail */
+/* Favorites board — full-width table, detail band stacked below */
 #fav-table {
-    width: 60%;
+    width: 1fr;
     height: 1fr;
     border: tall #8a6d1f;
     scrollbar-color: #8a6d1f;
@@ -74,16 +75,22 @@ TabPane {
 }
 
 #fav-detail {
-    width: 40%;
-    height: 1fr;
+    width: 1fr;
+    height: 50%;
     border: tall #8a6d1f;
     padding: 1 2;
     background: $surface-darken-1;
-    margin-left: 1;
+    margin-top: 1;
 }
 
 #fav-detail-content {
     color: $text;
+}
+
+/* Inline detail bands are hidden until the user toggles them with [d];
+ * the ID rules above style them, this only sets the default visibility. */
+.detail-band {
+    display: none;
 }
 
 /* ── Market tab layout ──────────────────────────────────────────────────── */
@@ -91,11 +98,12 @@ TabPane {
 #market-layout {
     height: 1fr;
     margin-top: 1;
+    layout: vertical;
 }
 
-/* Main table — takes 65% of width */
+/* Main table — full width, detail band stacked below */
 #market-table {
-    width: 65%;
+    width: 1fr;
     height: 1fr;
     border: tall #1e3a5f;
     scrollbar-color: #1e3a5f;
@@ -121,31 +129,17 @@ DataTable > .datatable--odd-row {
     background: $surface;
 }
 
-/* Sidebar detail panel */
+/* Detail band below the table (toggled with [d]) */
 #detail-panel {
-    width: 35%;
-    height: 1fr;
-    border: tall #1e3a5f;
-    padding: 1 2;
-    background: $surface-darken-1;
-    margin-left: 1;
-}
-
-#detail-content {
-    color: $text;
-}
-
-/* ── Detail full tab ────────────────────────────────────────────────────── */
-
-#detail-full-panel {
-    height: 1fr;
+    width: 1fr;
+    height: 50%;
     border: tall #1e3a5f;
     padding: 1 2;
     background: $surface-darken-1;
     margin-top: 1;
 }
 
-#detail-full-content {
+#detail-content {
     color: $text;
 }
 
