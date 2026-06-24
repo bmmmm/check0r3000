@@ -907,12 +907,15 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             lines: list[str] = []
 
             if detail:
+                # Escape the literal brackets (\[ ... ]) so the surrounding
+                # square brackets are not parsed as an opening markup tag — a
+                # bare "[" abutting "[bright_green]" breaks the markup lexer.
                 badge = (
-                    "[bright_green]enriched[/bright_green]"
+                    "[bright_green]\\[enriched][/bright_green]"
                     if detail.is_enriched
-                    else "[cyan]tariff[/cyan]"
+                    else "[cyan]\\[tariff][/cyan]"
                 )
-                lines.append(f"[bold]{detail.insurer}[/bold]  [{badge}]")
+                lines.append(f"[bold]{detail.insurer}[/bold]  {badge}")
                 lines.append(f"[italic]{detail.tariff}[/italic]")
                 if detail.stand:
                     lines.append(f"Stand: {detail.stand}")
