@@ -644,6 +644,48 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         def action_cancel(self) -> None:
             self.dismiss(False)
 
+    class DeleteDataScreen(ModalScreen[str | None]):
+        """Pick how much of a tariff's local data to delete. Returns the chosen scope
+        ('records' | 'purge' | 'purge_unfav') or None on cancel."""
+
+        BINDINGS = [
+            Binding("1", "pick('records')", "Records"),
+            Binding("2", "pick('purge')", "Purge"),
+            Binding("3", "pick('purge_unfav')", "Purge+Unfav"),
+            Binding("escape", "cancel", "Cancel"),
+            Binding("n", "cancel", "Cancel"),
+        ]
+
+        def __init__(self, stem: str, label: str, is_fav: bool) -> None:
+            super().__init__()
+            self._stem = stem
+            self._label = label
+            self._is_fav = is_fav
+
+        def compose(self) -> ComposeResult:
+            i, _, t = self._stem.partition("__")
+            unfav = "" if self._is_fav else "   [dim](nicht in Favoriten)[/dim]"
+            lines = [
+                f"[bold]Daten löschen — {self._label}[/bold]",
+                f"[dim]stem: {self._stem}[/dim]",
+                "[dim]Irreversibel.[/dim]",
+                "",
+                "[bold]\\[1][/bold] Nur Analyse-Records",
+                f"     [dim]out/tariffs|enriched/{self._stem}.json — per \\[g] neu erzeugbar[/dim]",
+                "[bold]\\[2][/bold] Records + lokale PDFs + Texte",
+                f"     [dim]+ data/raw/{i}/{t}/ + data/extracted/{i}/{t}/ — PDFs neu zu laden[/dim]",
+                f"[bold]\\[3][/bold] Voller Purge + aus Favoriten entfernen{unfav}",
+                "",
+                "[bold]\\[Esc/n][/bold] Abbrechen",
+            ]
+            yield Container(Static("\n".join(lines)), id="confirm-box")
+
+        def action_pick(self, scope: str) -> None:
+            self.dismiss(scope)
+
+        def action_cancel(self) -> None:
+            self.dismiss(None)
+
     class CheckApp(App):
         """check0r3000 — Rechtsschutz-Vergleich TUI."""
 
@@ -662,7 +704,9 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("d", "toggle_detail", "Details", show=True),
             Binding("x", "switch_tab('diff')", "Diff", show=True),
             Binding("g", "fetch_docs", "Get docs", show=True),
-            Binding("r", "refresh_data", "Reload"),
+            Binding("u", "toggle_favorite", "Favorit", show=False),
+            Binding("D", "delete_data", "Daten löschen", show=False),
+            Binding("r", "refresh_data", "Reload", show=False),
         ]
 
         # reactive state
@@ -1367,11 +1411,150 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             except NoMatches:
                 pass
 
-        def action_refresh_data(self) -> None:
+        def _reload_all(self) -> None:
+            """Reload every data source from disk and repaint both tables, the header
+            and whichever detail band is shown. Used after [g], a favorite edit or a
+            delete so the UI reflects the new on-disk state."""
             self._load_data()
             self._populate_favorites_table()
             self._populate_market_table()
             self._update_header()
+            self._refresh_market_detail()
+            self._refresh_fav_detail()
+
+        def action_refresh_data(self) -> None:
+            self._reload_all()
+
+        # --- Favorites management ([u] toggle, [D] delete) ---
+
+        def _save_favorites(self) -> None:
+            """Persist the (tracked, PII-free) shortlist back to config/favorites.json."""
+            path = REPO_ROOT / "config" / "favorites.json"
+            path.write_text(
+                json.dumps(self._favorites, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+
+        def _is_favorite_stem(self, stem: str | None) -> bool:
+            if not stem:
+                return False
+            return any(f.get("stem") == stem for f in self._favorites.get("favorites", []))
+
+        def _active_identity(self) -> tuple[str, str, str | None] | None:
+            """(insurer, product, stem) of the active favorite or market row, or None."""
+            if self._active_fav is not None:
+                f = self._active_fav
+                return f.get("insurer", ""), f.get("product", ""), f.get("stem")
+            if self._active_row is not None:
+                r = self._active_row
+                return r.insurer, r.product, r.stem
+            return None
+
+        def action_toggle_favorite(self) -> None:
+            """Add the active market row to the shortlist, or remove the active
+            favorite / an already-favorited row from it."""
+            ident = self._active_identity()
+            if ident is None:
+                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+                return
+            insurer, product, stem = ident
+            favs = self._favorites.setdefault("favorites", [])
+
+            def matches(f: dict) -> bool:
+                if stem and f.get("stem"):
+                    return f.get("stem") == stem
+                return f.get("insurer") == insurer and f.get("product") == product
+
+            if any(matches(f) for f in favs):
+                self._favorites["favorites"] = [f for f in favs if not matches(f)]
+                self._save_favorites()
+                self.notify(f"Aus Favoriten entfernt: {insurer} {product}", timeout=4)
+            else:
+                entry: dict[str, Any] = {"insurer": insurer, "product": product}
+                if stem:
+                    entry["stem"] = stem
+                if self._active_row is not None and self._active_row.selbstbeteiligung:
+                    entry["show_sb"] = self._active_row.selbstbeteiligung
+                entry["tag"] = "in TUI hinzugefügt"
+                favs.append(entry)
+                self._save_favorites()
+                self.notify(f"Zu Favoriten hinzugefügt: {insurer} {product}", timeout=4)
+            self._reload_all()
+
+        def action_delete_data(self) -> None:
+            """Delete a tariff's locally stored data, with a scope chosen in a modal."""
+            ident = self._active_identity()
+            if ident is None:
+                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+                return
+            insurer, product, stem = ident
+            if not stem:
+                self.notify(
+                    "Kein kanonischer stem für diese Zeile — nichts lokal gespeichert.",
+                    severity="warning",
+                    timeout=6,
+                )
+                return
+            label = f"{insurer} {product}"
+            is_fav = self._is_favorite_stem(stem)
+
+            def _go(scope: str | None) -> None:
+                if scope:
+                    self._do_delete(stem, scope, label)
+
+            self.push_screen(DeleteDataScreen(stem, label, is_fav), _go)
+
+        def _prune_ingest_manifest(self, insurer_part: str, tariff_part: str) -> None:
+            """Drop a tariff's documents from data/extracted/manifest.json so a future
+            extract run does not resurrect a deleted tariff from a dangling entry."""
+            mp = REPO_ROOT / "data" / "extracted" / "manifest.json"
+            if not mp.is_file():
+                return
+            try:
+                m = json.loads(mp.read_text())
+            except (json.JSONDecodeError, OSError):
+                return
+            docs = m.get("documents", [])
+            kept = [
+                d for d in docs
+                if not (d.get("insurer") == insurer_part and d.get("tariff") == tariff_part)
+            ]
+            if len(kept) != len(docs):
+                m["documents"] = kept
+                mp.write_text(json.dumps(m, indent=2, ensure_ascii=False), encoding="utf-8")
+
+        def _do_delete(self, stem: str, scope: str, label: str) -> None:
+            import shutil
+
+            removed: list[str] = []
+            for sub in ("tariffs", "enriched"):
+                p = REPO_ROOT / "out" / sub / f"{stem}.json"
+                if p.exists():
+                    p.unlink()
+                    removed.append(f"out/{sub}/{stem}.json")
+
+            if scope in ("purge", "purge_unfav"):
+                insurer_part, _, tariff_part = stem.partition("__")
+                for base in ("raw", "extracted"):
+                    d = REPO_ROOT / "data" / base / insurer_part / tariff_part
+                    if d.is_dir():
+                        shutil.rmtree(d)
+                        removed.append(f"data/{base}/{insurer_part}/{tariff_part}/")
+                self._prune_ingest_manifest(insurer_part, tariff_part)
+
+            if scope == "purge_unfav":
+                favs = self._favorites.get("favorites", [])
+                pruned = [f for f in favs if f.get("stem") != stem]
+                if len(pruned) != len(favs):
+                    self._favorites["favorites"] = pruned
+                    self._save_favorites()
+                    removed.append("config/favorites.json (unfavorite)")
+
+            if removed:
+                self.notify(f"Gelöscht ({label}): " + ", ".join(removed), timeout=8)
+            else:
+                self.notify(f"Nichts zu löschen für {label}.", severity="information")
+            self._reload_all()
 
         # --- Inline detail band (toggled with [d]) ---
 
