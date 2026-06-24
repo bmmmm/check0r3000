@@ -17,9 +17,12 @@ Navigate a tariff (Market or Favorites) with the arrow keys or a click; press [d
 to toggle a detail band below the table (tariff modules, coverage, premium and the
 harvested source documents). If the documents are not yet analyzed, [g] downloads
 them and runs the pipeline (fetch_docs --into-raw -> ingest -> extract) in the
-background, after a confirm. The extract model defaults to "claude"; override
-with the CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were never harvested
-point you back to the browser "Tarifdetails" step.
+background, after a confirm; [G] runs the same analysis WITHOUT the download when
+the source PDFs are already in data/raw/<stem>/. The extract model defaults to
+"claude"; override with the CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were
+never harvested point you back to the browser "Tarifdetails" step. The Vergleich
+tab [x] shows an across-tariff coverage comparison (modules, coverage, and
+taxonomy-aligned Leistungen/Ausschlüsse) built from the analyzed records.
 """
 
 from __future__ import annotations
@@ -741,40 +744,54 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
     # -----------------------------------------------------------------------
 
     class ConfirmFetchScreen(ModalScreen[bool]):
-        """Deliberate gate before downloading third-party source PDFs and running
-        the analyze pipeline. Returns True on confirm, False on cancel."""
+        """Deliberate gate before the analyze pipeline. With skip_download the source
+        PDFs are already on disk and only ingest → extract runs (still a paid model
+        call, so the confirm stays). Returns True on confirm, False on cancel."""
 
         BINDINGS = [
-            Binding("enter", "confirm", "Download + analyze"),
+            Binding("enter", "confirm", "Analyze"),
             Binding("y", "confirm", "Yes"),
             Binding("escape", "cancel", "Cancel"),
             Binding("n", "cancel", "No"),
         ]
 
-        def __init__(self, entry: dict, model: str) -> None:
+        def __init__(self, entry: dict, model: str, skip_download: bool = False) -> None:
             super().__init__()
             self._entry = entry
             self._model = model
+            self._skip_download = skip_download
 
         def compose(self) -> ComposeResult:
             e = self._entry
             docs = e.get("docs", [])
-            lines = [
-                f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
-                "",
-                f"Download von [cyan]rechtsschutz.check24.de[/cyan]: "
-                f"[bold]{len(docs)}[/bold] PDF(s)",
-            ]
-            for dd in docs:
-                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                lines.append(f"  • [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:48]}")
-            lines += [
-                "",
-                f"dann: intake → ingest → extract  [dim](Modell: {self._model})[/dim]",
-                "[dim]Drittanbieter-Copyright — nur für den Eigengebrauch.[/dim]",
-                "",
-                "[bold]\\[↵/y][/bold] Download + Analyse     [bold]\\[Esc/n][/bold] Abbrechen",
-            ]
+            if self._skip_download:
+                lines = [
+                    f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                    "",
+                    "[bold]Analyse ohne Download[/bold] — PDFs liegen lokal "
+                    f"([cyan]data/raw/{e.get('stem', '')}/[/cyan]).",
+                    f"ingest → extract  [dim](Modell: {self._model})[/dim]",
+                    "[dim]Extraktion ist ein Modell-Call.[/dim]",
+                    "",
+                    "[bold]\\[↵/y][/bold] Analysieren     [bold]\\[Esc/n][/bold] Abbrechen",
+                ]
+            else:
+                lines = [
+                    f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                    "",
+                    f"Download von [cyan]rechtsschutz.check24.de[/cyan]: "
+                    f"[bold]{len(docs)}[/bold] PDF(s)",
+                ]
+                for dd in docs:
+                    lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                    lines.append(f"  • [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:48]}")
+                lines += [
+                    "",
+                    f"dann: ingest → extract  [dim](Modell: {self._model})[/dim]",
+                    "[dim]Drittanbieter-Copyright — nur für den Eigengebrauch.[/dim]",
+                    "",
+                    "[bold]\\[↵/y][/bold] Download + Analyse     [bold]\\[Esc/n][/bold] Abbrechen",
+                ]
             yield Container(Static("\n".join(lines)), id="confirm-box")
 
         def action_confirm(self) -> None:
@@ -876,12 +893,13 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         GROUPS = [
             ("Navigation", [
-                ("v / m / x", "Favoriten / Markt / Diff"),
+                ("v / m / x", "Favoriten / Markt / Vergleich"),
                 ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
                 ("d", "Detail-Band unter der Tabelle ein/aus"),
             ]),
             ("Tarif-Aktionen (markierte Zeile)", [
                 ("g", "Quell-PDFs laden + analysieren"),
+                ("G", "nur analysieren (PDFs lokal, kein Download)"),
                 ("R", "als Referenz setzen — Δ rechnet neu"),
                 ("u", "Favorit an/aus"),
                 ("D", "lokale Daten löschen (Umfang im Dialog)"),
@@ -922,12 +940,13 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             # Footer (show=True): only the most-used keys; [?] lists everything.
             Binding("v", "switch_tab('favorites')", "Favorites", show=True),
             Binding("m", "switch_tab('market')", "Market", show=True),
-            Binding("x", "switch_tab('diff')", "Diff", show=True),
+            Binding("x", "switch_tab('diff')", "Vergleich", show=True),
             Binding("d", "toggle_detail", "Details", show=True),
             Binding("g", "fetch_docs", "Get docs", show=True),
             Binding("question_mark", "help", "Help", show=True, key_display="?"),
             Binding("q", "quit", "Quit", show=True),
             # Context / power keys — documented in [?], hidden from the footer.
+            Binding("G", "analyze_local", "Analyze local", show=False),
             Binding("f", "focus_filter", "Filter", show=False),
             Binding("escape", "clear_filter", "Clear filter", show=False),
             Binding("s", "sort_price", "Sort €", show=False),
@@ -1013,7 +1032,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         yield DataTable(id="market-table", cursor_type="row", zebra_stripes=True)
                         with ScrollableContainer(id="detail-panel", classes="detail-band"):
                             yield Static("Select a row to see details.", id="detail-content")
-                with TabPane("Diff [x]", id="diff"):
+                with TabPane("Vergleich [x]", id="diff"):
                     with ScrollableContainer(id="diff-panel"):
                         yield Static("Loading diff…", id="diff-content")
             yield Footer()
@@ -1264,7 +1283,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
                 if not has_detail:
                     lines.append(
-                        "[bright_yellow]  \\[g] herunterladen + analysieren[/bright_yellow]"
+                        "[bright_yellow]  \\[g] herunterladen + analysieren"
+                        "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
                     )
                     lines.append(
                         f"  [dim]→ fetch_docs.py {fav.get('stem')} --into-raw"
@@ -1395,7 +1415,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                     lines.append("[bright_green]  ✓ analysiert[/bright_green]")
                 else:
                     lines.append(
-                        "[bright_yellow]  \\[g] herunterladen + analysieren[/bright_yellow]"
+                        "[bright_yellow]  \\[g] herunterladen + analysieren"
+                        "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
                     )
                     lines.append(
                         f"  [dim]→ fetch_docs.py {entry.get('stem')} --into-raw"
@@ -2140,18 +2161,61 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
             self.push_screen(ConfirmFetchScreen(entry, ANALYZE_MODEL), _go)
 
+        def action_analyze_local(self) -> None:
+            """Analyze a tariff whose source PDFs are ALREADY on disk: ingest →
+            extract, no download. For PDFs kept from a prior [g] or dropped in
+            manually. Gated on data/raw/<stem>/ containing PDFs; still confirms
+            because extract is a paid model call."""
+            row = self._active_row
+            if row is None:
+                self.notify("Erst eine Zeile wählen (↵).", severity="warning")
+                return
+            stem = row.stem or resolve_stem(row.insurer, row.product)
+            if not stem:
+                self.notify("Kein kanonischer stem für diese Zeile.", severity="warning")
+                return
+            raw_dir = _raw_dir_for_stem(stem)
+            if not (raw_dir.is_dir() and any(raw_dir.glob("*.pdf"))):
+                self.notify(
+                    f"Keine lokalen PDFs unter data/raw/{stem}/ — nutze [g] zum Download.",
+                    severity="warning",
+                    timeout=6,
+                )
+                return
+            if _load_detail(row.insurer, row.product):
+                self.notify(
+                    "Schon analysiert — [d] zeigt die Details.", severity="information"
+                )
+                return
+            entry = {"stem": stem, "insurer": row.insurer, "tariff": row.product}
+
+            def _go(confirmed: bool | None) -> None:
+                if confirmed:
+                    self._run_pipeline(entry, row, skip_download=True)
+
+            self.push_screen(
+                ConfirmFetchScreen(entry, ANALYZE_MODEL, skip_download=True), _go
+            )
+
         @work(thread=True, exclusive=True, group="pipeline")
-        def _run_pipeline(self, entry: dict, row: SnapshotRow) -> None:
-            """Run fetch_docs --apply → intake → ingest → extract for one tariff.
-            Runs off the UI thread; status is posted back via call_from_thread."""
+        def _run_pipeline(self, entry: dict, row: SnapshotRow,
+                          *, skip_download: bool = False) -> None:
+            """Run the analyze pipeline for one tariff off the UI thread; status is
+            posted back via call_from_thread. With skip_download the PDFs are already
+            in data/raw/<stem>/ and only ingest → extract run; otherwise fetch_docs
+            --into-raw downloads them first."""
             import subprocess
 
             stem = entry.get("stem", "")
             # Download straight into the canonical data/raw/<stem>/ layout (--into-raw),
             # so ingest/extract name the record exactly <stem>.json — no filename-guessing
             # intake step that could misname it and hide the result from the TUI.
-            steps = [
-                ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--into-raw"]),
+            steps = []
+            if not skip_download:
+                steps.append(
+                    ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--into-raw"])
+                )
+            steps += [
                 ("Ingest", ["uv", "run", "scripts/ingest.py"]),
                 ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
             ]
@@ -2250,10 +2314,10 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 await pilot.pause()
                 app.save_screenshot(filename="market-detail.svg", path=str(screenshot_dir))
 
-                # --- Diff ---
+                # --- Vergleich (coverage comparison) ---
                 tabs.active = "diff"
                 await pilot.pause()
-                app.save_screenshot(filename="diff.svg", path=str(screenshot_dir))
+                app.save_screenshot(filename="vergleich.svg", path=str(screenshot_dir))
 
                 # --- Confirm modal ([g] gate) over the market tab ---
                 tabs.active = "market"
@@ -2273,7 +2337,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         asyncio.run(_shoot())
         print(
-            "Saved screenshots (favorites/market/market-detail/diff/confirm .svg) to "
+            "Saved screenshots (favorites/market/market-detail/vergleich/confirm .svg) to "
             f"{screenshot_dir}"
         )
         return
