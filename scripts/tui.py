@@ -26,7 +26,9 @@ taxonomy-aligned Leistungen/Ausschlüsse) built from the analyzed records: [w]
 toggles the verbatim per-insurer wording (compact ↔ verbose), [t] opens a modal with
 the full untruncated wording per category across all tariffs, [c] hides/shows the
 selected tariff in the comparison, and [o] opens a tariff's source documents online
-or as the local PDFs.
+or as the local PDFs. Press [b] to view the read-only CHECK24 query URL, or [e] to
+edit the query levers (provider, modules, birthdate, zipcode, sort, …) in place and
+save them back to config/check24-profile.json.
 """
 
 from __future__ import annotations
@@ -781,6 +783,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
     from textual.reactive import reactive
     from textual.screen import ModalScreen
     from textual.widgets import (
+        Button,
         DataTable,
         Footer,
         Header,
@@ -788,6 +791,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         Label,
         OptionList,
         Static,
+        Switch,
         TabbedContent,
         TabPane,
     )
@@ -1009,6 +1013,204 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         def action_close(self) -> None:
             self.dismiss(None)
+
+    class QueryEditScreen(ModalScreen[dict[str, str] | None]):
+        """Edit the curated CHECK24 query levers in place. Pre-filled from the parsed
+        query; returns {lever_key: new_value} for the levers the user changed-or-kept,
+        or None on cancel. The app applies these via check24_query.set_param so every
+        OTHER (uncurated / repeated / unknown) query param survives the round-trip
+        verbatim. discounts stays read-only (a JSON blob); it is only displayed."""
+
+        BINDINGS = [
+            Binding("ctrl+s", "save", "Speichern"),
+            Binding("escape", "cancel", "Abbrechen"),
+        ]
+
+        # (lever_key, German label) for the free-text Input fields, in display order.
+        TEXT_FIELDS = [
+            ("provider_filter", "Versicherer-ID (provider_filter)"),
+            ("tariff_position", "Tarif-Position"),
+            ("maritalstatus", "Familienstand"),
+            ("birthdate", "Geburtsdatum (TT.MM.JJJJ)"),
+            ("zipcode", "PLZ"),
+            ("employmentstatus", "Beschäftigung"),
+            ("employmentstatus_partner", "Beschäftigung Partner"),
+            ("costsharing", "Selbstbeteiligung"),
+            ("sortfield", "Sortierfeld"),
+            ("sortorder", "Sortierrichtung"),
+        ]
+        # (lever_key, German label) for the Switch (yes/no) fields, in display order.
+        SWITCH_FIELDS = [
+            ("module_priv", "Modul Privat"),
+            ("module_job", "Modul Beruf"),
+            ("module_traffic", "Modul Verkehr"),
+            ("module_living", "Modul Wohnen"),
+            ("module_rental", "Modul Vermietung"),
+            ("stiftung_warentest", "Stiftung Warentest"),
+        ]
+
+        def __init__(self, values: dict[str, str], provider_name_fn,
+                     discounts: list[str], is_example: bool) -> None:
+            super().__init__()
+            # values: the current value of every curated lever (missing -> "").
+            self._values = dict(values)
+            self._provider_name_fn = provider_name_fn
+            self._discounts = discounts
+            self._is_example = is_example
+
+        def _provider_hint(self) -> str:
+            pid = (self._values.get("provider_filter") or "").strip()
+            if not pid:
+                return "[dim]alle Versicherer[/dim]"
+            name = self._provider_name_fn(pid)
+            return f"[cyan]{_esc(name)}[/cyan]" if name else "[yellow]unbekannte ID[/yellow]"
+
+        def compose(self) -> ComposeResult:
+            with Container(id="query-edit-box"):
+                yield Static(
+                    "[bold]CHECK24-Suche bearbeiten[/bold]   "
+                    "[dim]Tab/↑↓ Feld wählen · \\[Ctrl+S] speichern · "
+                    "\\[Esc] abbrechen[/dim]",
+                    id="query-edit-head",
+                )
+                if self._is_example:
+                    yield Static(
+                        "[yellow]! Nur das Beispielprofil (Fake-Daten) geladen — "
+                        "Speichern legt config/check24-profile.json mit deinen "
+                        "echten Werten an.[/yellow]",
+                        id="query-edit-warn",
+                    )
+                with ScrollableContainer(id="query-edit-body"):
+                    for key, label in self.TEXT_FIELDS:
+                        hint = ""
+                        if key == "provider_filter":
+                            hint = f"  → {self._provider_hint()}"
+                        yield Static(f"[bold]{_esc(label)}[/bold]{hint}")
+                        yield Input(
+                            value=self._values.get(key, ""),
+                            id=f"qe-{key}",
+                            classes="qe-input",
+                        )
+                    for key, label in self.SWITCH_FIELDS:
+                        with Horizontal(classes="qe-switch-row"):
+                            yield Switch(
+                                value=(self._values.get(key) == "yes"),
+                                id=f"qe-{key}",
+                                classes="qe-switch",
+                            )
+                            yield Label(label, classes="qe-switch-label")
+                    blob = ", ".join(self._discounts) or "(keine)"
+                    yield Static(
+                        f"[dim]Rabatte (nur Anzeige): {_esc(blob)}[/dim]",
+                        classes="qe-readonly",
+                    )
+                with Horizontal(id="query-edit-buttons"):
+                    yield Button("Speichern", variant="success", id="qe-save")
+                    yield Button("Abbrechen", variant="error", id="qe-cancel")
+
+        def on_button_pressed(self, event: Button.Pressed) -> None:
+            if event.button.id == "qe-save":
+                self.action_save()
+            elif event.button.id == "qe-cancel":
+                self.action_cancel()
+
+        def _collect(self) -> dict[str, str]:
+            """Read every editable widget back into {lever_key: value}."""
+            out: dict[str, str] = {}
+            for key, _ in self.TEXT_FIELDS:
+                out[key] = self.query_one(f"#qe-{key}", Input).value.strip()
+            for key, _ in self.SWITCH_FIELDS:
+                out[key] = "yes" if self.query_one(f"#qe-{key}", Switch).value else "no"
+            return out
+
+        def _validate(self, vals: dict[str, str]) -> str | None:
+            """Return an actionable German error message, or None if all fields pass."""
+            import re
+
+            bd = vals.get("birthdate", "")
+            if bd and not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", bd):
+                return ("Geburtsdatum: Format TT.MM.JJJJ erwartet "
+                        f"(z. B. 01.01.1990), nicht {bd!r}.")
+            zc = vals.get("zipcode", "")
+            if zc and not re.fullmatch(r"\d{5}", zc):
+                return f"PLZ: 5 Ziffern erwartet, nicht {zc!r}."
+            cs = vals.get("costsharing", "")
+            if cs and not re.fullmatch(r"\d+", cs):
+                return f"Selbstbeteiligung: nur Ziffern erwartet, nicht {cs!r}."
+            pf = vals.get("provider_filter", "")
+            if pf and not re.fullmatch(r"\d+", pf):
+                return ("Versicherer-ID: nur Ziffern erwartet (leer = alle "
+                        f"Versicherer), nicht {pf!r}.")
+            tp = vals.get("tariff_position", "")
+            if tp and not re.fullmatch(r"\d+", tp):
+                return f"Tarif-Position: nur Ziffern erwartet, nicht {tp!r}."
+            so = vals.get("sortorder", "")
+            if so and so not in ("asc", "desc"):
+                return f"Sortierrichtung: 'asc' oder 'desc' erwartet, nicht {so!r}."
+            return None
+
+        def action_save(self) -> None:
+            vals = self._collect()
+            err = self._validate(vals)
+            if err is not None:
+                self.notify(err, severity="error", timeout=8)
+                return
+            self.dismiss(vals)
+
+        def action_cancel(self) -> None:
+            self.dismiss(None)
+
+    class QuerySaveConfirmScreen(ModalScreen[bool]):
+        """Confirm gate before overwriting config/check24-profile.json with the edited
+        query. Shows which levers changed so the write is deliberate. Returns True on
+        confirm, False on cancel."""
+
+        BINDINGS = [
+            Binding("enter", "confirm", "Speichern"),
+            Binding("y", "confirm", "Ja"),
+            Binding("escape", "cancel", "Abbrechen"),
+            Binding("n", "cancel", "Nein"),
+        ]
+
+        def __init__(self, changes: list[tuple[str, str, str]], is_example: bool) -> None:
+            super().__init__()
+            # changes: (lever_key, old_value, new_value) for changed levers only.
+            self._changes = changes
+            self._is_example = is_example
+
+        def compose(self) -> ComposeResult:
+            lines = ["[bold]Suche speichern?[/bold]", ""]
+            if self._is_example:
+                lines += [
+                    "[yellow]Legt config/check24-profile.json an (gitignored, deine "
+                    "echten Werte).[/yellow]",
+                    "",
+                ]
+            else:
+                lines += [
+                    "[dim]Überschreibt config/check24-profile.json (atomar).[/dim]",
+                    "",
+                ]
+            if self._changes:
+                lines.append("[underline]Geänderte Levers[/underline]")
+                for key, old, new in self._changes:
+                    lines.append(
+                        f"  [cyan]{_esc(key)}[/cyan]: "
+                        f"[dim]{_esc(old) or '(leer)'}[/dim] → [bold]{_esc(new) or '(leer)'}[/bold]"
+                    )
+            else:
+                lines.append("[dim]Keine Lever-Änderung — Query bleibt gleich.[/dim]")
+            lines += [
+                "",
+                "[bold]\\[↵/y][/bold] Speichern     [bold]\\[Esc/n][/bold] Abbrechen",
+            ]
+            yield Container(Static("\n".join(lines)), id="query-save-box")
+
+        def action_confirm(self) -> None:
+            self.dismiss(True)
+
+        def action_cancel(self) -> None:
+            self.dismiss(False)
 
     class OpenSourceScreen(ModalScreen[str | None]):
         """Choose how to read a tariff's source documents: online in the browser, or
@@ -1274,7 +1476,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 ("s / n / p", "Sortierung: €/Monat · Note · Position"),
             ]),
             ("Werkzeuge", [
-                ("b", "CHECK24-Query-URL bauen"),
+                ("b", "CHECK24-Query-URL bauen (nur Ansicht)"),
+                ("e", "CHECK24-Suche bearbeiten (Levers ändern + speichern)"),
                 ("r", "Daten neu laden"),
                 ("?", "diese Hilfe"),
                 ("q", "Beenden"),
@@ -1321,6 +1524,7 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             Binding("n", "sort_note", "Sort note", show=False),
             Binding("p", "sort_position", "Sort #", show=False),
             Binding("b", "build_query", "Query-URL", show=False),
+            Binding("e", "edit_query", "Suche bearbeiten", show=False),
             Binding("u", "toggle_favorite", "Favorite", show=False),
             Binding("R", "set_reference", "Reference", show=False),
             Binding("D", "delete_data", "Delete data", show=False),
@@ -2341,24 +2545,28 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
 
         # --- Build the CHECK24 result URL ([b]) ---
 
-        def action_build_query(self) -> None:
-            """Rebuild the CHECK24 result URL(s) from the saved profile and write them
-            to tmp/ for the manual browser + scrape workflow (no headless path — bot
-            gating). Reuses scripts/check24_query.py for the lever decode."""
-            import contextlib
+        def _load_query_module(self):
+            """Import scripts/check24_query.py as a module, or notify + return None.
+
+            tui.py keeps check24_query as the single owner of the lever vocabulary and
+            parse/rebuild logic; both [b] (build URL) and [e] (edit) load it this way."""
             import importlib.util
-            import io
-            from urllib.parse import parse_qsl, urlencode
 
             qpath = REPO_ROOT / "scripts" / "check24_query.py"
             try:
                 spec = importlib.util.spec_from_file_location("check24_query", qpath)
                 cq = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(cq)
+                return cq
             except Exception as exc:  # noqa: BLE001 — surface any load failure to the user
                 self.notify(f"check24_query.py nicht ladbar: {exc}", severity="error", timeout=6)
-                return
+                return None
 
+        def _load_query_profile(self):
+            """Return (profile_dict, base, query, is_example) or None (after notify).
+
+            Prefers the real (gitignored) profile and falls back to the tracked example
+            with is_example=True, mirroring check24_query.load_profile()."""
             ppath = REPO_ROOT / "config" / "check24-profile.json"
             epath = REPO_ROOT / "config" / "check24-profile.example.json"
             is_example = False
@@ -2374,16 +2582,33 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         severity="error",
                         timeout=6,
                     )
-                    return
+                    return None
             except (json.JSONDecodeError, OSError) as exc:
                 self.notify(f"Query-Profil unlesbar: {exc}", severity="error", timeout=6)
-                return
+                return None
 
             base = profile.get("base_url") if isinstance(profile, dict) else None
             query = profile.get("query") if isinstance(profile, dict) else None
             if not base or not isinstance(query, str):
                 self.notify("Profil ohne base_url/query (string).", severity="error", timeout=6)
+                return None
+            return profile, base, query, is_example
+
+        def action_build_query(self) -> None:
+            """Rebuild the CHECK24 result URL(s) from the saved profile and write them
+            to tmp/ for the manual browser + scrape workflow (no headless path — bot
+            gating). Reuses scripts/check24_query.py for the lever decode."""
+            import contextlib
+            import io
+            from urllib.parse import parse_qsl, urlencode
+
+            cq = self._load_query_module()
+            if cq is None:
                 return
+            loaded = self._load_query_profile()
+            if loaded is None:
+                return
+            _profile, base, query, is_example = loaded
 
             pairs = parse_qsl(query, keep_blank_values=True)
             saved_url = base + "?" + urlencode(pairs)
@@ -2405,6 +2630,97 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 encoding="utf-8",
             )
             self.push_screen(QueryUrlScreen(levers, str(out.relative_to(REPO_ROOT)), is_example))
+
+        # Curated, editable lever keys (the set QueryEditScreen exposes). discounts is
+        # intentionally NOT here (read-only JSON blob); every OTHER query param is
+        # preserved verbatim by routing only these through set_param.
+        _EDIT_LEVER_KEYS = (
+            "provider_filter", "tariff_position", "maritalstatus", "birthdate",
+            "zipcode", "employmentstatus", "employmentstatus_partner", "costsharing",
+            "sortfield", "sortorder",
+            "module_priv", "module_job", "module_traffic", "module_living",
+            "module_rental", "stiftung_warentest",
+        )
+
+        def action_edit_query(self) -> None:
+            """Open an interactive editor for the curated CHECK24 query levers, then
+            (on confirm) write the rebuilt query back to config/check24-profile.json
+            atomically and show the resulting URL. Only the touched levers are
+            overridden via check24_query.set_param; every other query param (repeated
+            keys, uncurated/unknown params) survives the round-trip verbatim."""
+            from urllib.parse import parse_qsl, urlencode
+
+            cq = self._load_query_module()
+            if cq is None:
+                return
+            loaded = self._load_query_profile()
+            if loaded is None:
+                return
+            profile, base, query, is_example = loaded
+
+            pairs = parse_qsl(query, keep_blank_values=True)
+            # last-wins matches browser semantics for repeated keys; this is the
+            # pre-fill value shown in each field.
+            current = dict(pairs)
+            values = {k: current.get(k, "") for k in self._EDIT_LEVER_KEYS}
+            discounts = cq.decode_discounts(pairs)
+
+            def _on_edit(result: dict[str, str] | None) -> None:
+                if result is None:
+                    return  # cancelled
+                # Apply ONLY the touched levers; preserve everything else verbatim.
+                new_pairs = list(pairs)
+                changes: list[tuple[str, str, str]] = []
+                for key in self._EDIT_LEVER_KEYS:
+                    new_val = result.get(key, "")
+                    old_val = values.get(key, "")
+                    if new_val != old_val:
+                        changes.append((key, old_val, new_val))
+                    new_pairs = cq.set_param(new_pairs, key, new_val)
+
+                def _on_confirm(ok: bool | None) -> None:
+                    if not ok:
+                        return
+                    new_query = urlencode(new_pairs)
+                    out_profile = dict(profile)
+                    out_profile["query"] = new_query
+                    ppath = REPO_ROOT / "config" / "check24-profile.json"
+                    try:
+                        # Atomic write (temp twin on the same dir + os.replace), like
+                        # snapshot.build() / _save_favorites: a crash mid-write must not
+                        # truncate the only copy of the real (PII-bearing) profile.
+                        tmp = ppath.with_suffix(".json.tmp")
+                        tmp.write_text(
+                            json.dumps(out_profile, indent=2, ensure_ascii=False) + "\n",
+                            encoding="utf-8",
+                        )
+                        os.replace(tmp, ppath)
+                    except OSError as exc:
+                        self.notify(
+                            f"Speichern fehlgeschlagen ({ppath.name}): {exc}",
+                            severity="error",
+                            timeout=8,
+                        )
+                        return
+                    # Show the resulting URL so the user can paste it into the browser.
+                    # is_example is now False — we just wrote the real profile.
+                    new_url = base + "?" + new_query
+                    out = REPO_ROOT / "tmp" / "check24-query.txt"
+                    out.parent.mkdir(parents=True, exist_ok=True)
+                    out.write_text(f"# saved query\n{new_url}\n", encoding="utf-8")
+                    self.notify("Suche gespeichert (config/check24-profile.json).",
+                                severity="information", timeout=5)
+                    levers_lines = [f"  {k}: {result.get(k, '')}" for k in self._EDIT_LEVER_KEYS]
+                    self.push_screen(QueryUrlScreen(
+                        "\n".join(levers_lines), str(out.relative_to(REPO_ROOT)), False))
+
+                self.push_screen(
+                    QuerySaveConfirmScreen(changes, is_example), _on_confirm)
+
+            self.push_screen(
+                QueryEditScreen(values, cq.provider_name, discounts, is_example),
+                _on_edit,
+            )
 
         # --- Favorites management ([u] toggle, [D] delete) ---
 

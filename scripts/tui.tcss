@@ -210,6 +210,97 @@ QueryUrlScreen {
     height: auto;
 }
 
+/* ── Query-edit modal ([e]) ─────────────────────────────────────────────── */
+
+QueryEditScreen {
+    align: center middle;
+    background: $surface 60%;
+}
+
+#query-edit-box {
+    width: 80;
+    height: 85%;
+    padding: 1 2;
+    border: thick #5ba0d0;
+    background: $surface-darken-1;
+    color: $text;
+}
+
+#query-edit-head {
+    width: 1fr;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#query-edit-warn {
+    width: 1fr;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#query-edit-body {
+    width: 1fr;
+    height: 1fr;
+    border: round $surface-lighten-2;
+    padding: 0 1;
+}
+
+#query-edit-body .qe-input {
+    width: 1fr;
+    margin-bottom: 1;
+}
+
+#query-edit-body .qe-switch-row {
+    width: 1fr;
+    height: 3;
+    align: left middle;
+}
+
+#query-edit-body .qe-switch-label {
+    height: 3;
+    content-align: left middle;
+    margin-left: 1;
+}
+
+#query-edit-body .qe-readonly {
+    width: 1fr;
+    height: auto;
+    margin-top: 1;
+}
+
+#query-edit-buttons {
+    width: 1fr;
+    height: auto;
+    margin-top: 1;
+    align: center middle;
+}
+
+#query-edit-buttons Button {
+    margin: 0 1;
+}
+
+/* ── Query-save confirm modal (after [e]) ───────────────────────────────── */
+
+QuerySaveConfirmScreen {
+    align: center middle;
+    background: $surface 60%;
+}
+
+#query-save-box {
+    width: 76;
+    height: auto;
+    max-height: 80%;
+    padding: 1 2;
+    border: thick #5ba0d0;
+    background: $surface-darken-1;
+    color: $text;
+}
+
+#query-save-box Static {
+    width: 1fr;
+    height: auto;
+}
+
 /* ── Open-source modal ([o]) ────────────────────────────────────────────── */
 
 OpenSourceScreen {
