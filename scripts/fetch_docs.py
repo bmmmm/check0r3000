@@ -22,6 +22,7 @@ Run:
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import http.client
 import sys
 import urllib.error
@@ -193,6 +194,52 @@ def download(url: str, dest: Path) -> str:
     return f"ok ({len(data) // 1024} KiB)"
 
 
+def plan(tariffs: list[dict], into_raw: bool) -> list[tuple[dict, list[dict]]]:
+    """Resolve every (tariff, doc) -> destination Path up front, sequentially, so the
+    per-tariff doctype disambiguation (`used`) and doc order stay deterministic before
+    the parallel network stage runs. Returns groups of (tariff, [doc-item, ...]) so the
+    summary can print per tariff in manifest order even though downloads finish out of
+    order. Each doc-item is a fresh dict the worker stores its `result` into."""
+    groups: list[tuple[dict, list[dict]]] = []
+    for t in tariffs:
+        stem = t.get("stem", "")
+        used: set[str] = set()
+        items: list[dict] = []
+        for doc in t.get("docs", []):
+            dest = raw_target_for(stem, doc, used) if into_raw else target_for(doc)
+            items.append({
+                "doctype": doc.get("doctype"),
+                "url": doc.get("url", ""),
+                "dest": dest,
+                "rel": dest.relative_to(ROOT),
+            })
+        groups.append((t, items))
+    return groups
+
+
+def _run_pool(fn, items: list[dict], jobs: int) -> None:
+    """Map fn over items with a bounded thread pool and store each result back on its
+    item dict. urllib's socket I/O releases the GIL, so threads give real concurrency;
+    the bound keeps us polite to a third-party host. Each item is a distinct dict, so
+    concurrent `item["result"] = ...` writes never collide."""
+    # max_workers must be >= 1 even if the caller passes 0/garbage.
+    workers = max(1, min(jobs, len(items))) if items else 1
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(fn, it): it for it in items}
+        for fut in concurrent.futures.as_completed(futs):
+            futs[fut]["result"] = fut.result()
+
+
+def _download_one(item: dict) -> str:
+    """Worker: skip an already-present file (so re-runs are cheap and resumable),
+    else download it via the guarded download()."""
+    dest: Path = item["dest"]
+    if dest.exists():
+        return "exists, skipped"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    return download(item["url"], dest)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Download persisted tariff source PDFs into data/inbox/.")
     ap.add_argument("stems", nargs="*", help="tariff stems to fetch (default: all in the manifest)")
@@ -203,6 +250,8 @@ def main() -> int:
                          "skips the filename-guessing intake step); implies --apply")
     ap.add_argument("--check", action="store_true",
                     help="probe each URL for reachability + PDF type (downloads nothing)")
+    ap.add_argument("--jobs", type=int, default=6, metavar="N",
+                    help="concurrent downloads/probes (default: 6; bounded for politeness)")
     args = ap.parse_args()
     if args.into_raw:
         args.apply = True
@@ -214,18 +263,21 @@ def main() -> int:
 
     if args.check:
         print(f"REACHABILITY CHECK — {len(tariffs)} tariff(s), no download:\n")
+        groups = plan(tariffs, args.into_raw)
+        flat = [it for _, items in groups for it in items]
+        _run_pool(lambda it: check(it["url"]), flat, args.jobs)
         ok = warn = bad = 0
-        for t in tariffs:
+        for t, items in groups:
             print(f"  {t.get('stem')}  [{t.get('insurer')} — {t.get('tariff')}]")
-            for doc in t.get("docs", []):
-                res = check(doc.get("url", ""))
+            for it in items:
+                res = it["result"]
                 if res.startswith("FAILED"):
                     bad += 1  # only a network/HTTP error is a real failure
                 elif res.startswith("OK"):
                     ok += 1
                 else:
                     warn += 1  # reachable, but served with a non-PDF content-type
-                print(f"    {(doc.get('doctype') or '?'):<20} {res}")
+                print(f"    {(it.get('doctype') or '?'):<20} {res}")
             print()
         extra = f" ({warn} reachable but non-PDF content-type)" if warn else ""
         print(f"{ok + warn} reachable{extra}, {bad} failed. "
@@ -236,32 +288,34 @@ def main() -> int:
         (RAW if args.into_raw else INBOX).mkdir(parents=True, exist_ok=True)
     print(f"{'DOWNLOAD' if args.apply else 'DRY-RUN'} — {len(tariffs)} tariff(s)"
           f"{' (canonical -> data/raw/)' if args.into_raw else ''}:\n")
-    n_docs = 0
-    for t in tariffs:
+    groups = plan(tariffs, args.into_raw)
+    n_docs = sum(len(items) for _, items in groups)
+
+    if args.apply:
+        flat = [it for _, items in groups for it in items]
+        _run_pool(_download_one, flat, args.jobs)
+
+    fails = 0
+    for t, items in groups:
         print(f"  {t.get('stem')}  [{t.get('insurer')} — {t.get('tariff')}]")
-        used: set[str] = set()
-        for doc in t.get("docs", []):
-            dest = (raw_target_for(t.get("stem", ""), doc, used)
-                    if args.into_raw else target_for(doc))
-            n_docs += 1
-            rel = dest.relative_to(ROOT)
+        for it in items:
             if not args.apply:
-                print(f"    {doc.get('doctype')}: {doc.get('url')}\n      -> {rel}")
-            elif dest.exists():
-                print(f"    {doc.get('doctype')}: exists, skipped -> {rel}")
+                print(f"    {it['doctype']}: {it['url']}\n      -> {it['rel']}")
             else:
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                print(f"    {doc.get('doctype')}: {download(doc.get('url'), dest)} -> {rel}")
+                res = it["result"]
+                if res.startswith("FAILED"):
+                    fails += 1
+                print(f"    {it['doctype']}: {res} -> {it['rel']}")
         print()
 
     if not args.apply:
         print(f"{n_docs} document(s) would be fetched. Re-run with --apply to download, "
               f"then: uv run scripts/intake.py")
-    elif args.into_raw:
-        print("Downloaded into data/raw/. Next: uv run scripts/ingest.py")
-    else:
-        print("Downloaded. Next: uv run scripts/intake.py  (sort into data/raw/)")
-    return 0
+        return 0
+    tail = ("Downloaded into data/raw/. Next: uv run scripts/ingest.py" if args.into_raw
+            else "Downloaded. Next: uv run scripts/intake.py  (sort into data/raw/)")
+    print(f"{tail}  ({fails} failed)" if fails else tail)
+    return 1 if fails else 0
 
 
 if __name__ == "__main__":
