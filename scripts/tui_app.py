@@ -499,7 +499,7 @@ class CheckApp(App):
         url = self._build_offer_url(row.position) if row.position else None
         if url:
             lines.append(
-                f"[link={url}][cyan]↗ auf CHECK24 ansehen[/cyan][/link]"
+                f'[link="{url}"][cyan]↗ auf CHECK24 ansehen[/cyan][/link]'
                 f"   [dim](Position {row.position})[/dim]"
             )
         tag = fav.get("tag", "")
@@ -787,7 +787,7 @@ class CheckApp(App):
         url = self._build_offer_url(row.position) if row.position else None
         if url:
             link_line = (
-                f"[link={url}][cyan]↗ auf CHECK24 ansehen[/cyan][/link]"
+                f'[link="{url}"][cyan]↗ auf CHECK24 ansehen[/cyan][/link]'
                 f"   [dim](Position {row.position})[/dim]"
             )
             result = link_line + "\n\n" + result
@@ -1047,7 +1047,7 @@ class CheckApp(App):
             if url:
                 display = "↗ Link"
                 pad = " " * max(0, col_w - len(display))
-                link_row += f"[link={url}][cyan]{display}[/cyan][/link]{pad}"
+                link_row += f'[link="{url}"][cyan]{display}[/cyan][/link]{pad}'
                 has_any_link = True
             else:
                 link_row += _pad_cell("—", col_w, "dim")
