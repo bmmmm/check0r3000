@@ -234,6 +234,9 @@ class CheckApp(App):
         # Vergleich tab view state: compact by default (clean ✓/✗/~/— matrix);
         # [w] expands the verbatim per-insurer wording under each category.
         self._compare_verbose: bool = False
+        # detail band visibility intent: True = auto-show on navigation,
+        # False = user explicitly closed it ([d]); Enter always re-opens.
+        self._detail_visible: bool = True
 
     # --- Lifecycle ---
 
@@ -262,6 +265,9 @@ class CheckApp(App):
         self._doc_by_stem = {
             t["stem"]: t for t in self._doc_by_tariff.values() if t.get("stem")
         }
+        # invalidate cached offer URL base (profile may have changed)
+        if hasattr(self, "_offer_url_cache"):
+            del self._offer_url_cache
 
     # --- Layout ---
 
@@ -489,6 +495,12 @@ class CheckApp(App):
     def _render_favorite_detail(self, row: SnapshotRow, fav: dict) -> str:
         lines: list[str] = []
         lines.append(f"[bold]{row.insurer}[/bold] — [italic]{row.product}[/italic]")
+        url = self._build_offer_url(row.position) if row.position else None
+        if url:
+            lines.append(
+                f"[link={url}][cyan]↗ auf CHECK24 ansehen[/cyan][/link]"
+                f"   [dim](Position {row.position})[/dim]"
+            )
         tag = fav.get("tag", "")
         if tag or self._is_reference(fav):
             if self._is_reference(fav):
@@ -769,7 +781,15 @@ class CheckApp(App):
         docs = self._render_docs_block(row, detail)
         if docs:
             parts.append(docs)
-        return "\n\n".join(parts)
+        result = "\n\n".join(parts)
+        url = self._build_offer_url(row.position) if row.position else None
+        if url:
+            link_line = (
+                f"[link={url}][cyan]↗ auf CHECK24 ansehen[/cyan][/link]"
+                f"   [dim](Position {row.position})[/dim]"
+            )
+            result = link_line + "\n\n" + result
+        return result
 
     # --- Full detail tab ---
 
@@ -1013,6 +1033,24 @@ class CheckApp(App):
         Vergleich so the fast-decision numbers are immediately visible without
         scrolling past the AVB-analysis sections."""
         lines = [self._col_header(cols, col_w, "MARKTDATEN")]
+
+        # Per-column CHECK24 links — built as markup (not through _pad_cell, which
+        # would escape the [link=…] tags). Padding is manual: link markup is
+        # invisible-width, only the display text counts.
+        link_row = _pad_label("↗ CHECK24")
+        has_any_link = False
+        for stem, _ in cols:
+            srow = snap_by_stem.get(stem)
+            url = self._build_offer_url(srow.position) if (srow and srow.position) else None
+            if url:
+                display = "↗ Link"
+                pad = " " * max(0, col_w - len(display))
+                link_row += f"[link={url}][cyan]{display}[/cyan][/link]{pad}"
+                has_any_link = True
+            else:
+                link_row += _pad_cell("—", col_w, "dim")
+        if has_any_link:
+            lines.append(link_row)
 
         row = _pad_label("€/Monat")
         for stem, _ in cols:
@@ -1258,7 +1296,7 @@ class CheckApp(App):
     @on(DataTable.RowHighlighted, "#market-table")
     def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """A single click / arrow move highlights a row — track it as the active
-            target and refresh the (possibly hidden) detail band live."""
+            target and show/refresh the detail band when _detail_visible is set."""
         key = str(event.row_key.value) if event.row_key.value is not None else None
         self.selected_row_key = key
         if not self._snapshot or key is None:
@@ -1268,7 +1306,10 @@ class CheckApp(App):
             return
         self._active_row = row  # target for the [g] download/analyze action
         self._active_fav = None
-        self._refresh_market_detail()
+        if self._detail_visible:
+            self._show_detail()
+        else:
+            self._refresh_market_detail()
 
     @on(DataTable.RowHighlighted, "#fav-table")
     def on_fav_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -1281,18 +1322,23 @@ class CheckApp(App):
         row, fav = entry
         self._active_row = row  # may be None (favorite not in snapshot)
         self._active_fav = fav
-        self._refresh_fav_detail()
+        if self._detail_visible:
+            self._show_detail()
+        else:
+            self._refresh_fav_detail()
 
-    # Enter / click-on-highlighted: open the detail band on the row.
+    # Enter / click-on-highlighted: open+focus the detail band.
     @on(DataTable.RowSelected, "#market-table")
     def on_market_selected(self, event: DataTable.RowSelected) -> None:
         self.on_market_highlighted(event)  # ensure active row is current
-        self._show_detail()
+        self._detail_visible = True
+        self._show_detail(focus=True)
 
     @on(DataTable.RowSelected, "#fav-table")
     def on_fav_selected(self, event: DataTable.RowSelected) -> None:
         self.on_fav_highlighted(event)
-        self._show_detail()
+        self._detail_visible = True
+        self._show_detail(focus=True)
 
     @on(DataTable.HeaderSelected, "#market-table")
     def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
@@ -1942,6 +1988,39 @@ class CheckApp(App):
                 return
         self.notify(f"{opened} geöffnet.", timeout=3)
 
+    def _get_offer_url_base(self):
+        """Cache (cq_module, base_url, pairs_without_pin) for _build_offer_url.
+        Returns None if the profile is missing or malformed. One disk read per
+        session; cleared by _load_data() on [r] refresh."""
+        if hasattr(self, "_offer_url_cache"):
+            return self._offer_url_cache
+        from urllib.parse import parse_qsl
+        cq = self._load_query_module()
+        if cq is None:
+            self._offer_url_cache = None
+            return None
+        loaded = self._load_query_profile()
+        if loaded is None:
+            self._offer_url_cache = None
+            return None
+        _, base, query, _ = loaded
+        pairs = parse_qsl(query, keep_blank_values=True)
+        pairs_no_pin = [(k, v) for k, v in pairs if k not in cq.PIN_KEYS]
+        self._offer_url_cache = (cq, base, pairs_no_pin)
+        return self._offer_url_cache
+
+    def _build_offer_url(self, position: int) -> str | None:
+        """CHECK24 result URL with tariff_position set to `position` and all
+        provider/package pins dropped, so the listed tariff is highlighted
+        regardless of the saved profile's insurer filter."""
+        from urllib.parse import urlencode
+        cached = self._get_offer_url_base()
+        if cached is None:
+            return None
+        cq, base, pairs_no_pin = cached
+        pairs = cq.set_param(list(pairs_no_pin), "tariff_position", str(position))
+        return base + "?" + urlencode(pairs)
+
     def action_delete_data(self) -> None:
         """Delete a tariff's locally stored data, with a scope chosen in a modal."""
         ident = self._active_identity()
@@ -2087,13 +2166,16 @@ class CheckApp(App):
         except NoMatches:
             return
         band.display = not band.display
+        self._detail_visible = band.display  # track user intent for auto-show
         if band.display:
             self._render_active_into(ids)
             band.scroll_home(animate=False)
+            band.focus()
 
-    def _show_detail(self) -> None:
-        """Reveal the active tab's detail band and render the active row (used by
-            Enter / click-on-highlighted)."""
+    def _show_detail(self, focus: bool = False) -> None:
+        """Reveal the active tab's detail band and render the active row.
+        With focus=True, keyboard focus moves to the band so arrow keys scroll it
+        (return focus to the table by pressing Tab or clicking it)."""
         ids = self._detail_band_for_tab()
         if ids is None:
             return
@@ -2104,6 +2186,9 @@ class CheckApp(App):
             return
         band.display = True
         self._render_active_into(ids)
+        band.scroll_home(animate=False)
+        if focus:
+            band.focus()
 
     def _refresh_market_detail(self) -> None:
         """Re-render the Market band live — only when it is currently shown."""
