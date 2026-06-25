@@ -31,10 +31,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SNAPDIR = ROOT / "data" / "snapshots"
 # tarifnote = CHECK24 expert grade; bewertung/_anzahl = customer rating (stars + count).
-# The PSV path carries only the first six; the JSON scrape may add the rating fields
-# (null where absent).
+# wartezeit_per_modul = per-Baustein wait time dict, JSON scrape only (None in PSV path).
+# The PSV path carries only the first six scalar fields; JSON rows may add the others.
 FIELDS = ("position", "insurer", "product", "tarifnote", "monatlich_eur",
-          "selbstbeteiligung", "bewertung", "bewertung_anzahl")
+          "selbstbeteiligung", "bewertung", "bewertung_anzahl", "wartezeit_per_modul")
 
 
 def _eur(s) -> float | None:

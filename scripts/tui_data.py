@@ -55,6 +55,8 @@ class SnapshotRow:
     # CHECK24 customer rating (separate from the expert Tarifnote), if scraped.
     bewertung: float | None = None
     bewertung_anzahl: int | None = None
+    # Per-Baustein wait times from the listing (Privat/Beruf/Wohnen/Verkehr → "N Monate").
+    wartezeit_per_modul: dict | None = None
 
     # enriched at load time
     stem: str | None = None  # canonical tariff id (from the URL manifest)
@@ -255,6 +257,11 @@ def load_snapshot(path: Path) -> Snapshot | None:
             key=t.get("key", ""),
             bewertung=t.get("bewertung"),
             bewertung_anzahl=t.get("bewertung_anzahl"),
+            wartezeit_per_modul=(
+                t.get("wartezeit_per_modul")
+                if isinstance(t.get("wartezeit_per_modul"), dict)
+                else None
+            ),
             stem=stem,
             has_urls=stem is not None,
             has_pdf=bool(stem and _raw_dir_for_stem(stem).is_dir()),

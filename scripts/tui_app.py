@@ -960,6 +960,13 @@ class CheckApp(App):
         overflow = len(cols) - len(shown)
         col_w = _vergleich_col_w(len(shown), avail)
 
+        # Snapshot rows keyed by stem for the MARKTDATEN section.
+        snap_by_stem: dict[str, SnapshotRow] = {}
+        if self._snapshot:
+            for r in self._snapshot.rows:
+                if r.stem:
+                    snap_by_stem[r.stem] = r
+
         mode = "Wortlaut an \\[w]" if self._compare_verbose else "kompakt · \\[w] Wortlaut"
         pending_hint = (
             f" · [yellow]{len(pending)} ausstehend (\\[g] analysieren)[/yellow]"
@@ -974,6 +981,7 @@ class CheckApp(App):
             f"[dim]{len(shown)}/{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
             f"\\[a] Tarif zufügen · \\[t] Volltext · \\[c] verwalten · \\[o] Quelle öffnen"
             f"{pending_hint}{overflow_hint}[/dim]",
+            self._render_market_matrix(shown, col_w, snap_by_stem),
             self._render_module_matrix(shown, col_w),
             self._render_coverage_matrix(shown, col_w),
             self._render_category_matrix("leistung", shown, col_w),
@@ -986,6 +994,74 @@ class CheckApp(App):
         if tail:
             parts.append(tail)
         widget.update("\n\n".join(parts))
+
+    def _render_market_matrix(self, cols, col_w, snap_by_stem: dict) -> str:
+        """Snapshot-sourced market data for the compared tariffs: price, expert
+        grade, customer rating, and per-Baustein wait times. Placed first in the
+        Vergleich so the fast-decision numbers are immediately visible without
+        scrolling past the AVB-analysis sections."""
+        lines = [self._col_header(cols, col_w, "MARKTDATEN")]
+
+        row = _pad_label("€/Monat")
+        for stem, _ in cols:
+            srow = snap_by_stem.get(stem)
+            if srow and srow.monatlich_eur is not None:
+                pc = _price_color(srow.monatlich_eur, self._q1, self._q3)
+                row += _pad_cell(f"{srow.monatlich_eur:.2f}", col_w, pc)
+            else:
+                row += _pad_cell("—", col_w, "dim")
+        lines.append(row)
+
+        row = _pad_label("Tarifnote")
+        for stem, _ in cols:
+            srow = snap_by_stem.get(stem)
+            if srow and srow.tarifnote:
+                row += _pad_cell(srow.tarifnote, col_w, _tarifnote_color(srow.tarifnote))
+            else:
+                row += _pad_cell("—", col_w, "dim")
+        lines.append(row)
+
+        row = _pad_label("Kundenbewertung ★")
+        for stem, _ in cols:
+            srow = snap_by_stem.get(stem)
+            if srow and srow.bewertung is not None:
+                v = srow.bewertung
+                cnt = f" ({srow.bewertung_anzahl})" if srow.bewertung_anzahl else ""
+                color = "bright_green" if v >= 4.5 else "yellow" if v >= 3.5 else "bright_red"
+                row += _pad_cell(f"{v:.1f}★{cnt}", col_w, color)
+            else:
+                row += _pad_cell("—", col_w, "dim")
+        lines.append(row)
+
+        # Collect all Baustein names present across compared tariffs, in appearance order.
+        module_keys: list[str] = []
+        for stem, _ in cols:
+            srow = snap_by_stem.get(stem)
+            if srow and srow.wartezeit_per_modul:
+                for k in srow.wartezeit_per_modul:
+                    if k not in module_keys:
+                        module_keys.append(k)
+        for modul in module_keys:
+            row = _pad_label(f"Wartezeit {modul}")
+            for stem, _ in cols:
+                srow = snap_by_stem.get(stem)
+                wz = (srow.wartezeit_per_modul or {}).get(modul) if srow else None
+                if wz:
+                    try:
+                        monate = int(wz.split()[0])
+                        color: str | None = (
+                            "bright_green" if monate == 0
+                            else "yellow" if monate <= 3
+                            else "dim"
+                        )
+                    except (ValueError, IndexError):
+                        color = None
+                    row += _pad_cell(wz, col_w, color)
+                else:
+                    row += _pad_cell("—", col_w, "dim")
+            lines.append(row)
+
+        return "\n".join(lines)
 
     def _render_module_matrix(self, cols, col_w) -> str:
         lines = [self._col_header(cols, col_w, "MODULE (Lebensbereiche)")]
