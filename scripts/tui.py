@@ -157,8 +157,11 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                         ((stem, _col_label(stem)) for stem, _ in mgr_details),
                         key=lambda sl: (sl[0] != mgr_ref, sl[0]),
                     )
+                    mgr_included = {
+                        s for s, _ in mgr_details if s in set(app._compare_stems())
+                    }
                     await app.push_screen(
-                        CompareManagerScreen(mgr_stems, app._compare_hidden(), mgr_ref)
+                        CompareManagerScreen(mgr_stems, mgr_included, mgr_ref)
                     )
                     await pilot.pause()
                     app.save_screenshot(

@@ -189,6 +189,7 @@ class CheckApp(App):
         Binding("q", "quit", "Quit", show=True),
         # Context / power keys — documented in [?], hidden from the footer.
         Binding("G", "analyze_local", "Analyze local", show=False),
+        Binding("a", "add_to_compare", "Zum Vergleich", show=False),
         Binding("c", "manage_compare", "Vergleich verwalten", show=False),
         Binding("w", "toggle_compare_wording", "Wording", show=False),
         Binding("t", "compare_fulltext", "Volltext", show=False),
@@ -810,19 +811,35 @@ class CheckApp(App):
 
     # --- Vergleich tab (cross-tariff coverage comparison) ---
 
-    def _compare_hidden(self) -> set[str]:
-        """Stems the user has removed from the Vergleich via [c]. An exclude-set
-            (not an include-set) so newly analyzed tariffs join the comparison
-            automatically; [c] toggles a stem in/out."""
-        return set(self._favorites.get("compare_hidden") or [])
+    def _compare_stems(self) -> list[str]:
+        """The tariffs explicitly chosen for the Vergleich — an include-set in
+            config/favorites.json, curated separately from the favorites star
+            (Market [a] adds/removes, [c] bulk-manages). If the key is absent (first
+            run after the exclude-set → include-set switch) it seeds from the favorite
+            stems, so the comparison starts as the favorites and is curated from there.
+            Read-only: the seed is persisted only when [a]/[c] next write it."""
+        stems = self._favorites.get("compare_stems")
+        if stems is None:
+            stems = [f["stem"] for f in self._favorites.get("favorites", [])
+                     if f.get("stem")]
+        return list(stems)
+
+    def _set_compare_stems(self, stems: list[str]) -> None:
+        """Persist the curated compare-set and retire the legacy compare_hidden
+            exclude-set (dead under the include-set model)."""
+        self._favorites["compare_stems"] = stems
+        self._favorites.pop("compare_hidden", None)
+        self._save_favorites()
 
     def _coverage_columns(self) -> list[tuple[str, DetailRecord]]:
-        """Analyzed records as (stem, record), reference_stem first then by stem
-            — so the current contract ([R]) is always the leftmost baseline column.
-            Stems hidden via [c] are dropped."""
-        hidden = self._compare_hidden()
-        cols = [c for c in load_all_details() if c[0] not in hidden]
+        """Analyzed records for the curated compare-set as (stem, record),
+            reference_stem first then by stem — so the current contract ([R]) is
+            always the leftmost baseline column. Compare-set members that aren't
+            analyzed yet are skipped here (counted as pending by _populate_coverage)."""
+        included = self._compare_stems()
+        by_stem = dict(load_all_details())
         ref = self._favorites.get("reference_stem")
+        cols = [(s, by_stem[s]) for s in included if s in by_stem]
         cols.sort(key=lambda sr: (sr[0] != ref, sr[0]))
         return cols
 
@@ -844,20 +861,24 @@ class CheckApp(App):
             return
 
         cols = self._coverage_columns()
-        n_hidden = len(self._compare_hidden())
+        included = self._compare_stems()
+        analyzed = {s for s, _ in load_all_details()}
+        pending = [s for s in included if s not in analyzed]
         if not cols:
-            if n_hidden:
+            if pending:
+                names = ", ".join(_col_label(s) for s in pending)
                 widget.update(
-                    f"[dim italic]Alle Tarife aus dem Vergleich ausgeblendet "
-                    f"({n_hidden} versteckt).\n\\[c] öffnet den Manager — dort "
-                    "\\[a] drücken, um alle wieder einzublenden.[/dim italic]"
+                    "[dim italic]Im Vergleich vorgemerkt, aber noch nicht "
+                    f"analysiert: {_esc(names)}.\n"
+                    "Markiere den Tarif im Markt und drücke \\[g] (Download + Analyse) "
+                    "— dann erscheint seine Spalte hier.[/dim italic]"
                 )
             else:
                 widget.update(
-                    "[dim italic]Noch keine analysierten Tarife.\n"
-                    "Markiere im Markt/Favoriten einen Tarif und drücke \\[g] (Download "
-                    "+ Analyse) oder \\[G] (nur Analyse, PDFs lokal) — dann erscheint hier "
-                    "der angebotsübergreifende Leistungsvergleich.[/dim italic]"
+                    "[dim italic]Der Vergleich ist leer.\n"
+                    "Markiere im Markt einen Tarif und drücke \\[a] — er wird dem "
+                    "Vergleich hinzugefügt und bei Bedarf automatisch analysiert. "
+                    "\\[c] verwaltet die Auswahl.[/dim italic]"
                 )
             return
 
@@ -874,8 +895,9 @@ class CheckApp(App):
         col_w = _vergleich_col_w(len(shown), avail)
 
         mode = "Wortlaut an \\[w]" if self._compare_verbose else "kompakt · \\[w] Wortlaut"
-        hidden_hint = (
-            f" · [yellow]{n_hidden} ausgeblendet \\[c][/yellow]" if n_hidden else ""
+        pending_hint = (
+            f" · [yellow]{len(pending)} ausstehend (\\[g] analysieren)[/yellow]"
+            if pending else ""
         )
         overflow_hint = (
             f" · [yellow]+{overflow} passen nicht — \\[c] verwalten / Terminal "
@@ -884,8 +906,8 @@ class CheckApp(App):
         parts = [
             "[bold]Tarif-Vergleich[/bold]   "
             f"[dim]{len(shown)}/{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
-            f"\\[t] Volltext · \\[c] verwalten · \\[o] Quelle öffnen"
-            f"{hidden_hint}{overflow_hint}[/dim]",
+            f"\\[a] Tarif zufügen · \\[t] Volltext · \\[c] verwalten · \\[o] Quelle öffnen"
+            f"{pending_hint}{overflow_hint}[/dim]",
             self._render_module_matrix(shown, col_w),
             self._render_coverage_matrix(shown, col_w),
             self._render_category_matrix("leistung", shown, col_w),
@@ -1448,6 +1470,25 @@ class CheckApp(App):
             return r.insurer, r.product, r.stem
         return None
 
+    def _snapshot_row_for(
+        self, stem: str, insurer: str, product: str
+    ) -> SnapshotRow | None:
+        """The snapshot row backing an identity — the active market row if set,
+            else looked up by stem (then insurer+product) in the current snapshot.
+            Needed to drive the analyze pipeline when [a] is pressed on a favorite
+            (where _active_row is None) rather than a market row."""
+        if self._active_row is not None:
+            return self._active_row
+        if self._snapshot is None:
+            return None
+        for r in self._snapshot.rows:
+            if stem and r.stem == stem:
+                return r
+        for r in self._snapshot.rows:
+            if r.insurer == insurer and r.product == product:
+                return r
+        return None
+
     def action_toggle_favorite(self) -> None:
         """Add the active market row to the shortlist, or remove the active
             favorite / an already-favorited row from it."""
@@ -1509,13 +1550,77 @@ class CheckApp(App):
         )
         self._reload_all()
 
+    def action_add_to_compare(self) -> None:
+        """Add (or remove) the active tariff to the curated Vergleich. The
+            comparison and the favorites star are separate lists — this touches only
+            compare_stems. A new member that isn't analyzed yet is queued; if its
+            source URLs are harvested it is analyzed in the background after a confirm
+            (extract is a paid model call), so its column appears automatically."""
+        ident = self._active_identity()
+        if ident is None:
+            self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+            return
+        insurer, product, stem = ident
+        if not stem:
+            stem = resolve_stem(insurer, product)
+        if not stem:
+            self.notify(
+                "Vergleich braucht einen kanonischen stem (Tarif ohne "
+                "Manifest-Eintrag).",
+                severity="warning",
+                timeout=6,
+            )
+            return
+
+        current = self._compare_stems()
+        if stem in current:
+            current.remove(stem)
+            self._set_compare_stems(current)
+            self.notify(f"Aus Vergleich entfernt: {insurer} {product}", timeout=4)
+            self._reload_all()
+            return
+
+        current.append(stem)
+        self._set_compare_stems(current)
+        if _load_detail(insurer, product):
+            self.notify(f"Zum Vergleich hinzugefügt: {insurer} {product}", timeout=4)
+            self._reload_all()
+            return
+
+        # Queued but not analyzed yet — analyze it so the column can appear.
+        row = self._snapshot_row_for(stem, insurer, product)
+        entry = self._doc_entry(row) if row is not None else None
+        if row is not None and entry and entry.get("docs"):
+            def _go(confirmed: bool | None) -> None:
+                if confirmed:
+                    self._run_pipeline(entry, row)
+                else:
+                    self.notify(
+                        f"Im Vergleich vorgemerkt — \\[g] startet die Analyse für "
+                        f"{insurer} {product} später.",
+                        timeout=6,
+                    )
+                self._reload_all()
+
+            self.push_screen(ConfirmFetchScreen(entry, ANALYZE_MODEL), _go)
+        else:
+            self.notify(
+                f"Im Vergleich vorgemerkt, aber {insurer} {product} ist noch nicht "
+                "analysierbar (keine Quell-URLs — erst der Browser-Schritt "
+                "'Tarifdetails'). Die Spalte erscheint nach \\[g].",
+                severity="warning",
+                timeout=8,
+            )
+            self._reload_all()
+
     def action_manage_compare(self) -> None:
-        """Open the Vergleich manager: toggle individual tariffs in/out of the
-            comparison, clear it, or bring them all back. The single source of truth
-            is compare_hidden (an exclude-set) in config/favorites.json — this works
-            on any tab and does not depend on a row cursor (the old per-row [c] toggle
-            was ambiguous on the Vergleich matrix, whose rows are categories, not
-            tariffs)."""
+        """Open the Vergleich manager: toggle which analyzed tariffs are in the
+            comparison. The single source of truth is compare_stems (an include-set)
+            in config/favorites.json — this works on any tab and does not depend on a
+            row cursor (the old per-row [c] toggle was ambiguous on the Vergleich
+            matrix, whose rows are categories, not tariffs). The pool is every
+            analyzed tariff; compare-set members not yet analyzed (queued from the
+            Market [a]) are preserved untouched."""
         details = load_all_details()
         if not details:
             self.notify(
@@ -1530,18 +1635,24 @@ class CheckApp(App):
             ((stem, _col_label(stem)) for stem, _ in details),
             key=lambda sl: (sl[0] != ref, sl[0]),
         )
+        pool = {s for s, _ in details}
+        included_now = {s for s in self._compare_stems() if s in pool}
 
-        def _apply(new_hidden: list[str] | None) -> None:
-            if new_hidden is None:
-                return  # cancelled — leave compare_hidden untouched
-            self._favorites["compare_hidden"] = sorted(set(new_hidden))
-            self._save_favorites()
-            n_shown = sum(1 for s, _ in stems if s not in set(new_hidden))
-            self.notify(f"Vergleich: {n_shown}/{len(stems)} Tarife.", timeout=3)
+        def _apply(new_included: list[str] | None) -> None:
+            if new_included is None:
+                return  # cancelled — leave compare_stems untouched
+            # Keep any queued-but-unanalyzed members (added from the Market): the
+            # manager only ever shows the analyzed pool, so it must not drop them.
+            kept_pending = [s for s in self._compare_stems() if s not in pool]
+            self._set_compare_stems(sorted(set(new_included) | set(kept_pending)))
+            self.notify(
+                f"Vergleich: {len(new_included)}/{len(stems)} analysierte Tarife.",
+                timeout=3,
+            )
             self._reload_all()
 
         self.push_screen(
-            CompareManagerScreen(stems, self._compare_hidden(), ref), _apply
+            CompareManagerScreen(stems, included_now, ref), _apply
         )
 
     def action_compare_fulltext(self) -> None:

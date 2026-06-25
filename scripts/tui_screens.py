@@ -501,10 +501,10 @@ class CompareTextScreen(ModalScreen[None]):
 
 class CompareManagerScreen(ModalScreen[list[str] | None]):
     """Manage which analyzed tariffs the Vergleich shows. The single source of
-        truth is compare_hidden (an exclude-set) in config/favorites.json — this
-        modal is the one place to edit it: toggle a tariff in/out, clear the whole
-        comparison, or bring them all back. Returns the new exclude-set to persist
-        on save, or None on cancel."""
+        truth is compare_stems (an include-set) in config/favorites.json — this
+        modal is the one place to bulk-edit it: toggle a tariff in/out, include all,
+        or clear the whole comparison. Returns the new include-set to persist on
+        save, or None on cancel."""
 
     BINDINGS = [
         Binding("space", "toggle", "Ein/Aus"),
@@ -516,12 +516,12 @@ class CompareManagerScreen(ModalScreen[list[str] | None]):
         Binding("q", "cancel", "Abbrechen"),
     ]
 
-    def __init__(self, stems: list[tuple[str, str]], hidden: set[str],
+    def __init__(self, stems: list[tuple[str, str]], included: set[str],
                  ref_stem: str | None) -> None:
         # stems: (stem, label) already in display order (reference first).
         super().__init__()
         self._stems = stems
-        self._hidden = set(hidden)
+        self._included = set(included)
         self._ref = ref_stem
 
     def compose(self) -> ComposeResult:
@@ -539,7 +539,7 @@ class CompareManagerScreen(ModalScreen[list[str] | None]):
         self._refresh_list()
 
     def _row_text(self, stem: str, label: str) -> str:
-        shown = stem not in self._hidden
+        shown = stem in self._included
         box = "[green]\\[x][/green]" if shown else "[dim]\\[ ][/dim]"
         ref = " [yellow](Ref)[/yellow]" if stem == self._ref else ""
         name = label if shown else f"[dim]{label}[/dim]"
@@ -554,7 +554,7 @@ class CompareManagerScreen(ModalScreen[list[str] | None]):
         lst.clear_options()
         for stem, label in self._stems:
             lst.add_option(Option(self._row_text(stem, label), id=stem))
-        n_shown = sum(1 for s, _ in self._stems if s not in self._hidden)
+        n_shown = sum(1 for s, _ in self._stems if s in self._included)
         self.query_one("#compare-mgr-head", Static).update(
             "[bold]Vergleich verwalten[/bold]   "
             f"[dim]{n_shown}/{len(self._stems)} im Vergleich · ↑↓ wählen · "
@@ -577,28 +577,28 @@ class CompareManagerScreen(ModalScreen[list[str] | None]):
         # binding, so toggle from here too.
         stem = event.option.id
         if stem is not None:
-            self._hidden.symmetric_difference_update({stem})
+            self._included.symmetric_difference_update({stem})
             self._refresh_list()
 
     def action_toggle(self) -> None:
         stem = self._highlighted_stem()
         if stem is None:
             return
-        self._hidden.symmetric_difference_update({stem})
+        self._included.symmetric_difference_update({stem})
         self._refresh_list()
 
     def action_include_all(self) -> None:
-        self._hidden.clear()
+        self._included = {stem for stem, _ in self._stems}
         self._refresh_list()
 
     def action_clear_all(self) -> None:
-        # Exclude every tariff — the matrix then shows its "alle ausgeblendet"
-        # empty state, which tells the user how to bring tariffs back.
-        self._hidden = {stem for stem, _ in self._stems}
+        # Include none — the matrix then shows its "leer" empty state, which tells
+        # the user how to add tariffs back (Market [a] / toggle here).
+        self._included.clear()
         self._refresh_list()
 
     def action_save(self) -> None:
-        self.dismiss(sorted(self._hidden))
+        self.dismiss(sorted(self._included))
 
     def action_cancel(self) -> None:
         self.dismiss(None)
