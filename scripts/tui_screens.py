@@ -52,16 +52,30 @@ class ConfirmFetchScreen(ModalScreen[bool]):
         Binding("n", "cancel", "No"),
     ]
 
-    def __init__(self, entry: dict, model: str, skip_download: bool = False) -> None:
+    def __init__(self, entry: dict, model: str, skip_download: bool = False,
+                 harvest: bool = False) -> None:
         super().__init__()
         self._entry = entry
         self._model = model
         self._skip_download = skip_download
+        self._harvest = harvest
 
     def compose(self) -> ComposeResult:
         e = self._entry
         docs = e.get("docs", [])
-        if self._skip_download:
+        if self._harvest:
+            lines = [
+                f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                "",
+                "[bold]Live-Harvest[/bold] — lädt die CHECK24-Ergebnisseite headless "
+                "([dim]~30–60s[/dim]), liest die Tarifdetails-URLs,",
+                "lädt die PDFs nach [cyan]data/raw/[/cyan], dann ingest → extract  "
+                f"[dim](Modell: {self._model})[/dim].",
+                "[dim]Headless-Browser + Drittanbieter-Copyright + ein Modell-Call.[/dim]",
+                "",
+                "[bold]\\[↵/y][/bold] Harvest + Analyse     [bold]\\[Esc/n][/bold] Abbrechen",
+            ]
+        elif self._skip_download:
             lines = [
                 f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
                 "",
@@ -623,6 +637,7 @@ class HelpScreen(ModalScreen[None]):
         ("Tarif-Aktionen (markierte Zeile)", [
             ("g", "Quell-PDFs laden + analysieren"),
             ("G", "nur analysieren (PDFs lokal, kein Download)"),
+            ("H", "live harvesten (Browser) + laden + analysieren — wenn keine URLs da"),
             ("a", "zum Vergleich hinzufügen/entfernen (analysiert bei Bedarf)"),
             ("o", "Quelle öffnen (online im Browser / lokale PDFs)"),
             ("R", "als Referenz setzen — Δ rechnet neu"),

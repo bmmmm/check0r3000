@@ -191,6 +191,7 @@ class CheckApp(App):
         Binding("q", "quit", "Quit", show=True),
         # Context / power keys — documented in [?], hidden from the footer.
         Binding("G", "analyze_local", "Analyze local", show=False),
+        Binding("H", "harvest", "Harvest+Analyze", show=False),
         Binding("a", "add_to_compare", "Zum Vergleich", show=False),
         Binding("c", "manage_compare", "Vergleich verwalten", show=False),
         Binding("w", "toggle_compare_wording", "Wording", show=False),
@@ -768,8 +769,9 @@ class CheckApp(App):
                 )
             else:
                 lines.append(
-                    "[dim]Quell-PDFs noch nicht geharvestet — Browser-Schritt"
-                    " (Tarifdetails öffnen) nötig.[/dim]"
+                    "[dim]Quell-PDFs noch nicht geharvestet —[/dim] "
+                    "[bright_yellow]\\[H] live harvesten + analysieren[/bright_yellow]"
+                    "[dim] (lädt die CHECK24-Seite headless).[/dim]"
                 )
         return "\n".join(lines)
 
@@ -1855,8 +1857,8 @@ class CheckApp(App):
         else:
             self.notify(
                 f"Im Vergleich vorgemerkt, aber {insurer} {product} ist noch nicht "
-                "analysierbar (keine Quell-URLs — erst der Browser-Schritt "
-                "'Tarifdetails'). Die Spalte erscheint nach \\[g].",
+                "analysierbar (keine Quell-URLs). \\[H] harvestet + analysiert live; "
+                "die Spalte erscheint danach.",
                 severity="warning",
                 timeout=8,
             )
@@ -2219,8 +2221,8 @@ class CheckApp(App):
         entry = self._doc_entry(row)
         if not entry or not entry.get("docs"):
             self.notify(
-                "Keine geharvesteten Quell-URLs — erst Browser-Schritt "
-                "(Tarifdetails öffnen).",
+                "Keine geharvesteten Quell-URLs — \\[H] harvestet + analysiert live "
+                "(headless Browser).",
                 severity="warning",
                 timeout=6,
             )
@@ -2273,21 +2275,67 @@ class CheckApp(App):
             ConfirmFetchScreen(entry, ANALYZE_MODEL, skip_download=True), _go
         )
 
+    def action_harvest(self) -> None:
+        """Harvest the selected tariff's documents from the LIVE CHECK24 page (headless
+            Playwright), download them, then ingest → extract — the scripted path for a
+            tariff whose source URLs were never harvested (e.g. KS/Auxilia — JURPRIVAT).
+            Heavier than [g]/[G] (loads the full all-insurers result page), so it
+            confirms first."""
+        row = self._active_row
+        if row is None:
+            self.notify("Erst eine Zeile wählen (↵).", severity="warning")
+            return
+        if _load_detail(row.insurer, row.product):
+            self.notify(
+                "Schon analysiert — [d] zeigt die Details.", severity="information"
+            )
+            return
+        entry = self._doc_entry(row)
+        if entry and entry.get("docs"):
+            self.notify(
+                "URLs schon geharvestet — [g] lädt + analysiert direkt "
+                "(kein Headless-Load nötig).",
+                severity="information",
+                timeout=6,
+            )
+            return
+        # No stem yet — harvest_docs derives it from (insurer, product); the confirm
+        # and the start notify use the row label instead.
+        pseudo = {"insurer": row.insurer, "tariff": row.product}
+
+        def _go(confirmed: bool | None) -> None:
+            if confirmed:
+                self._run_pipeline(pseudo, row, harvest=True)
+
+        self.push_screen(ConfirmFetchScreen(pseudo, ANALYZE_MODEL, harvest=True), _go)
+
     @work(thread=True, exclusive=True, group="pipeline")
     def _run_pipeline(self, entry: dict, row: SnapshotRow,
-                      *, skip_download: bool = False) -> None:
+                      *, skip_download: bool = False, harvest: bool = False) -> None:
         """Run the analyze pipeline for one tariff off the UI thread; status is
-            posted back via call_from_thread. With skip_download the PDFs are already
-            in data/raw/<stem>/ and only ingest → extract run; otherwise fetch_docs
-            --into-raw downloads them first."""
+            posted back via call_from_thread. With harvest, a headless harvest_docs
+            pass (--download) fetches the source URLs + PDFs first; with skip_download
+            the PDFs are already in data/raw/<stem>/ and only ingest → extract run;
+            otherwise fetch_docs --into-raw downloads them first."""
         import subprocess
 
         stem = entry.get("stem", "")
+        label = stem or f"{row.insurer} {row.product}"
         # Download straight into the canonical data/raw/<stem>/ layout (--into-raw),
         # so ingest/extract name the record exactly <stem>.json — no filename-guessing
         # intake step that could misname it and hide the result from the TUI.
         steps = []
-        if not skip_download:
+        if harvest:
+            # Pin EXACTLY this tariff on the fresh page (--exact + --insurer), harvest
+            # its document URLs into the manifest, and download into data/raw/ in one
+            # headless pass; then ingest/extract pick the PDFs up by stem.
+            steps.append((
+                "Harvest",
+                ["uv", "run", "scripts/harvest_docs.py",
+                 "--insurer", row.insurer, "--match", row.product, "--exact",
+                 "--download", "--jobs", "6"],
+            ))
+        elif not skip_download:
             steps.append(
                 ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--into-raw"])
             )
@@ -2296,7 +2344,7 @@ class CheckApp(App):
             ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
         ]
         self.call_from_thread(
-            self.notify, f"Pipeline gestartet: {stem} …", timeout=4
+            self.notify, f"Pipeline gestartet: {label} …", timeout=4
         )
         for name, cmd in steps:
             try:

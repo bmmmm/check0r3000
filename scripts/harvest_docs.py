@@ -140,9 +140,14 @@ def resolve_rows(rows: list[dict], args) -> list[dict]:
         for term in (t.strip().casefold() for t in args.match.split(",")):
             if not term:
                 continue
-            hits = [r for r in rows if term in _row_text(r).casefold() and ins_ok(r)]
+            if args.exact:  # product name equals the term (pins exactly one product)
+                hits = [r for r in rows
+                        if (r.get("product", "") or "").casefold() == term and ins_ok(r)]
+            else:  # substring over "insurer product"
+                hits = [r for r in rows if term in _row_text(r).casefold() and ins_ok(r)]
             if not hits:
                 print(f"  ! --match {term!r}: no matching row"
+                      + (" (exact)" if args.exact else "")
                       + (f" for insurer {args.insurer!r}" if ins else ""), file=sys.stderr)
             for r in hits:
                 picked[r["position"]] = r
@@ -340,6 +345,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description="Harvest tariff document URLs from the live CHECK24 page into the manifest.")
     ap.add_argument("--match", help="comma-list of name substrings (over 'insurer product')")
+    ap.add_argument("--exact", action="store_true",
+                    help="match a product name EXACTLY, not as a substring (pins one tariff)")
     ap.add_argument("--insurer", help="restrict to rows whose insurer contains this")
     ap.add_argument("--positions", help="comma-list of raw fresh-page result positions")
     ap.add_argument("--all", action="store_true", help="every tariff (SLOW: 214 panels)")
