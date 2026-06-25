@@ -1174,7 +1174,13 @@ class CheckApp(App):
                     )
         lines.append("")
 
-        _, variants = match_favorite(self._snapshot, fav)
+        # self._snapshot can be None here if the snapshot file vanished and the
+        # user pressed [r] while a fav row was still the active detail target
+        # (DataTable.clear() fires no RowHighlighted, so _active_fav survives).
+        # match_favorite() dereferences snapshot.rows, so guard before calling.
+        variants: list[SnapshotRow] = []
+        if self._snapshot is not None:
+            _, variants = match_favorite(self._snapshot, fav)
         if len(variants) > 1:
             lines.append("[underline]SB-Varianten[/underline]")
             for v in sorted(
