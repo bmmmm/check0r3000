@@ -2009,20 +2009,34 @@ class CheckApp(App):
         def _on_edit(result: dict[str, str] | None) -> None:
             if result is None:
                 return  # cancelled
-            # Apply ONLY the touched levers; preserve everything else verbatim.
+            # Apply ONLY the levers the user actually changed; preserve every
+            # other param (order, encoding, repeated/uncurated keys) verbatim.
+            # set_param removes-all-then-appends, so routing an UNCHANGED key
+            # through it would needlessly move it to the tail and reshuffle the
+            # whole query on every save.
             new_pairs = list(pairs)
             changes: list[tuple[str, str, str]] = []
             for key in self._EDIT_LEVER_KEYS:
                 new_val = result.get(key, "")
                 old_val = values.get(key, "")
-                if new_val != old_val:
-                    changes.append((key, old_val, new_val))
+                if new_val == old_val:
+                    continue  # untouched: leave the original pair (or absence)
+                # A key absent from the source query (old_val == "") left at the
+                # switch-off default ("no") is not a user change — injecting
+                # key=no would flip an implicit server default into an explicit
+                # exclusion. (Empty text fields hit the new_val == old_val skip.)
+                if old_val == "" and new_val == "no":
+                    continue
+                changes.append((key, old_val, new_val))
                 new_pairs = cq.set_param(new_pairs, key, new_val)
 
             def _on_confirm(ok: bool | None) -> None:
                 if not ok:
                     return
-                new_query = urlencode(new_pairs)
+                # No real lever change -> keep the source query byte-for-byte
+                # (don't re-encode), so a confirmed "Query bleibt gleich" save is
+                # a true no-op instead of a silent re-encode of untouched params.
+                new_query = urlencode(new_pairs) if changes else query
                 out_profile = dict(profile)
                 out_profile["query"] = new_query
                 ppath = REPO_ROOT / "config" / "check24-profile.json"
