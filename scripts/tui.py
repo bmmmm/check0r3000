@@ -432,7 +432,6 @@ class QueryEditScreen(ModalScreen[dict[str, str] | None]):
                         yield Switch(
                             value=(self._values.get(key) == "yes"),
                             id=f"qe-{key}",
-                            classes="qe-switch",
                         )
                         yield Label(label, classes="qe-switch-label")
                 blob = ", ".join(self._discounts) or "(keine)"

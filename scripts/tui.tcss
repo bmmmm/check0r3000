@@ -169,7 +169,9 @@ DataTable > .datatable--odd-row {
 
 /* ── Confirm modal (download + analyze) ─────────────────────────────────── */
 
-ConfirmFetchScreen {
+/* DeleteDataScreen reuses #confirm-box but is a distinct ModalScreen subclass,
+   so it needs its own centering rule (ModalScreen.DEFAULT_CSS has none). */
+ConfirmFetchScreen, DeleteDataScreen {
     align: center middle;
     background: $surface 60%;
 }
