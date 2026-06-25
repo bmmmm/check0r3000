@@ -82,6 +82,7 @@ from tui_screens import (  # noqa: E402
     ConfirmFetchScreen,
     DeleteDataScreen,
     HelpScreen,
+    NoteEditScreen,
     OpenSourceScreen,
     QueryEditScreen,
     QuerySaveConfirmScreen,
@@ -202,6 +203,7 @@ class CheckApp(App):
         Binding("b", "build_query", "Query-URL", show=False),
         Binding("e", "edit_query", "Suche bearbeiten", show=False),
         Binding("u", "toggle_favorite", "Favorite", show=False),
+        Binding("N", "edit_note", "Notiz", show=False),
         Binding("R", "set_reference", "Reference", show=False),
         Binding("D", "delete_data", "Delete data", show=False),
         Binding("r", "refresh_data", "Reload", show=False),
@@ -484,6 +486,17 @@ class CheckApp(App):
             else:
                 marker, mcolor = "★", "yellow"
             lines.append(f"[{mcolor}]{marker} {tag or 'Referenz'}[/{mcolor}]")
+        lines.append("")
+
+        note = fav.get("note", "")
+        if note:
+            lines.append(
+                "[bold underline]Notiz[/bold underline]   [dim](\\[N] bearbeiten)[/dim]"
+            )
+            for nl in note.splitlines() or [note]:
+                lines.append(f"  [italic]{_esc(nl)}[/italic]")
+        else:
+            lines.append("[dim]\\[N] Notiz hinzufügen[/dim]")
         lines.append("")
 
         nc = _tarifnote_color(row.tarifnote)
@@ -1519,6 +1532,53 @@ class CheckApp(App):
             self._save_favorites()
             self.notify(f"Zu Favoriten hinzugefügt: {insurer} {product}", timeout=4)
         self._reload_all()
+
+    def action_edit_note(self) -> None:
+        """Edit the free-text note on the active favorite — per-favorite context the
+            dashboard shows, saved to the favorite's 'note' field in favorites.json.
+            Only favorites carry notes; on a non-favorite row it points to \\[u]."""
+        ident = self._active_identity()
+        if ident is None:
+            self.notify("Erst einen Favoriten wählen (Pfeile / Klick).",
+                        severity="warning")
+            return
+        insurer, product, stem = ident
+
+        def matches(f: dict) -> bool:
+            if stem and f.get("stem"):
+                return f.get("stem") == stem
+            return f.get("insurer") == insurer and f.get("product") == product
+
+        fav = next(
+            (f for f in self._favorites.get("favorites", []) if matches(f)), None
+        )
+        if fav is None:
+            self.notify(
+                f"{insurer} {product} ist kein Favorit — erst \\[u] hinzufügen.",
+                severity="warning",
+                timeout=6,
+            )
+            return
+
+        def _save(note: str | None) -> None:
+            if note is None:
+                return  # cancelled
+            note = note.strip()
+            if note:
+                fav["note"] = note
+            else:
+                fav.pop("note", None)  # empty text clears the note
+            self._save_favorites()
+            self.notify(
+                ("Notiz gespeichert" if note else "Notiz entfernt")
+                + f": {insurer} {product}",
+                timeout=4,
+            )
+            self._reload_all()
+
+        self.push_screen(
+            NoteEditScreen(f"{insurer} {product}", fav.get("note", "")), _save
+        )
 
     def action_set_reference(self) -> None:
         """Make the active row the comparison baseline; every Δ recomputes against

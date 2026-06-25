@@ -32,6 +32,7 @@ from textual.widgets import (  # noqa: E402
     OptionList,
     Static,
     Switch,
+    TextArea,
 )
 from textual.widgets.option_list import Option  # noqa: E402
 
@@ -622,13 +623,16 @@ class HelpScreen(ModalScreen[None]):
         ("Tarif-Aktionen (markierte Zeile)", [
             ("g", "Quell-PDFs laden + analysieren"),
             ("G", "nur analysieren (PDFs lokal, kein Download)"),
+            ("a", "zum Vergleich hinzufügen/entfernen (analysiert bei Bedarf)"),
             ("o", "Quelle öffnen (online im Browser / lokale PDFs)"),
             ("R", "als Referenz setzen — Δ rechnet neu"),
             ("u", "Favorit an/aus"),
+            ("N", "Notiz zum Favoriten bearbeiten"),
             ("D", "lokale Daten löschen (Umfang im Dialog)"),
         ]),
         ("Vergleich \\[v]", [
-            ("c", "Vergleich verwalten — Tarife ein-/ausblenden, leeren, alle"),
+            ("a", "markierten Tarif zum Vergleich hinzufügen/entfernen"),
+            ("c", "Vergleich verwalten — Tarife ein-/ausschalten, leeren, alle"),
             ("w", "Wortlaut ein/aus (kompakt ↔ ausführlich)"),
             ("t", "Volltext-Modal: ganze Texte je Kategorie, alle Tarife"),
         ]),
@@ -657,4 +661,38 @@ class HelpScreen(ModalScreen[None]):
         yield Container(Static("\n".join(lines)), id="help-box")
 
     def action_close(self) -> None:
+        self.dismiss(None)
+
+class NoteEditScreen(ModalScreen[str | None]):
+    """Edit the free-text note on a favorite. A multi-line TextArea prefilled with
+        the current note; Ctrl+S saves, Esc cancels. Returns the new note text
+        (possibly empty, to clear the note) on save, or None on cancel."""
+
+    BINDINGS = [
+        Binding("ctrl+s", "save", "Speichern"),
+        Binding("escape", "cancel", "Abbrechen"),
+    ]
+
+    def __init__(self, title: str, note: str) -> None:
+        super().__init__()
+        self._title = title
+        self._note = note
+
+    def compose(self) -> ComposeResult:
+        with Container(id="note-box"):
+            yield Static(
+                f"[bold]Notiz — {_esc(self._title)}[/bold]\n"
+                "[dim]Gedanken/Kontext zu diesem Favoriten · "
+                "\\[Strg+S] speichern · \\[Esc] abbrechen[/dim]",
+                id="note-head",
+            )
+            yield TextArea(self._note, id="note-input", soft_wrap=True)
+
+    def on_mount(self) -> None:
+        self.query_one("#note-input", TextArea).focus()
+
+    def action_save(self) -> None:
+        self.dismiss(self.query_one("#note-input", TextArea).text)
+
+    def action_cancel(self) -> None:
         self.dismiss(None)
