@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -206,7 +207,7 @@ class CheckApp(App):
         Binding("N", "edit_note", "Notiz", show=False),
         Binding("R", "set_reference", "Reference", show=False),
         Binding("D", "delete_data", "Delete data", show=False),
-        Binding("r", "refresh_data", "Reload", show=False),
+        Binding("r", "refresh_data", "Reload", show=True),
     ]
 
     # reactive state
@@ -289,6 +290,7 @@ class CheckApp(App):
             with TabPane("Vergleich [v]", id="diff"):
                 with ScrollableContainer(id="diff-panel"):
                     yield Static("Loading diff…", id="diff-content")
+        yield Label("", id="status-bar")
         yield Footer()
 
     # --- Header update ---
@@ -301,6 +303,16 @@ class CheckApp(App):
             )
         else:
             self.sub_title = "No snapshot loaded — place files in data/snapshots/"
+
+    def _update_status_bar(self) -> None:
+        t = datetime.now().strftime("%H:%M:%S")
+        n = len(self._snapshot.rows) if self._snapshot else 0
+        try:
+            self.query_one("#status-bar", Label).update(
+                f"[dim]Neu geladen: {t}  ·  {n} Tarife  ·  [bold]r[/bold] Reload[/dim]"
+            )
+        except NoMatches:
+            pass
 
     # --- Favorites board ---
 
@@ -1381,9 +1393,11 @@ class CheckApp(App):
         self._update_header()
         self._refresh_market_detail()
         self._refresh_fav_detail()
+        self._update_status_bar()
 
     def action_refresh_data(self) -> None:
         self._reload_all()
+        self.notify("Daten neu geladen.", timeout=3)
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
@@ -2234,9 +2248,10 @@ class CheckApp(App):
         self._load_data()
         self._populate_market_table()
         self._populate_favorites_table()
-        # Re-render whichever detail band is currently shown.
+        self._update_header()
         self._refresh_market_detail()
         self._refresh_fav_detail()
+        self._update_status_bar()
         self.notify(
             f"Analyse fertig: {row.insurer} {row.product} — [d] zeigt die Details.",
             timeout=8,

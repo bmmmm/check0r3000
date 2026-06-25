@@ -22,6 +22,13 @@ Footer {
     height: 1;
 }
 
+#status-bar {
+    height: 1;
+    padding: 0 1;
+    background: $surface-darken-1;
+    color: $text-muted;
+}
+
 /* ── Tabs ───────────────────────────────────────────────────────────────── */
 
 TabbedContent {
