@@ -677,6 +677,31 @@ class CheckApp(App):
             return self._doc_by_stem.get(row.stem)
         return None
 
+    def _equivalent_analyzed(
+        self, row: SnapshotRow
+    ) -> tuple[dict, DetailRecord] | None:
+        """A DIFFERENT-insurer manifest tariff with the SAME product name that is
+            already analyzed — e.g. S-Direkt and BavariaDirekt both resell ÖRAG's
+            'Rundum-Schutz (ÖRAG Rechtsschutz)'. CHECK24 product names carry the
+            risk-carrier, so an exact (case-insensitive) product match across a
+            different insurer is the same underlying terms. Distinct names like
+            '… mit Beitragsgarantie' or '… - PLUS' are real variants and do NOT
+            match. A hint only (loads nothing), returned solely when exactly one such
+            analyzed twin exists — so a stray generic-name collision can't mislead."""
+        prod = (row.product or "").strip().casefold()
+        own = (row.insurer or "").strip().casefold()
+        if not prod:
+            return None
+        by_stem = dict(load_all_details())
+        hits: list[tuple[dict, DetailRecord]] = []
+        for (ins_cf, prod_cf), entry in load_doc_by_tariff().items():
+            if prod_cf != prod or ins_cf == own:
+                continue
+            det = by_stem.get(entry.get("stem"))
+            if det is not None:
+                hits.append((entry, det))
+        return hits[0] if len(hits) == 1 else None
+
     def _render_docs_block(
         self, row: SnapshotRow, detail: DetailRecord | None
     ) -> str:
@@ -704,10 +729,24 @@ class CheckApp(App):
                     " → ingest → extract[/dim]"
                 )
         elif not detail:
-            lines.append(
-                "[dim]Quell-PDFs noch nicht geharvestet — Browser-Schritt"
-                " (Tarifdetails öffnen) nötig.[/dim]"
-            )
+            twin = self._equivalent_analyzed(row)
+            if twin is not None:
+                entry, _det = twin
+                lines.append(
+                    "[bright_cyan]→ Gleiches Produkt schon analysiert:[/bright_cyan] "
+                    f"[bold]{_esc(entry.get('insurer', ''))}[/bold]"
+                    f" — {_esc(entry.get('tariff', ''))}"
+                )
+                lines.append(
+                    "[dim]  Gleicher Produktname bei anderem Vertrieb = identischer"
+                    " Tarif/Wortlaut; meist unterscheidet sich nur der Preis. Dort im"
+                    " Markt die Details ansehen (oder \\[a] für den Vergleich).[/dim]"
+                )
+            else:
+                lines.append(
+                    "[dim]Quell-PDFs noch nicht geharvestet — Browser-Schritt"
+                    " (Tarifdetails öffnen) nötig.[/dim]"
+                )
         return "\n".join(lines)
 
     def _render_market_detail(self, row: SnapshotRow) -> str:
@@ -725,9 +764,17 @@ class CheckApp(App):
     def _render_detail_full(self, row: SnapshotRow) -> str:
         detail = _load_detail(row.insurer, row.product)
         if not detail:
+            head = f"[bold]{row.insurer}[/bold] — {row.product}\n\n"
+            if self._equivalent_analyzed(row) is not None:
+                # The same product is analyzed under another distributor; the docs
+                # block below names it, so don't tell the user to run ingest here.
+                return (
+                    head + "[dim italic]Kein eigener Datensatz — gleiches Produkt"
+                    " ist unter einem anderen Vertrieb analysiert (siehe unten)."
+                    "[/dim italic]"
+                )
             return (
-                f"[bold]{row.insurer}[/bold] — {row.product}\n\n"
-                "[dim italic]No detailed record ingested yet.[/dim italic]\n"
+                head + "[dim italic]No detailed record ingested yet.[/dim italic]\n"
                 "[dim]Run: uv run scripts/ingest.py  to extract tariff details.[/dim]"
             )
 
