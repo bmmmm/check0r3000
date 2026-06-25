@@ -2315,7 +2315,12 @@ class CheckApp(App):
         ]
         if len(kept) != len(docs):
             m["documents"] = kept
-            mp.write_text(json.dumps(m, indent=2, ensure_ascii=False), encoding="utf-8")
+            # Atomic write (tmp + os.replace), matching _save_favorites and the
+            # profile/snapshot/ingest writers: a crash mid-write must not leave a
+            # truncated, invalid manifest.json behind.
+            tmp = mp.with_suffix(".json.tmp")
+            tmp.write_text(json.dumps(m, indent=2, ensure_ascii=False), encoding="utf-8")
+            os.replace(tmp, mp)
 
     def _do_delete(self, stem: str, scope: str, label: str) -> None:
         import shutil
