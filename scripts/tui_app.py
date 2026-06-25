@@ -827,9 +827,9 @@ class CheckApp(App):
     def _compare_stems(self) -> list[str]:
         """The tariffs explicitly chosen for the Vergleich — an include-set in
             config/favorites.json, curated separately from the favorites star
-            (Market [a] adds/removes, [c] bulk-manages). If the key is absent (first
-            run after the exclude-set → include-set switch) it seeds from the favorite
-            stems, so the comparison starts as the favorites and is curated from there.
+            (Market [a] adds/removes, [c] bulk-manages). If the key is absent (e.g. a
+            fresh favorites.json) it seeds from the favorite stems, so the comparison
+            starts as the favorites and is curated from there.
             Read-only: the seed is persisted only when [a]/[c] next write it."""
         stems = self._favorites.get("compare_stems")
         if stems is None:
@@ -838,10 +838,8 @@ class CheckApp(App):
         return list(stems)
 
     def _set_compare_stems(self, stems: list[str]) -> None:
-        """Persist the curated compare-set and retire the legacy compare_hidden
-            exclude-set (dead under the include-set model)."""
+        """Persist the curated compare-set (the include-set the Vergleich renders)."""
         self._favorites["compare_stems"] = stems
-        self._favorites.pop("compare_hidden", None)
         self._save_favorites()
 
     def _coverage_columns(self) -> list[tuple[str, DetailRecord]]:

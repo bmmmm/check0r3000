@@ -101,9 +101,11 @@ scripts/tui.py                                        interaktiver Browser über
   Kategorie-Liste (↑↓), rechts der ganze Wortlaut aller Tarife nebeneinander, umbrochen
   — inkl. der Tarife, die wegen der Terminalbreite nicht in die Matrix passen. Nicht
   zugeordnete Einträge landen sichtbar im **Sonstige**-Bucket (nie verworfen); `~` markiert
-  Teil-Deckung (nur/eingeschr./außer/begrenzt). **`[c]`** blendet den markierten Tarif
-  aus dem Vergleich aus bzw. wieder ein (persistiert als Ausschluss-Set `compare_hidden`,
-  damit neu analysierte Tarife automatisch dazukommen). Erweitern = ein Objekt an die
+  Teil-Deckung (nur/eingeschr./außer/begrenzt). Der Vergleich ist eine **kuratierte
+  Auswahl** (`compare_stems`), getrennt von den Favoriten: **`[a]`** (im Markt) nimmt den
+  markierten Tarif in den Vergleich auf bzw. wieder heraus und analysiert ihn bei Bedarf
+  automatisch; **`[c]`** (auf dem Vergleich-Tab) schaltet die Mitglieder im Block ein/aus.
+  Fehlt der Key, startet der Vergleich als Kopie der Favoriten. Erweitern = ein Objekt an die
   Taxonomie anhängen (`coverage_taxonomy.py --selftest` pinnt die Cross-Tarif-Zuordnung).
   Der frühere Snapshot-Preis-Diff hängt nur noch an, sobald ein zweiter Snapshot existiert.
 - **Identität über den `stem`**: jeder Tarif hat einen kanonischen `stem`
