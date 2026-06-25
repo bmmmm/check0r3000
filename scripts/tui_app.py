@@ -773,9 +773,17 @@ class CheckApp(App):
                     " ist unter einem anderen Vertrieb analysiert (siehe unten)."
                     "[/dim italic]"
                 )
+            # Only suggest ingest when the PDFs are actually on disk; otherwise it's
+            # a dead end (nothing to extract). The docs block below states the real
+            # next step: [g] download, or the browser harvest when there are no
+            # source URLs at all (e.g. KS/Auxilia — never harvested).
+            ingest_hint = (
+                "\n[dim]Run: uv run scripts/ingest.py  to extract tariff details."
+                "[/dim]" if row.has_pdf else ""
+            )
             return (
-                head + "[dim italic]No detailed record ingested yet.[/dim italic]\n"
-                "[dim]Run: uv run scripts/ingest.py  to extract tariff details.[/dim]"
+                head + "[dim italic]No detailed record ingested yet.[/dim italic]"
+                + ingest_hint
             )
 
         lines: list[str] = []
