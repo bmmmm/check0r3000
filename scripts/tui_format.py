@@ -182,8 +182,10 @@ def _short_versicherungssumme(v: str | None) -> str:
 def _short_selbstbeteiligung(v: str | None) -> str:
     if not v:
         return "k.A."
-    nums = _distinct_numbers(v, limit=2)
-    return ("/".join(nums) + " €") if nums else v
+    # "ohne" (zero excess) is a meaningful, distinct option; keep it visible
+    # instead of letting the digit-only token parse silently drop it.
+    parts = (["ohne"] if "ohne" in v.lower() else []) + _distinct_numbers(v, limit=2)
+    return ("/".join(parts) + " €") if parts else v
 
 
 def _short_geltungsbereich(v: str | None) -> str:
@@ -199,8 +201,11 @@ def _short_vertragslaufzeit(v: str | None) -> str:
     if not v:
         return "k.A."
     low = v.lower()
-    tag = ", tägl." if ("täglich" in low or "taeglich" in low) else ""
-    nums = _distinct_numbers(v, limit=2)
+    # match the abbreviation "tägl." too, not only the full word "täglich"
+    tag = ", tägl." if ("tägl" in low or "taegl" in low) else ""
+    # keep every distinct term option ("1, 2, 3, 4 oder 5 Jahre" -> "1/2/3/4/5
+    # J."); do not truncate the list to the first two.
+    nums = _distinct_numbers(v, limit=8)
     return ("/".join(nums) + " J." + tag) if nums else v
 
 
