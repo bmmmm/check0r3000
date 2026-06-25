@@ -37,7 +37,6 @@ import argparse
 import json
 import os
 import sys
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -100,1746 +99,1746 @@ from tui_format import (  # noqa: E402
 # code via CHECK0R_ANALYZE_MODEL (e.g. a local mlx:/ollama: spec).
 ANALYZE_MODEL = os.environ.get("CHECK0R_ANALYZE_MODEL", "claude")
 
-
 # ---------------------------------------------------------------------------
-# Textual imports (only needed for interactive mode)
+# Textual UI — imports, closure helpers, modal screens and the app, all at
+# module level. Importing tui.py therefore pulls in Textual; the data-only
+# smoke test lives in tui_data.py (`python3 tui_data.py`), which stays
+# Textual-free. `uv run scripts/tui.py --selftest` is unaffected.
 # ---------------------------------------------------------------------------
 
+from textual import on, work
+from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.containers import (
+    Container,
+    Horizontal,
+    ScrollableContainer,
+    Vertical,
+)
+from textual.css.query import NoMatches
+from textual.reactive import reactive
+from textual.screen import ModalScreen
+from textual.widgets import (
+    Button,
+    DataTable,
+    Footer,
+    Header,
+    Input,
+    Label,
+    OptionList,
+    Static,
+    Switch,
+    TabbedContent,
+    TabPane,
+)
+from textual.widgets.option_list import Option
 
-def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) -> None:
-    from textual import on, work
-    from textual.app import App, ComposeResult
-    from textual.binding import Binding
-    from textual.containers import (
-        Container,
-        Horizontal,
-        ScrollableContainer,
-        Vertical,
-    )
-    from textual.css.query import NoMatches
-    from textual.reactive import reactive
-    from textual.screen import ModalScreen
-    from textual.widgets import (
-        Button,
-        DataTable,
-        Footer,
-        Header,
-        Input,
-        Label,
-        OptionList,
-        Static,
-        Switch,
-        TabbedContent,
-        TabPane,
-    )
-    from textual.widgets.option_list import Option
+# -----------------------------------------------------------------------
+# Helpers used inside the app
+# -----------------------------------------------------------------------
 
-    # -----------------------------------------------------------------------
-    # Helpers used inside the app
-    # -----------------------------------------------------------------------
-
-    def _tarifnote_color(note: str) -> str:
-        """Return a Rich color name based on Tarifnote value."""
-        try:
-            val = float(note.replace(",", "."))
-        except (ValueError, AttributeError):
-            return "white"
-        if val <= 1.3:
-            return "bright_green"
-        if val <= 2.0:
-            return "yellow"
-        return "bright_red"
-
-    def _price_color(price: float | None, q1: float, q3: float) -> str:
-        if price is None:
-            return "white"
-        if price <= q1:
-            return "bright_green"
-        if price >= q3:
-            return "bright_red"
+def _tarifnote_color(note: str) -> str:
+    """Return a Rich color name based on Tarifnote value."""
+    try:
+        val = float(note.replace(",", "."))
+    except (ValueError, AttributeError):
         return "white"
+    if val <= 1.3:
+        return "bright_green"
+    if val <= 2.0:
+        return "yellow"
+    return "bright_red"
 
-    def _module_badge(mod: dict[str, Any]) -> str:
-        if not mod.get("included"):
-            return "[dim]—[/dim]"
-        level = mod.get("level")
-        if level == "Premium":
-            return "[bright_green]★★★ Premium[/bright_green]"
-        if level == "Komfort":
-            return "[yellow]★★ Komfort[/yellow]"
-        if level == "Basis":
-            return "[white]★ Basis[/white]"
-        return "[cyan]✓[/cyan]"
+def _price_color(price: float | None, q1: float, q3: float) -> str:
+    if price is None:
+        return "white"
+    if price <= q1:
+        return "bright_green"
+    if price >= q3:
+        return "bright_red"
+    return "white"
 
-    MODULE_LABELS = {
-        "privat": "Privat",
-        "beruf": "Beruf",
-        "verkehr": "Verkehr",
-        "wohnen_immobilien": "Wohnen",
-        "internet_web": "Internet",
-        "steuer": "Steuer",
-        "sozialgericht": "Sozialgericht",
-        "verwaltungsrecht": "Verwaltungsrecht",
-    }
+def _module_badge(mod: dict[str, Any]) -> str:
+    if not mod.get("included"):
+        return "[dim]—[/dim]"
+    level = mod.get("level")
+    if level == "Premium":
+        return "[bright_green]★★★ Premium[/bright_green]"
+    if level == "Komfort":
+        return "[yellow]★★ Komfort[/yellow]"
+    if level == "Basis":
+        return "[white]★ Basis[/white]"
+    return "[cyan]✓[/cyan]"
 
-    # -----------------------------------------------------------------------
-    # Diff helper
-    # -----------------------------------------------------------------------
+MODULE_LABELS = {
+    "privat": "Privat",
+    "beruf": "Beruf",
+    "verkehr": "Verkehr",
+    "wohnen_immobilien": "Wohnen",
+    "internet_web": "Internet",
+    "steuer": "Steuer",
+    "sozialgericht": "Sozialgericht",
+    "verwaltungsrecht": "Verwaltungsrecht",
+}
 
-    def _compute_diff(
-        old_snap: Snapshot, new_snap: Snapshot
-    ) -> tuple[list[tuple], list[str], list[str]]:
-        """
+# -----------------------------------------------------------------------
+# Diff helper
+# -----------------------------------------------------------------------
+
+def _compute_diff(
+    old_snap: Snapshot, new_snap: Snapshot
+) -> tuple[list[tuple], list[str], list[str]]:
+    """
         Returns (changes, added_keys, removed_keys).
         changes = [(key, old_price, new_price, delta), ...]
         """
-        old_map = {r.key: r for r in old_snap.rows}
-        new_map = {r.key: r for r in new_snap.rows}
+    old_map = {r.key: r for r in old_snap.rows}
+    new_map = {r.key: r for r in new_snap.rows}
 
-        changes = []
-        for key, new_row in new_map.items():
-            if key in old_map:
-                old_row = old_map[key]
-                old_p = old_row.monatlich_eur
-                new_p = new_row.monatlich_eur
-                if old_p != new_p and old_p is not None and new_p is not None:
-                    changes.append((key, old_p, new_p, new_p - old_p))
+    changes = []
+    for key, new_row in new_map.items():
+        if key in old_map:
+            old_row = old_map[key]
+            old_p = old_row.monatlich_eur
+            new_p = new_row.monatlich_eur
+            if old_p != new_p and old_p is not None and new_p is not None:
+                changes.append((key, old_p, new_p, new_p - old_p))
 
-        added = [k for k in new_map if k not in old_map]
-        removed = [k for k in old_map if k not in new_map]
-        return changes, added, removed
+    added = [k for k in new_map if k not in old_map]
+    removed = [k for k in old_map if k not in new_map]
+    return changes, added, removed
 
-    # -----------------------------------------------------------------------
-    # The App
-    # -----------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# The App
+# -----------------------------------------------------------------------
 
-    class ConfirmFetchScreen(ModalScreen[bool]):
-        """Deliberate gate before the analyze pipeline. With skip_download the source
+class ConfirmFetchScreen(ModalScreen[bool]):
+    """Deliberate gate before the analyze pipeline. With skip_download the source
         PDFs are already on disk and only ingest → extract runs (still a paid model
         call, so the confirm stays). Returns True on confirm, False on cancel."""
 
-        BINDINGS = [
-            Binding("enter", "confirm", "Analyze"),
-            Binding("y", "confirm", "Yes"),
-            Binding("escape", "cancel", "Cancel"),
-            Binding("n", "cancel", "No"),
-        ]
+    BINDINGS = [
+        Binding("enter", "confirm", "Analyze"),
+        Binding("y", "confirm", "Yes"),
+        Binding("escape", "cancel", "Cancel"),
+        Binding("n", "cancel", "No"),
+    ]
 
-        def __init__(self, entry: dict, model: str, skip_download: bool = False) -> None:
-            super().__init__()
-            self._entry = entry
-            self._model = model
-            self._skip_download = skip_download
+    def __init__(self, entry: dict, model: str, skip_download: bool = False) -> None:
+        super().__init__()
+        self._entry = entry
+        self._model = model
+        self._skip_download = skip_download
 
-        def compose(self) -> ComposeResult:
-            e = self._entry
-            docs = e.get("docs", [])
-            if self._skip_download:
-                lines = [
-                    f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
-                    "",
-                    "[bold]Analyse ohne Download[/bold] — PDFs liegen lokal "
-                    f"([cyan]data/raw/{e.get('stem', '').replace('__', '/')}/[/cyan]).",
-                    f"ingest → extract  [dim](Modell: {self._model})[/dim]",
-                    "[dim]Extraktion ist ein Modell-Call.[/dim]",
-                    "",
-                    "[bold]\\[↵/y][/bold] Analysieren     [bold]\\[Esc/n][/bold] Abbrechen",
-                ]
-            else:
-                lines = [
-                    f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
-                    "",
-                    f"Download von [cyan]rechtsschutz.check24.de[/cyan]: "
-                    f"[bold]{len(docs)}[/bold] PDF(s)",
-                ]
-                for dd in docs:
-                    lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                    lines.append(f"  • [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:48]}")
-                lines += [
-                    "",
-                    f"dann: ingest → extract  [dim](Modell: {self._model})[/dim]",
-                    "[dim]Drittanbieter-Copyright — nur für den Eigengebrauch.[/dim]",
-                    "",
-                    "[bold]\\[↵/y][/bold] Download + Analyse     [bold]\\[Esc/n][/bold] Abbrechen",
-                ]
-            yield Container(Static("\n".join(lines)), id="confirm-box")
+    def compose(self) -> ComposeResult:
+        e = self._entry
+        docs = e.get("docs", [])
+        if self._skip_download:
+            lines = [
+                f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                "",
+                "[bold]Analyse ohne Download[/bold] — PDFs liegen lokal "
+                f"([cyan]data/raw/{e.get('stem', '').replace('__', '/')}/[/cyan]).",
+                f"ingest → extract  [dim](Modell: {self._model})[/dim]",
+                "[dim]Extraktion ist ein Modell-Call.[/dim]",
+                "",
+                "[bold]\\[↵/y][/bold] Analysieren     [bold]\\[Esc/n][/bold] Abbrechen",
+            ]
+        else:
+            lines = [
+                f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                "",
+                f"Download von [cyan]rechtsschutz.check24.de[/cyan]: "
+                f"[bold]{len(docs)}[/bold] PDF(s)",
+            ]
+            for dd in docs:
+                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                lines.append(f"  • [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:48]}")
+            lines += [
+                "",
+                f"dann: ingest → extract  [dim](Modell: {self._model})[/dim]",
+                "[dim]Drittanbieter-Copyright — nur für den Eigengebrauch.[/dim]",
+                "",
+                "[bold]\\[↵/y][/bold] Download + Analyse     [bold]\\[Esc/n][/bold] Abbrechen",
+            ]
+        yield Container(Static("\n".join(lines)), id="confirm-box")
 
-        def action_confirm(self) -> None:
-            self.dismiss(True)
+    def action_confirm(self) -> None:
+        self.dismiss(True)
 
-        def action_cancel(self) -> None:
-            self.dismiss(False)
+    def action_cancel(self) -> None:
+        self.dismiss(False)
 
-    class DeleteDataScreen(ModalScreen[str | None]):
-        """Pick how much of a tariff's local data to delete. Returns the chosen scope
+class DeleteDataScreen(ModalScreen[str | None]):
+    """Pick how much of a tariff's local data to delete. Returns the chosen scope
         ('records' | 'purge' | 'purge_unfav') or None on cancel."""
 
-        BINDINGS = [
-            Binding("1", "pick('records')", "Records"),
-            Binding("2", "pick('purge')", "Purge"),
-            Binding("3", "pick('purge_unfav')", "Purge+Unfav"),
-            Binding("escape", "cancel", "Cancel"),
-            Binding("n", "cancel", "Cancel"),
+    BINDINGS = [
+        Binding("1", "pick('records')", "Records"),
+        Binding("2", "pick('purge')", "Purge"),
+        Binding("3", "pick('purge_unfav')", "Purge+Unfav"),
+        Binding("escape", "cancel", "Cancel"),
+        Binding("n", "cancel", "Cancel"),
+    ]
+
+    def __init__(self, stem: str, label: str, is_fav: bool) -> None:
+        super().__init__()
+        self._stem = stem
+        self._label = label
+        self._is_fav = is_fav
+
+    def compose(self) -> ComposeResult:
+        i, _, t = self._stem.partition("__")
+        unfav = "" if self._is_fav else "   [dim](nicht in Favoriten)[/dim]"
+        lines = [
+            f"[bold]Daten löschen — {self._label}[/bold]",
+            f"[dim]stem: {self._stem}[/dim]",
+            "[dim]Irreversibel.[/dim]",
+            "",
+            "[bold]\\[1][/bold] Nur Analyse-Records",
+            f"     [dim]out/tariffs|enriched/{self._stem}.json — per \\[g] neu erzeugbar[/dim]",
+            "[bold]\\[2][/bold] Records + lokale PDFs + Texte",
+            f"     [dim]+ data/raw/{i}/{t}/ + data/extracted/{i}/{t}/ — PDFs neu zu laden[/dim]",
+            f"[bold]\\[3][/bold] Voller Purge + aus Favoriten entfernen{unfav}",
+            "",
+            "[bold]\\[Esc/n][/bold] Abbrechen",
         ]
+        yield Container(Static("\n".join(lines)), id="confirm-box")
 
-        def __init__(self, stem: str, label: str, is_fav: bool) -> None:
-            super().__init__()
-            self._stem = stem
-            self._label = label
-            self._is_fav = is_fav
+    def action_pick(self, scope: str) -> None:
+        self.dismiss(scope)
 
-        def compose(self) -> ComposeResult:
-            i, _, t = self._stem.partition("__")
-            unfav = "" if self._is_fav else "   [dim](nicht in Favoriten)[/dim]"
-            lines = [
-                f"[bold]Daten löschen — {self._label}[/bold]",
-                f"[dim]stem: {self._stem}[/dim]",
-                "[dim]Irreversibel.[/dim]",
-                "",
-                "[bold]\\[1][/bold] Nur Analyse-Records",
-                f"     [dim]out/tariffs|enriched/{self._stem}.json — per \\[g] neu erzeugbar[/dim]",
-                "[bold]\\[2][/bold] Records + lokale PDFs + Texte",
-                f"     [dim]+ data/raw/{i}/{t}/ + data/extracted/{i}/{t}/ — PDFs neu zu laden[/dim]",
-                f"[bold]\\[3][/bold] Voller Purge + aus Favoriten entfernen{unfav}",
-                "",
-                "[bold]\\[Esc/n][/bold] Abbrechen",
-            ]
-            yield Container(Static("\n".join(lines)), id="confirm-box")
+    def action_cancel(self) -> None:
+        self.dismiss(None)
 
-        def action_pick(self, scope: str) -> None:
-            self.dismiss(scope)
-
-        def action_cancel(self) -> None:
-            self.dismiss(None)
-
-    class QueryUrlScreen(ModalScreen[None]):
-        """Show the decoded CHECK24 query levers and where the full result URLs were
+class QueryUrlScreen(ModalScreen[None]):
+    """Show the decoded CHECK24 query levers and where the full result URLs were
         written, for the manual browser + scrape-snippet workflow."""
 
-        BINDINGS = [
-            Binding("escape", "close", "Close"),
-            Binding("enter", "close", "Close"),
-            Binding("q", "close", "Close"),
+    BINDINGS = [
+        Binding("escape", "close", "Close"),
+        Binding("enter", "close", "Close"),
+        Binding("q", "close", "Close"),
+    ]
+
+    def __init__(self, levers: str, url_file: str, is_example: bool) -> None:
+        super().__init__()
+        self._levers = levers
+        self._url_file = url_file
+        self._is_example = is_example
+
+    def compose(self) -> ComposeResult:
+        lines = [
+            "[bold]CHECK24-Query bauen[/bold]",
+            "[dim]Im Browser öffnen → scripts/check24_scrape.js in die DevTools-"
+            "Konsole einfügen → snapshot.py / check24Docs.[/dim]",
+            "",
+            f"[underline]URLs geschrieben[/underline]: [cyan]{self._url_file}[/cyan]",
+            "[dim]   (gespeicherte Query + Variante 'alle Versicherer')[/dim]",
         ]
-
-        def __init__(self, levers: str, url_file: str, is_example: bool) -> None:
-            super().__init__()
-            self._levers = levers
-            self._url_file = url_file
-            self._is_example = is_example
-
-        def compose(self) -> ComposeResult:
-            lines = [
-                "[bold]CHECK24-Query bauen[/bold]",
-                "[dim]Im Browser öffnen → scripts/check24_scrape.js in die DevTools-"
-                "Konsole einfügen → snapshot.py / check24Docs.[/dim]",
+        if self._levers:
+            lines += ["", "[underline]Levers[/underline]", self._levers.replace("[", "\\[")]
+        if self._is_example:
+            lines += [
                 "",
-                f"[underline]URLs geschrieben[/underline]: [cyan]{self._url_file}[/cyan]",
-                "[dim]   (gespeicherte Query + Variante 'alle Versicherer')[/dim]",
+                "[yellow]! Beispielprofil (Fake-Daten) — config/check24-profile.json "
+                "anlegen.[/yellow]",
             ]
-            if self._levers:
-                lines += ["", "[underline]Levers[/underline]", self._levers.replace("[", "\\[")]
-            if self._is_example:
-                lines += [
-                    "",
-                    "[yellow]! Beispielprofil (Fake-Daten) — config/check24-profile.json "
-                    "anlegen.[/yellow]",
-                ]
-            lines += ["", "[bold]\\[Esc][/bold] Schließen"]
-            yield Container(Static("\n".join(lines)), id="query-box")
+        lines += ["", "[bold]\\[Esc][/bold] Schließen"]
+        yield Container(Static("\n".join(lines)), id="query-box")
 
-        def action_close(self) -> None:
-            self.dismiss(None)
+    def action_close(self) -> None:
+        self.dismiss(None)
 
-    class QueryEditScreen(ModalScreen[dict[str, str] | None]):
-        """Edit the curated CHECK24 query levers in place. Pre-filled from the parsed
+class QueryEditScreen(ModalScreen[dict[str, str] | None]):
+    """Edit the curated CHECK24 query levers in place. Pre-filled from the parsed
         query; returns {lever_key: new_value} for the levers the user changed-or-kept,
         or None on cancel. The app applies these via check24_query.set_param so every
         OTHER (uncurated / repeated / unknown) query param survives the round-trip
         verbatim. discounts stays read-only (a JSON blob); it is only displayed."""
 
-        BINDINGS = [
-            Binding("ctrl+s", "save", "Speichern"),
-            Binding("escape", "cancel", "Abbrechen"),
-        ]
+    BINDINGS = [
+        Binding("ctrl+s", "save", "Speichern"),
+        Binding("escape", "cancel", "Abbrechen"),
+    ]
 
-        # (lever_key, German label) for the free-text Input fields, in display order.
-        TEXT_FIELDS = [
-            ("provider_filter", "Versicherer-ID (provider_filter)"),
-            ("tariff_position", "Tarif-Position"),
-            ("maritalstatus", "Familienstand"),
-            ("birthdate", "Geburtsdatum (TT.MM.JJJJ)"),
-            ("zipcode", "PLZ"),
-            ("employmentstatus", "Beschäftigung"),
-            ("employmentstatus_partner", "Beschäftigung Partner"),
-            ("costsharing", "Selbstbeteiligung"),
-            ("sortfield", "Sortierfeld"),
-            ("sortorder", "Sortierrichtung"),
-        ]
-        # (lever_key, German label) for the Switch (yes/no) fields, in display order.
-        SWITCH_FIELDS = [
-            ("module_priv", "Modul Privat"),
-            ("module_job", "Modul Beruf"),
-            ("module_traffic", "Modul Verkehr"),
-            ("module_living", "Modul Wohnen"),
-            ("module_rental", "Modul Vermietung"),
-            ("stiftung_warentest", "Stiftung Warentest"),
-        ]
+    # (lever_key, German label) for the free-text Input fields, in display order.
+    TEXT_FIELDS = [
+        ("provider_filter", "Versicherer-ID (provider_filter)"),
+        ("tariff_position", "Tarif-Position"),
+        ("maritalstatus", "Familienstand"),
+        ("birthdate", "Geburtsdatum (TT.MM.JJJJ)"),
+        ("zipcode", "PLZ"),
+        ("employmentstatus", "Beschäftigung"),
+        ("employmentstatus_partner", "Beschäftigung Partner"),
+        ("costsharing", "Selbstbeteiligung"),
+        ("sortfield", "Sortierfeld"),
+        ("sortorder", "Sortierrichtung"),
+    ]
+    # (lever_key, German label) for the Switch (yes/no) fields, in display order.
+    SWITCH_FIELDS = [
+        ("module_priv", "Modul Privat"),
+        ("module_job", "Modul Beruf"),
+        ("module_traffic", "Modul Verkehr"),
+        ("module_living", "Modul Wohnen"),
+        ("module_rental", "Modul Vermietung"),
+        ("stiftung_warentest", "Stiftung Warentest"),
+    ]
 
-        def __init__(self, values: dict[str, str], provider_name_fn,
-                     discounts: list[str], is_example: bool) -> None:
-            super().__init__()
-            # values: the current value of every curated lever (missing -> "").
-            self._values = dict(values)
-            self._provider_name_fn = provider_name_fn
-            self._discounts = discounts
-            self._is_example = is_example
+    def __init__(self, values: dict[str, str], provider_name_fn,
+                 discounts: list[str], is_example: bool) -> None:
+        super().__init__()
+        # values: the current value of every curated lever (missing -> "").
+        self._values = dict(values)
+        self._provider_name_fn = provider_name_fn
+        self._discounts = discounts
+        self._is_example = is_example
 
-        def _provider_hint(self) -> str:
-            pid = (self._values.get("provider_filter") or "").strip()
-            if not pid:
-                return "[dim]alle Versicherer[/dim]"
-            name = self._provider_name_fn(pid)
-            return f"[cyan]{_esc(name)}[/cyan]" if name else "[yellow]unbekannte ID[/yellow]"
+    def _provider_hint(self) -> str:
+        pid = (self._values.get("provider_filter") or "").strip()
+        if not pid:
+            return "[dim]alle Versicherer[/dim]"
+        name = self._provider_name_fn(pid)
+        return f"[cyan]{_esc(name)}[/cyan]" if name else "[yellow]unbekannte ID[/yellow]"
 
-        def compose(self) -> ComposeResult:
-            with Container(id="query-edit-box"):
+    def compose(self) -> ComposeResult:
+        with Container(id="query-edit-box"):
+            yield Static(
+                "[bold]CHECK24-Suche bearbeiten[/bold]   "
+                "[dim]Tab/↑↓ Feld wählen · \\[Ctrl+S] speichern · "
+                "\\[Esc] abbrechen[/dim]",
+                id="query-edit-head",
+            )
+            if self._is_example:
                 yield Static(
-                    "[bold]CHECK24-Suche bearbeiten[/bold]   "
-                    "[dim]Tab/↑↓ Feld wählen · \\[Ctrl+S] speichern · "
-                    "\\[Esc] abbrechen[/dim]",
-                    id="query-edit-head",
+                    "[yellow]! Nur das Beispielprofil (Fake-Daten) geladen — "
+                    "Speichern legt config/check24-profile.json mit deinen "
+                    "echten Werten an.[/yellow]",
+                    id="query-edit-warn",
                 )
-                if self._is_example:
-                    yield Static(
-                        "[yellow]! Nur das Beispielprofil (Fake-Daten) geladen — "
-                        "Speichern legt config/check24-profile.json mit deinen "
-                        "echten Werten an.[/yellow]",
-                        id="query-edit-warn",
+            with ScrollableContainer(id="query-edit-body"):
+                for key, label in self.TEXT_FIELDS:
+                    hint = ""
+                    if key == "provider_filter":
+                        hint = f"  → {self._provider_hint()}"
+                    yield Static(f"[bold]{_esc(label)}[/bold]{hint}")
+                    yield Input(
+                        value=self._values.get(key, ""),
+                        id=f"qe-{key}",
+                        classes="qe-input",
                     )
-                with ScrollableContainer(id="query-edit-body"):
-                    for key, label in self.TEXT_FIELDS:
-                        hint = ""
-                        if key == "provider_filter":
-                            hint = f"  → {self._provider_hint()}"
-                        yield Static(f"[bold]{_esc(label)}[/bold]{hint}")
-                        yield Input(
-                            value=self._values.get(key, ""),
+                for key, label in self.SWITCH_FIELDS:
+                    with Horizontal(classes="qe-switch-row"):
+                        yield Switch(
+                            value=(self._values.get(key) == "yes"),
                             id=f"qe-{key}",
-                            classes="qe-input",
+                            classes="qe-switch",
                         )
-                    for key, label in self.SWITCH_FIELDS:
-                        with Horizontal(classes="qe-switch-row"):
-                            yield Switch(
-                                value=(self._values.get(key) == "yes"),
-                                id=f"qe-{key}",
-                                classes="qe-switch",
-                            )
-                            yield Label(label, classes="qe-switch-label")
-                    blob = ", ".join(self._discounts) or "(keine)"
-                    yield Static(
-                        f"[dim]Rabatte (nur Anzeige): {_esc(blob)}[/dim]",
-                        classes="qe-readonly",
-                    )
-                with Horizontal(id="query-edit-buttons"):
-                    yield Button("Speichern", variant="success", id="qe-save")
-                    yield Button("Abbrechen", variant="error", id="qe-cancel")
+                        yield Label(label, classes="qe-switch-label")
+                blob = ", ".join(self._discounts) or "(keine)"
+                yield Static(
+                    f"[dim]Rabatte (nur Anzeige): {_esc(blob)}[/dim]",
+                    classes="qe-readonly",
+                )
+            with Horizontal(id="query-edit-buttons"):
+                yield Button("Speichern", variant="success", id="qe-save")
+                yield Button("Abbrechen", variant="error", id="qe-cancel")
 
-        def on_button_pressed(self, event: Button.Pressed) -> None:
-            if event.button.id == "qe-save":
-                self.action_save()
-            elif event.button.id == "qe-cancel":
-                self.action_cancel()
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "qe-save":
+            self.action_save()
+        elif event.button.id == "qe-cancel":
+            self.action_cancel()
 
-        def _collect(self) -> dict[str, str]:
-            """Read every editable widget back into {lever_key: value}."""
-            out: dict[str, str] = {}
-            for key, _ in self.TEXT_FIELDS:
-                out[key] = self.query_one(f"#qe-{key}", Input).value.strip()
-            for key, _ in self.SWITCH_FIELDS:
-                out[key] = "yes" if self.query_one(f"#qe-{key}", Switch).value else "no"
-            return out
+    def _collect(self) -> dict[str, str]:
+        """Read every editable widget back into {lever_key: value}."""
+        out: dict[str, str] = {}
+        for key, _ in self.TEXT_FIELDS:
+            out[key] = self.query_one(f"#qe-{key}", Input).value.strip()
+        for key, _ in self.SWITCH_FIELDS:
+            out[key] = "yes" if self.query_one(f"#qe-{key}", Switch).value else "no"
+        return out
 
-        def _validate(self, vals: dict[str, str]) -> str | None:
-            """Return an actionable German error message, or None if all fields pass."""
-            import re
+    def _validate(self, vals: dict[str, str]) -> str | None:
+        """Return an actionable German error message, or None if all fields pass."""
+        import re
 
-            bd = vals.get("birthdate", "")
-            if bd and not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", bd):
-                return ("Geburtsdatum: Format TT.MM.JJJJ erwartet "
-                        f"(z. B. 01.01.1990), nicht {bd!r}.")
-            zc = vals.get("zipcode", "")
-            if zc and not re.fullmatch(r"\d{5}", zc):
-                return f"PLZ: 5 Ziffern erwartet, nicht {zc!r}."
-            cs = vals.get("costsharing", "")
-            if cs and not re.fullmatch(r"\d+", cs):
-                return f"Selbstbeteiligung: nur Ziffern erwartet, nicht {cs!r}."
-            pf = vals.get("provider_filter", "")
-            if pf and not re.fullmatch(r"\d+", pf):
-                return ("Versicherer-ID: nur Ziffern erwartet (leer = alle "
-                        f"Versicherer), nicht {pf!r}.")
-            tp = vals.get("tariff_position", "")
-            if tp and not re.fullmatch(r"\d+", tp):
-                return f"Tarif-Position: nur Ziffern erwartet, nicht {tp!r}."
-            so = vals.get("sortorder", "")
-            if so and so not in ("asc", "desc"):
-                return f"Sortierrichtung: 'asc' oder 'desc' erwartet, nicht {so!r}."
-            return None
+        bd = vals.get("birthdate", "")
+        if bd and not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", bd):
+            return ("Geburtsdatum: Format TT.MM.JJJJ erwartet "
+                    f"(z. B. 01.01.1990), nicht {bd!r}.")
+        zc = vals.get("zipcode", "")
+        if zc and not re.fullmatch(r"\d{5}", zc):
+            return f"PLZ: 5 Ziffern erwartet, nicht {zc!r}."
+        cs = vals.get("costsharing", "")
+        if cs and not re.fullmatch(r"\d+", cs):
+            return f"Selbstbeteiligung: nur Ziffern erwartet, nicht {cs!r}."
+        pf = vals.get("provider_filter", "")
+        if pf and not re.fullmatch(r"\d+", pf):
+            return ("Versicherer-ID: nur Ziffern erwartet (leer = alle "
+                    f"Versicherer), nicht {pf!r}.")
+        tp = vals.get("tariff_position", "")
+        if tp and not re.fullmatch(r"\d+", tp):
+            return f"Tarif-Position: nur Ziffern erwartet, nicht {tp!r}."
+        so = vals.get("sortorder", "")
+        if so and so not in ("asc", "desc"):
+            return f"Sortierrichtung: 'asc' oder 'desc' erwartet, nicht {so!r}."
+        return None
 
-        def action_save(self) -> None:
-            vals = self._collect()
-            err = self._validate(vals)
-            if err is not None:
-                self.notify(err, severity="error", timeout=8)
-                return
-            self.dismiss(vals)
+    def action_save(self) -> None:
+        vals = self._collect()
+        err = self._validate(vals)
+        if err is not None:
+            self.notify(err, severity="error", timeout=8)
+            return
+        self.dismiss(vals)
 
-        def action_cancel(self) -> None:
-            self.dismiss(None)
+    def action_cancel(self) -> None:
+        self.dismiss(None)
 
-    class QuerySaveConfirmScreen(ModalScreen[bool]):
-        """Confirm gate before overwriting config/check24-profile.json with the edited
+class QuerySaveConfirmScreen(ModalScreen[bool]):
+    """Confirm gate before overwriting config/check24-profile.json with the edited
         query. Shows which levers changed so the write is deliberate. Returns True on
         confirm, False on cancel."""
 
-        BINDINGS = [
-            Binding("enter", "confirm", "Speichern"),
-            Binding("y", "confirm", "Ja"),
-            Binding("escape", "cancel", "Abbrechen"),
-            Binding("n", "cancel", "Nein"),
-        ]
+    BINDINGS = [
+        Binding("enter", "confirm", "Speichern"),
+        Binding("y", "confirm", "Ja"),
+        Binding("escape", "cancel", "Abbrechen"),
+        Binding("n", "cancel", "Nein"),
+    ]
 
-        def __init__(self, changes: list[tuple[str, str, str]], is_example: bool) -> None:
-            super().__init__()
-            # changes: (lever_key, old_value, new_value) for changed levers only.
-            self._changes = changes
-            self._is_example = is_example
+    def __init__(self, changes: list[tuple[str, str, str]], is_example: bool) -> None:
+        super().__init__()
+        # changes: (lever_key, old_value, new_value) for changed levers only.
+        self._changes = changes
+        self._is_example = is_example
 
-        def compose(self) -> ComposeResult:
-            lines = ["[bold]Suche speichern?[/bold]", ""]
-            if self._is_example:
-                lines += [
-                    "[yellow]Legt config/check24-profile.json an (gitignored, deine "
-                    "echten Werte).[/yellow]",
-                    "",
-                ]
-            else:
-                lines += [
-                    "[dim]Überschreibt config/check24-profile.json (atomar).[/dim]",
-                    "",
-                ]
-            if self._changes:
-                lines.append("[underline]Geänderte Levers[/underline]")
-                for key, old, new in self._changes:
-                    lines.append(
-                        f"  [cyan]{_esc(key)}[/cyan]: "
-                        f"[dim]{_esc(old) or '(leer)'}[/dim] → [bold]{_esc(new) or '(leer)'}[/bold]"
-                    )
-            else:
-                lines.append("[dim]Keine Lever-Änderung — Query bleibt gleich.[/dim]")
+    def compose(self) -> ComposeResult:
+        lines = ["[bold]Suche speichern?[/bold]", ""]
+        if self._is_example:
             lines += [
+                "[yellow]Legt config/check24-profile.json an (gitignored, deine "
+                "echten Werte).[/yellow]",
                 "",
-                "[bold]\\[↵/y][/bold] Speichern     [bold]\\[Esc/n][/bold] Abbrechen",
             ]
-            yield Container(Static("\n".join(lines)), id="query-save-box")
+        else:
+            lines += [
+                "[dim]Überschreibt config/check24-profile.json (atomar).[/dim]",
+                "",
+            ]
+        if self._changes:
+            lines.append("[underline]Geänderte Levers[/underline]")
+            for key, old, new in self._changes:
+                lines.append(
+                    f"  [cyan]{_esc(key)}[/cyan]: "
+                    f"[dim]{_esc(old) or '(leer)'}[/dim] → [bold]{_esc(new) or '(leer)'}[/bold]"
+                )
+        else:
+            lines.append("[dim]Keine Lever-Änderung — Query bleibt gleich.[/dim]")
+        lines += [
+            "",
+            "[bold]\\[↵/y][/bold] Speichern     [bold]\\[Esc/n][/bold] Abbrechen",
+        ]
+        yield Container(Static("\n".join(lines)), id="query-save-box")
 
-        def action_confirm(self) -> None:
-            self.dismiss(True)
+    def action_confirm(self) -> None:
+        self.dismiss(True)
 
-        def action_cancel(self) -> None:
-            self.dismiss(False)
+    def action_cancel(self) -> None:
+        self.dismiss(False)
 
-    class OpenSourceScreen(ModalScreen[str | None]):
-        """Choose how to read a tariff's source documents: online in the browser, or
+class OpenSourceScreen(ModalScreen[str | None]):
+    """Choose how to read a tariff's source documents: online in the browser, or
         the local PDFs from disk. Returns 'online' | 'disk' | None."""
 
-        BINDINGS = [
-            Binding("1", "pick('online')", "Online"),
-            Binding("2", "pick('disk')", "Disk"),
-            Binding("escape", "cancel", "Cancel"),
-            Binding("q", "cancel", "Cancel"),
-        ]
+    BINDINGS = [
+        Binding("1", "pick('online')", "Online"),
+        Binding("2", "pick('disk')", "Disk"),
+        Binding("escape", "cancel", "Cancel"),
+        Binding("q", "cancel", "Cancel"),
+    ]
 
-        def __init__(self, label: str, docs: list[dict], has_urls: bool,
-                     n_pdfs: int, stem: str) -> None:
-            super().__init__()
-            self._label = label
-            self._docs = docs
-            self._has_urls = has_urls
-            self._n_pdfs = n_pdfs
-            self._stem = stem
+    def __init__(self, label: str, docs: list[dict], has_urls: bool,
+                 n_pdfs: int, stem: str) -> None:
+        super().__init__()
+        self._label = label
+        self._docs = docs
+        self._has_urls = has_urls
+        self._n_pdfs = n_pdfs
+        self._stem = stem
 
-        def compose(self) -> ComposeResult:
-            i, _, t = self._stem.partition("__")
-            lines = [f"[bold]Quelle öffnen — {self._label}[/bold]", ""]
-            if self._docs:
-                lines.append("[underline]Dokumente[/underline]")
-                for dd in self._docs:
-                    lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:50]}")
-                lines.append("")
-            online = (
-                "[bold]\\[1][/bold] Online im Browser"
-                if self._has_urls else "[dim]\\[1] Online — keine URLs hinterlegt[/dim]"
-            )
-            disk = (
-                f"[bold]\\[2][/bold] Lokale PDFs ({self._n_pdfs}) — "
-                f"[cyan]data/raw/{i}/{t}/[/cyan]"
-                if self._n_pdfs else "[dim]\\[2] Lokale PDFs — keine vorhanden (\\[g] lädt)[/dim]"
-            )
-            lines += [online, disk, "", "[bold]\\[Esc][/bold] Abbrechen"]
-            yield Container(Static("\n".join(lines)), id="open-box")
+    def compose(self) -> ComposeResult:
+        i, _, t = self._stem.partition("__")
+        lines = [f"[bold]Quelle öffnen — {self._label}[/bold]", ""]
+        if self._docs:
+            lines.append("[underline]Dokumente[/underline]")
+            for dd in self._docs:
+                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                lines.append(f"  [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:50]}")
+            lines.append("")
+        online = (
+            "[bold]\\[1][/bold] Online im Browser"
+            if self._has_urls else "[dim]\\[1] Online — keine URLs hinterlegt[/dim]"
+        )
+        disk = (
+            f"[bold]\\[2][/bold] Lokale PDFs ({self._n_pdfs}) — "
+            f"[cyan]data/raw/{i}/{t}/[/cyan]"
+            if self._n_pdfs else "[dim]\\[2] Lokale PDFs — keine vorhanden (\\[g] lädt)[/dim]"
+        )
+        lines += [online, disk, "", "[bold]\\[Esc][/bold] Abbrechen"]
+        yield Container(Static("\n".join(lines)), id="open-box")
 
-        def action_pick(self, choice: str) -> None:
-            if choice == "online" and not self._has_urls:
-                return
-            if choice == "disk" and not self._n_pdfs:
-                return
-            self.dismiss(choice)
+    def action_pick(self, choice: str) -> None:
+        if choice == "online" and not self._has_urls:
+            return
+        if choice == "disk" and not self._n_pdfs:
+            return
+        self.dismiss(choice)
 
-        def action_cancel(self) -> None:
-            self.dismiss(None)
+    def action_cancel(self) -> None:
+        self.dismiss(None)
 
-    class CompareTextScreen(ModalScreen[None]):
-        """Full, untruncated Leistungen/Ausschlüsse across all compared tariffs, one
+class CompareTextScreen(ModalScreen[None]):
+    """Full, untruncated Leistungen/Ausschlüsse across all compared tariffs, one
         category at a time. The Vergleich matrix stays compact (alignment); this is
         where the verbatim wording is read side by side — including tariffs that did
         not fit the matrix width. ↑↓ picks a category, the detail pane wraps the full
         text. Returns None (read-only)."""
 
-        BINDINGS = [
-            Binding("escape", "close", "Close"),
-            Binding("q", "close", "Close"),
-        ]
+    BINDINGS = [
+        Binding("escape", "close", "Close"),
+        Binding("q", "close", "Close"),
+    ]
 
-        def __init__(self, entries: list[dict], n_cols: int) -> None:
-            super().__init__()
-            self._entries = entries
-            self._n_cols = n_cols
+    def __init__(self, entries: list[dict], n_cols: int) -> None:
+        super().__init__()
+        self._entries = entries
+        self._n_cols = n_cols
 
-        def compose(self) -> ComposeResult:
-            with Container(id="fulltext-box"):
-                yield Static(
-                    "[bold]Volltext-Vergleich[/bold]   "
-                    f"[dim]{len(self._entries)} Kategorien · {self._n_cols} Tarife · "
-                    "↑↓ wählen · \\[Esc] schließen[/dim]",
-                    id="fulltext-head",
+    def compose(self) -> ComposeResult:
+        with Container(id="fulltext-box"):
+            yield Static(
+                "[bold]Volltext-Vergleich[/bold]   "
+                f"[dim]{len(self._entries)} Kategorien · {self._n_cols} Tarife · "
+                "↑↓ wählen · \\[Esc] schließen[/dim]",
+                id="fulltext-head",
+            )
+            with Horizontal(id="fulltext-body"):
+                yield OptionList(
+                    *(
+                        Option(
+                            f"[{e['color']}]{e['glyph']}[/{e['color']}] {_esc(e['label'])}"
+                        )
+                        for e in self._entries
+                    ),
+                    id="fulltext-list",
                 )
-                with Horizontal(id="fulltext-body"):
-                    yield OptionList(
-                        *(
-                            Option(
-                                f"[{e['color']}]{e['glyph']}[/{e['color']}] {_esc(e['label'])}"
-                            )
-                            for e in self._entries
-                        ),
-                        id="fulltext-list",
-                    )
-                    yield ScrollableContainer(
-                        Static("", id="fulltext-detail"), id="fulltext-detail-wrap"
-                    )
+                yield ScrollableContainer(
+                    Static("", id="fulltext-detail"), id="fulltext-detail-wrap"
+                )
 
-        def on_mount(self) -> None:
-            # First option auto-highlights; render its detail right away.
-            if self._entries:
-                self._render_detail(0)
+    def on_mount(self) -> None:
+        # First option auto-highlights; render its detail right away.
+        if self._entries:
+            self._render_detail(0)
 
-        def on_option_list_option_highlighted(
-            self, event: OptionList.OptionHighlighted
-        ) -> None:
-            self._render_detail(event.option_index)
+    def on_option_list_option_highlighted(
+        self, event: OptionList.OptionHighlighted
+    ) -> None:
+        self._render_detail(event.option_index)
 
-        def _render_detail(self, idx: int) -> None:
-            if not (0 <= idx < len(self._entries)):
-                return
-            e = self._entries[idx]
-            lines = [
-                f"[bold {e['color']}]{e['glyph']} {_esc(e['label'])}[/bold {e['color']}]"
-                f"   [dim]({e['section']})[/dim]",
-                "",
-            ]
-            for label, verbatim in e["rows"]:
-                if verbatim:
-                    lines.append(f"[bold]{_esc(label)}[/bold]")
-                    lines.append(f"  {_esc(verbatim)}")
-                else:
-                    lines.append(f"[dim]{_esc(label)}: — nicht genannt[/dim]")
-                lines.append("")
-            try:
-                self.query_one("#fulltext-detail", Static).update("\n".join(lines))
-                self.query_one("#fulltext-detail-wrap").scroll_home(animate=False)
-            except NoMatches:
-                pass
+    def _render_detail(self, idx: int) -> None:
+        if not (0 <= idx < len(self._entries)):
+            return
+        e = self._entries[idx]
+        lines = [
+            f"[bold {e['color']}]{e['glyph']} {_esc(e['label'])}[/bold {e['color']}]"
+            f"   [dim]({e['section']})[/dim]",
+            "",
+        ]
+        for label, verbatim in e["rows"]:
+            if verbatim:
+                lines.append(f"[bold]{_esc(label)}[/bold]")
+                lines.append(f"  {_esc(verbatim)}")
+            else:
+                lines.append(f"[dim]{_esc(label)}: — nicht genannt[/dim]")
+            lines.append("")
+        try:
+            self.query_one("#fulltext-detail", Static).update("\n".join(lines))
+            self.query_one("#fulltext-detail-wrap").scroll_home(animate=False)
+        except NoMatches:
+            pass
 
-        def action_close(self) -> None:
-            self.dismiss(None)
+    def action_close(self) -> None:
+        self.dismiss(None)
 
-    class CompareManagerScreen(ModalScreen[list[str] | None]):
-        """Manage which analyzed tariffs the Vergleich shows. The single source of
+class CompareManagerScreen(ModalScreen[list[str] | None]):
+    """Manage which analyzed tariffs the Vergleich shows. The single source of
         truth is compare_hidden (an exclude-set) in config/favorites.json — this
         modal is the one place to edit it: toggle a tariff in/out, clear the whole
         comparison, or bring them all back. Returns the new exclude-set to persist
         on save, or None on cancel."""
 
-        BINDINGS = [
-            Binding("space", "toggle", "Ein/Aus"),
-            Binding("enter", "toggle", "Ein/Aus"),
-            Binding("a", "include_all", "Alle"),
-            Binding("l", "clear_all", "Leeren"),
-            Binding("s", "save", "Speichern"),
-            Binding("escape", "cancel", "Abbrechen"),
-            Binding("q", "cancel", "Abbrechen"),
-        ]
+    BINDINGS = [
+        Binding("space", "toggle", "Ein/Aus"),
+        Binding("enter", "toggle", "Ein/Aus"),
+        Binding("a", "include_all", "Alle"),
+        Binding("l", "clear_all", "Leeren"),
+        Binding("s", "save", "Speichern"),
+        Binding("escape", "cancel", "Abbrechen"),
+        Binding("q", "cancel", "Abbrechen"),
+    ]
 
-        def __init__(self, stems: list[tuple[str, str]], hidden: set[str],
-                     ref_stem: str | None) -> None:
-            # stems: (stem, label) already in display order (reference first).
-            super().__init__()
-            self._stems = stems
-            self._hidden = set(hidden)
-            self._ref = ref_stem
+    def __init__(self, stems: list[tuple[str, str]], hidden: set[str],
+                 ref_stem: str | None) -> None:
+        # stems: (stem, label) already in display order (reference first).
+        super().__init__()
+        self._stems = stems
+        self._hidden = set(hidden)
+        self._ref = ref_stem
 
-        def compose(self) -> ComposeResult:
-            with Container(id="compare-mgr-box"):
-                yield Static(
-                    "[bold]Vergleich verwalten[/bold]   "
-                    "[dim]↑↓ wählen · Space/Enter ein-/ausblenden · "
-                    "\\[a] alle einblenden · \\[l] leeren · \\[s] speichern · "
-                    "\\[Esc] abbrechen[/dim]",
-                    id="compare-mgr-head",
-                )
-                yield OptionList(id="compare-mgr-list")
-
-        def on_mount(self) -> None:
-            self._refresh_list()
-
-        def _row_text(self, stem: str, label: str) -> str:
-            shown = stem not in self._hidden
-            box = "[green]\\[x][/green]" if shown else "[dim]\\[ ][/dim]"
-            ref = " [yellow](Ref)[/yellow]" if stem == self._ref else ""
-            name = label if shown else f"[dim]{label}[/dim]"
-            return f"{box} {name}{ref}"
-
-        def _refresh_list(self) -> None:
-            try:
-                lst = self.query_one("#compare-mgr-list", OptionList)
-            except NoMatches:
-                return
-            keep = lst.highlighted
-            lst.clear_options()
-            for stem, label in self._stems:
-                lst.add_option(Option(self._row_text(stem, label), id=stem))
-            n_shown = sum(1 for s, _ in self._stems if s not in self._hidden)
-            self.query_one("#compare-mgr-head", Static).update(
+    def compose(self) -> ComposeResult:
+        with Container(id="compare-mgr-box"):
+            yield Static(
                 "[bold]Vergleich verwalten[/bold]   "
-                f"[dim]{n_shown}/{len(self._stems)} im Vergleich · ↑↓ wählen · "
-                "Space/Enter ein-/ausblenden · \\[a] alle · \\[l] leeren · "
-                "\\[s] speichern · \\[Esc] abbrechen[/dim]"
+                "[dim]↑↓ wählen · Space/Enter ein-/ausblenden · "
+                "\\[a] alle einblenden · \\[l] leeren · \\[s] speichern · "
+                "\\[Esc] abbrechen[/dim]",
+                id="compare-mgr-head",
             )
-            if self._stems and keep is not None:
-                lst.highlighted = min(keep, len(self._stems) - 1)
+            yield OptionList(id="compare-mgr-list")
 
-        def _highlighted_stem(self) -> str | None:
+    def on_mount(self) -> None:
+        self._refresh_list()
+
+    def _row_text(self, stem: str, label: str) -> str:
+        shown = stem not in self._hidden
+        box = "[green]\\[x][/green]" if shown else "[dim]\\[ ][/dim]"
+        ref = " [yellow](Ref)[/yellow]" if stem == self._ref else ""
+        name = label if shown else f"[dim]{label}[/dim]"
+        return f"{box} {name}{ref}"
+
+    def _refresh_list(self) -> None:
+        try:
             lst = self.query_one("#compare-mgr-list", OptionList)
-            if lst.highlighted is None:
-                return None
-            return self._stems[lst.highlighted][0]
+        except NoMatches:
+            return
+        keep = lst.highlighted
+        lst.clear_options()
+        for stem, label in self._stems:
+            lst.add_option(Option(self._row_text(stem, label), id=stem))
+        n_shown = sum(1 for s, _ in self._stems if s not in self._hidden)
+        self.query_one("#compare-mgr-head", Static).update(
+            "[bold]Vergleich verwalten[/bold]   "
+            f"[dim]{n_shown}/{len(self._stems)} im Vergleich · ↑↓ wählen · "
+            "Space/Enter ein-/ausblenden · \\[a] alle · \\[l] leeren · "
+            "\\[s] speichern · \\[Esc] abbrechen[/dim]"
+        )
+        if self._stems and keep is not None:
+            lst.highlighted = min(keep, len(self._stems) - 1)
 
-        def on_option_list_option_selected(
-            self, event: OptionList.OptionSelected
-        ) -> None:
-            # Enter / click — the OptionList consumes enter before the screen
-            # binding, so toggle from here too.
-            stem = event.option.id
-            if stem is not None:
-                self._hidden.symmetric_difference_update({stem})
-                self._refresh_list()
+    def _highlighted_stem(self) -> str | None:
+        lst = self.query_one("#compare-mgr-list", OptionList)
+        if lst.highlighted is None:
+            return None
+        return self._stems[lst.highlighted][0]
 
-        def action_toggle(self) -> None:
-            stem = self._highlighted_stem()
-            if stem is None:
-                return
+    def on_option_list_option_selected(
+        self, event: OptionList.OptionSelected
+    ) -> None:
+        # Enter / click — the OptionList consumes enter before the screen
+        # binding, so toggle from here too.
+        stem = event.option.id
+        if stem is not None:
             self._hidden.symmetric_difference_update({stem})
             self._refresh_list()
 
-        def action_include_all(self) -> None:
-            self._hidden.clear()
-            self._refresh_list()
+    def action_toggle(self) -> None:
+        stem = self._highlighted_stem()
+        if stem is None:
+            return
+        self._hidden.symmetric_difference_update({stem})
+        self._refresh_list()
 
-        def action_clear_all(self) -> None:
-            # Exclude every tariff — the matrix then shows its "alle ausgeblendet"
-            # empty state, which tells the user how to bring tariffs back.
-            self._hidden = {stem for stem, _ in self._stems}
-            self._refresh_list()
+    def action_include_all(self) -> None:
+        self._hidden.clear()
+        self._refresh_list()
 
-        def action_save(self) -> None:
-            self.dismiss(sorted(self._hidden))
+    def action_clear_all(self) -> None:
+        # Exclude every tariff — the matrix then shows its "alle ausgeblendet"
+        # empty state, which tells the user how to bring tariffs back.
+        self._hidden = {stem for stem, _ in self._stems}
+        self._refresh_list()
 
-        def action_cancel(self) -> None:
-            self.dismiss(None)
+    def action_save(self) -> None:
+        self.dismiss(sorted(self._hidden))
 
-    class HelpScreen(ModalScreen[None]):
-        """Full keyboard reference, grouped. The footer shows only the essentials."""
+    def action_cancel(self) -> None:
+        self.dismiss(None)
 
-        BINDINGS = [
-            Binding("escape", "close", "Close"),
-            Binding("question_mark", "close", "Close"),
-            Binding("q", "close", "Close"),
-            Binding("enter", "close", "Close"),
-        ]
+class HelpScreen(ModalScreen[None]):
+    """Full keyboard reference, grouped. The footer shows only the essentials."""
 
-        GROUPS = [
-            ("Navigation", [
-                ("y / x / v", "Favoriten / Markt / Vergleich"),
-                ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
-                ("d", "Detail-Band unter der Tabelle ein/aus"),
-            ]),
-            ("Tarif-Aktionen (markierte Zeile)", [
-                ("g", "Quell-PDFs laden + analysieren"),
-                ("G", "nur analysieren (PDFs lokal, kein Download)"),
-                ("o", "Quelle öffnen (online im Browser / lokale PDFs)"),
-                ("R", "als Referenz setzen — Δ rechnet neu"),
-                ("u", "Favorit an/aus"),
-                ("D", "lokale Daten löschen (Umfang im Dialog)"),
-            ]),
-            ("Vergleich \\[v]", [
-                ("c", "Vergleich verwalten — Tarife ein-/ausblenden, leeren, alle"),
-                ("w", "Wortlaut ein/aus (kompakt ↔ ausführlich)"),
-                ("t", "Volltext-Modal: ganze Texte je Kategorie, alle Tarife"),
-            ]),
-            ("Markt", [
-                ("f", "Filter (Versicherer / Produkt)"),
-                ("Esc", "Filter leeren"),
-                ("s / n / p", "Sortierung: €/Monat · Note · Position"),
-            ]),
-            ("Werkzeuge", [
-                ("b", "CHECK24-Query-URL bauen (nur Ansicht)"),
-                ("e", "CHECK24-Suche bearbeiten (Levers ändern + speichern)"),
-                ("r", "Daten neu laden"),
-                ("?", "diese Hilfe"),
-                ("q", "Beenden"),
-            ]),
-        ]
+    BINDINGS = [
+        Binding("escape", "close", "Close"),
+        Binding("question_mark", "close", "Close"),
+        Binding("q", "close", "Close"),
+        Binding("enter", "close", "Close"),
+    ]
 
-        def compose(self) -> ComposeResult:
-            lines = ["[bold]check0r3000 — Shortcuts[/bold]", ""]
-            for title, items in self.GROUPS:
-                lines.append(f"[underline]{title}[/underline]")
-                for key, desc in items:
-                    lines.append(f"  [bold cyan]{key:<13}[/bold cyan] {desc}")
-                lines.append("")
-            lines.append("[bold]\\[Esc][/bold] Schließen")
-            yield Container(Static("\n".join(lines)), id="help-box")
+    GROUPS = [
+        ("Navigation", [
+            ("y / x / v", "Favoriten / Markt / Vergleich"),
+            ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
+            ("d", "Detail-Band unter der Tabelle ein/aus"),
+        ]),
+        ("Tarif-Aktionen (markierte Zeile)", [
+            ("g", "Quell-PDFs laden + analysieren"),
+            ("G", "nur analysieren (PDFs lokal, kein Download)"),
+            ("o", "Quelle öffnen (online im Browser / lokale PDFs)"),
+            ("R", "als Referenz setzen — Δ rechnet neu"),
+            ("u", "Favorit an/aus"),
+            ("D", "lokale Daten löschen (Umfang im Dialog)"),
+        ]),
+        ("Vergleich \\[v]", [
+            ("c", "Vergleich verwalten — Tarife ein-/ausblenden, leeren, alle"),
+            ("w", "Wortlaut ein/aus (kompakt ↔ ausführlich)"),
+            ("t", "Volltext-Modal: ganze Texte je Kategorie, alle Tarife"),
+        ]),
+        ("Markt", [
+            ("f", "Filter (Versicherer / Produkt)"),
+            ("Esc", "Filter leeren"),
+            ("s / n / p", "Sortierung: €/Monat · Note · Position"),
+        ]),
+        ("Werkzeuge", [
+            ("b", "CHECK24-Query-URL bauen (nur Ansicht)"),
+            ("e", "CHECK24-Suche bearbeiten (Levers ändern + speichern)"),
+            ("r", "Daten neu laden"),
+            ("?", "diese Hilfe"),
+            ("q", "Beenden"),
+        ]),
+    ]
 
-        def action_close(self) -> None:
-            self.dismiss(None)
+    def compose(self) -> ComposeResult:
+        lines = ["[bold]check0r3000 — Shortcuts[/bold]", ""]
+        for title, items in self.GROUPS:
+            lines.append(f"[underline]{title}[/underline]")
+            for key, desc in items:
+                lines.append(f"  [bold cyan]{key:<13}[/bold cyan] {desc}")
+            lines.append("")
+        lines.append("[bold]\\[Esc][/bold] Schließen")
+        yield Container(Static("\n".join(lines)), id="help-box")
 
-    class CheckApp(App):
-        """check0r3000 — Rechtsschutz-Vergleich TUI."""
+    def action_close(self) -> None:
+        self.dismiss(None)
 
-        CSS_PATH = Path(__file__).resolve().parent / "tui.tcss"  # resolve: survives symlink launch
-        TITLE = "check0r3000 — Rechtsschutz-Vergleich"
+class CheckApp(App):
+    """check0r3000 — Rechtsschutz-Vergleich TUI."""
 
-        BINDINGS = [
-            # Footer (show=True): only the most-used keys; [?] lists everything.
-            Binding("y", "switch_tab('favorites')", "Favorites", show=True),
-            Binding("x", "switch_tab('market')", "Market", show=True),
-            Binding("v", "switch_tab('diff')", "Vergleich", show=True),
-            Binding("d", "toggle_detail", "Details", show=True),
-            Binding("g", "fetch_docs", "Get docs", show=True),
-            Binding("question_mark", "help", "Help", show=True, key_display="?"),
-            Binding("q", "quit", "Quit", show=True),
-            # Context / power keys — documented in [?], hidden from the footer.
-            Binding("G", "analyze_local", "Analyze local", show=False),
-            Binding("c", "manage_compare", "Vergleich verwalten", show=False),
-            Binding("w", "toggle_compare_wording", "Wording", show=False),
-            Binding("t", "compare_fulltext", "Volltext", show=False),
-            Binding("o", "open_source", "Open source", show=False),
-            Binding("f", "focus_filter", "Filter", show=False),
-            Binding("escape", "clear_filter", "Clear filter", show=False),
-            Binding("s", "sort_price", "Sort €", show=False),
-            Binding("n", "sort_note", "Sort note", show=False),
-            Binding("p", "sort_position", "Sort #", show=False),
-            Binding("b", "build_query", "Query-URL", show=False),
-            Binding("e", "edit_query", "Suche bearbeiten", show=False),
-            Binding("u", "toggle_favorite", "Favorite", show=False),
-            Binding("R", "set_reference", "Reference", show=False),
-            Binding("D", "delete_data", "Delete data", show=False),
-            Binding("r", "refresh_data", "Reload", show=False),
-        ]
+    CSS_PATH = Path(__file__).resolve().parent / "tui.tcss"  # resolve: survives symlink launch
+    TITLE = "check0r3000 — Rechtsschutz-Vergleich"
 
-        # reactive state
-        filter_text: reactive[str] = reactive("", recompose=False)
-        sort_col: reactive[str] = reactive("position")
-        sort_asc: reactive[bool] = reactive(True)
-        selected_row_key: reactive[str | None] = reactive(None)
+    BINDINGS = [
+        # Footer (show=True): only the most-used keys; [?] lists everything.
+        Binding("y", "switch_tab('favorites')", "Favorites", show=True),
+        Binding("x", "switch_tab('market')", "Market", show=True),
+        Binding("v", "switch_tab('diff')", "Vergleich", show=True),
+        Binding("d", "toggle_detail", "Details", show=True),
+        Binding("g", "fetch_docs", "Get docs", show=True),
+        Binding("question_mark", "help", "Help", show=True, key_display="?"),
+        Binding("q", "quit", "Quit", show=True),
+        # Context / power keys — documented in [?], hidden from the footer.
+        Binding("G", "analyze_local", "Analyze local", show=False),
+        Binding("c", "manage_compare", "Vergleich verwalten", show=False),
+        Binding("w", "toggle_compare_wording", "Wording", show=False),
+        Binding("t", "compare_fulltext", "Volltext", show=False),
+        Binding("o", "open_source", "Open source", show=False),
+        Binding("f", "focus_filter", "Filter", show=False),
+        Binding("escape", "clear_filter", "Clear filter", show=False),
+        Binding("s", "sort_price", "Sort €", show=False),
+        Binding("n", "sort_note", "Sort note", show=False),
+        Binding("p", "sort_position", "Sort #", show=False),
+        Binding("b", "build_query", "Query-URL", show=False),
+        Binding("e", "edit_query", "Suche bearbeiten", show=False),
+        Binding("u", "toggle_favorite", "Favorite", show=False),
+        Binding("R", "set_reference", "Reference", show=False),
+        Binding("D", "delete_data", "Delete data", show=False),
+        Binding("r", "refresh_data", "Reload", show=False),
+    ]
 
-        def __init__(self, snapshot_path: Path | None) -> None:
-            super().__init__()
-            self._snapshot_path = snapshot_path
-            self._snapshot: Snapshot | None = None
-            self._all_snapshots: list[tuple[str, Path]] = []
-            self._detail: DetailRecord | None = None
-            self._q1 = self._median = self._q3 = 0.0
-            self._favorites: dict[str, Any] = {}
-            self._doc_index: dict[str, list[dict]] = {}
-            self._doc_by_tariff: dict[tuple[str, str], dict] = {}
-            self._doc_by_stem: dict[str, dict] = {}
-            self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
-            self._market_rows: dict[str, SnapshotRow] = {}
-            self._active_row: SnapshotRow | None = None
-            self._active_fav: dict | None = None
-            # Vergleich tab view state: compact by default (clean ✓/✗/~/— matrix);
-            # [w] expands the verbatim per-insurer wording under each category.
-            self._compare_verbose: bool = False
+    # reactive state
+    filter_text: reactive[str] = reactive("", recompose=False)
+    sort_col: reactive[str] = reactive("position")
+    sort_asc: reactive[bool] = reactive(True)
+    selected_row_key: reactive[str | None] = reactive(None)
 
-        # --- Lifecycle ---
+    def __init__(self, snapshot_path: Path | None) -> None:
+        super().__init__()
+        self._snapshot_path = snapshot_path
+        self._snapshot: Snapshot | None = None
+        self._all_snapshots: list[tuple[str, Path]] = []
+        self._detail: DetailRecord | None = None
+        self._q1 = self._median = self._q3 = 0.0
+        self._favorites: dict[str, Any] = {}
+        self._doc_index: dict[str, list[dict]] = {}
+        self._doc_by_tariff: dict[tuple[str, str], dict] = {}
+        self._doc_by_stem: dict[str, dict] = {}
+        self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
+        self._market_rows: dict[str, SnapshotRow] = {}
+        self._active_row: SnapshotRow | None = None
+        self._active_fav: dict | None = None
+        # Vergleich tab view state: compact by default (clean ✓/✗/~/— matrix);
+        # [w] expands the verbatim per-insurer wording under each category.
+        self._compare_verbose: bool = False
 
-        def on_mount(self) -> None:
-            self._load_data()
-            self._populate_favorites_table()
-            self._populate_market_table()
-            self._update_header()
+    # --- Lifecycle ---
 
-        def _load_data(self) -> None:
-            """Load snapshot and supplemental data."""
-            if self._snapshot_path is not None:
-                path = self._snapshot_path
-            else:
-                path = _find_latest_snapshot(REPO_ROOT / "data" / "snapshots")
+    def on_mount(self) -> None:
+        self._load_data()
+        self._populate_favorites_table()
+        self._populate_market_table()
+        self._update_header()
 
-            if path is not None:
-                self._snapshot = load_snapshot(path)
+    def _load_data(self) -> None:
+        """Load snapshot and supplemental data."""
+        if self._snapshot_path is not None:
+            path = self._snapshot_path
+        else:
+            path = _find_latest_snapshot(REPO_ROOT / "data" / "snapshots")
 
-            self._all_snapshots = load_all_snapshots()
-            if self._snapshot:
-                self._q1, self._median, self._q3 = _price_quartiles(self._snapshot.rows)
-            self._favorites = load_favorites()
-            self._doc_index = load_doc_index()
-            self._doc_by_tariff = load_doc_by_tariff()
-            self._doc_by_stem = {
-                t["stem"]: t for t in self._doc_by_tariff.values() if t.get("stem")
-            }
+        if path is not None:
+            self._snapshot = load_snapshot(path)
 
-        # --- Layout ---
+        self._all_snapshots = load_all_snapshots()
+        if self._snapshot:
+            self._q1, self._median, self._q3 = _price_quartiles(self._snapshot.rows)
+        self._favorites = load_favorites()
+        self._doc_index = load_doc_index()
+        self._doc_by_tariff = load_doc_by_tariff()
+        self._doc_by_stem = {
+            t["stem"]: t for t in self._doc_by_tariff.values() if t.get("stem")
+        }
 
-        def compose(self) -> ComposeResult:
-            yield Header(show_clock=True)
-            with TabbedContent(id="tabs", initial="favorites"):
-                with TabPane("★ Favorites [y]", id="favorites"):
-                    yield Label("", id="fav-knockout")
-                    with Vertical(id="fav-layout"):
-                        yield DataTable(id="fav-table", cursor_type="row", zebra_stripes=True)
-                        with ScrollableContainer(id="fav-detail", classes="detail-band"):
-                            yield Static(
-                                "Select a favorite to see full details, SB variants and documents.",
-                                id="fav-detail-content",
-                            )
-                with TabPane("Market [x]", id="market"):
-                    yield Input(
-                        placeholder="Filter by insurer or product…",
-                        id="filter-input",
-                    )
-                    yield Label(STATUS_LEGEND, id="market-legend")
-                    with Vertical(id="market-layout"):
-                        yield DataTable(id="market-table", cursor_type="row", zebra_stripes=True)
-                        with ScrollableContainer(id="detail-panel", classes="detail-band"):
-                            yield Static("Select a row to see details.", id="detail-content")
-                with TabPane("Vergleich [v]", id="diff"):
-                    with ScrollableContainer(id="diff-panel"):
-                        yield Static("Loading diff…", id="diff-content")
-            yield Footer()
+    # --- Layout ---
 
-        # --- Header update ---
-
-        def _update_header(self) -> None:
-            if self._snapshot:
-                self.sub_title = (
-                    f"{self._snapshot.date}  |  {self._snapshot.profile}"
-                    f"  |  {len(self._snapshot.rows)} tariffs"
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=True)
+        with TabbedContent(id="tabs", initial="favorites"):
+            with TabPane("★ Favorites [y]", id="favorites"):
+                yield Label("", id="fav-knockout")
+                with Vertical(id="fav-layout"):
+                    yield DataTable(id="fav-table", cursor_type="row", zebra_stripes=True)
+                    with ScrollableContainer(id="fav-detail", classes="detail-band"):
+                        yield Static(
+                            "Select a favorite to see full details, SB variants and documents.",
+                            id="fav-detail-content",
+                        )
+            with TabPane("Market [x]", id="market"):
+                yield Input(
+                    placeholder="Filter by insurer or product…",
+                    id="filter-input",
                 )
-            else:
-                self.sub_title = "No snapshot loaded — place files in data/snapshots/"
+                yield Label(STATUS_LEGEND, id="market-legend")
+                with Vertical(id="market-layout"):
+                    yield DataTable(id="market-table", cursor_type="row", zebra_stripes=True)
+                    with ScrollableContainer(id="detail-panel", classes="detail-band"):
+                        yield Static("Select a row to see details.", id="detail-content")
+            with TabPane("Vergleich [v]", id="diff"):
+                with ScrollableContainer(id="diff-panel"):
+                    yield Static("Loading diff…", id="diff-content")
+        yield Footer()
 
-        # --- Favorites board ---
+    # --- Header update ---
 
-        def _is_reference(self, fav: dict) -> bool:
-            """A favorite is the reference iff its stem is the configured reference_stem.
-            (reference_stem is the single source of truth — set live with [R].)"""
-            rs = self._favorites.get("reference_stem")
-            return bool(rs and fav.get("stem") == rs)
-
-        def _reference_sb(self) -> str:
-            """The reference SB band — explicit reference_sb, else the reference
-            favorite's show_sb (back-compat with the pre-[R] config)."""
-            sb = (self._favorites.get("reference_sb") or "").strip()
-            if sb:
-                return sb
-            rs = self._favorites.get("reference_stem")
-            rf = next(
-                (f for f in self._favorites.get("favorites", []) if f.get("stem") == rs), None
+    def _update_header(self) -> None:
+        if self._snapshot:
+            self.sub_title = (
+                f"{self._snapshot.date}  |  {self._snapshot.profile}"
+                f"  |  {len(self._snapshot.rows)} tariffs"
             )
-            return (rf.get("show_sb") or "").strip() if rf else ""
+        else:
+            self.sub_title = "No snapshot loaded — place files in data/snapshots/"
 
-        def _reference_row(self) -> SnapshotRow | None:
-            """The snapshot row that is the comparison baseline. Resolves
+    # --- Favorites board ---
+
+    def _is_reference(self, fav: dict) -> bool:
+        """A favorite is the reference iff its stem is the configured reference_stem.
+            (reference_stem is the single source of truth — set live with [R].)"""
+        rs = self._favorites.get("reference_stem")
+        return bool(rs and fav.get("stem") == rs)
+
+    def _reference_sb(self) -> str:
+        """The reference SB band — explicit reference_sb, else the reference
+            favorite's show_sb (back-compat with the pre-[R] config)."""
+        sb = (self._favorites.get("reference_sb") or "").strip()
+        if sb:
+            return sb
+        rs = self._favorites.get("reference_stem")
+        rf = next(
+            (f for f in self._favorites.get("favorites", []) if f.get("stem") == rs), None
+        )
+        return (rf.get("show_sb") or "").strip() if rf else ""
+
+    def _reference_row(self) -> SnapshotRow | None:
+        """The snapshot row that is the comparison baseline. Resolves
             reference_stem against the snapshot (so the reference need NOT be a
             favorite), picking the reference SB band, else the cheapest variant."""
-            if not self._snapshot:
-                return None
-            rs = self._favorites.get("reference_stem")
-            if not rs:
-                return None
-            variants = [r for r in self._snapshot.rows if r.stem == rs]
-            if not variants:
-                return None
-            ref_sb = self._reference_sb()
-            if ref_sb:
-                match = next(
-                    (r for r in variants if r.selbstbeteiligung.strip() == ref_sb), None
-                )
-                if match is not None:
-                    return match
-            priced = [r for r in variants if r.monatlich_eur is not None]
-            return min(priced, key=lambda r: r.monatlich_eur) if priced else variants[0]
+        if not self._snapshot:
+            return None
+        rs = self._favorites.get("reference_stem")
+        if not rs:
+            return None
+        variants = [r for r in self._snapshot.rows if r.stem == rs]
+        if not variants:
+            return None
+        ref_sb = self._reference_sb()
+        if ref_sb:
+            match = next(
+                (r for r in variants if r.selbstbeteiligung.strip() == ref_sb), None
+            )
+            if match is not None:
+                return match
+        priced = [r for r in variants if r.monatlich_eur is not None]
+        return min(priced, key=lambda r: r.monatlich_eur) if priced else variants[0]
 
-        def _reference_info(self) -> tuple[float | None, str | None]:
-            """(monthly premium, SB band) of the reference tariff (current contract)."""
-            row = self._reference_row()
-            if row is not None and row.monatlich_eur is not None:
-                return row.monatlich_eur, row.selbstbeteiligung
-            return None, None
+    def _reference_info(self) -> tuple[float | None, str | None]:
+        """(monthly premium, SB band) of the reference tariff (current contract)."""
+        row = self._reference_row()
+        if row is not None and row.monatlich_eur is not None:
+            return row.monatlich_eur, row.selbstbeteiligung
+        return None, None
 
-        @staticmethod
-        def _delta_cell(
-            price: float | None, sb: str | None, ref_price: float | None, ref_sb: str | None
-        ) -> str:
-            """Δ vs the reference premium. Prefixes ≈ when the SB band differs (so the
+    @staticmethod
+    def _delta_cell(
+        price: float | None, sb: str | None, ref_price: float | None, ref_sb: str | None
+    ) -> str:
+        """Δ vs the reference premium. Prefixes ≈ when the SB band differs (so the
             comparison is not 1:1) and renders an exact match as a neutral ±0."""
-            if ref_price is None or price is None:
-                return "[dim]—[/dim]"
-            d = price - ref_price
-            if abs(d) < 0.005:
-                return "[dim]±0[/dim]"
-            pct = d / ref_price * 100 if ref_price else 0.0
-            color = "bright_green" if d < 0 else "bright_red"
-            sign = "" if d < 0 else "+"
-            approx = "≈" if (sb or "") != (ref_sb or "") else ""
-            return f"[{color}]{approx}{sign}{d:.2f} ({sign}{pct:.0f}%)[/{color}]"
+        if ref_price is None or price is None:
+            return "[dim]—[/dim]"
+        d = price - ref_price
+        if abs(d) < 0.005:
+            return "[dim]±0[/dim]"
+        pct = d / ref_price * 100 if ref_price else 0.0
+        color = "bright_green" if d < 0 else "bright_red"
+        sign = "" if d < 0 else "+"
+        approx = "≈" if (sb or "") != (ref_sb or "") else ""
+        return f"[{color}]{approx}{sign}{d:.2f} ({sign}{pct:.0f}%)[/{color}]"
 
-        def _docs_label(self, stem: str) -> str:
-            seen: list[str] = []
-            for dd in self._doc_index.get(stem, []):
-                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                if lbl and lbl not in seen:
-                    seen.append(lbl)
-            return "·".join(seen) if seen else "[dim]—[/dim]"
+    def _docs_label(self, stem: str) -> str:
+        seen: list[str] = []
+        for dd in self._doc_index.get(stem, []):
+            lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+            if lbl and lbl not in seen:
+                seen.append(lbl)
+        return "·".join(seen) if seen else "[dim]—[/dim]"
 
-        def _populate_favorites_table(self) -> None:
+    def _populate_favorites_table(self) -> None:
+        try:
+            table: DataTable = self.query_one("#fav-table", DataTable)
+        except NoMatches:
+            return
+
+        table.clear(columns=True)
+        table.add_columns("★", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB", "Δ ref", "Status")
+        self._fav_rows = {}
+
+        ref_price, ref_sb = self._reference_info()
+
+        # Banner: knock-out rule + the reference anchor + a drill-in hint.
+        try:
+            ko = self.query_one("#fav-knockout", Label)
+            parts: list[str] = []
+            ko_text = self._favorites.get("knockout", "")
+            if ko_text:
+                parts.append(f"⊘ {ko_text}")
+            ref_row = self._reference_row()
+            if ref_row is not None and ref_price is not None:
+                parts.append(
+                    f"◆ Referenz: {ref_row.insurer} {ref_row.product} "
+                    f"(SB {ref_sb}, €{ref_price:.2f}/mo) — \\[R] setzt eine andere; "
+                    f"Δ vergleicht dagegen, ≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
+                )
+            parts.append("↵ Zeile wählen → Detail · \\[R] Referenz · \\[u] Favorit")
+            parts.append(STATUS_LEGEND)
+            ko.update("\n".join(parts))
+        except NoMatches:
+            pass
+
+        if not self._snapshot:
+            return
+
+        # Resolve, then order by Tarifnote then price (best decision first).
+        entries: list[tuple[dict, SnapshotRow | None, list[SnapshotRow]]] = []
+        for fav in self._favorites.get("favorites", []):
+            row, variants = match_favorite(self._snapshot, fav)
+            entries.append((fav, row, variants))
+
+        def _sort_key(e: tuple[dict, SnapshotRow | None, list]) -> tuple[float, float]:
+            _f, r, _v = e
+            if r is None:
+                return (9999.0, 9999.0)
             try:
-                table: DataTable = self.query_one("#fav-table", DataTable)
-            except NoMatches:
-                return
+                note = float((r.tarifnote or "").replace(",", "."))
+            except (ValueError, AttributeError):
+                note = 9999.0
+            return (note, r.monatlich_eur if r.monatlich_eur is not None else 9999.0)
 
-            table.clear(columns=True)
-            table.add_columns("★", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB", "Δ ref", "Status")
-            self._fav_rows = {}
+        entries.sort(key=_sort_key)
 
-            ref_price, ref_sb = self._reference_info()
-
-            # Banner: knock-out rule + the reference anchor + a drill-in hint.
-            try:
-                ko = self.query_one("#fav-knockout", Label)
-                parts: list[str] = []
-                ko_text = self._favorites.get("knockout", "")
-                if ko_text:
-                    parts.append(f"⊘ {ko_text}")
-                ref_row = self._reference_row()
-                if ref_row is not None and ref_price is not None:
-                    parts.append(
-                        f"◆ Referenz: {ref_row.insurer} {ref_row.product} "
-                        f"(SB {ref_sb}, €{ref_price:.2f}/mo) — \\[R] setzt eine andere; "
-                        f"Δ vergleicht dagegen, ≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
-                    )
-                parts.append("↵ Zeile wählen → Detail · \\[R] Referenz · \\[u] Favorit")
-                parts.append(STATUS_LEGEND)
-                ko.update("\n".join(parts))
-            except NoMatches:
-                pass
-
-            if not self._snapshot:
-                return
-
-            # Resolve, then order by Tarifnote then price (best decision first).
-            entries: list[tuple[dict, SnapshotRow | None, list[SnapshotRow]]] = []
-            for fav in self._favorites.get("favorites", []):
-                row, variants = match_favorite(self._snapshot, fav)
-                entries.append((fav, row, variants))
-
-            def _sort_key(e: tuple[dict, SnapshotRow | None, list]) -> tuple[float, float]:
-                _f, r, _v = e
-                if r is None:
-                    return (9999.0, 9999.0)
-                try:
-                    note = float((r.tarifnote or "").replace(",", "."))
-                except (ValueError, AttributeError):
-                    note = 9999.0
-                return (note, r.monatlich_eur if r.monatlich_eur is not None else 9999.0)
-
-            entries.sort(key=_sort_key)
-
-            for idx, (fav, row, variants) in enumerate(entries):
-                key = f"fav-{idx}"  # unique per board row, never collides
-                self._fav_rows[key] = (row, fav)
-                if row is None:
-                    table.add_row(
-                        "[dim]?[/dim]",
-                        fav.get("insurer") or "",
-                        fav.get("product") or "",
-                        "—", "—", "—", "—", "—",
-                        self._docs_label(fav.get("stem", "")),
-                        key=key,
-                    )
-                    continue
-
-                if self._is_reference(fav):
-                    star = "[bright_yellow]◆[/bright_yellow]"
-                elif fav.get("recommended"):
-                    star = "[bright_green]▶[/bright_green]"
-                else:
-                    star = "[yellow]★[/yellow]"
-
-                nc = _tarifnote_color(row.tarifnote)
-                note_col = f"[{nc}]{row.tarifnote}[/{nc}]" if row.tarifnote else "—"
-                price_str = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
-                pc = _price_color(row.monatlich_eur, self._q1, self._q3)
-                price_col = f"[{pc}]{price_str}[/{pc}]"
-
-                if self._is_reference(fav):
-                    delta_col = "[dim]— (Referenz)[/dim]"
-                else:
-                    delta_col = self._delta_cell(
-                        row.monatlich_eur, row.selbstbeteiligung, ref_price, ref_sb
-                    )
-
-                sb_cell = row.selbstbeteiligung or "—"
-                if len(variants) > 1:
-                    sb_cell = f"{sb_cell} [dim]·{len(variants)}▾[/dim]"
-
-                docs_cell = f"{_status_glyph(row)} {self._docs_label(fav.get('stem', ''))}"
+        for idx, (fav, row, variants) in enumerate(entries):
+            key = f"fav-{idx}"  # unique per board row, never collides
+            self._fav_rows[key] = (row, fav)
+            if row is None:
                 table.add_row(
-                    star, row.insurer, row.product, note_col, _bewertung_cell(row),
-                    price_col, sb_cell, delta_col, docs_cell,
+                    "[dim]?[/dim]",
+                    fav.get("insurer") or "",
+                    fav.get("product") or "",
+                    "—", "—", "—", "—", "—",
+                    self._docs_label(fav.get("stem", "")),
                     key=key,
                 )
+                continue
 
-        def _render_favorite_detail(self, row: SnapshotRow, fav: dict) -> str:
-            lines: list[str] = []
-            lines.append(f"[bold]{row.insurer}[/bold] — [italic]{row.product}[/italic]")
-            tag = fav.get("tag", "")
-            if tag or self._is_reference(fav):
-                if self._is_reference(fav):
-                    marker, mcolor = "◆", "bright_yellow"
-                elif fav.get("recommended"):
-                    marker, mcolor = "▶", "bright_green"
-                else:
-                    marker, mcolor = "★", "yellow"
-                lines.append(f"[{mcolor}]{marker} {tag or 'Referenz'}[/{mcolor}]")
-            lines.append("")
+            if self._is_reference(fav):
+                star = "[bright_yellow]◆[/bright_yellow]"
+            elif fav.get("recommended"):
+                star = "[bright_green]▶[/bright_green]"
+            else:
+                star = "[yellow]★[/yellow]"
 
             nc = _tarifnote_color(row.tarifnote)
-            lines.append(f"Tarifnote : [{nc}]{row.tarifnote or '—'}[/{nc}]   [dim](Experten-Note)[/dim]")
-            if row.bewertung is not None:
-                lines.append(f"Bewertung : {_bewertung_cell(row)}   [dim](Kundenbewertung /5)[/dim]")
-            price = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
-            lines.append(
-                f"€/Monat   : [bright_green]{price}[/bright_green]   "
-                f"(SB {row.selbstbeteiligung or '—'})"
+            note_col = f"[{nc}]{row.tarifnote}[/{nc}]" if row.tarifnote else "—"
+            price_str = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
+            pc = _price_color(row.monatlich_eur, self._q1, self._q3)
+            price_col = f"[{pc}]{price_str}[/{pc}]"
+
+            if self._is_reference(fav):
+                delta_col = "[dim]— (Referenz)[/dim]"
+            else:
+                delta_col = self._delta_cell(
+                    row.monatlich_eur, row.selbstbeteiligung, ref_price, ref_sb
+                )
+
+            sb_cell = row.selbstbeteiligung or "—"
+            if len(variants) > 1:
+                sb_cell = f"{sb_cell} [dim]·{len(variants)}▾[/dim]"
+
+            docs_cell = f"{_status_glyph(row)} {self._docs_label(fav.get('stem', ''))}"
+            table.add_row(
+                star, row.insurer, row.product, note_col, _bewertung_cell(row),
+                price_col, sb_cell, delta_col, docs_cell,
+                key=key,
             )
-            ref_price, ref_sb = self._reference_info()
-            if ref_price is not None and row.monatlich_eur is not None and not self._is_reference(fav):
-                d = row.monatlich_eur - ref_price
-                if abs(d) < 0.005:
-                    lines.append("vs. Referenz: [dim]±0 €/mo[/dim]")
-                else:
-                    pct = d / ref_price * 100 if ref_price else 0.0
-                    color = "bright_green" if d < 0 else "bright_red"
-                    sign = "" if d < 0 else "+"
+
+    def _render_favorite_detail(self, row: SnapshotRow, fav: dict) -> str:
+        lines: list[str] = []
+        lines.append(f"[bold]{row.insurer}[/bold] — [italic]{row.product}[/italic]")
+        tag = fav.get("tag", "")
+        if tag or self._is_reference(fav):
+            if self._is_reference(fav):
+                marker, mcolor = "◆", "bright_yellow"
+            elif fav.get("recommended"):
+                marker, mcolor = "▶", "bright_green"
+            else:
+                marker, mcolor = "★", "yellow"
+            lines.append(f"[{mcolor}]{marker} {tag or 'Referenz'}[/{mcolor}]")
+        lines.append("")
+
+        nc = _tarifnote_color(row.tarifnote)
+        lines.append(f"Tarifnote : [{nc}]{row.tarifnote or '—'}[/{nc}]   [dim](Experten-Note)[/dim]")
+        if row.bewertung is not None:
+            lines.append(f"Bewertung : {_bewertung_cell(row)}   [dim](Kundenbewertung /5)[/dim]")
+        price = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
+        lines.append(
+            f"€/Monat   : [bright_green]{price}[/bright_green]   "
+            f"(SB {row.selbstbeteiligung or '—'})"
+        )
+        ref_price, ref_sb = self._reference_info()
+        if ref_price is not None and row.monatlich_eur is not None and not self._is_reference(fav):
+            d = row.monatlich_eur - ref_price
+            if abs(d) < 0.005:
+                lines.append("vs. Referenz: [dim]±0 €/mo[/dim]")
+            else:
+                pct = d / ref_price * 100 if ref_price else 0.0
+                color = "bright_green" if d < 0 else "bright_red"
+                sign = "" if d < 0 else "+"
+                lines.append(
+                    f"vs. Referenz: [{color}]{sign}{d:.2f} €/mo ({sign}{pct:.0f}%)[/{color}]"
+                )
+                if (row.selbstbeteiligung or "") != (ref_sb or ""):
                     lines.append(
-                        f"vs. Referenz: [{color}]{sign}{d:.2f} €/mo ({sign}{pct:.0f}%)[/{color}]"
+                        f"  [yellow]≈ andere SB-Stufe[/yellow] [dim]({row.selbstbeteiligung} "
+                        f"vs. Referenz {ref_sb}) — nicht 1:1[/dim]"
                     )
-                    if (row.selbstbeteiligung or "") != (ref_sb or ""):
-                        lines.append(
-                            f"  [yellow]≈ andere SB-Stufe[/yellow] [dim]({row.selbstbeteiligung} "
-                            f"vs. Referenz {ref_sb}) — nicht 1:1[/dim]"
-                        )
+        lines.append("")
+
+        _, variants = match_favorite(self._snapshot, fav)
+        if len(variants) > 1:
+            lines.append("[underline]SB-Varianten[/underline]")
+            for v in sorted(
+                variants, key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0
+            ):
+                p = f"{v.monatlich_eur:.2f}" if v.monatlich_eur is not None else "—"
+                mark = " [bright_yellow]◀ shown[/bright_yellow]" if v.key == row.key else ""
+                lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
             lines.append("")
 
-            _, variants = match_favorite(self._snapshot, fav)
-            if len(variants) > 1:
-                lines.append("[underline]SB-Varianten[/underline]")
-                for v in sorted(
-                    variants, key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0
-                ):
-                    p = f"{v.monatlich_eur:.2f}" if v.monatlich_eur is not None else "—"
-                    mark = " [bright_yellow]◀ shown[/bright_yellow]" if v.key == row.key else ""
-                    lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
-                lines.append("")
-
-            detail_rec = _load_detail(row.insurer, row.product)
-            has_detail = detail_rec is not None
-            docs = self._doc_index.get(fav.get("stem", ""), [])
-            if docs:
-                lines.append("[underline]Quelldokumente (URLs gesichert)[/underline]")
-                for dd in docs:
-                    lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                    fname = (dd.get("file") or "")[:54]
-                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
-                if not has_detail:
-                    lines.append(
-                        "[bright_yellow]  \\[g] herunterladen + analysieren"
-                        "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
-                    )
-                    lines.append(
-                        f"  [dim]→ fetch_docs.py {fav.get('stem')} --into-raw"
-                        " → ingest → extract[/dim]"
-                    )
-                lines.append("")
-
-            if detail_rec is not None:
+        detail_rec = _load_detail(row.insurer, row.product)
+        has_detail = detail_rec is not None
+        docs = self._doc_index.get(fav.get("stem", ""), [])
+        if docs:
+            lines.append("[underline]Quelldokumente (URLs gesichert)[/underline]")
+            for dd in docs:
+                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                fname = (dd.get("file") or "")[:54]
+                lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+            if not has_detail:
                 lines.append(
-                    "[bold underline]Tarifdetails[/bold underline]   "
-                    "[dim](\\[o] Quelle öffnen · \\[v] Vergleich)[/dim]"
+                    "[bright_yellow]  \\[g] herunterladen + analysieren"
+                    "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
                 )
-                lines += self._record_body_lines(detail_rec)
-            else:
                 lines.append(
-                    "[dim italic]Noch keine AVB/PIB eingelesen — \\[g] lädt + analysiert "
-                    "sie für den Modul-Vergleich.[/dim italic]"
+                    f"  [dim]→ fetch_docs.py {fav.get('stem')} --into-raw"
+                    " → ingest → extract[/dim]"
                 )
-            return "\n".join(lines)
+            lines.append("")
 
-        # --- Market table ---
-
-        def _visible_rows(self) -> list[SnapshotRow]:
-            if not self._snapshot:
-                return []
-            f = self.filter_text.lower()
-            rows = [
-                r
-                for r in self._snapshot.rows
-                if not f or f in r.insurer.lower() or f in r.product.lower()
-            ]
-
-            key = self.sort_col
-            if key == "position":
-                rows.sort(key=lambda r: r.position, reverse=not self.sort_asc)
-            elif key == "insurer":
-                rows.sort(key=lambda r: r.insurer.lower(), reverse=not self.sort_asc)
-            elif key == "note":
-                def note_key(r: SnapshotRow) -> float:
-                    try:
-                        return float(r.tarifnote.replace(",", "."))
-                    except (ValueError, AttributeError):
-                        return 9999.0
-                rows.sort(key=note_key, reverse=not self.sort_asc)
-            elif key == "price":
-                rows.sort(
-                    key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0,
-                    reverse=not self.sort_asc,
-                )
-            return rows
-
-        def _populate_market_table(self) -> None:
-            try:
-                table: DataTable = self.query_one("#market-table", DataTable)
-            except NoMatches:
-                return
-
-            table.clear(columns=True)
-            table.add_columns("#", "St", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB")
-
-            rows = self._visible_rows()
-            row_count_label = self.query_one("#filter-input", Input)
-            # update placeholder with count
-            row_count_label.placeholder = (
-                f"Filter by insurer or product… ({len(rows)} shown)"
+        if detail_rec is not None:
+            lines.append(
+                "[bold underline]Tarifdetails[/bold underline]   "
+                "[dim](\\[o] Quelle öffnen · \\[v] Vergleich)[/dim]"
             )
-            try:
-                date = self._snapshot.date if self._snapshot else "?"
-                self.query_one("#market-legend", Label).update(
-                    f"{STATUS_LEGEND}   [dim]· gelesen am {date}[/dim]"
-                )
-            except NoMatches:
-                pass
+            lines += self._record_body_lines(detail_rec)
+        else:
+            lines.append(
+                "[dim italic]Noch keine AVB/PIB eingelesen — \\[g] lädt + analysiert "
+                "sie für den Modul-Vergleich.[/dim italic]"
+            )
+        return "\n".join(lines)
 
-            # Build a unique DataTable key per row and a key->row map for the
-            # highlight handler. r.key (insurer|product|SB) can legitimately repeat —
-            # snapshot.py itself counts same-key rows — so an enumerate suffix keeps
-            # add_row from raising DuplicateKey on mount/filter/sort.
-            self._market_rows = {}
-            for i, r in enumerate(rows):
-                star = _status_glyph(r)
+    # --- Market table ---
 
-                note_col = (
-                    f"[{_tarifnote_color(r.tarifnote)}]{r.tarifnote}[/{_tarifnote_color(r.tarifnote)}]"
-                    if r.tarifnote
-                    else "—"
-                )
+    def _visible_rows(self) -> list[SnapshotRow]:
+        if not self._snapshot:
+            return []
+        f = self.filter_text.lower()
+        rows = [
+            r
+            for r in self._snapshot.rows
+            if not f or f in r.insurer.lower() or f in r.product.lower()
+        ]
 
-                price_str = f"{r.monatlich_eur:.2f}" if r.monatlich_eur is not None else "—"
-                price_col = (
-                    f"[{_price_color(r.monatlich_eur, self._q1, self._q3)}]{price_str}[/{_price_color(r.monatlich_eur, self._q1, self._q3)}]"
-                )
+        key = self.sort_col
+        if key == "position":
+            rows.sort(key=lambda r: r.position, reverse=not self.sort_asc)
+        elif key == "insurer":
+            rows.sort(key=lambda r: r.insurer.lower(), reverse=not self.sort_asc)
+        elif key == "note":
+            def note_key(r: SnapshotRow) -> float:
+                try:
+                    return float(r.tarifnote.replace(",", "."))
+                except (ValueError, AttributeError):
+                    return 9999.0
+            rows.sort(key=note_key, reverse=not self.sort_asc)
+        elif key == "price":
+            rows.sort(
+                key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0,
+                reverse=not self.sort_asc,
+            )
+        return rows
 
-                row_key = f"{r.key or r.position}#{i}"
-                self._market_rows[row_key] = r
-                table.add_row(
-                    str(r.position),
-                    star,
-                    r.insurer,
-                    r.product,
-                    note_col,
-                    _bewertung_cell(r),
-                    price_col,
-                    r.selbstbeteiligung or "—",
-                    key=row_key,
-                )
+    def _populate_market_table(self) -> None:
+        try:
+            table: DataTable = self.query_one("#market-table", DataTable)
+        except NoMatches:
+            return
 
-            # rebuild the Vergleich tab while we're refreshing
-            self._populate_coverage()
+        table.clear(columns=True)
+        table.add_columns("#", "St", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB")
 
-        # --- Detail panel (sidebar) ---
+        rows = self._visible_rows()
+        row_count_label = self.query_one("#filter-input", Input)
+        # update placeholder with count
+        row_count_label.placeholder = (
+            f"Filter by insurer or product… ({len(rows)} shown)"
+        )
+        try:
+            date = self._snapshot.date if self._snapshot else "?"
+            self.query_one("#market-legend", Label).update(
+                f"{STATUS_LEGEND}   [dim]· gelesen am {date}[/dim]"
+            )
+        except NoMatches:
+            pass
 
-        def _doc_entry(self, row: SnapshotRow) -> dict | None:
-            """Resolve a snapshot row to its harvested manifest entry (stem + docs)
+        # Build a unique DataTable key per row and a key->row map for the
+        # highlight handler. r.key (insurer|product|SB) can legitimately repeat —
+        # snapshot.py itself counts same-key rows — so an enumerate suffix keeps
+        # add_row from raising DuplicateKey on mount/filter/sort.
+        self._market_rows = {}
+        for i, r in enumerate(rows):
+            star = _status_glyph(r)
+
+            note_col = (
+                f"[{_tarifnote_color(r.tarifnote)}]{r.tarifnote}[/{_tarifnote_color(r.tarifnote)}]"
+                if r.tarifnote
+                else "—"
+            )
+
+            price_str = f"{r.monatlich_eur:.2f}" if r.monatlich_eur is not None else "—"
+            price_col = (
+                f"[{_price_color(r.monatlich_eur, self._q1, self._q3)}]{price_str}[/{_price_color(r.monatlich_eur, self._q1, self._q3)}]"
+            )
+
+            row_key = f"{r.key or r.position}#{i}"
+            self._market_rows[row_key] = r
+            table.add_row(
+                str(r.position),
+                star,
+                r.insurer,
+                r.product,
+                note_col,
+                _bewertung_cell(r),
+                price_col,
+                r.selbstbeteiligung or "—",
+                key=row_key,
+            )
+
+        # rebuild the Vergleich tab while we're refreshing
+        self._populate_coverage()
+
+    # --- Detail panel (sidebar) ---
+
+    def _doc_entry(self, row: SnapshotRow) -> dict | None:
+        """Resolve a snapshot row to its harvested manifest entry (stem + docs)
             via the row's canonical stem (computed once at load via the same manifest
             join). None when the tariff has no harvested source URLs."""
-            if row.stem:
-                return self._doc_by_stem.get(row.stem)
-            return None
+        if row.stem:
+            return self._doc_by_stem.get(row.stem)
+        return None
 
-        def _render_docs_block(
-            self, row: SnapshotRow, detail: DetailRecord | None
-        ) -> str:
-            """The harvested source-document list + the on-demand [g] pull hint.
+    def _render_docs_block(
+        self, row: SnapshotRow, detail: DetailRecord | None
+    ) -> str:
+        """The harvested source-document list + the on-demand [g] pull hint.
             Shared by the Market and Favorites detail bands. Returns "" if there is
             nothing to say (a tariff with no harvested URLs that is already
             analyzed)."""
-            entry = self._doc_entry(row)
-            lines: list[str] = []
-            if entry and entry.get("docs"):
-                lines.append("[underline]Quelldokumente[/underline]")
-                for dd in entry["docs"]:
-                    lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                    fname = (dd.get("file") or "")[:60]
-                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
-                if detail:
-                    lines.append("[bright_green]  ✓ analysiert[/bright_green]")
-                else:
-                    lines.append(
-                        "[bright_yellow]  \\[g] herunterladen + analysieren"
-                        "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
-                    )
-                    lines.append(
-                        f"  [dim]→ fetch_docs.py {entry.get('stem')} --into-raw"
-                        " → ingest → extract[/dim]"
-                    )
-            elif not detail:
+        entry = self._doc_entry(row)
+        lines: list[str] = []
+        if entry and entry.get("docs"):
+            lines.append("[underline]Quelldokumente[/underline]")
+            for dd in entry["docs"]:
+                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                fname = (dd.get("file") or "")[:60]
+                lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+            if detail:
+                lines.append("[bright_green]  ✓ analysiert[/bright_green]")
+            else:
                 lines.append(
-                    "[dim]Quell-PDFs noch nicht geharvestet — Browser-Schritt"
-                    " (Tarifdetails öffnen) nötig.[/dim]"
+                    "[bright_yellow]  \\[g] herunterladen + analysieren"
+                    "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
                 )
-            return "\n".join(lines)
-
-        def _render_market_detail(self, row: SnapshotRow) -> str:
-            """Full tariff detail (modules, coverage, premium, benefits, exclusions)
-            plus the source-document / [g] block, for the inline Market band."""
-            detail = _load_detail(row.insurer, row.product)
-            parts = [self._render_detail_full(row)]
-            docs = self._render_docs_block(row, detail)
-            if docs:
-                parts.append(docs)
-            return "\n\n".join(parts)
-
-        # --- Full detail tab ---
-
-        def _render_detail_full(self, row: SnapshotRow) -> str:
-            detail = _load_detail(row.insurer, row.product)
-            if not detail:
-                return (
-                    f"[bold]{row.insurer}[/bold] — {row.product}\n\n"
-                    "[dim italic]No detailed record ingested yet.[/dim italic]\n"
-                    "[dim]Run: uv run scripts/ingest.py  to extract tariff details.[/dim]"
+                lines.append(
+                    f"  [dim]→ fetch_docs.py {entry.get('stem')} --into-raw"
+                    " → ingest → extract[/dim]"
                 )
-
-            lines: list[str] = []
-            badge = (
-                "[bright_green]enriched record[/bright_green]"
-                if detail.is_enriched
-                else "[cyan]base tariff record[/cyan]"
+        elif not detail:
+            lines.append(
+                "[dim]Quell-PDFs noch nicht geharvestet — Browser-Schritt"
+                " (Tarifdetails öffnen) nötig.[/dim]"
             )
-            lines.append(f"[bold underline]{detail.insurer}[/bold underline]  — {badge}")
-            lines.append(f"[bold]{detail.tariff}[/bold]")
-            if detail.stand:
-                lines.append(f"Stand: {detail.stand}")
-            lines.append("")
-            lines += self._record_body_lines(detail)
-            return "\n".join(lines)
+        return "\n".join(lines)
 
-        def _record_body_lines(self, detail: DetailRecord) -> list[str]:
-            """Modules → coverage → premium → benefits → exclusions → highlights.
+    def _render_market_detail(self, row: SnapshotRow) -> str:
+        """Full tariff detail (modules, coverage, premium, benefits, exclusions)
+            plus the source-document / [g] block, for the inline Market band."""
+        detail = _load_detail(row.insurer, row.product)
+        parts = [self._render_detail_full(row)]
+        docs = self._render_docs_block(row, detail)
+        if docs:
+            parts.append(docs)
+        return "\n\n".join(parts)
+
+    # --- Full detail tab ---
+
+    def _render_detail_full(self, row: SnapshotRow) -> str:
+        detail = _load_detail(row.insurer, row.product)
+        if not detail:
+            return (
+                f"[bold]{row.insurer}[/bold] — {row.product}\n\n"
+                "[dim italic]No detailed record ingested yet.[/dim italic]\n"
+                "[dim]Run: uv run scripts/ingest.py  to extract tariff details.[/dim]"
+            )
+
+        lines: list[str] = []
+        badge = (
+            "[bright_green]enriched record[/bright_green]"
+            if detail.is_enriched
+            else "[cyan]base tariff record[/cyan]"
+        )
+        lines.append(f"[bold underline]{detail.insurer}[/bold underline]  — {badge}")
+        lines.append(f"[bold]{detail.tariff}[/bold]")
+        if detail.stand:
+            lines.append(f"Stand: {detail.stand}")
+        lines.append("")
+        lines += self._record_body_lines(detail)
+        return "\n".join(lines)
+
+    def _record_body_lines(self, detail: DetailRecord) -> list[str]:
+        """Modules → coverage → premium → benefits → exclusions → highlights.
             Shared by the Market detail band and the Favorites band (when a record
             exists), so an analyzed favorite shows the same full tariff detail instead
             of a 'Module oben' pointer to a module list that the Favorites band never
             actually rendered."""
-            lines: list[str] = []
+        lines: list[str] = []
 
-            # Modules
-            lines.append("[bold underline]Module[/bold underline]")
-            for mod_key, label in MODULE_LABELS.items():
-                mod = detail.modules.get(mod_key, {})
-                included = mod.get("included", False)
-                badge_str = _module_badge(mod)
-                note_str = mod.get("note") or ""
-                lines.append(f"  {label:<22} {badge_str}")
-                if included and note_str:
-                    lines.append(f"    [dim]{_esc(note_str)}[/dim]")
+        # Modules
+        lines.append("[bold underline]Module[/bold underline]")
+        for mod_key, label in MODULE_LABELS.items():
+            mod = detail.modules.get(mod_key, {})
+            included = mod.get("included", False)
+            badge_str = _module_badge(mod)
+            note_str = mod.get("note") or ""
+            lines.append(f"  {label:<22} {badge_str}")
+            if included and note_str:
+                lines.append(f"    [dim]{_esc(note_str)}[/dim]")
+        lines.append("")
+
+        # Coverage — every value is model-emitted free text, so escape '[' (a
+        # literal bracket would otherwise be eaten by / break Rich markup).
+        cov = detail.coverage
+        if cov:
+            lines.append("[bold underline]Deckung[/bold underline]")
+            if cov.get("versicherungssumme"):
+                lines.append(f"  Versicherungssumme:  {_esc(str(cov['versicherungssumme']))}")
+            if cov.get("selbstbeteiligung"):
+                lines.append(f"  Selbstbeteiligung:   {_esc(str(cov['selbstbeteiligung']))}")
+            if cov.get("wartezeit_monate") is not None:
+                lines.append(f"  Wartezeit:           {cov['wartezeit_monate']} Monate")
+            if cov.get("wartezeit_ausnahmen"):
+                lines.append("  Wartezeit-Ausnahmen:")
+                wa = cov["wartezeit_ausnahmen"]
+                for ex in (wa if isinstance(wa, list) else [wa]):
+                    lines.append(f"    • {_esc(str(ex))}")
+            if cov.get("geltungsbereich"):
+                lines.append(f"  Geltungsbereich:     {_esc(str(cov['geltungsbereich']))}")
+            if cov.get("vertragslaufzeit"):
+                lines.append(f"  Vertragslaufzeit:    {_esc(str(cov['vertragslaufzeit']))}")
             lines.append("")
 
-            # Coverage — every value is model-emitted free text, so escape '[' (a
-            # literal bracket would otherwise be eaten by / break Rich markup).
-            cov = detail.coverage
-            if cov:
-                lines.append("[bold underline]Deckung[/bold underline]")
-                if cov.get("versicherungssumme"):
-                    lines.append(f"  Versicherungssumme:  {_esc(str(cov['versicherungssumme']))}")
-                if cov.get("selbstbeteiligung"):
-                    lines.append(f"  Selbstbeteiligung:   {_esc(str(cov['selbstbeteiligung']))}")
-                if cov.get("wartezeit_monate") is not None:
-                    lines.append(f"  Wartezeit:           {cov['wartezeit_monate']} Monate")
-                if cov.get("wartezeit_ausnahmen"):
-                    lines.append("  Wartezeit-Ausnahmen:")
-                    wa = cov["wartezeit_ausnahmen"]
-                    for ex in (wa if isinstance(wa, list) else [wa]):
-                        lines.append(f"    • {_esc(str(ex))}")
-                if cov.get("geltungsbereich"):
-                    lines.append(f"  Geltungsbereich:     {_esc(str(cov['geltungsbereich']))}")
-                if cov.get("vertragslaufzeit"):
-                    lines.append(f"  Vertragslaufzeit:    {_esc(str(cov['vertragslaufzeit']))}")
-                lines.append("")
+        # Premium
+        if detail.beitrag:
+            lines.append("[bold underline]Beitrag[/bold underline]")
+            m = detail.beitrag.get("monatlich_eur")
+            y = detail.beitrag.get("jaehrlich_eur")
+            if m is not None:
+                lines.append(f"  [bright_green]€ {_fmt_eur(m)} / Monat[/bright_green]")
+            if y is not None:
+                lines.append(f"  € {_fmt_eur(y)} / Jahr")
+            if detail.beitrag.get("quelle"):
+                lines.append(f"  Quelle: {_esc(str(detail.beitrag['quelle']))}")
+            lines.append("")
 
-            # Premium
-            if detail.beitrag:
-                lines.append("[bold underline]Beitrag[/bold underline]")
-                m = detail.beitrag.get("monatlich_eur")
-                y = detail.beitrag.get("jaehrlich_eur")
-                if m is not None:
-                    lines.append(f"  [bright_green]€ {_fmt_eur(m)} / Monat[/bright_green]")
-                if y is not None:
-                    lines.append(f"  € {_fmt_eur(y)} / Jahr")
-                if detail.beitrag.get("quelle"):
-                    lines.append(f"  Quelle: {_esc(str(detail.beitrag['quelle']))}")
-                lines.append("")
+        # Leistungen
+        if detail.leistungen:
+            lines.append("[bold underline]Leistungen[/bold underline]")
+            for item in detail.leistungen:
+                lines.append(f"  [green]✓[/green] {_esc(item)}")
+            lines.append("")
 
-            # Leistungen
-            if detail.leistungen:
-                lines.append("[bold underline]Leistungen[/bold underline]")
-                for item in detail.leistungen:
-                    lines.append(f"  [green]✓[/green] {_esc(item)}")
-                lines.append("")
+        # Ausschlüsse
+        if detail.ausschluesse:
+            lines.append("[bold underline]Ausschlüsse[/bold underline]")
+            for item in detail.ausschluesse:
+                lines.append(f"  [red]✗[/red] {_esc(item)}")
+            lines.append("")
 
-            # Ausschlüsse
-            if detail.ausschluesse:
-                lines.append("[bold underline]Ausschlüsse[/bold underline]")
-                for item in detail.ausschluesse:
-                    lines.append(f"  [red]✗[/red] {_esc(item)}")
-                lines.append("")
+        # Besonderheiten
+        if detail.besonderheiten:
+            lines.append("[bold underline]Besonderheiten[/bold underline]")
+            for item in detail.besonderheiten:
+                lines.append(f"  [yellow]★[/yellow] {_esc(item)}")
 
-            # Besonderheiten
-            if detail.besonderheiten:
-                lines.append("[bold underline]Besonderheiten[/bold underline]")
-                for item in detail.besonderheiten:
-                    lines.append(f"  [yellow]★[/yellow] {_esc(item)}")
+        return lines
 
-            return lines
+    # --- Vergleich tab (cross-tariff coverage comparison) ---
 
-        # --- Vergleich tab (cross-tariff coverage comparison) ---
-
-        def _compare_hidden(self) -> set[str]:
-            """Stems the user has removed from the Vergleich via [c]. An exclude-set
+    def _compare_hidden(self) -> set[str]:
+        """Stems the user has removed from the Vergleich via [c]. An exclude-set
             (not an include-set) so newly analyzed tariffs join the comparison
             automatically; [c] toggles a stem in/out."""
-            return set(self._favorites.get("compare_hidden") or [])
+        return set(self._favorites.get("compare_hidden") or [])
 
-        def _coverage_columns(self) -> list[tuple[str, DetailRecord]]:
-            """Analyzed records as (stem, record), reference_stem first then by stem
+    def _coverage_columns(self) -> list[tuple[str, DetailRecord]]:
+        """Analyzed records as (stem, record), reference_stem first then by stem
             — so the current contract ([R]) is always the leftmost baseline column.
             Stems hidden via [c] are dropped."""
-            hidden = self._compare_hidden()
-            cols = [c for c in load_all_details() if c[0] not in hidden]
-            ref = self._favorites.get("reference_stem")
-            cols.sort(key=lambda sr: (sr[0] != ref, sr[0]))
-            return cols
+        hidden = self._compare_hidden()
+        cols = [c for c in load_all_details() if c[0] not in hidden]
+        ref = self._favorites.get("reference_stem")
+        cols.sort(key=lambda sr: (sr[0] != ref, sr[0]))
+        return cols
 
-        def _is_ref_col(self, stem: str) -> bool:
-            return stem == self._favorites.get("reference_stem")
+    def _is_ref_col(self, stem: str) -> bool:
+        return stem == self._favorites.get("reference_stem")
 
-        def _col_header(self, cols: list[tuple[str, DetailRecord]], col_w: int,
-                        title: str) -> str:
-            head = _pad_cell(title, VERGLEICH_LABEL_W)  # same truncation rule as rows
-            for stem, _ in cols:
-                lbl = _col_label(stem) + (" (Ref)" if self._is_ref_col(stem) else "")
-                head += _pad_cell(lbl, col_w)
-            return f"[bold underline]{head}[/bold underline]"
+    def _col_header(self, cols: list[tuple[str, DetailRecord]], col_w: int,
+                    title: str) -> str:
+        head = _pad_cell(title, VERGLEICH_LABEL_W)  # same truncation rule as rows
+        for stem, _ in cols:
+            lbl = _col_label(stem) + (" (Ref)" if self._is_ref_col(stem) else "")
+            head += _pad_cell(lbl, col_w)
+        return f"[bold underline]{head}[/bold underline]"
 
-        def _populate_coverage(self) -> None:
-            try:
-                widget: Static = self.query_one("#diff-content", Static)
-            except NoMatches:
-                return
+    def _populate_coverage(self) -> None:
+        try:
+            widget: Static = self.query_one("#diff-content", Static)
+        except NoMatches:
+            return
 
-            cols = self._coverage_columns()
-            n_hidden = len(self._compare_hidden())
-            if not cols:
-                if n_hidden:
-                    widget.update(
-                        f"[dim italic]Alle Tarife aus dem Vergleich ausgeblendet "
-                        f"({n_hidden} versteckt).\n\\[c] öffnet den Manager — dort "
-                        "\\[a] drücken, um alle wieder einzublenden.[/dim italic]"
-                    )
-                else:
-                    widget.update(
-                        "[dim italic]Noch keine analysierten Tarife.\n"
-                        "Markiere im Markt/Favoriten einen Tarif und drücke \\[g] (Download "
-                        "+ Analyse) oder \\[G] (nur Analyse, PDFs lokal) — dann erscheint hier "
-                        "der angebotsübergreifende Leistungsvergleich.[/dim italic]"
-                    )
-                return
+        cols = self._coverage_columns()
+        n_hidden = len(self._compare_hidden())
+        if not cols:
+            if n_hidden:
+                widget.update(
+                    f"[dim italic]Alle Tarife aus dem Vergleich ausgeblendet "
+                    f"({n_hidden} versteckt).\n\\[c] öffnet den Manager — dort "
+                    "\\[a] drücken, um alle wieder einzublenden.[/dim italic]"
+                )
+            else:
+                widget.update(
+                    "[dim italic]Noch keine analysierten Tarife.\n"
+                    "Markiere im Markt/Favoriten einen Tarif und drücke \\[g] (Download "
+                    "+ Analyse) oder \\[G] (nur Analyse, PDFs lokal) — dann erscheint hier "
+                    "der angebotsübergreifende Leistungsvergleich.[/dim italic]"
+                )
+            return
 
-            # Cap the columns to what fits the panel at the minimum column width: more
-            # tariffs than fit would push every matrix row past the terminal edge and
-            # wrap, re-breaking the alignment this view exists to provide. The reference
-            # column is leftmost (sorted first), so it always survives the cap; the rest
-            # can be chosen via [c]. avail falls back to 130 before the first layout pass.
-            width = self.size.width or 130
-            avail = max(60, width - 6)
-            max_cols = max(1, (avail - VERGLEICH_LABEL_W) // 13)
-            shown = cols[:max_cols]
-            overflow = len(cols) - len(shown)
-            col_w = _vergleich_col_w(len(shown), avail)
+        # Cap the columns to what fits the panel at the minimum column width: more
+        # tariffs than fit would push every matrix row past the terminal edge and
+        # wrap, re-breaking the alignment this view exists to provide. The reference
+        # column is leftmost (sorted first), so it always survives the cap; the rest
+        # can be chosen via [c]. avail falls back to 130 before the first layout pass.
+        width = self.size.width or 130
+        avail = max(60, width - 6)
+        max_cols = max(1, (avail - VERGLEICH_LABEL_W) // 13)
+        shown = cols[:max_cols]
+        overflow = len(cols) - len(shown)
+        col_w = _vergleich_col_w(len(shown), avail)
 
-            mode = "Wortlaut an \\[w]" if self._compare_verbose else "kompakt · \\[w] Wortlaut"
-            hidden_hint = (
-                f" · [yellow]{n_hidden} ausgeblendet \\[c][/yellow]" if n_hidden else ""
-            )
-            overflow_hint = (
-                f" · [yellow]+{overflow} passen nicht — \\[c] verwalten / Terminal "
-                f"breiter[/yellow]" if overflow else ""
-            )
-            parts = [
-                "[bold]Tarif-Vergleich[/bold]   "
-                f"[dim]{len(shown)}/{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
-                f"\\[t] Volltext · \\[c] verwalten · \\[o] Quelle öffnen"
-                f"{hidden_hint}{overflow_hint}[/dim]",
-                self._render_module_matrix(shown, col_w),
-                self._render_coverage_matrix(shown, col_w),
-                self._render_category_matrix("leistung", shown, col_w),
-                self._render_category_matrix("ausschluss", shown, col_w),
-                "[dim]Legende: [green]✓[/green] enthalten · [red]✗[/red] ausgeschlossen · "
-                "[yellow]~[/yellow] teilweise (nur/eingeschr./außer/begrenzt) · "
-                "[dim]—[/dim] nicht genannt[/dim]",
-            ]
-            tail = self._render_snapshot_pricediff()
-            if tail:
-                parts.append(tail)
-            widget.update("\n\n".join(parts))
+        mode = "Wortlaut an \\[w]" if self._compare_verbose else "kompakt · \\[w] Wortlaut"
+        hidden_hint = (
+            f" · [yellow]{n_hidden} ausgeblendet \\[c][/yellow]" if n_hidden else ""
+        )
+        overflow_hint = (
+            f" · [yellow]+{overflow} passen nicht — \\[c] verwalten / Terminal "
+            f"breiter[/yellow]" if overflow else ""
+        )
+        parts = [
+            "[bold]Tarif-Vergleich[/bold]   "
+            f"[dim]{len(shown)}/{len(cols)} Tarife · Referenz \\[R] links · {mode} · "
+            f"\\[t] Volltext · \\[c] verwalten · \\[o] Quelle öffnen"
+            f"{hidden_hint}{overflow_hint}[/dim]",
+            self._render_module_matrix(shown, col_w),
+            self._render_coverage_matrix(shown, col_w),
+            self._render_category_matrix("leistung", shown, col_w),
+            self._render_category_matrix("ausschluss", shown, col_w),
+            "[dim]Legende: [green]✓[/green] enthalten · [red]✗[/red] ausgeschlossen · "
+            "[yellow]~[/yellow] teilweise (nur/eingeschr./außer/begrenzt) · "
+            "[dim]—[/dim] nicht genannt[/dim]",
+        ]
+        tail = self._render_snapshot_pricediff()
+        if tail:
+            parts.append(tail)
+        widget.update("\n\n".join(parts))
 
-        def _render_module_matrix(self, cols, col_w) -> str:
-            lines = [self._col_header(cols, col_w, "MODULE (Lebensbereiche)")]
-            for key, label in MODULE_LABELS.items():
-                row = _pad_label(label)
-                for stem, rec in cols:
-                    plain, color = _module_cell(rec.modules.get(key, {}))
-                    row += _pad_cell(plain, col_w, color)
-                lines.append(row)
-            return "\n".join(lines)
+    def _render_module_matrix(self, cols, col_w) -> str:
+        lines = [self._col_header(cols, col_w, "MODULE (Lebensbereiche)")]
+        for key, label in MODULE_LABELS.items():
+            row = _pad_label(label)
+            for stem, rec in cols:
+                plain, color = _module_cell(rec.modules.get(key, {}))
+                row += _pad_cell(plain, col_w, color)
+            lines.append(row)
+        return "\n".join(lines)
 
-        def _render_coverage_matrix(self, cols, col_w) -> str:
-            rows = [
-                ("Versicherungssumme", lambda c: _short_versicherungssumme(c.get("versicherungssumme"))),
-                ("Selbstbeteiligung", lambda c: _short_selbstbeteiligung(c.get("selbstbeteiligung"))),
-                ("Wartezeit", lambda c: _short_wartezeit(c)),
-                ("Geltungsbereich", lambda c: _short_geltungsbereich(c.get("geltungsbereich"))),
-                ("Vertragslaufzeit", lambda c: _short_vertragslaufzeit(c.get("vertragslaufzeit"))),
-            ]
-            lines = [self._col_header(cols, col_w, "DECKUNG")]
-            for label, fn in rows:
-                row = _pad_label(label)
-                for stem, rec in cols:
-                    row += _pad_cell(fn(rec.coverage or {}), col_w)
-                lines.append(row)
-            return "\n".join(lines)
+    def _render_coverage_matrix(self, cols, col_w) -> str:
+        rows = [
+            ("Versicherungssumme", lambda c: _short_versicherungssumme(c.get("versicherungssumme"))),
+            ("Selbstbeteiligung", lambda c: _short_selbstbeteiligung(c.get("selbstbeteiligung"))),
+            ("Wartezeit", lambda c: _short_wartezeit(c)),
+            ("Geltungsbereich", lambda c: _short_geltungsbereich(c.get("geltungsbereich"))),
+            ("Vertragslaufzeit", lambda c: _short_vertragslaufzeit(c.get("vertragslaufzeit"))),
+        ]
+        lines = [self._col_header(cols, col_w, "DECKUNG")]
+        for label, fn in rows:
+            row = _pad_label(label)
+            for stem, rec in cols:
+                row += _pad_cell(fn(rec.coverage or {}), col_w)
+            lines.append(row)
+        return "\n".join(lines)
 
-        # Conservative partial-coverage cues: a matched item whose wording carries one
-        # of these is shown as ~ rather than a flat ✓/✗ (the full wording is in the
-        # subtext line and the [d] detail).
-        _PARTIAL_CUES = ("nur ", "eingeschr", "außer", "ausser", "begrenzt", "teilweise")
+    # Conservative partial-coverage cues: a matched item whose wording carries one
+    # of these is shown as ~ rather than a flat ✓/✗ (the full wording is in the
+    # subtext line and the [d] detail).
+    _PARTIAL_CUES = ("nur ", "eingeschr", "außer", "ausser", "begrenzt", "teilweise")
 
-        def _classify_columns(
-            self, cols, kind: str, field: str
-        ) -> tuple[list[dict[str, str]], list[list[str]], set[str]]:
-            """Map each column's verbatim items into taxonomy categories. Returns
+    def _classify_columns(
+        self, cols, kind: str, field: str
+    ) -> tuple[list[dict[str, str]], list[list[str]], set[str]]:
+        """Map each column's verbatim items into taxonomy categories. Returns
             (per_col_cat, per_col_sonst, present): per column the first verbatim hit
             per category, the unmatched 'Sonstige' bucket, and the union of matched
             category keys. Shared by the Vergleich matrix and the [t] full-text modal
             so the two never disagree on what matched what."""
-            per_col_cat: list[dict[str, str]] = []
-            per_col_sonst: list[list[str]] = []
-            present: set[str] = set()
-            for stem, rec in cols:
-                catmap: dict[str, str] = {}
-                sonst: list[str] = []
-                for item in getattr(rec, field) or []:
-                    key = ctax.classify(item, kind)
-                    if key:
-                        catmap.setdefault(key, item)
-                        present.add(key)
-                    else:
-                        sonst.append(item)
-                per_col_cat.append(catmap)
-                per_col_sonst.append(sonst)
-            return per_col_cat, per_col_sonst, present
+        per_col_cat: list[dict[str, str]] = []
+        per_col_sonst: list[list[str]] = []
+        present: set[str] = set()
+        for stem, rec in cols:
+            catmap: dict[str, str] = {}
+            sonst: list[str] = []
+            for item in getattr(rec, field) or []:
+                key = ctax.classify(item, kind)
+                if key:
+                    catmap.setdefault(key, item)
+                    present.add(key)
+                else:
+                    sonst.append(item)
+            per_col_cat.append(catmap)
+            per_col_sonst.append(sonst)
+        return per_col_cat, per_col_sonst, present
 
-        def _render_category_matrix(self, kind: str, cols, col_w) -> str:
-            title = "LEISTUNGEN (Vergleich)" if kind == "leistung" else "AUSSCHLÜSSE (Vergleich)"
-            field = "leistungen" if kind == "leistung" else "ausschluesse"
-            glyph, color = ("✓", "green") if kind == "leistung" else ("✗", "red")
-            verbose = self._compare_verbose
-            total_w = VERGLEICH_LABEL_W + len(cols) * col_w  # subtext width budget
+    def _render_category_matrix(self, kind: str, cols, col_w) -> str:
+        title = "LEISTUNGEN (Vergleich)" if kind == "leistung" else "AUSSCHLÜSSE (Vergleich)"
+        field = "leistungen" if kind == "leistung" else "ausschluesse"
+        glyph, color = ("✓", "green") if kind == "leistung" else ("✗", "red")
+        verbose = self._compare_verbose
+        total_w = VERGLEICH_LABEL_W + len(cols) * col_w  # subtext width budget
 
-            per_col_cat, per_col_sonst, present = self._classify_columns(cols, kind, field)
-            ordered = [k for k in ctax.ordered_keys(kind) if k in present]
-            lines = [self._col_header(cols, col_w, title)]
+        per_col_cat, per_col_sonst, present = self._classify_columns(cols, kind, field)
+        ordered = [k for k in ctax.ordered_keys(kind) if k in present]
+        lines = [self._col_header(cols, col_w, title)]
 
-            for key in ordered:
-                row = _pad_label(ctax.category_label(key))
-                wordings: list[tuple[str, str]] = []
-                for i, (stem, rec) in enumerate(cols):
-                    verbatim = per_col_cat[i].get(key)
-                    if verbatim is None:
-                        row += _pad_cell("—", col_w, "dim")
-                        continue
-                    low = verbatim.lower()
-                    if any(cue in low for cue in self._PARTIAL_CUES):
-                        row += _pad_cell("~", col_w, "yellow")
-                    else:
-                        row += _pad_cell(glyph, col_w, color)
-                    wordings.append((_col_label(stem), verbatim))
-                lines.append(row)
-                # Verbose only: each insurer's own wording on its OWN line, hard-
-                # truncated so it never wraps into the next row. This is the naming
-                # difference made visible (compact mode keeps just the glyph matrix).
-                if verbose and wordings:
-                    for lbl, txt in wordings:
-                        sub = _trunc(f"{lbl}: {txt}", total_w - 3)
-                        lines.append(f"   [dim]{sub}[/dim]")
+        for key in ordered:
+            row = _pad_label(ctax.category_label(key))
+            wordings: list[tuple[str, str]] = []
+            for i, (stem, rec) in enumerate(cols):
+                verbatim = per_col_cat[i].get(key)
+                if verbatim is None:
+                    row += _pad_cell("—", col_w, "dim")
+                    continue
+                low = verbatim.lower()
+                if any(cue in low for cue in self._PARTIAL_CUES):
+                    row += _pad_cell("~", col_w, "yellow")
+                else:
+                    row += _pad_cell(glyph, col_w, color)
+                wordings.append((_col_label(stem), verbatim))
+            lines.append(row)
+            # Verbose only: each insurer's own wording on its OWN line, hard-
+            # truncated so it never wraps into the next row. This is the naming
+            # difference made visible (compact mode keeps just the glyph matrix).
+            if verbose and wordings:
+                for lbl, txt in wordings:
+                    sub = _trunc(f"{lbl}: {txt}", total_w - 3)
+                    lines.append(f"   [dim]{sub}[/dim]")
 
-            total_sonst = sum(len(s) for s in per_col_sonst)
-            if total_sonst:
-                if verbose:
-                    for i, (stem, _rec) in enumerate(cols):
-                        if per_col_sonst[i]:
-                            full = _trunc(
-                                f"… Sonstige ({_col_label(stem)}): "
-                                + " · ".join(per_col_sonst[i]),
-                                total_w - 3,
-                            )
-                            lines.append(f"   [dim]{full}[/dim]")
-                sonst_hint = "" if verbose else " — \\[w] zeigt sie"
-                lines.append(
-                    f"   [dim]({total_sonst} nicht zugeordnet{sonst_hint})[/dim]"
-                )
-            return "\n".join(lines)
+        total_sonst = sum(len(s) for s in per_col_sonst)
+        if total_sonst:
+            if verbose:
+                for i, (stem, _rec) in enumerate(cols):
+                    if per_col_sonst[i]:
+                        full = _trunc(
+                            f"… Sonstige ({_col_label(stem)}): "
+                            + " · ".join(per_col_sonst[i]),
+                            total_w - 3,
+                        )
+                        lines.append(f"   [dim]{full}[/dim]")
+            sonst_hint = "" if verbose else " — \\[w] zeigt sie"
+            lines.append(
+                f"   [dim]({total_sonst} nicht zugeordnet{sonst_hint})[/dim]"
+            )
+        return "\n".join(lines)
 
-        def _fulltext_entries(self) -> tuple[list[dict], int]:
-            """Build the [t] full-text modal payload: one entry per taxonomy category
+    def _fulltext_entries(self) -> tuple[list[dict], int]:
+        """Build the [t] full-text modal payload: one entry per taxonomy category
             present across the compared tariffs (Leistungen then Ausschlüsse), each
             with the verbatim wording per tariff, plus a per-category 'Sonstige'
             bucket. Uses the FULL column set (no width cap) — the modal is exactly
             where the tariffs that did not fit the matrix become readable. Returns
             (entries, n_cols)."""
-            cols = self._coverage_columns()  # full set, intentionally not width-capped
-            entries: list[dict] = []
-            for kind, field, glyph, color, section in (
-                ("leistung", "leistungen", "✓", "green", "Leistungen"),
-                ("ausschluss", "ausschluesse", "✗", "red", "Ausschlüsse"),
-            ):
-                per_col_cat, per_col_sonst, present = self._classify_columns(
-                    cols, kind, field
-                )
-                for key in (k for k in ctax.ordered_keys(kind) if k in present):
-                    rows = [
-                        (_col_label(stem), per_col_cat[i].get(key))
-                        for i, (stem, _rec) in enumerate(cols)
-                    ]
-                    entries.append({
-                        "section": section,
-                        "glyph": glyph,
-                        "color": color,
-                        "label": ctax.category_label(key),
-                        "rows": rows,
-                    })
-                if any(per_col_sonst):
-                    rows = [
-                        (_col_label(stem), " · ".join(per_col_sonst[i]) or None)
-                        for i, (stem, _rec) in enumerate(cols)
-                    ]
-                    entries.append({
-                        "section": section,
-                        "glyph": "•",
-                        "color": "yellow",
-                        "label": "Sonstige (nicht zugeordnet)",
-                        "rows": rows,
-                    })
-            return entries, len(cols)
+        cols = self._coverage_columns()  # full set, intentionally not width-capped
+        entries: list[dict] = []
+        for kind, field, glyph, color, section in (
+            ("leistung", "leistungen", "✓", "green", "Leistungen"),
+            ("ausschluss", "ausschluesse", "✗", "red", "Ausschlüsse"),
+        ):
+            per_col_cat, per_col_sonst, present = self._classify_columns(
+                cols, kind, field
+            )
+            for key in (k for k in ctax.ordered_keys(kind) if k in present):
+                rows = [
+                    (_col_label(stem), per_col_cat[i].get(key))
+                    for i, (stem, _rec) in enumerate(cols)
+                ]
+                entries.append({
+                    "section": section,
+                    "glyph": glyph,
+                    "color": color,
+                    "label": ctax.category_label(key),
+                    "rows": rows,
+                })
+            if any(per_col_sonst):
+                rows = [
+                    (_col_label(stem), " · ".join(per_col_sonst[i]) or None)
+                    for i, (stem, _rec) in enumerate(cols)
+                ]
+                entries.append({
+                    "section": section,
+                    "glyph": "•",
+                    "color": "yellow",
+                    "label": "Sonstige (nicht zugeordnet)",
+                    "rows": rows,
+                })
+        return entries, len(cols)
 
-        def _render_snapshot_pricediff(self) -> str:
-            """The legacy market-price drift across snapshots, appended only once a
+    def _render_snapshot_pricediff(self) -> str:
+        """The legacy market-price drift across snapshots, appended only once a
             second snapshot exists (silently omitted otherwise)."""
-            if len(self._all_snapshots) < 2:
-                return ""
-            _, old_path = self._all_snapshots[0]
-            _, new_path = self._all_snapshots[-1]
-            old_snap = load_snapshot(old_path)
-            new_snap = load_snapshot(new_path)
-            if old_snap is None or new_snap is None:
-                return ""
-            changes, added, removed = _compute_diff(old_snap, new_snap)
-            lines = [
-                f"[bold underline]Preisänderungen (Snapshots)[/bold underline]   "
-                f"[dim]{old_snap.date} → {new_snap.date}[/dim]"
-            ]
-            for key, old_p, new_p, delta in sorted(changes, key=lambda x: x[3]):
-                sign = "+" if delta > 0 else ""
-                c = "bright_red" if delta > 0 else "bright_green"
-                lines.append(f"  {_esc(key[:50].ljust(50))}  {old_p:.2f} → {new_p:.2f}  "
-                             f"[{c}]{sign}{delta:.2f}[/{c}]")
-            for k in added:
-                lines.append(f"  [bright_green]+[/bright_green] {_esc(k)}")
-            for k in removed:
-                lines.append(f"  [bright_red]−[/bright_red] {_esc(k)}")
-            if not (changes or added or removed):
-                lines.append("[dim italic]keine Änderungen zwischen den Snapshots.[/dim italic]")
-            return "\n".join(lines)
+        if len(self._all_snapshots) < 2:
+            return ""
+        _, old_path = self._all_snapshots[0]
+        _, new_path = self._all_snapshots[-1]
+        old_snap = load_snapshot(old_path)
+        new_snap = load_snapshot(new_path)
+        if old_snap is None or new_snap is None:
+            return ""
+        changes, added, removed = _compute_diff(old_snap, new_snap)
+        lines = [
+            f"[bold underline]Preisänderungen (Snapshots)[/bold underline]   "
+            f"[dim]{old_snap.date} → {new_snap.date}[/dim]"
+        ]
+        for key, old_p, new_p, delta in sorted(changes, key=lambda x: x[3]):
+            sign = "+" if delta > 0 else ""
+            c = "bright_red" if delta > 0 else "bright_green"
+            lines.append(f"  {_esc(key[:50].ljust(50))}  {old_p:.2f} → {new_p:.2f}  "
+                         f"[{c}]{sign}{delta:.2f}[/{c}]")
+        for k in added:
+            lines.append(f"  [bright_green]+[/bright_green] {_esc(k)}")
+        for k in removed:
+            lines.append(f"  [bright_red]−[/bright_red] {_esc(k)}")
+        if not (changes or added or removed):
+            lines.append("[dim italic]keine Änderungen zwischen den Snapshots.[/dim italic]")
+        return "\n".join(lines)
 
-        # --- Event handlers ---
+    # --- Event handlers ---
 
-        @on(DataTable.RowHighlighted, "#market-table")
-        def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
-            """A single click / arrow move highlights a row — track it as the active
+    @on(DataTable.RowHighlighted, "#market-table")
+    def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """A single click / arrow move highlights a row — track it as the active
             target and refresh the (possibly hidden) detail band live."""
-            key = str(event.row_key.value) if event.row_key.value is not None else None
-            self.selected_row_key = key
-            if not self._snapshot or key is None:
-                return
-            row = self._market_rows.get(key)
-            if row is None:
-                return
-            self._active_row = row  # target for the [g] download/analyze action
-            self._active_fav = None
-            self._refresh_market_detail()
+        key = str(event.row_key.value) if event.row_key.value is not None else None
+        self.selected_row_key = key
+        if not self._snapshot or key is None:
+            return
+        row = self._market_rows.get(key)
+        if row is None:
+            return
+        self._active_row = row  # target for the [g] download/analyze action
+        self._active_fav = None
+        self._refresh_market_detail()
 
-        @on(DataTable.RowHighlighted, "#fav-table")
-        def on_fav_highlighted(self, event: DataTable.RowHighlighted) -> None:
-            key = str(event.row_key.value) if event.row_key.value is not None else None
-            if not key:
-                return
-            entry = self._fav_rows.get(key)
-            if entry is None:
-                return
-            row, fav = entry
-            self._active_row = row  # may be None (favorite not in snapshot)
-            self._active_fav = fav
-            self._refresh_fav_detail()
+    @on(DataTable.RowHighlighted, "#fav-table")
+    def on_fav_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        key = str(event.row_key.value) if event.row_key.value is not None else None
+        if not key:
+            return
+        entry = self._fav_rows.get(key)
+        if entry is None:
+            return
+        row, fav = entry
+        self._active_row = row  # may be None (favorite not in snapshot)
+        self._active_fav = fav
+        self._refresh_fav_detail()
 
-        # Enter / click-on-highlighted: open the detail band on the row.
-        @on(DataTable.RowSelected, "#market-table")
-        def on_market_selected(self, event: DataTable.RowSelected) -> None:
-            self.on_market_highlighted(event)  # ensure active row is current
-            self._show_detail()
+    # Enter / click-on-highlighted: open the detail band on the row.
+    @on(DataTable.RowSelected, "#market-table")
+    def on_market_selected(self, event: DataTable.RowSelected) -> None:
+        self.on_market_highlighted(event)  # ensure active row is current
+        self._show_detail()
 
-        @on(DataTable.RowSelected, "#fav-table")
-        def on_fav_selected(self, event: DataTable.RowSelected) -> None:
-            self.on_fav_highlighted(event)
-            self._show_detail()
+    @on(DataTable.RowSelected, "#fav-table")
+    def on_fav_selected(self, event: DataTable.RowSelected) -> None:
+        self.on_fav_highlighted(event)
+        self._show_detail()
 
-        @on(DataTable.HeaderSelected, "#market-table")
-        def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
-            col_map = {0: "position", 2: "insurer", 4: "note", 6: "price"}
-            col = col_map.get(event.column_index)
-            if col is None:
-                return
-            if self.sort_col == col:
-                self.sort_asc = not self.sort_asc
-            else:
-                self.sort_col = col
-                self.sort_asc = True
-            self._populate_market_table()
+    @on(DataTable.HeaderSelected, "#market-table")
+    def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
+        col_map = {0: "position", 2: "insurer", 4: "note", 6: "price"}
+        col = col_map.get(event.column_index)
+        if col is None:
+            return
+        if self.sort_col == col:
+            self.sort_asc = not self.sort_asc
+        else:
+            self.sort_col = col
+            self.sort_asc = True
+        self._populate_market_table()
 
-        @on(Input.Changed, "#filter-input")
-        def on_filter_changed(self, event: Input.Changed) -> None:
-            self.filter_text = event.value
-            self._populate_market_table()
+    @on(Input.Changed, "#filter-input")
+    def on_filter_changed(self, event: Input.Changed) -> None:
+        self.filter_text = event.value
+        self._populate_market_table()
 
-        def on_resize(self, event) -> None:
-            """Re-render the Vergleich matrix on resize so its width-capped columns
+    def on_resize(self, event) -> None:
+        """Re-render the Vergleich matrix on resize so its width-capped columns
             track the new terminal size instead of leaving a stale layout."""
-            self._populate_coverage()
+        self._populate_coverage()
 
-        # --- Actions ---
+    # --- Actions ---
 
-        def action_focus_filter(self) -> None:
-            try:
-                self.query_one("#filter-input", Input).focus()
-            except NoMatches:
-                pass
+    def action_focus_filter(self) -> None:
+        try:
+            self.query_one("#filter-input", Input).focus()
+        except NoMatches:
+            pass
 
-        def action_clear_filter(self) -> None:
-            try:
-                inp = self.query_one("#filter-input", Input)
-                inp.value = ""
-                self.filter_text = ""
-                self.query_one("#market-table", DataTable).focus()
-            except NoMatches:
-                pass
+    def action_clear_filter(self) -> None:
+        try:
+            inp = self.query_one("#filter-input", Input)
+            inp.value = ""
+            self.filter_text = ""
+            self.query_one("#market-table", DataTable).focus()
+        except NoMatches:
+            pass
 
-        def action_sort_price(self) -> None:
-            self.sort_col = "price"
-            self.sort_asc = True
-            self._populate_market_table()
+    def action_sort_price(self) -> None:
+        self.sort_col = "price"
+        self.sort_asc = True
+        self._populate_market_table()
 
-        def action_sort_note(self) -> None:
-            self.sort_col = "note"
-            self.sort_asc = True
-            self._populate_market_table()
+    def action_sort_note(self) -> None:
+        self.sort_col = "note"
+        self.sort_asc = True
+        self._populate_market_table()
 
-        def action_sort_position(self) -> None:
-            self.sort_col = "position"
-            self.sort_asc = True
-            self._populate_market_table()
+    def action_sort_position(self) -> None:
+        self.sort_col = "position"
+        self.sort_asc = True
+        self._populate_market_table()
 
-        def action_switch_tab(self, tab_id: str) -> None:
-            try:
-                tabs = self.query_one("#tabs", TabbedContent)
-                tabs.active = tab_id
-            except NoMatches:
-                pass
+    def action_switch_tab(self, tab_id: str) -> None:
+        try:
+            tabs = self.query_one("#tabs", TabbedContent)
+            tabs.active = tab_id
+        except NoMatches:
+            pass
 
-        def on_tabbed_content_tab_activated(
-            self, event: TabbedContent.TabActivated
-        ) -> None:
-            """Move focus to the activated tab's primary scrollable widget. Without
+    def on_tabbed_content_tab_activated(
+        self, event: TabbedContent.TabActivated
+    ) -> None:
+        """Move focus to the activated tab's primary scrollable widget. Without
             this, Textual focuses the first focusable widget in the new pane — on the
             Market tab that is the dock-top #filter-input, which then swallows the
             global single-letter shortcuts (y/x/v/…) as filter text instead of
@@ -1850,735 +1849,739 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
             (and arrow-scrolling the diff) did not register — the 'x does not switch
             from Favorites' bug. Every tab now lands focus on a stable, non-Input
             widget of its own pane."""
-            try:
-                active = self.query_one("#tabs", TabbedContent).active
-            except NoMatches:
-                return
-            target = {"favorites": "#fav-table", "market": "#market-table",
-                      "diff": "#diff-panel"}.get(active)
-            if not target:
-                return
-            try:
-                self.query_one(target).focus()
-            except NoMatches:
-                pass
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            return
+        target = {"favorites": "#fav-table", "market": "#market-table",
+                  "diff": "#diff-panel"}.get(active)
+        if not target:
+            return
+        try:
+            self.query_one(target).focus()
+        except NoMatches:
+            pass
 
-        def _reload_all(self) -> None:
-            """Reload every data source from disk and repaint both tables, the header
+    def _reload_all(self) -> None:
+        """Reload every data source from disk and repaint both tables, the header
             and whichever detail band is shown. Used after [g], a favorite edit or a
             delete so the UI reflects the new on-disk state."""
-            self._load_data()
-            self._populate_favorites_table()
-            self._populate_market_table()
-            self._update_header()
-            self._refresh_market_detail()
-            self._refresh_fav_detail()
+        self._load_data()
+        self._populate_favorites_table()
+        self._populate_market_table()
+        self._update_header()
+        self._refresh_market_detail()
+        self._refresh_fav_detail()
 
-        def action_refresh_data(self) -> None:
-            self._reload_all()
+    def action_refresh_data(self) -> None:
+        self._reload_all()
 
-        def action_help(self) -> None:
-            self.push_screen(HelpScreen())
+    def action_help(self) -> None:
+        self.push_screen(HelpScreen())
 
-        # --- Build the CHECK24 result URL ([b]) ---
+    # --- Build the CHECK24 result URL ([b]) ---
 
-        def _load_query_module(self):
-            """Import scripts/check24_query.py as a module, or notify + return None.
+    def _load_query_module(self):
+        """Import scripts/check24_query.py as a module, or notify + return None.
 
             tui.py keeps check24_query as the single owner of the lever vocabulary and
             parse/rebuild logic; both [b] (build URL) and [e] (edit) load it this way."""
-            import importlib.util
+        import importlib.util
 
-            qpath = REPO_ROOT / "scripts" / "check24_query.py"
-            try:
-                spec = importlib.util.spec_from_file_location("check24_query", qpath)
-                cq = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(cq)
-                return cq
-            except Exception as exc:  # noqa: BLE001 — surface any load failure to the user
-                self.notify(f"check24_query.py nicht ladbar: {exc}", severity="error", timeout=6)
-                return None
+        qpath = REPO_ROOT / "scripts" / "check24_query.py"
+        try:
+            spec = importlib.util.spec_from_file_location("check24_query", qpath)
+            cq = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(cq)
+            return cq
+        except Exception as exc:  # noqa: BLE001 — surface any load failure to the user
+            self.notify(f"check24_query.py nicht ladbar: {exc}", severity="error", timeout=6)
+            return None
 
-        def _load_query_profile(self):
-            """Return (profile_dict, base, query, is_example) or None (after notify).
+    def _load_query_profile(self):
+        """Return (profile_dict, base, query, is_example) or None (after notify).
 
             Prefers the real (gitignored) profile and falls back to the tracked example
             with is_example=True, mirroring check24_query.load_profile()."""
-            ppath = REPO_ROOT / "config" / "check24-profile.json"
-            epath = REPO_ROOT / "config" / "check24-profile.example.json"
-            is_example = False
-            try:
-                if ppath.is_file():
-                    profile = json.loads(ppath.read_text())
-                elif epath.is_file():
-                    profile = json.loads(epath.read_text())
-                    is_example = True
-                else:
-                    self.notify(
-                        "Kein Query-Profil (config/check24-profile.json).",
-                        severity="error",
-                        timeout=6,
-                    )
-                    return None
-            except (json.JSONDecodeError, OSError) as exc:
-                self.notify(f"Query-Profil unlesbar: {exc}", severity="error", timeout=6)
+        ppath = REPO_ROOT / "config" / "check24-profile.json"
+        epath = REPO_ROOT / "config" / "check24-profile.example.json"
+        is_example = False
+        try:
+            if ppath.is_file():
+                profile = json.loads(ppath.read_text())
+            elif epath.is_file():
+                profile = json.loads(epath.read_text())
+                is_example = True
+            else:
+                self.notify(
+                    "Kein Query-Profil (config/check24-profile.json).",
+                    severity="error",
+                    timeout=6,
+                )
                 return None
+        except (json.JSONDecodeError, OSError) as exc:
+            self.notify(f"Query-Profil unlesbar: {exc}", severity="error", timeout=6)
+            return None
 
-            base = profile.get("base_url") if isinstance(profile, dict) else None
-            query = profile.get("query") if isinstance(profile, dict) else None
-            if not base or not isinstance(query, str):
-                self.notify("Profil ohne base_url/query (string).", severity="error", timeout=6)
-                return None
-            return profile, base, query, is_example
+        base = profile.get("base_url") if isinstance(profile, dict) else None
+        query = profile.get("query") if isinstance(profile, dict) else None
+        if not base or not isinstance(query, str):
+            self.notify("Profil ohne base_url/query (string).", severity="error", timeout=6)
+            return None
+        return profile, base, query, is_example
 
-        def action_build_query(self) -> None:
-            """Rebuild the CHECK24 result URL(s) from the saved profile and write them
+    def action_build_query(self) -> None:
+        """Rebuild the CHECK24 result URL(s) from the saved profile and write them
             to tmp/ for the manual browser + scrape workflow (no headless path — bot
             gating). Reuses scripts/check24_query.py for the lever decode."""
-            import contextlib
-            import io
-            from urllib.parse import parse_qsl, urlencode
+        import contextlib
+        import io
+        from urllib.parse import parse_qsl, urlencode
 
-            cq = self._load_query_module()
-            if cq is None:
-                return
-            loaded = self._load_query_profile()
-            if loaded is None:
-                return
-            _profile, base, query, is_example = loaded
+        cq = self._load_query_module()
+        if cq is None:
+            return
+        loaded = self._load_query_profile()
+        if loaded is None:
+            return
+        _profile, base, query, is_example = loaded
 
-            pairs = parse_qsl(query, keep_blank_values=True)
-            saved_url = base + "?" + urlencode(pairs)
-            all_url = base + "?" + urlencode([(k, v) for k, v in pairs if k not in cq.PIN_KEYS])
+        pairs = parse_qsl(query, keep_blank_values=True)
+        saved_url = base + "?" + urlencode(pairs)
+        all_url = base + "?" + urlencode([(k, v) for k, v in pairs if k not in cq.PIN_KEYS])
 
-            buf = io.StringIO()
-            try:
-                with contextlib.redirect_stdout(buf):
-                    cq.show(pairs)
-                levers = buf.getvalue().strip()
-            except Exception:  # noqa: BLE001 — the decode is best-effort context only
-                levers = ""
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                cq.show(pairs)
+            levers = buf.getvalue().strip()
+        except Exception:  # noqa: BLE001 — the decode is best-effort context only
+            levers = ""
 
-            out = REPO_ROOT / "tmp" / "check24-query.txt"
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(
-                f"# saved query\n{saved_url}\n\n# all insurers (provider/package pins dropped)\n"
-                f"{all_url}\n",
-                encoding="utf-8",
-            )
-            self.push_screen(QueryUrlScreen(levers, str(out.relative_to(REPO_ROOT)), is_example))
-
-        # Curated, editable lever keys (the set QueryEditScreen exposes). discounts is
-        # intentionally NOT here (read-only JSON blob); every OTHER query param is
-        # preserved verbatim by routing only these through set_param.
-        _EDIT_LEVER_KEYS = (
-            "provider_filter", "tariff_position", "maritalstatus", "birthdate",
-            "zipcode", "employmentstatus", "employmentstatus_partner", "costsharing",
-            "sortfield", "sortorder",
-            "module_priv", "module_job", "module_traffic", "module_living",
-            "module_rental", "stiftung_warentest",
+        out = REPO_ROOT / "tmp" / "check24-query.txt"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            f"# saved query\n{saved_url}\n\n# all insurers (provider/package pins dropped)\n"
+            f"{all_url}\n",
+            encoding="utf-8",
         )
+        self.push_screen(QueryUrlScreen(levers, str(out.relative_to(REPO_ROOT)), is_example))
 
-        def action_edit_query(self) -> None:
-            """Open an interactive editor for the curated CHECK24 query levers, then
+    # Curated, editable lever keys (the set QueryEditScreen exposes). discounts is
+    # intentionally NOT here (read-only JSON blob); every OTHER query param is
+    # preserved verbatim by routing only these through set_param.
+    _EDIT_LEVER_KEYS = (
+        "provider_filter", "tariff_position", "maritalstatus", "birthdate",
+        "zipcode", "employmentstatus", "employmentstatus_partner", "costsharing",
+        "sortfield", "sortorder",
+        "module_priv", "module_job", "module_traffic", "module_living",
+        "module_rental", "stiftung_warentest",
+    )
+
+    def action_edit_query(self) -> None:
+        """Open an interactive editor for the curated CHECK24 query levers, then
             (on confirm) write the rebuilt query back to config/check24-profile.json
             atomically and show the resulting URL. Only the touched levers are
             overridden via check24_query.set_param; every other query param (repeated
             keys, uncurated/unknown params) survives the round-trip verbatim."""
-            from urllib.parse import parse_qsl, urlencode
+        from urllib.parse import parse_qsl, urlencode
 
-            cq = self._load_query_module()
-            if cq is None:
-                return
-            loaded = self._load_query_profile()
-            if loaded is None:
-                return
-            profile, base, query, is_example = loaded
+        cq = self._load_query_module()
+        if cq is None:
+            return
+        loaded = self._load_query_profile()
+        if loaded is None:
+            return
+        profile, base, query, is_example = loaded
 
-            pairs = parse_qsl(query, keep_blank_values=True)
-            # last-wins matches browser semantics for repeated keys; this is the
-            # pre-fill value shown in each field.
-            current = dict(pairs)
-            values = {k: current.get(k, "") for k in self._EDIT_LEVER_KEYS}
-            discounts = cq.decode_discounts(pairs)
+        pairs = parse_qsl(query, keep_blank_values=True)
+        # last-wins matches browser semantics for repeated keys; this is the
+        # pre-fill value shown in each field.
+        current = dict(pairs)
+        values = {k: current.get(k, "") for k in self._EDIT_LEVER_KEYS}
+        discounts = cq.decode_discounts(pairs)
 
-            def _on_edit(result: dict[str, str] | None) -> None:
-                if result is None:
-                    return  # cancelled
-                # Apply ONLY the touched levers; preserve everything else verbatim.
-                new_pairs = list(pairs)
-                changes: list[tuple[str, str, str]] = []
-                for key in self._EDIT_LEVER_KEYS:
-                    new_val = result.get(key, "")
-                    old_val = values.get(key, "")
-                    if new_val != old_val:
-                        changes.append((key, old_val, new_val))
-                    new_pairs = cq.set_param(new_pairs, key, new_val)
+        def _on_edit(result: dict[str, str] | None) -> None:
+            if result is None:
+                return  # cancelled
+            # Apply ONLY the touched levers; preserve everything else verbatim.
+            new_pairs = list(pairs)
+            changes: list[tuple[str, str, str]] = []
+            for key in self._EDIT_LEVER_KEYS:
+                new_val = result.get(key, "")
+                old_val = values.get(key, "")
+                if new_val != old_val:
+                    changes.append((key, old_val, new_val))
+                new_pairs = cq.set_param(new_pairs, key, new_val)
 
-                def _on_confirm(ok: bool | None) -> None:
-                    if not ok:
-                        return
-                    new_query = urlencode(new_pairs)
-                    out_profile = dict(profile)
-                    out_profile["query"] = new_query
-                    ppath = REPO_ROOT / "config" / "check24-profile.json"
-                    try:
-                        # Atomic write (temp twin on the same dir + os.replace), like
-                        # snapshot.build() / _save_favorites: a crash mid-write must not
-                        # truncate the only copy of the real (PII-bearing) profile.
-                        tmp = ppath.with_suffix(".json.tmp")
-                        tmp.write_text(
-                            json.dumps(out_profile, indent=2, ensure_ascii=False) + "\n",
-                            encoding="utf-8",
-                        )
-                        os.replace(tmp, ppath)
-                    except OSError as exc:
-                        self.notify(
-                            f"Speichern fehlgeschlagen ({ppath.name}): {exc}",
-                            severity="error",
-                            timeout=8,
-                        )
-                        return
-                    # Show the resulting URL so the user can paste it into the browser.
-                    # is_example is now False — we just wrote the real profile.
-                    new_url = base + "?" + new_query
-                    out = REPO_ROOT / "tmp" / "check24-query.txt"
-                    out.parent.mkdir(parents=True, exist_ok=True)
-                    out.write_text(f"# saved query\n{new_url}\n", encoding="utf-8")
-                    self.notify("Suche gespeichert (config/check24-profile.json).",
-                                severity="information", timeout=5)
-                    levers_lines = [f"  {k}: {result.get(k, '')}" for k in self._EDIT_LEVER_KEYS]
-                    self.push_screen(QueryUrlScreen(
-                        "\n".join(levers_lines), str(out.relative_to(REPO_ROOT)), False))
-
-                self.push_screen(
-                    QuerySaveConfirmScreen(changes, is_example), _on_confirm)
+            def _on_confirm(ok: bool | None) -> None:
+                if not ok:
+                    return
+                new_query = urlencode(new_pairs)
+                out_profile = dict(profile)
+                out_profile["query"] = new_query
+                ppath = REPO_ROOT / "config" / "check24-profile.json"
+                try:
+                    # Atomic write (temp twin on the same dir + os.replace), like
+                    # snapshot.build() / _save_favorites: a crash mid-write must not
+                    # truncate the only copy of the real (PII-bearing) profile.
+                    tmp = ppath.with_suffix(".json.tmp")
+                    tmp.write_text(
+                        json.dumps(out_profile, indent=2, ensure_ascii=False) + "\n",
+                        encoding="utf-8",
+                    )
+                    os.replace(tmp, ppath)
+                except OSError as exc:
+                    self.notify(
+                        f"Speichern fehlgeschlagen ({ppath.name}): {exc}",
+                        severity="error",
+                        timeout=8,
+                    )
+                    return
+                # Show the resulting URL so the user can paste it into the browser.
+                # is_example is now False — we just wrote the real profile.
+                new_url = base + "?" + new_query
+                out = REPO_ROOT / "tmp" / "check24-query.txt"
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_text(f"# saved query\n{new_url}\n", encoding="utf-8")
+                self.notify("Suche gespeichert (config/check24-profile.json).",
+                            severity="information", timeout=5)
+                levers_lines = [f"  {k}: {result.get(k, '')}" for k in self._EDIT_LEVER_KEYS]
+                self.push_screen(QueryUrlScreen(
+                    "\n".join(levers_lines), str(out.relative_to(REPO_ROOT)), False))
 
             self.push_screen(
-                QueryEditScreen(values, cq.provider_name, discounts, is_example),
-                _on_edit,
-            )
+                QuerySaveConfirmScreen(changes, is_example), _on_confirm)
 
-        # --- Favorites management ([u] toggle, [D] delete) ---
+        self.push_screen(
+            QueryEditScreen(values, cq.provider_name, discounts, is_example),
+            _on_edit,
+        )
 
-        def _save_favorites(self) -> None:
-            """Persist the (tracked, PII-free) shortlist back to config/favorites.json.
+    # --- Favorites management ([u] toggle, [D] delete) ---
+
+    def _save_favorites(self) -> None:
+        """Persist the (tracked, PII-free) shortlist back to config/favorites.json.
 
             Atomic write: this is the only copy of a hand-curated file, and a crash /
             full disk mid-write would truncate it (load_favorites then silently returns
             {} — the shortlist would vanish). Write a temp file, then os.replace()."""
-            path = REPO_ROOT / "config" / "favorites.json"
-            tmp = path.with_suffix(".json.tmp")
-            tmp.write_text(
-                json.dumps(self._favorites, indent=2, ensure_ascii=False) + "\n",
-                encoding="utf-8",
-            )
-            os.replace(tmp, path)
+        path = REPO_ROOT / "config" / "favorites.json"
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(
+            json.dumps(self._favorites, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(tmp, path)
 
-        def _is_favorite_stem(self, stem: str | None) -> bool:
-            if not stem:
-                return False
-            return any(f.get("stem") == stem for f in self._favorites.get("favorites", []))
+    def _is_favorite_stem(self, stem: str | None) -> bool:
+        if not stem:
+            return False
+        return any(f.get("stem") == stem for f in self._favorites.get("favorites", []))
 
-        def _active_identity(self) -> tuple[str, str, str | None] | None:
-            """(insurer, product, stem) of the active favorite or market row, or None."""
-            if self._active_fav is not None:
-                f = self._active_fav
-                return f.get("insurer", ""), f.get("product", ""), f.get("stem")
-            if self._active_row is not None:
-                r = self._active_row
-                return r.insurer, r.product, r.stem
-            return None
+    def _active_identity(self) -> tuple[str, str, str | None] | None:
+        """(insurer, product, stem) of the active favorite or market row, or None."""
+        if self._active_fav is not None:
+            f = self._active_fav
+            return f.get("insurer", ""), f.get("product", ""), f.get("stem")
+        if self._active_row is not None:
+            r = self._active_row
+            return r.insurer, r.product, r.stem
+        return None
 
-        def action_toggle_favorite(self) -> None:
-            """Add the active market row to the shortlist, or remove the active
+    def action_toggle_favorite(self) -> None:
+        """Add the active market row to the shortlist, or remove the active
             favorite / an already-favorited row from it."""
-            ident = self._active_identity()
-            if ident is None:
-                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
-                return
-            insurer, product, stem = ident
-            favs = self._favorites.setdefault("favorites", [])
+        ident = self._active_identity()
+        if ident is None:
+            self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+            return
+        insurer, product, stem = ident
+        favs = self._favorites.setdefault("favorites", [])
 
-            def matches(f: dict) -> bool:
-                if stem and f.get("stem"):
-                    return f.get("stem") == stem
-                return f.get("insurer") == insurer and f.get("product") == product
+        def matches(f: dict) -> bool:
+            if stem and f.get("stem"):
+                return f.get("stem") == stem
+            return f.get("insurer") == insurer and f.get("product") == product
 
-            if any(matches(f) for f in favs):
-                self._favorites["favorites"] = [f for f in favs if not matches(f)]
-                self._save_favorites()
-                self.notify(f"Aus Favoriten entfernt: {insurer} {product}", timeout=4)
-            else:
-                entry: dict[str, Any] = {"insurer": insurer, "product": product}
-                if stem:
-                    entry["stem"] = stem
-                if self._active_row is not None and self._active_row.selbstbeteiligung:
-                    entry["show_sb"] = self._active_row.selbstbeteiligung
-                entry["tag"] = "in TUI hinzugefügt"
-                favs.append(entry)
-                self._save_favorites()
-                self.notify(f"Zu Favoriten hinzugefügt: {insurer} {product}", timeout=4)
-            self._reload_all()
-
-        def action_set_reference(self) -> None:
-            """Make the active row the comparison baseline; every Δ recomputes against
-            it. Writes reference_stem + reference_sb to config/favorites.json."""
-            ident = self._active_identity()
-            if ident is None:
-                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
-                return
-            insurer, product, stem = ident
-            if not stem:
-                self.notify(
-                    "Referenz braucht einen kanonischen stem (Tarif ohne Manifest-Eintrag).",
-                    severity="warning",
-                    timeout=6,
-                )
-                return
-            sb = self._active_row.selbstbeteiligung if self._active_row else ""
-            if not sb and self._active_fav:
-                sb = self._active_fav.get("show_sb", "")
-            self._favorites["reference_stem"] = stem
-            self._favorites["reference_sb"] = sb
-            # Retire the legacy per-favorite flag — reference_stem is now canonical.
-            for f in self._favorites.get("favorites", []):
-                f.pop("reference", None)
+        if any(matches(f) for f in favs):
+            self._favorites["favorites"] = [f for f in favs if not matches(f)]
             self._save_favorites()
-            self.notify(
-                f"Referenz: {insurer} {product} (SB {sb or '—'}) — Δ neu berechnet.",
-                timeout=5,
-            )
-            self._reload_all()
+            self.notify(f"Aus Favoriten entfernt: {insurer} {product}", timeout=4)
+        else:
+            entry: dict[str, Any] = {"insurer": insurer, "product": product}
+            if stem:
+                entry["stem"] = stem
+            if self._active_row is not None and self._active_row.selbstbeteiligung:
+                entry["show_sb"] = self._active_row.selbstbeteiligung
+            entry["tag"] = "in TUI hinzugefügt"
+            favs.append(entry)
+            self._save_favorites()
+            self.notify(f"Zu Favoriten hinzugefügt: {insurer} {product}", timeout=4)
+        self._reload_all()
 
-        def action_manage_compare(self) -> None:
-            """Open the Vergleich manager: toggle individual tariffs in/out of the
+    def action_set_reference(self) -> None:
+        """Make the active row the comparison baseline; every Δ recomputes against
+            it. Writes reference_stem + reference_sb to config/favorites.json."""
+        ident = self._active_identity()
+        if ident is None:
+            self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+            return
+        insurer, product, stem = ident
+        if not stem:
+            self.notify(
+                "Referenz braucht einen kanonischen stem (Tarif ohne Manifest-Eintrag).",
+                severity="warning",
+                timeout=6,
+            )
+            return
+        sb = self._active_row.selbstbeteiligung if self._active_row else ""
+        if not sb and self._active_fav:
+            sb = self._active_fav.get("show_sb", "")
+        self._favorites["reference_stem"] = stem
+        self._favorites["reference_sb"] = sb
+        # Retire the legacy per-favorite flag — reference_stem is now canonical.
+        for f in self._favorites.get("favorites", []):
+            f.pop("reference", None)
+        self._save_favorites()
+        self.notify(
+            f"Referenz: {insurer} {product} (SB {sb or '—'}) — Δ neu berechnet.",
+            timeout=5,
+        )
+        self._reload_all()
+
+    def action_manage_compare(self) -> None:
+        """Open the Vergleich manager: toggle individual tariffs in/out of the
             comparison, clear it, or bring them all back. The single source of truth
             is compare_hidden (an exclude-set) in config/favorites.json — this works
             on any tab and does not depend on a row cursor (the old per-row [c] toggle
             was ambiguous on the Vergleich matrix, whose rows are categories, not
             tariffs)."""
-            details = load_all_details()
-            if not details:
-                self.notify(
-                    "Noch keine analysierten Tarife — erst \\[g] (Download + Analyse) "
-                    "oder \\[G] (nur Analyse).",
-                    severity="information",
-                    timeout=5,
-                )
-                return
-            ref = self._favorites.get("reference_stem")
-            stems = sorted(
-                ((stem, _col_label(stem)) for stem, _ in details),
-                key=lambda sl: (sl[0] != ref, sl[0]),
-            )
-
-            def _apply(new_hidden: list[str] | None) -> None:
-                if new_hidden is None:
-                    return  # cancelled — leave compare_hidden untouched
-                self._favorites["compare_hidden"] = sorted(set(new_hidden))
-                self._save_favorites()
-                n_shown = sum(1 for s, _ in stems if s not in set(new_hidden))
-                self.notify(f"Vergleich: {n_shown}/{len(stems)} Tarife.", timeout=3)
-                self._reload_all()
-
-            self.push_screen(
-                CompareManagerScreen(stems, self._compare_hidden(), ref), _apply
-            )
-
-        def action_compare_fulltext(self) -> None:
-            """Open the per-category full-text modal: every Leistung/Ausschluss
-            verbatim across all compared tariffs, untruncated (the cross-tariff
-            companion to the [d] detail band, which is per-tariff only)."""
-            entries, n_cols = self._fulltext_entries()
-            if not entries:
-                self.notify(
-                    "Keine Leistungen/Ausschlüsse zum Anzeigen — erst Tarife "
-                    "analysieren (\\[g]).",
-                    severity="information",
-                    timeout=5,
-                )
-                return
-            self.push_screen(CompareTextScreen(entries, n_cols))
-
-        def action_toggle_compare_wording(self) -> None:
-            """Toggle the Vergleich between compact (glyph matrix only) and verbose
-            (each insurer's verbatim wording under every shared category)."""
-            self._compare_verbose = not self._compare_verbose
-            self._populate_coverage()
+        details = load_all_details()
+        if not details:
             self.notify(
-                "Vergleich: Wortlaut " + ("an" if self._compare_verbose else "aus"),
-                timeout=3,
+                "Noch keine analysierten Tarife — erst \\[g] (Download + Analyse) "
+                "oder \\[G] (nur Analyse).",
+                severity="information",
+                timeout=5,
             )
-            self.action_switch_tab("diff")  # make the change visible immediately
+            return
+        ref = self._favorites.get("reference_stem")
+        stems = sorted(
+            ((stem, _col_label(stem)) for stem, _ in details),
+            key=lambda sl: (sl[0] != ref, sl[0]),
+        )
 
-        def action_open_source(self) -> None:
-            """Open the active tariff's source documents — online (browser) or the
-            local PDFs (data/raw/<stem>/) — to read the original."""
-            ident = self._active_identity()
-            if ident is None:
-                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
-                return
-            insurer, product, stem = ident
-            entry = self._doc_by_stem.get(stem) if stem else None
-            docs = (entry or {}).get("docs", [])
-            raw_dir = _raw_dir_for_stem(stem) if stem else None
-            n_pdfs = len(list(raw_dir.glob("*.pdf"))) if raw_dir and raw_dir.is_dir() else 0
-            has_urls = any(d.get("url") for d in docs)
-            if not has_urls and not n_pdfs:
-                self.notify(
-                    "Keine Quell-URLs und keine lokalen PDFs für diese Zeile.",
-                    severity="warning",
-                    timeout=6,
-                )
-                return
-            label = f"{insurer} {product}"
-
-            def _go(choice: str | None) -> None:
-                if choice == "online":
-                    self._open_external([d["url"] for d in docs if d.get("url")])
-                elif choice == "disk" and raw_dir is not None:
-                    self._open_external([str(raw_dir)])
-
-            self.push_screen(
-                OpenSourceScreen(label, docs, has_urls, n_pdfs, stem or ""), _go
-            )
-
-        def _open_external(self, targets: list[str]) -> None:
-            """Hand off URLs / paths to the OS opener (browser / Finder). Best-effort:
-            a missing opener or a launch error is surfaced, never fatal."""
-            import shutil
-            import subprocess
-
-            if not targets:
-                self.notify("Nichts zu öffnen.", severity="information")
-                return
-            opener = "open" if sys.platform == "darwin" else (
-                shutil.which("xdg-open") or "xdg-open"
-            )
-            opened = 0
-            for t in targets:
-                try:
-                    subprocess.Popen(
-                        [opener, t],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                    opened += 1
-                except OSError as exc:
-                    self.notify(f"Öffnen fehlgeschlagen: {exc}", severity="error", timeout=6)
-                    return
-            self.notify(f"{opened} geöffnet.", timeout=3)
-
-        def action_delete_data(self) -> None:
-            """Delete a tariff's locally stored data, with a scope chosen in a modal."""
-            ident = self._active_identity()
-            if ident is None:
-                self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
-                return
-            insurer, product, stem = ident
-            if not stem:
-                self.notify(
-                    "Kein kanonischer stem für diese Zeile — nichts lokal gespeichert.",
-                    severity="warning",
-                    timeout=6,
-                )
-                return
-            label = f"{insurer} {product}"
-            is_fav = self._is_favorite_stem(stem)
-
-            def _go(scope: str | None) -> None:
-                if scope:
-                    self._do_delete(stem, scope, label)
-
-            self.push_screen(DeleteDataScreen(stem, label, is_fav), _go)
-
-        def _prune_ingest_manifest(self, insurer_part: str, tariff_part: str) -> None:
-            """Drop a tariff's documents from data/extracted/manifest.json so a future
-            extract run does not resurrect a deleted tariff from a dangling entry."""
-            mp = REPO_ROOT / "data" / "extracted" / "manifest.json"
-            if not mp.is_file():
-                return
-            try:
-                m = json.loads(mp.read_text())
-            except (json.JSONDecodeError, OSError):
-                return
-            docs = m.get("documents", [])
-            kept = [
-                d for d in docs
-                if not (d.get("insurer") == insurer_part and d.get("tariff") == tariff_part)
-            ]
-            if len(kept) != len(docs):
-                m["documents"] = kept
-                mp.write_text(json.dumps(m, indent=2, ensure_ascii=False), encoding="utf-8")
-
-        def _do_delete(self, stem: str, scope: str, label: str) -> None:
-            import shutil
-
-            removed: list[str] = []
-            for sub in ("tariffs", "enriched"):
-                p = REPO_ROOT / "out" / sub / f"{stem}.json"
-                if p.exists():
-                    p.unlink()
-                    removed.append(f"out/{sub}/{stem}.json")
-
-            if scope in ("purge", "purge_unfav"):
-                insurer_part, _, tariff_part = stem.partition("__")
-                # A stem must be 'insurer__tariff'; without the partition tariff_part is
-                # "" and the path collapses to data/<base>/<insurer>/, so rmtree would
-                # wipe the WHOLE insurer (every tariff). Refuse rather than over-delete.
-                if "__" not in stem or not insurer_part or not tariff_part:
-                    self.notify(
-                        f"Abbruch: '{stem}' ist kein insurer__tariff-stem — "
-                        f"PDFs/Extrakte nicht gelöscht (sonst ganzer Versicherer).",
-                        severity="error", timeout=8,
-                    )
-                else:
-                    for base in ("raw", "extracted"):
-                        d = REPO_ROOT / "data" / base / insurer_part / tariff_part
-                        if d.is_dir():
-                            shutil.rmtree(d)
-                            removed.append(f"data/{base}/{insurer_part}/{tariff_part}/")
-                    self._prune_ingest_manifest(insurer_part, tariff_part)
-
-            if scope == "purge_unfav":
-                favs = self._favorites.get("favorites", [])
-                pruned = [f for f in favs if f.get("stem") != stem]
-                if len(pruned) != len(favs):
-                    self._favorites["favorites"] = pruned
-                    self._save_favorites()
-                    removed.append("config/favorites.json (unfavorite)")
-
-            if removed:
-                self.notify(f"Gelöscht ({label}): " + ", ".join(removed), timeout=8)
-            else:
-                self.notify(f"Nichts zu löschen für {label}.", severity="information")
+        def _apply(new_hidden: list[str] | None) -> None:
+            if new_hidden is None:
+                return  # cancelled — leave compare_hidden untouched
+            self._favorites["compare_hidden"] = sorted(set(new_hidden))
+            self._save_favorites()
+            n_shown = sum(1 for s, _ in stems if s not in set(new_hidden))
+            self.notify(f"Vergleich: {n_shown}/{len(stems)} Tarife.", timeout=3)
             self._reload_all()
 
-        # --- Inline detail band (toggled with [d]) ---
+        self.push_screen(
+            CompareManagerScreen(stems, self._compare_hidden(), ref), _apply
+        )
 
-        def _detail_band_for_tab(self) -> tuple[str, str] | None:
-            """(#band-container, #content-static) for the active tab, or None when
+    def action_compare_fulltext(self) -> None:
+        """Open the per-category full-text modal: every Leistung/Ausschluss
+            verbatim across all compared tariffs, untruncated (the cross-tariff
+            companion to the [d] detail band, which is per-tariff only)."""
+        entries, n_cols = self._fulltext_entries()
+        if not entries:
+            self.notify(
+                "Keine Leistungen/Ausschlüsse zum Anzeigen — erst Tarife "
+                "analysieren (\\[g]).",
+                severity="information",
+                timeout=5,
+            )
+            return
+        self.push_screen(CompareTextScreen(entries, n_cols))
+
+    def action_toggle_compare_wording(self) -> None:
+        """Toggle the Vergleich between compact (glyph matrix only) and verbose
+            (each insurer's verbatim wording under every shared category)."""
+        self._compare_verbose = not self._compare_verbose
+        self._populate_coverage()
+        self.notify(
+            "Vergleich: Wortlaut " + ("an" if self._compare_verbose else "aus"),
+            timeout=3,
+        )
+        self.action_switch_tab("diff")  # make the change visible immediately
+
+    def action_open_source(self) -> None:
+        """Open the active tariff's source documents — online (browser) or the
+            local PDFs (data/raw/<stem>/) — to read the original."""
+        ident = self._active_identity()
+        if ident is None:
+            self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+            return
+        insurer, product, stem = ident
+        entry = self._doc_by_stem.get(stem) if stem else None
+        docs = (entry or {}).get("docs", [])
+        raw_dir = _raw_dir_for_stem(stem) if stem else None
+        n_pdfs = len(list(raw_dir.glob("*.pdf"))) if raw_dir and raw_dir.is_dir() else 0
+        has_urls = any(d.get("url") for d in docs)
+        if not has_urls and not n_pdfs:
+            self.notify(
+                "Keine Quell-URLs und keine lokalen PDFs für diese Zeile.",
+                severity="warning",
+                timeout=6,
+            )
+            return
+        label = f"{insurer} {product}"
+
+        def _go(choice: str | None) -> None:
+            if choice == "online":
+                self._open_external([d["url"] for d in docs if d.get("url")])
+            elif choice == "disk" and raw_dir is not None:
+                self._open_external([str(raw_dir)])
+
+        self.push_screen(
+            OpenSourceScreen(label, docs, has_urls, n_pdfs, stem or ""), _go
+        )
+
+    def _open_external(self, targets: list[str]) -> None:
+        """Hand off URLs / paths to the OS opener (browser / Finder). Best-effort:
+            a missing opener or a launch error is surfaced, never fatal."""
+        import shutil
+        import subprocess
+
+        if not targets:
+            self.notify("Nichts zu öffnen.", severity="information")
+            return
+        opener = "open" if sys.platform == "darwin" else (
+            shutil.which("xdg-open") or "xdg-open"
+        )
+        opened = 0
+        for t in targets:
+            try:
+                subprocess.Popen(
+                    [opener, t],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                opened += 1
+            except OSError as exc:
+                self.notify(f"Öffnen fehlgeschlagen: {exc}", severity="error", timeout=6)
+                return
+        self.notify(f"{opened} geöffnet.", timeout=3)
+
+    def action_delete_data(self) -> None:
+        """Delete a tariff's locally stored data, with a scope chosen in a modal."""
+        ident = self._active_identity()
+        if ident is None:
+            self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+            return
+        insurer, product, stem = ident
+        if not stem:
+            self.notify(
+                "Kein kanonischer stem für diese Zeile — nichts lokal gespeichert.",
+                severity="warning",
+                timeout=6,
+            )
+            return
+        label = f"{insurer} {product}"
+        is_fav = self._is_favorite_stem(stem)
+
+        def _go(scope: str | None) -> None:
+            if scope:
+                self._do_delete(stem, scope, label)
+
+        self.push_screen(DeleteDataScreen(stem, label, is_fav), _go)
+
+    def _prune_ingest_manifest(self, insurer_part: str, tariff_part: str) -> None:
+        """Drop a tariff's documents from data/extracted/manifest.json so a future
+            extract run does not resurrect a deleted tariff from a dangling entry."""
+        mp = REPO_ROOT / "data" / "extracted" / "manifest.json"
+        if not mp.is_file():
+            return
+        try:
+            m = json.loads(mp.read_text())
+        except (json.JSONDecodeError, OSError):
+            return
+        docs = m.get("documents", [])
+        kept = [
+            d for d in docs
+            if not (d.get("insurer") == insurer_part and d.get("tariff") == tariff_part)
+        ]
+        if len(kept) != len(docs):
+            m["documents"] = kept
+            mp.write_text(json.dumps(m, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def _do_delete(self, stem: str, scope: str, label: str) -> None:
+        import shutil
+
+        removed: list[str] = []
+        for sub in ("tariffs", "enriched"):
+            p = REPO_ROOT / "out" / sub / f"{stem}.json"
+            if p.exists():
+                p.unlink()
+                removed.append(f"out/{sub}/{stem}.json")
+
+        if scope in ("purge", "purge_unfav"):
+            insurer_part, _, tariff_part = stem.partition("__")
+            # A stem must be 'insurer__tariff'; without the partition tariff_part is
+            # "" and the path collapses to data/<base>/<insurer>/, so rmtree would
+            # wipe the WHOLE insurer (every tariff). Refuse rather than over-delete.
+            if "__" not in stem or not insurer_part or not tariff_part:
+                self.notify(
+                    f"Abbruch: '{stem}' ist kein insurer__tariff-stem — "
+                    f"PDFs/Extrakte nicht gelöscht (sonst ganzer Versicherer).",
+                    severity="error", timeout=8,
+                )
+            else:
+                for base in ("raw", "extracted"):
+                    d = REPO_ROOT / "data" / base / insurer_part / tariff_part
+                    if d.is_dir():
+                        shutil.rmtree(d)
+                        removed.append(f"data/{base}/{insurer_part}/{tariff_part}/")
+                self._prune_ingest_manifest(insurer_part, tariff_part)
+
+        if scope == "purge_unfav":
+            favs = self._favorites.get("favorites", [])
+            pruned = [f for f in favs if f.get("stem") != stem]
+            if len(pruned) != len(favs):
+                self._favorites["favorites"] = pruned
+                self._save_favorites()
+                removed.append("config/favorites.json (unfavorite)")
+
+        if removed:
+            self.notify(f"Gelöscht ({label}): " + ", ".join(removed), timeout=8)
+        else:
+            self.notify(f"Nichts zu löschen für {label}.", severity="information")
+        self._reload_all()
+
+    # --- Inline detail band (toggled with [d]) ---
+
+    def _detail_band_for_tab(self) -> tuple[str, str] | None:
+        """(#band-container, #content-static) for the active tab, or None when
             the active tab has no detail band (e.g. Diff)."""
-            try:
-                active = self.query_one("#tabs", TabbedContent).active
-            except NoMatches:
-                return None
-            if active == "favorites":
-                return "#fav-detail", "#fav-detail-content"
-            if active == "market":
-                return "#detail-panel", "#detail-content"
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
             return None
+        if active == "favorites":
+            return "#fav-detail", "#fav-detail-content"
+        if active == "market":
+            return "#detail-panel", "#detail-content"
+        return None
 
-        def _render_active_into(self, ids: tuple[str, str]) -> None:
-            """Render the current active row/favorite into a band's Static."""
-            band_id, content_id = ids
-            try:
-                content = self.query_one(content_id, Static)
-            except NoMatches:
-                return
-            if band_id == "#fav-detail":
-                fav, row = self._active_fav, self._active_row
-                if fav is None:
-                    content.update("[dim]Favoriten-Zeile wählen (Pfeile / Klick).[/dim]")
-                elif row is None:
-                    content.update(
-                        f"[bold]{fav.get('insurer', '')}[/bold] — "
-                        f"[italic]{fav.get('product', '')}[/italic]\n\n"
-                        "[yellow]Kein passender Tarif im aktuellen Snapshot.[/yellow]\n"
-                        "[dim]Liste oder Snapshot ist veraltet — config/favorites.json "
-                        "oder scripts/snapshot.py auffrischen.[/dim]"
-                    )
-                else:
-                    content.update(self._render_favorite_detail(row, fav))
-            else:  # market band
-                row = self._active_row
-                if row is None:
-                    content.update("[dim]Markt-Zeile wählen (Pfeile / Klick).[/dim]")
-                else:
-                    content.update(self._render_market_detail(row))
-
-        def action_toggle_detail(self) -> None:
-            """Show/hide the inline detail band below the active tab's table."""
-            ids = self._detail_band_for_tab()
-            if ids is None:
-                self.notify("Kein Detail-Panel auf diesem Tab.", severity="information")
-                return
-            band_id, _ = ids
-            try:
-                band = self.query_one(band_id)
-            except NoMatches:
-                return
-            band.display = not band.display
-            if band.display:
-                self._render_active_into(ids)
-                band.scroll_home(animate=False)
-
-        def _show_detail(self) -> None:
-            """Reveal the active tab's detail band and render the active row (used by
-            Enter / click-on-highlighted)."""
-            ids = self._detail_band_for_tab()
-            if ids is None:
-                return
-            band_id, _ = ids
-            try:
-                band = self.query_one(band_id)
-            except NoMatches:
-                return
-            band.display = True
-            self._render_active_into(ids)
-
-        def _refresh_market_detail(self) -> None:
-            """Re-render the Market band live — only when it is currently shown."""
-            try:
-                band = self.query_one("#detail-panel")
-            except NoMatches:
-                return
-            if band.display:
-                self._render_active_into(("#detail-panel", "#detail-content"))
-
-        def _refresh_fav_detail(self) -> None:
-            try:
-                band = self.query_one("#fav-detail")
-            except NoMatches:
-                return
-            if band.display:
-                self._render_active_into(("#fav-detail", "#fav-detail-content"))
-
-        # --- On-demand: download + analyze the selected tariff ([g]) ---
-
-        def action_fetch_docs(self) -> None:
-            """Resolve the selected row to its harvested source PDFs and, after a
-            confirm, download + run the analyze pipeline in the background."""
+    def _render_active_into(self, ids: tuple[str, str]) -> None:
+        """Render the current active row/favorite into a band's Static."""
+        band_id, content_id = ids
+        try:
+            content = self.query_one(content_id, Static)
+        except NoMatches:
+            return
+        if band_id == "#fav-detail":
+            fav, row = self._active_fav, self._active_row
+            if fav is None:
+                content.update("[dim]Favoriten-Zeile wählen (Pfeile / Klick).[/dim]")
+            elif row is None:
+                content.update(
+                    f"[bold]{fav.get('insurer', '')}[/bold] — "
+                    f"[italic]{fav.get('product', '')}[/italic]\n\n"
+                    "[yellow]Kein passender Tarif im aktuellen Snapshot.[/yellow]\n"
+                    "[dim]Liste oder Snapshot ist veraltet — config/favorites.json "
+                    "oder scripts/snapshot.py auffrischen.[/dim]"
+                )
+            else:
+                content.update(self._render_favorite_detail(row, fav))
+        else:  # market band
             row = self._active_row
             if row is None:
-                self.notify("Erst eine Zeile wählen (↵).", severity="warning")
-                return
-            entry = self._doc_entry(row)
-            if not entry or not entry.get("docs"):
-                self.notify(
-                    "Keine geharvesteten Quell-URLs — erst Browser-Schritt "
-                    "(Tarifdetails öffnen).",
-                    severity="warning",
-                    timeout=6,
-                )
-                return
-            if _load_detail(row.insurer, row.product):
-                self.notify(
-                    "Schon analysiert — [d] zeigt die Details.", severity="information"
-                )
-                return
+                content.update("[dim]Markt-Zeile wählen (Pfeile / Klick).[/dim]")
+            else:
+                content.update(self._render_market_detail(row))
 
-            def _go(confirmed: bool | None) -> None:
-                if confirmed:
-                    self._run_pipeline(entry, row)
+    def action_toggle_detail(self) -> None:
+        """Show/hide the inline detail band below the active tab's table."""
+        ids = self._detail_band_for_tab()
+        if ids is None:
+            self.notify("Kein Detail-Panel auf diesem Tab.", severity="information")
+            return
+        band_id, _ = ids
+        try:
+            band = self.query_one(band_id)
+        except NoMatches:
+            return
+        band.display = not band.display
+        if band.display:
+            self._render_active_into(ids)
+            band.scroll_home(animate=False)
 
-            self.push_screen(ConfirmFetchScreen(entry, ANALYZE_MODEL), _go)
+    def _show_detail(self) -> None:
+        """Reveal the active tab's detail band and render the active row (used by
+            Enter / click-on-highlighted)."""
+        ids = self._detail_band_for_tab()
+        if ids is None:
+            return
+        band_id, _ = ids
+        try:
+            band = self.query_one(band_id)
+        except NoMatches:
+            return
+        band.display = True
+        self._render_active_into(ids)
 
-        def action_analyze_local(self) -> None:
-            """Analyze a tariff whose source PDFs are ALREADY on disk: ingest →
+    def _refresh_market_detail(self) -> None:
+        """Re-render the Market band live — only when it is currently shown."""
+        try:
+            band = self.query_one("#detail-panel")
+        except NoMatches:
+            return
+        if band.display:
+            self._render_active_into(("#detail-panel", "#detail-content"))
+
+    def _refresh_fav_detail(self) -> None:
+        try:
+            band = self.query_one("#fav-detail")
+        except NoMatches:
+            return
+        if band.display:
+            self._render_active_into(("#fav-detail", "#fav-detail-content"))
+
+    # --- On-demand: download + analyze the selected tariff ([g]) ---
+
+    def action_fetch_docs(self) -> None:
+        """Resolve the selected row to its harvested source PDFs and, after a
+            confirm, download + run the analyze pipeline in the background."""
+        row = self._active_row
+        if row is None:
+            self.notify("Erst eine Zeile wählen (↵).", severity="warning")
+            return
+        entry = self._doc_entry(row)
+        if not entry or not entry.get("docs"):
+            self.notify(
+                "Keine geharvesteten Quell-URLs — erst Browser-Schritt "
+                "(Tarifdetails öffnen).",
+                severity="warning",
+                timeout=6,
+            )
+            return
+        if _load_detail(row.insurer, row.product):
+            self.notify(
+                "Schon analysiert — [d] zeigt die Details.", severity="information"
+            )
+            return
+
+        def _go(confirmed: bool | None) -> None:
+            if confirmed:
+                self._run_pipeline(entry, row)
+
+        self.push_screen(ConfirmFetchScreen(entry, ANALYZE_MODEL), _go)
+
+    def action_analyze_local(self) -> None:
+        """Analyze a tariff whose source PDFs are ALREADY on disk: ingest →
             extract, no download. For PDFs kept from a prior [g] or dropped in
             manually. Gated on data/raw/<stem>/ containing PDFs; still confirms
             because extract is a paid model call."""
-            row = self._active_row
-            if row is None:
-                self.notify("Erst eine Zeile wählen (↵).", severity="warning")
-                return
-            stem = row.stem or resolve_stem(row.insurer, row.product)
-            if not stem:
-                self.notify("Kein kanonischer stem für diese Zeile.", severity="warning")
-                return
-            raw_dir = _raw_dir_for_stem(stem)
-            if not (raw_dir.is_dir() and any(raw_dir.glob("*.pdf"))):
-                self.notify(
-                    f"Keine lokalen PDFs unter data/raw/{stem}/ — nutze [g] zum Download.",
-                    severity="warning",
-                    timeout=6,
-                )
-                return
-            if _load_detail(row.insurer, row.product):
-                self.notify(
-                    "Schon analysiert — [d] zeigt die Details.", severity="information"
-                )
-                return
-            entry = {"stem": stem, "insurer": row.insurer, "tariff": row.product}
-
-            def _go(confirmed: bool | None) -> None:
-                if confirmed:
-                    self._run_pipeline(entry, row, skip_download=True)
-
-            self.push_screen(
-                ConfirmFetchScreen(entry, ANALYZE_MODEL, skip_download=True), _go
+        row = self._active_row
+        if row is None:
+            self.notify("Erst eine Zeile wählen (↵).", severity="warning")
+            return
+        stem = row.stem or resolve_stem(row.insurer, row.product)
+        if not stem:
+            self.notify("Kein kanonischer stem für diese Zeile.", severity="warning")
+            return
+        raw_dir = _raw_dir_for_stem(stem)
+        if not (raw_dir.is_dir() and any(raw_dir.glob("*.pdf"))):
+            self.notify(
+                f"Keine lokalen PDFs unter data/raw/{stem}/ — nutze [g] zum Download.",
+                severity="warning",
+                timeout=6,
             )
+            return
+        if _load_detail(row.insurer, row.product):
+            self.notify(
+                "Schon analysiert — [d] zeigt die Details.", severity="information"
+            )
+            return
+        entry = {"stem": stem, "insurer": row.insurer, "tariff": row.product}
 
-        @work(thread=True, exclusive=True, group="pipeline")
-        def _run_pipeline(self, entry: dict, row: SnapshotRow,
-                          *, skip_download: bool = False) -> None:
-            """Run the analyze pipeline for one tariff off the UI thread; status is
+        def _go(confirmed: bool | None) -> None:
+            if confirmed:
+                self._run_pipeline(entry, row, skip_download=True)
+
+        self.push_screen(
+            ConfirmFetchScreen(entry, ANALYZE_MODEL, skip_download=True), _go
+        )
+
+    @work(thread=True, exclusive=True, group="pipeline")
+    def _run_pipeline(self, entry: dict, row: SnapshotRow,
+                      *, skip_download: bool = False) -> None:
+        """Run the analyze pipeline for one tariff off the UI thread; status is
             posted back via call_from_thread. With skip_download the PDFs are already
             in data/raw/<stem>/ and only ingest → extract run; otherwise fetch_docs
             --into-raw downloads them first."""
-            import subprocess
+        import subprocess
 
-            stem = entry.get("stem", "")
-            # Download straight into the canonical data/raw/<stem>/ layout (--into-raw),
-            # so ingest/extract name the record exactly <stem>.json — no filename-guessing
-            # intake step that could misname it and hide the result from the TUI.
-            steps = []
-            if not skip_download:
-                steps.append(
-                    ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--into-raw"])
+        stem = entry.get("stem", "")
+        # Download straight into the canonical data/raw/<stem>/ layout (--into-raw),
+        # so ingest/extract name the record exactly <stem>.json — no filename-guessing
+        # intake step that could misname it and hide the result from the TUI.
+        steps = []
+        if not skip_download:
+            steps.append(
+                ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--into-raw"])
+            )
+        steps += [
+            ("Ingest", ["uv", "run", "scripts/ingest.py"]),
+            ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
+        ]
+        self.call_from_thread(
+            self.notify, f"Pipeline gestartet: {stem} …", timeout=4
+        )
+        for name, cmd in steps:
+            try:
+                proc = subprocess.run(
+                    cmd,
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
                 )
-            steps += [
-                ("Ingest", ["uv", "run", "scripts/ingest.py"]),
-                ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
-            ]
-            self.call_from_thread(
-                self.notify, f"Pipeline gestartet: {stem} …", timeout=4
-            )
-            for name, cmd in steps:
-                try:
-                    proc = subprocess.run(
-                        cmd,
-                        cwd=str(REPO_ROOT),
-                        capture_output=True,
-                        text=True,
-                        timeout=600,
-                    )
-                except (subprocess.TimeoutExpired, OSError) as exc:
-                    self.call_from_thread(
-                        self.notify,
-                        f"{name} fehlgeschlagen: {exc}",
-                        severity="error",
-                        timeout=8,
-                    )
-                    return
-                if proc.returncode != 0:
-                    detail = (proc.stderr or proc.stdout or "").strip().splitlines()
-                    tail = detail[-1] if detail else f"exit {proc.returncode}"
-                    self.call_from_thread(
-                        self.notify,
-                        f"{name} fehlgeschlagen: {tail}",
-                        severity="error",
-                        timeout=10,
-                    )
-                    return
-                self.call_from_thread(self.notify, f"{name} ✓", timeout=2)
-            self.call_from_thread(self._after_pipeline, row)
+            except (subprocess.TimeoutExpired, OSError) as exc:
+                self.call_from_thread(
+                    self.notify,
+                    f"{name} fehlgeschlagen: {exc}",
+                    severity="error",
+                    timeout=8,
+                )
+                return
+            if proc.returncode != 0:
+                detail = (proc.stderr or proc.stdout or "").strip().splitlines()
+                tail = detail[-1] if detail else f"exit {proc.returncode}"
+                self.call_from_thread(
+                    self.notify,
+                    f"{name} fehlgeschlagen: {tail}",
+                    severity="error",
+                    timeout=10,
+                )
+                return
+            self.call_from_thread(self.notify, f"{name} ✓", timeout=2)
+        self.call_from_thread(self._after_pipeline, row)
 
-        def _after_pipeline(self, row: SnapshotRow) -> None:
-            """Reload data so the freshly extracted record shows, then refresh panels."""
-            self._load_data()
-            self._populate_market_table()
-            self._populate_favorites_table()
-            # Re-render whichever detail band is currently shown.
-            self._refresh_market_detail()
-            self._refresh_fav_detail()
-            self.notify(
-                f"Analyse fertig: {row.insurer} {row.product} — [d] zeigt die Details.",
-                timeout=8,
-            )
+    def _after_pipeline(self, row: SnapshotRow) -> None:
+        """Reload data so the freshly extracted record shows, then refresh panels."""
+        self._load_data()
+        self._populate_market_table()
+        self._populate_favorites_table()
+        # Re-render whichever detail band is currently shown.
+        self._refresh_market_detail()
+        self._refresh_fav_detail()
+        self.notify(
+            f"Analyse fertig: {row.insurer} {row.product} — [d] zeigt die Details.",
+            timeout=8,
+        )
 
+
+def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) -> None:
+    """Run the interactive app, or render the screenshot set and exit when
+    screenshot_dir is given."""
     app = CheckApp(snapshot_path=snapshot_path)
 
     if screenshot_dir is not None:

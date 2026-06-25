@@ -6,7 +6,10 @@ this module imports no data model and pulls in no Textual."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # annotations only; never imported at runtime (keeps this leaf
+    from tui_data import SnapshotRow  # module Textual-free and data-model-free)
 
 
 # Data-availability status, from "we only read the listing" to "fully analyzed".
