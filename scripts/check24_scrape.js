@@ -80,6 +80,17 @@
     const bewertung_anzahl = countEl
       ? (parseInt(countEl.textContent.replace(/[^\d]/g, ""), 10) || null)
       : null; // strip ALL non-digits: handles "4.713" and a parenthesised "(4.713)"
+    // Per-Baustein Wartezeiten aus dem Latenz-Tooltip (Privat/Beruf/Wohnen/Verkehr).
+    // The label spans end with a colon ("Privat:") — strip it for clean dict keys.
+    const wartezeit_per_modul_raw = {};
+    for (const mod of c.querySelectorAll(".tooltip_latency_module")) {
+      const label = (mod.querySelector(".tooltip_latency_module__module")?.textContent || "")
+        .replace(/:$/, "").trim();
+      const wert = (mod.querySelector(".tooltip_latency_module__value")?.textContent || "").trim();
+      if (label && wert) wartezeit_per_modul_raw[label] = wert;
+    }
+    const wartezeit_per_modul = Object.keys(wartezeit_per_modul_raw).length
+      ? wartezeit_per_modul_raw : null;
     const row = {
       position,
       insurer,
@@ -91,6 +102,7 @@
       selbstbeteiligung: grab(/Selbstbeteiligung[:\s]*([^\n]+)/),
       deckungssumme: grab(/Deckungssumme[:\s]*([^\n]+)/),
       wartezeit: grab(/Wartezeit[:\s]*([^\n]+)/),
+      wartezeit_per_modul,
     };
     rows.push(row);
     cardOf.set(row, c);
