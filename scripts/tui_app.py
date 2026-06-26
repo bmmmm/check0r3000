@@ -522,8 +522,8 @@ class CheckApp(App):
         ref_row = self._reference_row()
         if ref_row is not None and ref_price is not None:
             parts.append(
-                f"◆ Referenz: {ref_row.insurer} {ref_row.product} "
-                f"(SB {ref_sb}, €{ref_price:.2f}/mo) — \\[R] setzt eine andere; "
+                f"◆ Referenz: {_esc(ref_row.insurer)} {_esc(ref_row.product)} "
+                f"(SB {_esc(ref_sb)}, €{ref_price:.2f}/mo) — \\[R] setzt eine andere; "
                 f"Δ vergleicht dagegen, ≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
             )
         parts.append("↵ Zeile wählen → Detail · \\[R] Referenz · \\[u] Favorit")
@@ -541,8 +541,8 @@ class CheckApp(App):
         if row is None:
             return (
                 "[dim]?[/dim]",
-                fav.get("insurer") or "",
-                fav.get("product") or "",
+                _esc(fav.get("insurer") or ""),
+                _esc(fav.get("product") or ""),
                 "—", "—", "—", "—", "—",
                 self._docs_label(fav.get("stem", "")),
             )
@@ -562,11 +562,11 @@ class CheckApp(App):
             if self._is_reference(fav)
             else self._delta_cell(row.monatlich_eur, row.selbstbeteiligung, ref_price, ref_sb)
         )
-        sb_cell = row.selbstbeteiligung or "—"
+        sb_cell = _esc(row.selbstbeteiligung or "—")
         if len(variants) > 1:
             sb_cell = f"{sb_cell} [dim]·{len(variants)}▾[/dim]"
         docs_cell = f"{_status_glyph(row)} {self._docs_label(fav.get('stem', ''))}"
-        return (star, row.insurer, row.product, note_col, _bewertung_cell(row),
+        return (star, _esc(row.insurer), _esc(row.product), note_col, _bewertung_cell(row),
                 price_col, sb_cell, delta_col, docs_cell)
 
     def _populate_favorites_table(self) -> None:
@@ -615,7 +615,7 @@ class CheckApp(App):
 
     def _fav_detail_header(self, row: SnapshotRow, fav: dict) -> list[str]:
         lines: list[str] = []
-        lines.append(f"[bold]{row.insurer}[/bold] — [italic]{row.product}[/italic]")
+        lines.append(f"[bold]{_esc(row.insurer)}[/bold] — [italic]{_esc(row.product)}[/italic]")
         url = self._build_offer_url(row.position) if row.position else None
         if url:
             lines.append(
@@ -630,7 +630,7 @@ class CheckApp(App):
                 marker, mcolor = "▶", "bright_green"
             else:
                 marker, mcolor = "★", "yellow"
-            lines.append(f"[{mcolor}]{marker} {tag or 'Referenz'}[/{mcolor}]")
+            lines.append(f"[{mcolor}]{marker} {_esc(tag) or 'Referenz'}[/{mcolor}]")
         lines.append("")
         return lines
 
@@ -656,7 +656,7 @@ class CheckApp(App):
         price = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
         lines.append(
             f"€/Monat   : [bright_green]{price}[/bright_green]   "
-            f"(SB {row.selbstbeteiligung or '—'})"
+            f"(SB {_esc(row.selbstbeteiligung or '—')})"
         )
         ref_price, ref_sb = self._reference_info()
         if ref_price is not None and row.monatlich_eur is not None and not self._is_reference(fav):
@@ -672,8 +672,8 @@ class CheckApp(App):
                 )
                 if (row.selbstbeteiligung or "") != (ref_sb or ""):
                     lines.append(
-                        f"  [yellow]≈ andere SB-Stufe[/yellow] [dim]({row.selbstbeteiligung} "
-                        f"vs. Referenz {ref_sb}) — nicht 1:1[/dim]"
+                        f"  [yellow]≈ andere SB-Stufe[/yellow] [dim]({_esc(row.selbstbeteiligung)} "
+                        f"vs. Referenz {_esc(ref_sb)}) — nicht 1:1[/dim]"
                     )
         lines.append("")
         return lines
@@ -693,7 +693,7 @@ class CheckApp(App):
         ):
             p = f"{v.monatlich_eur:.2f}" if v.monatlich_eur is not None else "—"
             mark = " [bright_yellow]◀ shown[/bright_yellow]" if v.key == row.key else ""
-            lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
+            lines.append(f"  {_esc(v.selbstbeteiligung):<18} €{p}{mark}")
         lines.append("")
         return lines
 
@@ -704,10 +704,10 @@ class CheckApp(App):
         lines = ["[underline]Quelldokumente (URLs gesichert)[/underline]"]
         for dd in docs:
             lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-            fname = (dd.get("file") or "")[:54]
+            fname = _esc((dd.get("file") or "")[:54])
             doc_url = dd.get("url") or ""
             if doc_url:
-                lines.append(f'  [cyan]{lbl:<6}[/cyan] [link="{doc_url}"]{fname}[/link]')
+                lines.append(f'  [cyan]{lbl:<6}[/cyan] [link="{_esc(doc_url)}"]{fname}[/link]')
             else:
                 lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
         if detail_rec is None:
@@ -850,12 +850,12 @@ class CheckApp(App):
             table.add_row(
                 str(r.position),
                 star,
-                r.insurer,
-                r.product,
+                _esc(r.insurer),
+                _esc(r.product),
                 note_col,
                 _bewertung_cell(r),
                 price_col,
-                r.selbstbeteiligung or "—",
+                _esc(r.selbstbeteiligung or "—"),
                 self._change_cell(r.stem),
                 key=row_key,
             )
@@ -913,11 +913,11 @@ class CheckApp(App):
             lines.append("[underline]Quelldokumente[/underline]")
             for dd in entry["docs"]:
                 lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                fname = (dd.get("file") or "")[:60]
+                fname = _esc((dd.get("file") or "")[:60])
                 doc_url = dd.get("url") or ""
                 if doc_url:
                     lines.append(
-                        f'  [cyan]{lbl:<6}[/cyan] [link="{doc_url}"]{fname}[/link]'
+                        f'  [cyan]{lbl:<6}[/cyan] [link="{_esc(doc_url)}"]{fname}[/link]'
                     )
                 else:
                     lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
@@ -1069,7 +1069,7 @@ class CheckApp(App):
         if detail is None:
             detail = _load_detail(row.insurer, row.product)
         if not detail:
-            head = f"[bold]{row.insurer}[/bold] — {row.product}\n\n"
+            head = f"[bold]{_esc(row.insurer)}[/bold] — {_esc(row.product)}\n\n"
             if self._equivalent_analyzed(row) is not None:
                 # The same product is analyzed under another distributor; the docs
                 # block below names it, so don't tell the user to run ingest here.
@@ -1097,10 +1097,10 @@ class CheckApp(App):
             if detail.is_enriched
             else "[cyan]base tariff record[/cyan]"
         )
-        lines.append(f"[bold underline]{detail.insurer}[/bold underline]  — {badge}")
-        lines.append(f"[bold]{detail.tariff}[/bold]")
+        lines.append(f"[bold underline]{_esc(detail.insurer)}[/bold underline]  — {badge}")
+        lines.append(f"[bold]{_esc(detail.tariff)}[/bold]")
         if detail.stand:
-            lines.append(f"Stand: {detail.stand}")
+            lines.append(f"Stand: {_esc(detail.stand)}")
         lines.append("")
         lines += self._record_body_lines(detail)
         return "\n".join(lines)
@@ -1135,7 +1135,7 @@ class CheckApp(App):
             if cov.get("selbstbeteiligung"):
                 lines.append(f"  Selbstbeteiligung:   {_esc(str(cov['selbstbeteiligung']))}")
             if cov.get("wartezeit_monate") is not None:
-                lines.append(f"  Wartezeit:           {cov['wartezeit_monate']} Monate")
+                lines.append(f"  Wartezeit:           {_esc(cov['wartezeit_monate'])} Monate")
             if cov.get("wartezeit_ausnahmen"):
                 lines.append("  Wartezeit-Ausnahmen:")
                 wa = cov["wartezeit_ausnahmen"]
@@ -1718,9 +1718,9 @@ class CheckApp(App):
         if diff.get("coverage"):
             lines.append("  [bold]Deckung[/bold]")
             for ch in diff["coverage"]:
-                old_v = str(ch["old"]) if ch["old"] is not None else "—"
-                new_v = str(ch["new"]) if ch["new"] is not None else "—"
-                lines.append(f"    {ch['field']:<22} [dim]{old_v}[/dim] → {new_v}")
+                old_v = _esc(str(ch["old"])) if ch["old"] is not None else "—"
+                new_v = _esc(str(ch["new"])) if ch["new"] is not None else "—"
+                lines.append(f"    {_esc(ch['field']):<22} [dim]{old_v}[/dim] → {new_v}")
 
         # --- leistungen ---
         if diff.get("leistungen"):
@@ -2386,7 +2386,7 @@ class CheckApp(App):
         if any(matches(f) for f in favs):
             self._favorites["favorites"] = [f for f in favs if not matches(f)]
             self._save_favorites()
-            self.notify(f"Aus Favoriten entfernt: {insurer} {product}", timeout=4)
+            self.notify(f"Aus Favoriten entfernt: {_esc(insurer)} {_esc(product)}", timeout=4)
         else:
             entry: dict[str, Any] = {"insurer": insurer, "product": product}
             if stem:
@@ -2396,7 +2396,7 @@ class CheckApp(App):
             entry["tag"] = "in TUI hinzugefügt"
             favs.append(entry)
             self._save_favorites()
-            self.notify(f"Zu Favoriten hinzugefügt: {insurer} {product}", timeout=4)
+            self.notify(f"Zu Favoriten hinzugefügt: {_esc(insurer)} {_esc(product)}", timeout=4)
         self._reload_all()
 
     def action_edit_note(self) -> None:
@@ -2420,7 +2420,7 @@ class CheckApp(App):
         )
         if fav is None:
             self.notify(
-                f"{insurer} {product} ist kein Favorit — erst \\[u] hinzufügen.",
+                f"{_esc(insurer)} {_esc(product)} ist kein Favorit — erst \\[u] hinzufügen.",
                 severity="warning",
                 timeout=6,
             )
@@ -2437,7 +2437,7 @@ class CheckApp(App):
             self._save_favorites()
             self.notify(
                 ("Notiz gespeichert" if note else "Notiz entfernt")
-                + f": {insurer} {product}",
+                + f": {_esc(insurer)} {_esc(product)}",
                 timeout=4,
             )
             self._reload_all()
@@ -2471,7 +2471,7 @@ class CheckApp(App):
             f.pop("reference", None)
         self._save_favorites()
         self.notify(
-            f"Referenz: {insurer} {product} (SB {sb or '—'}) — Δ neu berechnet.",
+            f"Referenz: {_esc(insurer)} {_esc(product)} (SB {_esc(sb) or '—'}) — Δ neu berechnet.",
             timeout=5,
         )
         self._reload_all()
@@ -2502,14 +2502,14 @@ class CheckApp(App):
         if stem in current:
             current.remove(stem)
             self._set_compare_stems(current)
-            self.notify(f"Aus Vergleich entfernt: {insurer} {product}", timeout=4)
+            self.notify(f"Aus Vergleich entfernt: {_esc(insurer)} {_esc(product)}", timeout=4)
             self._reload_all()
             return
 
         current.append(stem)
         self._set_compare_stems(current)
         if stem in self._details_by_stem:
-            self.notify(f"Zum Vergleich hinzugefügt: {insurer} {product}", timeout=4)
+            self.notify(f"Zum Vergleich hinzugefügt: {_esc(insurer)} {_esc(product)}", timeout=4)
             self._reload_all()
             return
 
@@ -2523,7 +2523,7 @@ class CheckApp(App):
                 else:
                     self.notify(
                         f"Im Vergleich vorgemerkt — \\[g] startet die Analyse für "
-                        f"{insurer} {product} später.",
+                        f"{_esc(insurer)} {_esc(product)} später.",
                         timeout=6,
                     )
                 self._reload_all()
@@ -2531,7 +2531,7 @@ class CheckApp(App):
             self.push_screen(ConfirmFetchScreen(entry, ANALYZE_MODEL), _go)
         else:
             self.notify(
-                f"Im Vergleich vorgemerkt, aber {insurer} {product} ist noch nicht "
+                f"Im Vergleich vorgemerkt, aber {_esc(insurer)} {_esc(product)} ist noch nicht "
                 "analysierbar (keine Quell-URLs). \\[H] harvestet + analysiert live; "
                 "die Spalte erscheint danach.",
                 severity="warning",
@@ -2833,8 +2833,8 @@ class CheckApp(App):
                 content.update("[dim]Favoriten-Zeile wählen (Pfeile / Klick).[/dim]")
             elif row is None:
                 content.update(
-                    f"[bold]{fav.get('insurer', '')}[/bold] — "
-                    f"[italic]{fav.get('product', '')}[/italic]\n\n"
+                    f"[bold]{_esc(fav.get('insurer', ''))}[/bold] — "
+                    f"[italic]{_esc(fav.get('product', ''))}[/italic]\n\n"
                     "[yellow]Kein passender Tarif im aktuellen Snapshot.[/yellow]\n"
                     "[dim]Liste oder Snapshot ist veraltet — config/favorites.json "
                     "oder scripts/snapshot.py auffrischen.[/dim]"
@@ -2930,7 +2930,7 @@ class CheckApp(App):
             return
         if self._detail_for_row(row):
             self.notify(
-                "Schon analysiert — [d] zeigt die Details.", severity="information"
+                "Schon analysiert — \\[d] zeigt die Details.", severity="information"
             )
             return
 
@@ -2963,7 +2963,7 @@ class CheckApp(App):
             return
         if self._detail_for_row(row):
             self.notify(
-                "Schon analysiert — [d] zeigt die Details.", severity="information"
+                "Schon analysiert — \\[d] zeigt die Details.", severity="information"
             )
             return
         entry = {"stem": stem, "insurer": row.insurer, "tariff": row.product}
@@ -2988,7 +2988,7 @@ class CheckApp(App):
             return
         if self._detail_for_row(row):
             self.notify(
-                "Schon analysiert — [d] zeigt die Details.", severity="information"
+                "Schon analysiert — \\[d] zeigt die Details.", severity="information"
             )
             return
         entry = self._doc_entry(row)
@@ -3045,7 +3045,7 @@ class CheckApp(App):
             ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
         ]
         self.call_from_thread(
-            self.notify, f"Pipeline gestartet: {label} …", timeout=4
+            self.notify, f"Pipeline gestartet: {_esc(label)} …", timeout=4
         )
         for name, cmd in steps:
             try:
@@ -3087,6 +3087,6 @@ class CheckApp(App):
         self._refresh_fav_detail()
         self._update_status_bar()
         self.notify(
-            f"Analyse fertig: {row.insurer} {row.product} — [d] zeigt die Details.",
+            f"Analyse fertig: {_esc(row.insurer)} {_esc(row.product)} — \\[d] zeigt die Details.",
             timeout=8,
         )

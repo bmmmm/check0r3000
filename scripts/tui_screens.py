@@ -65,7 +65,7 @@ class ConfirmFetchScreen(ModalScreen[bool]):
         docs = e.get("docs", [])
         if self._harvest:
             lines = [
-                f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                f"[bold]{_esc(e.get('insurer', ''))} — {_esc(e.get('tariff', ''))}[/bold]",
                 "",
                 "[bold]Live-Harvest[/bold] — lädt die CHECK24-Ergebnisseite headless "
                 "([dim]~30–60s[/dim]), liest die Tarifdetails-URLs,",
@@ -77,10 +77,10 @@ class ConfirmFetchScreen(ModalScreen[bool]):
             ]
         elif self._skip_download:
             lines = [
-                f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                f"[bold]{_esc(e.get('insurer', ''))} — {_esc(e.get('tariff', ''))}[/bold]",
                 "",
                 "[bold]Analyse ohne Download[/bold] — PDFs liegen lokal "
-                f"([cyan]data/raw/{e.get('stem', '').replace('__', '/')}/[/cyan]).",
+                f"([cyan]data/raw/{_esc(e.get('stem', '').replace('__', '/'))}/[/cyan]).",
                 f"ingest → extract  [dim](Modell: {self._model})[/dim]",
                 "[dim]Extraktion ist ein Modell-Call.[/dim]",
                 "",
@@ -88,14 +88,14 @@ class ConfirmFetchScreen(ModalScreen[bool]):
             ]
         else:
             lines = [
-                f"[bold]{e.get('insurer', '')} — {e.get('tariff', '')}[/bold]",
+                f"[bold]{_esc(e.get('insurer', ''))} — {_esc(e.get('tariff', ''))}[/bold]",
                 "",
                 f"Download von [cyan]rechtsschutz.check24.de[/cyan]: "
                 f"[bold]{len(docs)}[/bold] PDF(s)",
             ]
             for dd in docs:
                 lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                lines.append(f"  • [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:48]}")
+                lines.append(f"  • [cyan]{lbl:<6}[/cyan] {_esc((dd.get('file') or '')[:48])}")
             lines += [
                 "",
                 f"dann: ingest → extract  [dim](Modell: {self._model})[/dim]",
@@ -130,15 +130,16 @@ class DeleteDataScreen(ModalScreen[str | None]):
         self._is_fav = is_fav
 
     def compose(self) -> ComposeResult:
-        i, _, t = self._stem.partition("__")
+        i, _, t = (_esc(p) for p in self._stem.partition("__"))
+        stem_e = _esc(self._stem)
         unfav = "" if self._is_fav else "   [dim](nicht in Favoriten)[/dim]"
         lines = [
-            f"[bold]Daten löschen — {self._label}[/bold]",
-            f"[dim]stem: {self._stem}[/dim]",
+            f"[bold]Daten löschen — {_esc(self._label)}[/bold]",
+            f"[dim]stem: {stem_e}[/dim]",
             "[dim]Irreversibel.[/dim]",
             "",
             "[bold]\\[1][/bold] Nur Analyse-Records",
-            f"     [dim]out/tariffs|enriched/{self._stem}.json — per \\[g] neu erzeugbar[/dim]",
+            f"     [dim]out/tariffs|enriched/{stem_e}.json — per \\[g] neu erzeugbar[/dim]",
             "[bold]\\[2][/bold] Records + lokale PDFs + Texte",
             f"     [dim]+ data/raw/{i}/{t}/ + data/extracted/{i}/{t}/ — PDFs neu zu laden[/dim]",
             f"[bold]\\[3][/bold] Voller Purge + aus Favoriten entfernen{unfav}",
@@ -412,17 +413,17 @@ class OpenSourceScreen(ModalScreen[str | None]):
         self._stem = stem
 
     def compose(self) -> ComposeResult:
-        i, _, t = self._stem.partition("__")
-        lines = [f"[bold]Quelle öffnen — {self._label}[/bold]", ""]
+        i, _, t = (_esc(p) for p in self._stem.partition("__"))
+        lines = [f"[bold]Quelle öffnen — {_esc(self._label)}[/bold]", ""]
         if self._docs:
             lines.append("[underline]Dokumente[/underline]")
             for dd in self._docs:
                 lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                fname = (dd.get("file") or "")[:50]
+                fname = _esc((dd.get("file") or "")[:50])
                 doc_url = dd.get("url") or ""
                 if doc_url:
                     lines.append(
-                        f'  [cyan]{lbl:<6}[/cyan] [link="{doc_url}"]{fname}[/link]'
+                        f'  [cyan]{lbl:<6}[/cyan] [link="{_esc(doc_url)}"]{fname}[/link]'
                     )
                 else:
                     lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
