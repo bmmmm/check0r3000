@@ -2211,7 +2211,8 @@ class CheckApp(App):
         docs = (entry or {}).get("docs", [])
         raw_dir = _raw_dir_for_stem(stem) if stem else None
         n_pdfs = len(list(raw_dir.glob("*.pdf"))) if raw_dir and raw_dir.is_dir() else 0
-        has_urls = any(d.get("url") for d in docs)
+        urls = [d["url"] for d in docs if d.get("url")]
+        has_urls = bool(urls)
         if not has_urls and not n_pdfs:
             self.notify(
                 "Keine Quell-URLs und keine lokalen PDFs für diese Zeile.",
@@ -2221,14 +2222,22 @@ class CheckApp(App):
             return
         label = f"{insurer} {product}"
 
+        # Skip the modal when only one source type is available.
+        if has_urls and not n_pdfs:
+            self._open_external(urls)
+            return
+        if n_pdfs and not has_urls:
+            self._open_external([str(raw_dir)])
+            return
+
         def _go(choice: str | None) -> None:
             if choice == "online":
-                self._open_external([d["url"] for d in docs if d.get("url")])
+                self._open_external(urls)
             elif choice == "disk" and raw_dir is not None:
                 self._open_external([str(raw_dir)])
 
         self.push_screen(
-            OpenSourceScreen(label, docs, has_urls, n_pdfs, stem or ""), _go
+            OpenSourceScreen(label, docs, len(urls), n_pdfs, stem or ""), _go
         )
 
     def _open_external(self, targets: list[str]) -> None:

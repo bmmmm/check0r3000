@@ -440,6 +440,16 @@ class OpenSourceScreen(ModalScreen[str | None]):
         lines += [online, disk, "", "[bold]\\[Esc][/bold] Abbrechen"]
         yield Container(Static("\n".join(lines)), id="open-box")
 
+    def on_click(self, event) -> None:
+        import shutil
+        import subprocess
+        style = getattr(event, "style", None)
+        link = style.link if (style is not None and hasattr(style, "link")) else None
+        if link and link.startswith("http"):
+            opener = "open" if sys.platform == "darwin" else (shutil.which("xdg-open") or "xdg-open")
+            subprocess.Popen([opener, link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            event.stop()
+
     def action_pick(self, choice: str) -> None:
         if choice == "online" and not self._n_urls:
             return
