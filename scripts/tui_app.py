@@ -492,6 +492,65 @@ class CheckApp(App):
                 seen.append(lbl)
         return "·".join(seen) if seen else "[dim]—[/dim]"
 
+    def _update_fav_banner(self, ref_price: float | None, ref_sb: str | None) -> None:
+        try:
+            ko = self.query_one("#fav-knockout", Label)
+        except NoMatches:
+            return
+        parts: list[str] = []
+        ko_text = self._favorites.get("knockout", "")
+        if ko_text:
+            parts.append(f"⊘ {ko_text}")
+        ref_row = self._reference_row()
+        if ref_row is not None and ref_price is not None:
+            parts.append(
+                f"◆ Referenz: {ref_row.insurer} {ref_row.product} "
+                f"(SB {ref_sb}, €{ref_price:.2f}/mo) — \\[R] setzt eine andere; "
+                f"Δ vergleicht dagegen, ≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
+            )
+        parts.append("↵ Zeile wählen → Detail · \\[R] Referenz · \\[u] Favorit")
+        parts.append(STATUS_LEGEND)
+        ko.update("\n".join(parts))
+
+    def _fav_row_cells(
+        self,
+        fav: dict,
+        row: "SnapshotRow | None",
+        variants: "list[SnapshotRow]",
+        ref_price: float | None,
+        ref_sb: str | None,
+    ) -> tuple[str, ...]:
+        if row is None:
+            return (
+                "[dim]?[/dim]",
+                fav.get("insurer") or "",
+                fav.get("product") or "",
+                "—", "—", "—", "—", "—",
+                self._docs_label(fav.get("stem", "")),
+            )
+        if self._is_reference(fav):
+            star = "[bright_yellow]◆[/bright_yellow]"
+        elif fav.get("recommended"):
+            star = "[bright_green]▶[/bright_green]"
+        else:
+            star = "[yellow]★[/yellow]"
+        nc = _tarifnote_color(row.tarifnote)
+        note_col = f"[{nc}]{row.tarifnote}[/{nc}]" if row.tarifnote else "—"
+        price_str = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
+        pc = _price_color(row.monatlich_eur, self._q1, self._q3)
+        price_col = f"[{pc}]{price_str}[/{pc}]"
+        delta_col = (
+            "[dim]— (Referenz)[/dim]"
+            if self._is_reference(fav)
+            else self._delta_cell(row.monatlich_eur, row.selbstbeteiligung, ref_price, ref_sb)
+        )
+        sb_cell = row.selbstbeteiligung or "—"
+        if len(variants) > 1:
+            sb_cell = f"{sb_cell} [dim]·{len(variants)}▾[/dim]"
+        docs_cell = f"{_status_glyph(row)} {self._docs_label(fav.get('stem', ''))}"
+        return (star, row.insurer, row.product, note_col, _bewertung_cell(row),
+                price_col, sb_cell, delta_col, docs_cell)
+
     def _populate_favorites_table(self) -> None:
         try:
             table: DataTable = self.query_one("#fav-table", DataTable)
@@ -503,31 +562,11 @@ class CheckApp(App):
         self._fav_rows = {}
 
         ref_price, ref_sb = self._reference_info()
-
-        # Banner: knock-out rule + the reference anchor + a drill-in hint.
-        try:
-            ko = self.query_one("#fav-knockout", Label)
-            parts: list[str] = []
-            ko_text = self._favorites.get("knockout", "")
-            if ko_text:
-                parts.append(f"⊘ {ko_text}")
-            ref_row = self._reference_row()
-            if ref_row is not None and ref_price is not None:
-                parts.append(
-                    f"◆ Referenz: {ref_row.insurer} {ref_row.product} "
-                    f"(SB {ref_sb}, €{ref_price:.2f}/mo) — \\[R] setzt eine andere; "
-                    f"Δ vergleicht dagegen, ≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
-                )
-            parts.append("↵ Zeile wählen → Detail · \\[R] Referenz · \\[u] Favorit")
-            parts.append(STATUS_LEGEND)
-            ko.update("\n".join(parts))
-        except NoMatches:
-            pass
+        self._update_fav_banner(ref_price, ref_sb)
 
         if not self._snapshot:
             return
 
-        # Resolve, then order by Tarifnote then price (best decision first).
         entries: list[tuple[dict, SnapshotRow | None, list[SnapshotRow]]] = []
         for fav in self._favorites.get("favorites", []):
             row, variants = match_favorite(self._snapshot, fav)
@@ -546,49 +585,9 @@ class CheckApp(App):
         entries.sort(key=_sort_key)
 
         for idx, (fav, row, variants) in enumerate(entries):
-            key = f"fav-{idx}"  # unique per board row, never collides
+            key = f"fav-{idx}"
             self._fav_rows[key] = (row, fav)
-            if row is None:
-                table.add_row(
-                    "[dim]?[/dim]",
-                    fav.get("insurer") or "",
-                    fav.get("product") or "",
-                    "—", "—", "—", "—", "—",
-                    self._docs_label(fav.get("stem", "")),
-                    key=key,
-                )
-                continue
-
-            if self._is_reference(fav):
-                star = "[bright_yellow]◆[/bright_yellow]"
-            elif fav.get("recommended"):
-                star = "[bright_green]▶[/bright_green]"
-            else:
-                star = "[yellow]★[/yellow]"
-
-            nc = _tarifnote_color(row.tarifnote)
-            note_col = f"[{nc}]{row.tarifnote}[/{nc}]" if row.tarifnote else "—"
-            price_str = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
-            pc = _price_color(row.monatlich_eur, self._q1, self._q3)
-            price_col = f"[{pc}]{price_str}[/{pc}]"
-
-            if self._is_reference(fav):
-                delta_col = "[dim]— (Referenz)[/dim]"
-            else:
-                delta_col = self._delta_cell(
-                    row.monatlich_eur, row.selbstbeteiligung, ref_price, ref_sb
-                )
-
-            sb_cell = row.selbstbeteiligung or "—"
-            if len(variants) > 1:
-                sb_cell = f"{sb_cell} [dim]·{len(variants)}▾[/dim]"
-
-            docs_cell = f"{_status_glyph(row)} {self._docs_label(fav.get('stem', ''))}"
-            table.add_row(
-                star, row.insurer, row.product, note_col, _bewertung_cell(row),
-                price_col, sb_cell, delta_col, docs_cell,
-                key=key,
-            )
+            table.add_row(*self._fav_row_cells(fav, row, variants, ref_price, ref_sb), key=key)
 
         self._fav_ident_to_rk = {}
         for rk, (row, fav) in self._fav_rows.items():
@@ -1641,7 +1640,8 @@ class CheckApp(App):
                 continue
             try:
                 row_idx = table.get_row_index(rk)
-                table.move_cursor(row=row_idx)
+                if table.cursor_coordinate.row != row_idx:
+                    table.move_cursor(row=row_idx)
             except Exception:
                 pass
 
