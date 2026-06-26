@@ -382,6 +382,16 @@ def _doc_by_tariff_map() -> dict[tuple[str, str], dict]:
     return _DOC_BY_TARIFF_CACHE
 
 
+def reset_doc_cache() -> None:
+    """Invalidate the module-level (insurer, product) -> entry cache behind
+    resolve_stem. The URL manifest IS rewritten in-session — [H] live-harvest
+    appends new stems — so the cache must be dropped on every data reload, or a
+    freshly-harvested tariff keeps stem=None (invisible to detail/Vergleich/
+    change-tracking) until the app restarts."""
+    global _DOC_BY_TARIFF_CACHE
+    _DOC_BY_TARIFF_CACHE = None
+
+
 def resolve_stem(insurer: str, product: str) -> str | None:
     """Map a snapshot (insurer, product) to its canonical tariff stem via the URL
     manifest. Exact match first, then a unique product match with overlapping insurer

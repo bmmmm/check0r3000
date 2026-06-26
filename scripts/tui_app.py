@@ -40,6 +40,7 @@ from tui_data import (  # noqa: E402
     load_feature_diff,
     load_snapshot,
     match_favorite,
+    reset_doc_cache,
     resolve_stem,
 )
 from tui_format import (  # noqa: E402
@@ -340,6 +341,10 @@ class CheckApp(App):
 
     def _load_data(self) -> None:
         """Load snapshot and supplemental data."""
+        # Drop the stem-resolution cache first: [H] harvest rewrites the manifest
+        # mid-session, and load_snapshot() below resolves every row's stem through
+        # it — a stale cache leaves freshly-harvested tariffs unresolved.
+        reset_doc_cache()
         if self._snapshot_path is not None:
             path = self._snapshot_path
         else:
@@ -2298,6 +2303,10 @@ class CheckApp(App):
                         timeout=8,
                     )
                     return
+                # The query just changed on disk; drop the cached offer-URL base so
+                # CHECK24 links rebuild from the new params (not the next [r] reload).
+                if hasattr(self, "_offer_url_cache"):
+                    del self._offer_url_cache
                 # Show the resulting URL so the user can paste it into the browser.
                 # is_example is now False — we just wrote the real profile.
                 new_url = base + "?" + new_query
@@ -2772,18 +2781,28 @@ class CheckApp(App):
 
         if scope in ("purge", "purge_unfav"):
             insurer_part, _, tariff_part = stem.partition("__")
-            # A stem must be 'insurer__tariff'; without the partition tariff_part is
-            # "" and the path collapses to data/<base>/<insurer>/, so rmtree would
-            # wipe the WHOLE insurer (every tariff). Refuse rather than over-delete.
-            if "__" not in stem or not insurer_part or not tariff_part:
+            # A stem must be 'insurer__tariff'. An empty part collapses the path to
+            # data/<base>/<insurer>/ (rmtree wipes the WHOLE insurer); a '.'/'..' or
+            # separator in a part lets rmtree escape data/ entirely — '..__..'
+            # resolves to the repo root. Refuse rather than over-delete.
+            unsafe = any(
+                p in (".", "..") or "/" in p or "\\" in p or "\x00" in p
+                for p in (insurer_part, tariff_part)
+            )
+            if "__" not in stem or not insurer_part or not tariff_part or unsafe:
                 self.notify(
-                    f"Abbruch: '{stem}' ist kein insurer__tariff-stem — "
-                    f"PDFs/Extrakte nicht gelöscht (sonst ganzer Versicherer).",
+                    f"Abbruch: '{stem}' ist kein sicherer insurer__tariff-stem — "
+                    f"PDFs/Extrakte nicht gelöscht (Schutz vor Über-Löschung).",
                     severity="error", timeout=8,
                 )
             else:
                 for base in ("raw", "extracted"):
-                    d = REPO_ROOT / "data" / base / insurer_part / tariff_part
+                    root = (REPO_ROOT / "data" / base).resolve()
+                    d = root / insurer_part / tariff_part
+                    # Defense in depth: never rmtree at/above data/<base>/.
+                    rd = d.resolve()
+                    if rd == root or not rd.is_relative_to(root):
+                        continue
                     if d.is_dir():
                         shutil.rmtree(d)
                         removed.append(f"data/{base}/{insurer_part}/{tariff_part}/")
@@ -2796,6 +2815,14 @@ class CheckApp(App):
                 self._favorites["favorites"] = pruned
                 self._save_favorites()
                 removed.append("config/favorites.json (unfavorite)")
+
+        # Drop the deleted tariff from the Vergleich include-set: its records are
+        # gone, so it can never be a column again — left in place it resurfaces
+        # forever as a phantom "ausstehend" entry that [c] cannot remove.
+        compare = self._compare_stems()
+        if stem in compare:
+            self._set_compare_stems([s for s in compare if s != stem])
+            removed.append("config/favorites.json (compare_stems)")
 
         if removed:
             self.notify(f"Gelöscht ({label}): " + ", ".join(removed), timeout=8)
