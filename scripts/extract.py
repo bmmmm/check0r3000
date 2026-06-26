@@ -34,7 +34,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _filter  # noqa: E402
 import _providers  # noqa: E402
-import feature_history  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 EXTRACTED = ROOT / "data" / "extracted"
@@ -244,8 +243,6 @@ def main() -> int:
             print(f"    warn: {insurer}/{tariff}: model returned empty {empty}", file=sys.stderr)
         out_path.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"    -> {out_path.relative_to(ROOT)}")
-        if feature_history.archive_version(out_path.stem, record):
-            print(f"    -> history archived ({out_path.stem})")
 
     return rc
 
