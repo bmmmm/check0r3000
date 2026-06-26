@@ -14,8 +14,11 @@
 #
 # Install (one-time): symlink onto PATH so it is callable as a bare name —
 #   ln -sf "$PWD/scripts/check0r-bench" ~/.local/bin/check0r-bench
-# Then add "check0r-bench" to sandbox.excludedCommands and "Bash(check0r-bench *)"
-# to permissions.allow in ~/.claude/settings.json, and restart the session.
+# Then, in ~/.claude/settings.json, add the GLOB "check0r-bench *" to
+# sandbox.excludedCommands (a bare "check0r-bench" matches ONLY a zero-arg
+# command and stays sandboxed — same form the docs use for "docker *"; note a
+# glob entry unsandboxes the whole shell line, so never chain after it) and
+# "Bash(check0r-bench *)" to permissions.allow, then restart the session.
 set -euo pipefail
 
 # Resolve this script's real path, following symlinks (it is symlinked into
