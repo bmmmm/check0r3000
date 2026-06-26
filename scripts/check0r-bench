@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# check0r-bench — CWD-independent benchmark wrapper around scripts/eval.py.
+#
+# Purpose: give the benchmark a single, bare command name that can be anchored in
+# Claude Code's `sandbox.excludedCommands`. Excluding this name runs the whole
+# invocation (and its python child) OUTSIDE the Seatbelt sandbox, which is the only
+# way eval.py can reach the loopback oMLX server at 127.0.0.1:8000 — the sandbox
+# blocks outbound loopback at the kernel level, and that is NOT fixable via
+# settings.json allowedDomains. See memory: omlx-local-benchmark-status.
+#
+# It runs the repo's pinned .venv interpreter directly (no `uv`): uv's cache is
+# sandbox-blocked, and a plain interpreter behaves identically inside and outside
+# the sandbox. eval.py's only third-party dep (jsonschema) lives in that .venv.
+#
+# Install (one-time): symlink onto PATH so it is callable as a bare name —
+#   ln -sf "$PWD/scripts/check0r-bench" ~/.local/bin/check0r-bench
+# Then add "check0r-bench" to sandbox.excludedCommands and "Bash(check0r-bench *)"
+# to permissions.allow in ~/.claude/settings.json, and restart the session.
+set -euo pipefail
+
+# Resolve this script's real path, following symlinks (it is symlinked into
+# ~/.local/bin). Portable — no GNU `readlink -f` dependency.
+src="${BASH_SOURCE[0]}"
+while [ -h "$src" ]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  case "$src" in /*) ;; *) src="$dir/$src" ;; esac   # relative symlink -> absolute
+done
+script_dir="$(cd -P "$(dirname "$src")" && pwd)"
+repo_root="$(cd -P "$script_dir/.." && pwd)"
+
+py="$repo_root/.venv/bin/python"
+if [ ! -x "$py" ]; then
+  echo "check0r-bench: missing venv interpreter at $py" >&2
+  echo "check0r-bench: create it with 'uv sync' in $repo_root" >&2
+  exit 1
+fi
+
+# eval.py reads data/ and writes tmp/eval/ relative to the repo root.
+cd "$repo_root"
+exec "$py" scripts/eval.py "$@"
