@@ -1,9 +1,11 @@
 {
-  "generated": "2026-06-24",
-  "commit": "6491d32",
+  "generated": "2026-06-26",
+  "commit": "7b35e26",
   "models": [
     "haiku",
-    "sonnet"
+    "sonnet",
+    "opus",
+    "omlx:gpt-oss-20b-MXFP4-Q8"
   ],
   "repeat": 3,
   "rows": [
@@ -44,10 +46,38 @@
       "schema_ok": 3,
       "faithful": 3,
       "modules_min": 7,
+      "modules_max": 7,
+      "unsupported_max": 0,
+      "cost_usd": 0.2617,
+      "wall_s": 47.9
+    },
+    {
+      "tariff": "arag / premium-2026",
+      "model": "omlx:gpt-oss-20b-MXFP4-Q8",
+      "input": "avb+pib+weit",
+      "runs": 3,
+      "ok": 3,
+      "schema_ok": 3,
+      "faithful": 3,
+      "modules_min": 8,
       "modules_max": 8,
       "unsupported_max": 0,
-      "cost_usd": 0.2535,
-      "wall_s": 100.4
+      "cost_usd": null,
+      "wall_s": 114.6
+    },
+    {
+      "tariff": "arag / premium-2026",
+      "model": "opus",
+      "input": "avb+pib+weit",
+      "runs": 3,
+      "ok": 3,
+      "schema_ok": 3,
+      "faithful": 1,
+      "modules_min": 8,
+      "modules_max": 8,
+      "unsupported_max": 2,
+      "cost_usd": 1.0849,
+      "wall_s": 91.8
     },
     {
       "tariff": "arag / premium-2026",
@@ -56,12 +86,12 @@
       "runs": 3,
       "ok": 3,
       "schema_ok": 3,
-      "faithful": 1,
-      "modules_min": 8,
-      "modules_max": 8,
+      "faithful": 2,
+      "modules_min": 7,
+      "modules_max": 7,
       "unsupported_max": 1,
-      "cost_usd": 0.7709,
-      "wall_s": 124.0
+      "cost_usd": 1.1439,
+      "wall_s": 109.2
     }
   ]
 }
