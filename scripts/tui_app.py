@@ -650,7 +650,7 @@ class CheckApp(App):
                 lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
             lines.append("")
 
-        detail_rec = _load_detail(row.insurer, row.product)
+        detail_rec = self._detail_for_row(row)
         has_detail = detail_rec is not None
         docs = self._doc_index.get(fav.get("stem", ""), [])
         if docs:
@@ -868,11 +868,18 @@ class CheckApp(App):
                 )
         return "\n".join(lines)
 
+    def _detail_for_row(self, row: SnapshotRow) -> "DetailRecord | None":
+        """Resolve a SnapshotRow to its DetailRecord: cache-hit when the row has a
+        stem, disk-fallback (_load_detail) for legacy records without one."""
+        if row.stem and row.stem in self._details_by_stem:
+            return self._details_by_stem[row.stem]
+        return _load_detail(row.insurer, row.product)
+
     def _render_market_detail(self, row: SnapshotRow) -> str:
         """Full tariff detail (modules, coverage, premium, benefits, exclusions)
             plus the source-document / [g] block, for the inline Market band."""
-        detail = _load_detail(row.insurer, row.product)
-        parts = [self._render_detail_full(row)]
+        detail = self._detail_for_row(row)
+        parts = [self._render_detail_full(row, detail)]
         docs = self._render_docs_block(row, detail)
         if docs:
             parts.append(docs)
@@ -888,8 +895,9 @@ class CheckApp(App):
 
     # --- Full detail tab ---
 
-    def _render_detail_full(self, row: SnapshotRow) -> str:
-        detail = _load_detail(row.insurer, row.product)
+    def _render_detail_full(self, row: SnapshotRow, detail: "DetailRecord | None" = None) -> str:
+        if detail is None:
+            detail = _load_detail(row.insurer, row.product)
         if not detail:
             head = f"[bold]{row.insurer}[/bold] — {row.product}\n\n"
             if self._equivalent_analyzed(row) is not None:
@@ -2106,7 +2114,7 @@ class CheckApp(App):
 
         current.append(stem)
         self._set_compare_stems(current)
-        if _load_detail(insurer, product):
+        if stem in self._details_by_stem:
             self.notify(f"Zum Vergleich hinzugefügt: {insurer} {product}", timeout=4)
             self._reload_all()
             return
@@ -2523,7 +2531,7 @@ class CheckApp(App):
                 timeout=6,
             )
             return
-        if _load_detail(row.insurer, row.product):
+        if self._detail_for_row(row):
             self.notify(
                 "Schon analysiert — [d] zeigt die Details.", severity="information"
             )
@@ -2556,7 +2564,7 @@ class CheckApp(App):
                 timeout=6,
             )
             return
-        if _load_detail(row.insurer, row.product):
+        if self._detail_for_row(row):
             self.notify(
                 "Schon analysiert — [d] zeigt die Details.", severity="information"
             )
@@ -2581,7 +2589,7 @@ class CheckApp(App):
         if row is None:
             self.notify("Erst eine Zeile wählen (↵).", severity="warning")
             return
-        if _load_detail(row.insurer, row.product):
+        if self._detail_for_row(row):
             self.notify(
                 "Schon analysiert — [d] zeigt die Details.", severity="information"
             )
