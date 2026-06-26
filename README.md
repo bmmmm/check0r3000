@@ -64,25 +64,32 @@ config/check24-profile.json     (gitignored, PII)   dein Query verbatim
         │  scripts/check24_query.py                  Result-URL aus dem Profil bauen
         ▼                                             (--all-insurers, --provider, --show)
 [CHECK24-Ergebnisseite]
-        │  scripts/check24_scrape.js (DevTools)       Zeilen + Quell-PDF-URLs scrapen
+        │  scripts/check24_scrape.js (DevTools)          Zeilen + Quell-PDF-URLs scrapen
+        │  scripts/harvest_docs.py <stem> (Playwright)  Alternativ: URLs live ernten + Manifest mergen
         ▼
 data/snapshots/<datum>.json       (gitignored)       scripts/snapshot.py: ganze Liste je Tag
 data/sources/check24-documents.json (getrackt)       nur die AVB/PIB-URLs, nie die PDFs
-        │  scripts/fetch_docs.py --check              URLs erreichbar? (lädt nichts)
+        │  scripts/fetch_docs.py --check              URLs erreichbar? (lädt nichts; parallelisiert)
         │  scripts/fetch_docs.py <stem> --apply       on demand nach data/inbox/ ziehen
         ▼
-scripts/tui.py                                        interaktiver Browser über alles
+scripts/tui.py                                        interaktiver Browser über alles (4 Tabs)
 ```
 
 - **`scripts/snapshot.py`** ist die Änderungs-DB: ein datierter Snapshot pro Lauf,
   `--diff ALT NEU` zeigt Preisänderungen / neu / weg.
 - **`scripts/fetch_docs.py --check`** prüft per HEAD/Range-Request, ob die gesicherten
   Dokument-URLs erreichbar sind — **ohne** ein (urheberrechtlich geschütztes) PDF zu laden.
-- **`scripts/tui.py`** (das einzige Skript mit `textual`-Dependency) bietet drei Tabs:
+  Intern parallelisiert (~4.8× schneller als seriell).
+- **`scripts/harvest_docs.py <stem>`** erntet Quell-PDF-URLs für einen Tarif **live** aus
+  der CHECK24-Ergebnisseite (Playwright), mergt sie content-hash-basiert in
+  `data/sources/check24-documents.json` und lädt die PDFs direkt. Nützlich für Tarife, die
+  kein gesichertes Manifest haben (z. B. KS/Auxilia, JURPRIVAT/S-Direkt). Im TUI mit
+  **`[H]`** aufrufbar (Quell-URLs ernten + direkt analysieren in einem Schritt).
+- **`scripts/tui.py`** (das einzige Skript mit `textual`-Dependency) bietet **vier Tabs**:
   **★ Favorites** (kuratierte Shortlist aus `config/favorites.json` mit Note/Preis/SB,
   Δ vs. Referenz, SB-Varianten und den gesicherten Dokument-URLs), **Market** (alle
-  Tarife, sortier-/filterbar) und **Vergleich** (`[x]`, der angebotsübergreifende
-  Deckungs-Vergleich — s.u.). Jeder Tarif zeigt einen
+  Tarife, sortier-/filterbar), **Verlauf** (`[l]`, s.u.) und **Vergleich** (`[x]`, s.u.).
+  Jeder Tarif zeigt einen
   **Status** (`✓ analysiert · ↓ PDF lokal · ○ URLs · gelistet`) und zwei getrennte
   Bewertungs-Spalten: **Note** (CHECK24-Experten-Tarifnote) und **Bew.** (Kundenbewertung
   /5). `--selftest` prüft das Laden ohne UI; `--screenshot DIR` rendert jeden Tab als SVG.
@@ -108,6 +115,10 @@ scripts/tui.py                                        interaktiver Browser über
   Fehlt der Key, startet der Vergleich als Kopie der Favoriten. Erweitern = ein Objekt an die
   Taxonomie anhängen (`coverage_taxonomy.py --selftest` pinnt die Cross-Tarif-Zuordnung).
   Der frühere Snapshot-Preis-Diff hängt nur noch an, sobald ein zweiter Snapshot existiert.
+- **Verlauf-Tab (`[l]`)** vergleicht zwei Snapshots (`,`/`.` wählen, `[m]` Filter).
+  Das Detail-Band zeigt neben Preis-/Stufenänderungen auch **Leistungsänderungen** —
+  hinzugekommene und weggefallene Features — sofern analysierte Records in
+  `out/tariff-history/<stem>/` für beide Zeitpunkte vorliegen (via `feature_history.py`).
 - **Identität über den `stem`**: jeder Tarif hat einen kanonischen `stem`
   (`<versicherer>__<tarif>`, aus `data/sources/check24-documents.json`). TUI-Lookup,
   Pipeline-Output und Doc-Manifest hängen alle daran — `[g]` schreibt direkt nach
@@ -117,13 +128,18 @@ scripts/tui.py                                        interaktiver Browser über
   **`[g]`** lädt + analysiert nach Bestätigung (Pipeline `fetch_docs --into-raw → ingest
   → extract` im Hintergrund; Modell per `CHECK0R_ANALYZE_MODEL`, Default `claude`);
   **`[G]`** nur analysieren ohne Download (`ingest → extract`), wenn die PDFs schon unter
-  `data/raw/<stem>/` liegen; **`[o]`** öffnet die Quelldokumente online (Browser) oder als
-  lokale PDFs (`data/raw/<stem>/`); **`[R]`** setzt die markierte Zeile als Δ-Referenz;
-  **`[u]`** Favorit an/aus; **`[c]`** Tarif aus dem Vergleich aus-/einblenden;
-  **`[D]`** lokale Daten löschen (mit Umfang-Auswahl); **`[b]`** baut die CHECK24-URL.
-  Tarife ohne gesicherte URLs verweisen auf den Browser-Schritt „Tarifdetails". Ein
-  analysierter Favorit zeigt im Detail-Band den **vollen Record** (Module/Deckung/
-  Leistungen/Ausschlüsse/Besonderheiten), nicht nur die Preis-Zusammenfassung.
+  `data/raw/<stem>/` liegen; **`[H]`** Quell-URLs **live ernten + direkt analysieren**
+  (Playwright; für Tarife ohne gesichertes Manifest); **`[o]`** öffnet die Quelldokumente
+  online (Browser) oder als lokale PDFs (`data/raw/<stem>/`); **`[R]`** setzt die markierte
+  Zeile als Δ-Referenz; **`[u]`** Favorit an/aus; **`[c]`** Tarif aus dem Vergleich
+  aus-/einblenden; **`[D]`** lokale Daten löschen (mit Umfang-Auswahl); **`[b]`** baut
+  die CHECK24-URL. Tarife ohne gesicherte URLs verweisen auf den Browser-Schritt
+  „Tarifdetails". Ein analysierter Favorit zeigt im Detail-Band den **vollen Record**
+  (Module/Deckung/Leistungen/Ausschlüsse/Besonderheiten), nicht nur die Preis-Zusammenfassung.
+- **TUI-Architektur:** `tui.py` ist ein ~270-Zeilen-Entry-Point, der an vier sibling-Module
+  delegiert: `tui_data.py` (Textual-freie Daten-/Lade-Schicht, unabhängig testbar via
+  `python3 tui_data.py --selftest`), `tui_format.py` (Rendering-Helpers), `tui_screens.py`
+  (Widget-Definitionen, Screens) und `tui_app.py` (App-Klasse, Bindings, Actions).
 
 ```sh
 uv run scripts/check24_query.py --all-insurers   # Result-URL für alle Versicherer
@@ -254,6 +270,27 @@ auf `null` setzt oder einen Beitrag erfindet — statt still einen schlechteren
 `out/tariffs/*.json` auszuliefern. Genau das hat der Check beim Bau gefangen: zwei
 schema-Defekte im damaligen Output (Pipeline-Meta-Keys + `beitrag: null` statt Objekt).
 Schema ändern → Invarianten in `golden.json` nachziehen.
+
+## Feature-History (Verlauf-Diff)
+
+`scripts/feature_history.py` archiviert jede extrahierte Tarif-Version content-hash-basiert
+in `out/tariff-history/<stem>/YYYY-MM-DD.json`. Der Hash schließt Pipeline-Metadaten und
+persönliche Prämien aus — ein Re-Extract mit anderem Modell oder Prompt erzeugt keine
+Phantom-Diffs.
+
+`scripts/extract.py` ruft `archive_version()` nach jedem erfolgreichen Schreiben automatisch
+auf. Die API im Überblick:
+
+| Funktion | Was |
+|---|---|
+| `archive_version(stem, record)` | Schreibt idempotent (doppeltes Schreiben am selben Tag ist ein No-Op) |
+| `state_as_of(stem, date)` | Letzter archivierter Record ≤ date |
+| `diff_features(old, new)` | Hinzugekommene / weggefallene Leistungen als Dict |
+| `backfill(stem)` | Backfilliert ältere Records aus git-History |
+
+Der **Verlauf-Tab** der TUI nutzt `state_as_of` + `diff_features`, um im Detail-Band neben
+Preis- und Stufenänderungen eine **Leistungsänderungs-Sektion** anzuzeigen. Die Dateien in
+`out/tariff-history/` sind getrackt (eigene abgeleitete Fakten, kein Urheberrechtsproblem).
 
 ## Prompt-Selbstverbesserung — sinnvoll?
 
