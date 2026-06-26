@@ -1,0 +1,101 @@
+{
+  "stand": "03.2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Aktiv-Rechtsschutz für Privatpersonen, Risiken des täglichen Lebens (§ 26/26 b/26 p)"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz, beruflich nicht selbstständig; abwählbarer Baustein (§ 2 b, § 26 Abs. 1 b)"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrsbereich bzw. eigener Aktiv-Rechtsschutz Verkehr (§ 21/21 b/21 p, § 26 Abs. 1 d)"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungs-/Grundstücks-Rechtsschutz; Immobilienbereich bzw. Aktiv-Rechtsschutz Immobilie (§ 2 c, § 29/29 b/29 p)"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Optionaler Baustein ARAG web@ktiv (Basis/Komfort/Premium, Sonderbedingung 12/12 a/12 b)"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz vor Finanz-/Verwaltungsgerichten (§ 2 e)"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz vor Sozialgerichten (§ 2 f)"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz Verkehrs- und Nichtverkehrssachen (§ 2 g)"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt in Europa (Kaution und weltweit je nach Variante begrenzt)",
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "keine Wartezeit: Schadenersatz, Verkehr, Straf/OWi",
+      "keine Wartezeit: Mediation",
+      "6 Monate: Bauherren-Rechtsschutz, Vorsorge-Rechtsschutz",
+      "1 Jahr: Unterhalts-Rechtsschutz, Erb-Rechtsschutz",
+      "3 Jahre: Ehe-Rechtsschutz, Studienplatzklagen"
+    ],
+    "geltungsbereich": "Europa, Mittelmeer-Anrainer, Kanaren, Madeira, Azoren; weltweit temporär bis 1 Jahr Aufenthalt",
+    "vertragslaufzeit": "1 oder 3 Jahre, danach stillschweigende Verlängerung um je 1 Jahr"
+  },
+  "leistungen": [
+    "telefonische Rechtsberatung (ARAG JuraTel®)",
+    "Mediation bis 3.000 €/Fall, 6.000 €/Jahr",
+    "Mobiler Anwalt (Hausbesuch)",
+    "Strafkaution als zinsloses Darlehen",
+    "Online-Rechtsberatung und Dokumenten-Center",
+    "telefonische psychologische Soforthilfe",
+    "Vermittlung von Legal-Tech-Dienstleistern",
+    "Vertrags- und Arbeitszeugnis-Check (ARAG JuraCheck®)",
+    "Übersetzung und Dolmetscher im Ausland",
+    "freie Anwaltswahl",
+    "Schieds-/Stichentscheid bei Deckungsablehnung"
+  ],
+  "ausschluesse": [
+    "Baufinanzierung und Errichtung/Kauf bebaubarer Grundstücke",
+    "Kapitalanlagegeschäfte",
+    "Patent-, Marken-, Urheber-, Designrecht (geistiges Eigentum)",
+    "Kartell- und Wettbewerbsrecht",
+    "Familien-/Lebenspartnerschafts-/Erbrecht (nur Beratungs-Rechtsschutz)",
+    "Spiel-/Wettverträge, Gewinnzusagen",
+    "Verfassungsgerichte und internationale Gerichtshöfe",
+    "vorsätzlich begangene Straftaten",
+    "eigenes Insolvenzverfahren des Versicherungsnehmers",
+    "Asyl- und Ausländerrecht",
+    "Enteignung/Planfeststellung (außer Premium)"
+  ],
+  "besonderheiten": [
+    "drei Leistungsstufen Basis/Komfort/Premium wählbar",
+    "Update-Garantie für beitragsneutrale Leistungserweiterungen",
+    "Vorsorge-Rechtsschutz für neu hinzukommende Risiken",
+    "Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren",
+    "Vorversicherungs-Garantie (Premium)",
+    "Schutzbrief-Bausteine inkl. Auslandskrankenschutz",
+    "Bündelrabatte bei Kombination mehrerer Bausteine"
+  ],
+  "beitrag": null,
+  "insurer": "ARAG SE",
+  "tariff": "Aktiv-Rechtsschutz (ARB 2026)",
+  "stem": "arag__premium-2026",
+  "_history_date": "2026-06-24",
+  "_content_sha256": "4336ed94b8f00305f62091a05cedf588930bb06f602c232aaf78895b59d65412",
+  "_supersedes": null
+}

@@ -428,6 +428,32 @@ def match_favorite(
 
 
 # ---------------------------------------------------------------------------
+# Feature-history helpers
+# ---------------------------------------------------------------------------
+
+def load_feature_diff(
+    stem: str, old_date: str, new_date: str
+) -> tuple[dict | None, dict | None, dict]:
+    """Return (old_state, new_state, diff) for a stem between two dates.
+
+    diff is {} when both states are present but identical, or when one/both
+    states are missing (sparse coverage). Callers check old/new for None to
+    distinguish "not yet analyzed" from "analyzed, no change".
+    """
+    import sys as _sys
+    _sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    try:
+        from feature_history import state_as_of, diff_features
+    except ImportError:
+        return None, None, {}
+    old = state_as_of(stem, old_date)
+    new = state_as_of(stem, new_date)
+    if old is None or new is None:
+        return old, new, {}
+    return old, new, diff_features(old, new)
+
+
+# ---------------------------------------------------------------------------
 # Non-interactive selftest
 # ---------------------------------------------------------------------------
 def run_selftest(snapshot_path: Path | None) -> int:
