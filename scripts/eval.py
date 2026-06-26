@@ -505,8 +505,25 @@ def main() -> int:
                          "Halluc-free 15 / Modules 15; latency & cost shown separately, "
                          "not scored); with --save-summary also writes "
                          "benchmarks/scorecard.md")
+    ap.add_argument("--prewarm", action="store_true",
+                    help="load each --models spec into its server's RAM (one minimal "
+                         "call each) and exit, without running any extraction — pulls a "
+                         "local model's one-time cold-load out of the measured path so "
+                         "the following runs are warm. No-op for claude specs")
     args = ap.parse_args()
     models = [m.strip() for m in args.models.split(",") if m.strip()]
+
+    if args.prewarm:
+        rc = 0
+        for spec in models:
+            res = _providers.prewarm(spec)
+            if res["ok"]:
+                print(f"warm: {spec}  ({res['wall_s']:.0f}s)")
+            else:
+                print(f"FAILED: {spec}  ({res['error']})", file=sys.stderr)
+                rc = 1
+        return rc
+
     doc_filter = {d.strip() for d in args.docs.split(",")} if args.docs else None
     transform = extract.avb_transform if args.filter else None
     filter_tag = "avb-filter" if args.filter else "none"

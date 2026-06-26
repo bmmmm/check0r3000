@@ -20,6 +20,7 @@ from typing import Any
 # `uv run`, then import the siblings.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import coverage_taxonomy as ctax  # noqa: E402
+import _providers  # noqa: E402
 
 from tui_data import (  # noqa: E402
     ChangeInfo,
@@ -348,6 +349,7 @@ class CheckApp(App):
         self._populate_market_table()
         self._populate_verlauf()
         self._update_header()
+        self._prewarm_analyze_model()
 
     def _load_data(self) -> None:
         """Load snapshot and supplemental data."""
@@ -3145,6 +3147,37 @@ class CheckApp(App):
 
         self.push_screen(ConfirmFetchScreen(pseudo, ANALYZE_MODEL, harvest=True), _go)
 
+    @work(thread=True, group="prewarm")
+    def _prewarm_analyze_model(self) -> None:
+        """Load a local analyze model into the server's RAM at startup, off the UI
+        thread, so the first [g]/[G]/[H] analysis runs warm instead of paying the
+        one-time cold-load (minutes for a large local model) inline in the Extract
+        step — which would otherwise overrun its subprocess timeout. No-op for the
+        claude backend (no resident model to warm). Failure is a soft warning: the
+        extraction still works, it just starts cold."""
+        provider, _, _ = _providers.parse_spec(ANALYZE_MODEL)
+        if provider == "claude":
+            return
+        self.call_from_thread(
+            self.notify, f"Lokales Modell wird vorgeladen: {_esc(ANALYZE_MODEL)} …",
+            timeout=4,
+        )
+        res = _providers.prewarm(ANALYZE_MODEL)
+        if res["ok"]:
+            self.call_from_thread(
+                self.notify,
+                f"Modell bereit ({res['wall_s']:.0f}s): {_esc(ANALYZE_MODEL)}",
+                timeout=4,
+            )
+        else:
+            self.call_from_thread(
+                self.notify,
+                f"Vorladen fehlgeschlagen (Analyse startet kalt): "
+                f"{_esc(res['error'] or '?')}",
+                severity="warning",
+                timeout=8,
+            )
+
     @work(thread=True, group="pipeline")
     def _run_pipeline(self, entry: dict, row: SnapshotRow,
                       *, skip_download: bool = False, harvest: bool = False) -> None:
@@ -3192,17 +3225,24 @@ class CheckApp(App):
             ("Ingest", ["uv", "run", "scripts/ingest.py"]),
             ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
         ]
+        # A local model that is not yet resident pays a one-time cold-load (minutes)
+        # on top of inference, which can exceed the default 600s step budget. Give the
+        # Extract step the same 1200s ceiling _providers.run() already allows for the
+        # model call, so a cold-start race (analyze fired before the mount prewarm
+        # finished) doesn't get killed mid-load.
+        local_model = _providers.parse_spec(ANALYZE_MODEL)[0] != "claude"
         self.call_from_thread(
             self.notify, f"Pipeline gestartet: {_esc(label)} …", timeout=4
         )
         for name, cmd in steps:
+            step_timeout = 1200 if (name == "Extract" and local_model) else 600
             try:
                 proc = subprocess.run(
                     cmd,
                     cwd=str(REPO_ROOT),
                     capture_output=True,
                     text=True,
-                    timeout=600,
+                    timeout=step_timeout,
                 )
             except (subprocess.TimeoutExpired, OSError) as exc:
                 self.call_from_thread(

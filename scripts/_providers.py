@@ -168,6 +168,53 @@ def _run_claude(model: str | None, instruction: str, payload: str, timeout: int)
     return res
 
 
+def prewarm(spec: str, timeout: int = 1200) -> dict:
+    """Load a local model into the server's RAM ahead of real use by firing a
+    minimal (max_tokens=1) completion. The FIRST such call pays the one-time
+    cold-load — minutes for a large local model — so the next real extraction
+    runs warm instead of eating that latency in the critical path. For the
+    `claude` provider this is a no-op (no resident model to warm). Returns
+    {ok: bool, wall_s: float, error: str|None}. Kept self-contained (not folded
+    into _run_openai) so warming never disturbs the proven extraction path."""
+    provider, model, endpoint = parse_spec(spec)
+    if provider == "claude":
+        return {"ok": True, "wall_s": 0.0, "error": None}
+    endpoint = endpoint or DEFAULT_ENDPOINTS.get(provider)
+    if not endpoint:
+        return {"ok": False, "wall_s": 0.0,
+                "error": f"no endpoint for provider '{provider}'"}
+    if not model:
+        return {"ok": False, "wall_s": 0.0,
+                "error": f"provider '{provider}' needs a model name"}
+    url = endpoint.rstrip("/") + "/chat/completions"
+    body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": "ok"}],
+        "temperature": 0,
+        "max_tokens": 1,
+        "stream": False,
+    }).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    key = _api_key(provider)
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    req = urllib.request.Request(url, data=body, headers=headers)
+    t0 = time.monotonic()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            resp.read()
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:200] if e.fp else ""
+        hint = (f" — set {provider.upper()}_API_KEY (or OPENAI_API_KEY)"
+                if e.code == 401 else "")
+        return {"ok": False, "wall_s": round(time.monotonic() - t0, 1),
+                "error": f"{provider} prewarm HTTP {e.code} ({url}): {detail}{hint}"}
+    except (urllib.error.URLError, TimeoutError) as e:
+        return {"ok": False, "wall_s": round(time.monotonic() - t0, 1),
+                "error": f"{provider} prewarm failed ({url}): {e}"}
+    return {"ok": True, "wall_s": round(time.monotonic() - t0, 1), "error": None}
+
+
 def _run_openai(provider: str, model: str | None, endpoint: str | None,
                 instruction: str, payload: str, timeout: int) -> dict:
     endpoint = endpoint or DEFAULT_ENDPOINTS.get(provider)
