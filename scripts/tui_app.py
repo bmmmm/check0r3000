@@ -65,6 +65,7 @@ from textual.app import App, ComposeResult  # noqa: E402
 from textual.binding import Binding  # noqa: E402
 from textual.containers import ScrollableContainer, Vertical  # noqa: E402
 from textual.css.query import NoMatches  # noqa: E402
+from textual.timer import Timer  # noqa: E402
 from textual.reactive import reactive  # noqa: E402
 from textual.widgets import (  # noqa: E402
     DataTable,
@@ -292,6 +293,8 @@ class CheckApp(App):
         self._doc_index: dict[str, list[dict]] = {}
         self._doc_by_tariff: dict[tuple[str, str], dict] = {}
         self._doc_by_stem: dict[str, dict] = {}
+        self._details_by_stem: dict[str, DetailRecord] = {}
+        self._filter_timer: Timer | None = None
         self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
         self._market_rows: dict[str, SnapshotRow] = {}
         self._active_row: SnapshotRow | None = None
@@ -334,6 +337,7 @@ class CheckApp(App):
         self._doc_by_stem = {
             t["stem"]: t for t in self._doc_by_tariff.values() if t.get("stem")
         }
+        self._details_by_stem = dict(load_all_details())
         # invalidate cached offer URL base (profile may have changed)
         if hasattr(self, "_offer_url_cache"):
             del self._offer_url_cache
@@ -800,9 +804,9 @@ class CheckApp(App):
         own = (row.insurer or "").strip().casefold()
         if not prod:
             return None
-        by_stem = dict(load_all_details())
+        by_stem = self._details_by_stem
         hits: list[tuple[dict, DetailRecord]] = []
-        for (ins_cf, prod_cf), entry in load_doc_by_tariff().items():
+        for (ins_cf, prod_cf), entry in self._doc_by_tariff.items():
             if prod_cf != prod or ins_cf == own:
                 continue
             det = by_stem.get(entry.get("stem"))
@@ -1026,7 +1030,7 @@ class CheckApp(App):
             always the leftmost baseline column. Compare-set members that aren't
             analyzed yet are skipped here (counted as pending by _populate_coverage)."""
         included = self._compare_stems()
-        by_stem = dict(load_all_details())
+        by_stem = self._details_by_stem
         ref = self._favorites.get("reference_stem")
         cols = [(s, by_stem[s]) for s in included if s in by_stem]
         cols.sort(key=lambda sr: (sr[0] != ref, sr[0]))
@@ -1051,7 +1055,7 @@ class CheckApp(App):
 
         cols = self._coverage_columns()
         included = self._compare_stems()
-        analyzed = {s for s, _ in load_all_details()}
+        analyzed = set(self._details_by_stem)
         pending = [s for s in included if s not in analyzed]
         if not cols:
             if pending:
@@ -1590,7 +1594,9 @@ class CheckApp(App):
     @on(Input.Changed, "#filter-input")
     def on_filter_changed(self, event: Input.Changed) -> None:
         self.filter_text = event.value
-        self._populate_market_table()
+        if self._filter_timer is not None:
+            self._filter_timer.stop()
+        self._filter_timer = self.set_timer(0.15, self._populate_market_table)
 
     def on_resize(self, event) -> None:
         """Re-render the Vergleich matrix on resize so its width-capped columns
@@ -2139,8 +2145,7 @@ class CheckApp(App):
             matrix, whose rows are categories, not tariffs). The pool is every
             analyzed tariff; compare-set members not yet analyzed (queued from the
             Market [a]) are preserved untouched."""
-        details = load_all_details()
-        if not details:
+        if not self._details_by_stem:
             self.notify(
                 "Noch keine analysierten Tarife — erst \\[g] (Download + Analyse) "
                 "oder \\[G] (nur Analyse).",
@@ -2150,10 +2155,10 @@ class CheckApp(App):
             return
         ref = self._favorites.get("reference_stem")
         stems = sorted(
-            ((stem, _col_label(stem)) for stem, _ in details),
+            ((stem, _col_label(stem)) for stem in self._details_by_stem),
             key=lambda sl: (sl[0] != ref, sl[0]),
         )
-        pool = {s for s, _ in details}
+        pool = set(self._details_by_stem)
         included_now = {s for s in self._compare_stems() if s in pool}
 
         def _apply(new_included: list[str] | None) -> None:
