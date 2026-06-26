@@ -473,22 +473,33 @@ def load_change_summary() -> dict[str, ChangeInfo]:
 
     result: dict[str, ChangeInfo] = {}
 
-    # 1. Feature history — one sub-dir per stem
+    # 1. Feature history — one sub-dir per stem. Wrapped like the price half so an
+    #    unexpected error (e.g. an iterdir permission failure) can't abort _load_data.
     hist_dir = REPO_ROOT / "out" / "tariff-history"
     if hist_dir.is_dir():
-        for stem_dir in sorted(hist_dir.iterdir()):
-            if not stem_dir.is_dir():
-                continue
-            stem = stem_dir.name
-            result[stem] = ChangeInfo(
-                feature_changes=fh.change_count(stem),
-                price_changes=0,
-                last_change_date=fh.last_change_date(stem),
-                last_analysis_date=fh.last_analysis_date(stem),
-                first_seen_date=fh.first_seen_date(stem),
-                feature_changelog=fh.full_changelog(stem),
-                price_changelog=[],
-            )
+        try:
+            for stem_dir in sorted(hist_dir.iterdir()):
+                if not stem_dir.is_dir():
+                    continue
+                stem = stem_dir.name
+                # Count actual feature diffs, not archived versions. archive_version
+                # writes a new version whenever the content hash changes — including a
+                # `stand`-only change (an LLM-extracted, run-to-run-variant string that
+                # diff_features deliberately ignores), which would otherwise surface as
+                # "Δ1 / 1 Änderung" with no listed change. full_changelog yields only
+                # pairs with a real diff, so len()/its last date are the honest figures.
+                changelog = fh.full_changelog(stem)
+                result[stem] = ChangeInfo(
+                    feature_changes=len(changelog),
+                    price_changes=0,
+                    last_change_date=changelog[-1][1] if changelog else None,
+                    last_analysis_date=fh.last_analysis_date(stem),
+                    first_seen_date=fh.first_seen_date(stem),
+                    feature_changelog=changelog,
+                    price_changelog=[],
+                )
+        except OSError:
+            pass
 
     # 2. Price history — derive from all snapshots via resolve_stem
     try:
@@ -540,7 +551,9 @@ def load_feature_diff(
     distinguish "not yet analyzed" from "analyzed, no change".
     """
     import sys as _sys
-    _sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    _scripts = str(REPO_ROOT / "scripts")
+    if _scripts not in _sys.path:
+        _sys.path.insert(0, _scripts)
     try:
         from feature_history import state_as_of, diff_features
     except ImportError:

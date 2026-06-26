@@ -205,21 +205,20 @@ def last_analysis_date(stem: str) -> str | None:
 
 
 def change_count(stem: str) -> int:
-    """Number of detected Leistungs-changes (0 = baseline only or no history)."""
-    stem_dir = HISTORY_DIR / stem
-    if not stem_dir.is_dir():
-        return 0
-    n = sum(1 for p in stem_dir.glob("*.json") if _DATE_RE.match(p.stem))
-    return max(0, n - 1)
+    """Number of detected feature changes — consecutive version pairs whose
+    *comparable facts* actually differ. Delegates to full_changelog so it never
+    disagrees with the changelog: this is < (archived versions − 1) whenever a
+    metadata-only write happened (e.g. a `stand`-only re-extract bumps the
+    content hash but diff_features reports no field change)."""
+    return len(full_changelog(stem))
 
 
 def last_change_date(stem: str) -> str | None:
-    """Date of the most-recent detected change, or None if ≤1 history entries."""
-    stem_dir = HISTORY_DIR / stem
-    if not stem_dir.is_dir():
-        return None
-    files = sorted(p for p in stem_dir.glob("*.json") if _DATE_RE.match(p.stem))
-    return files[-1].stem if len(files) >= 2 else None
+    """Date of the most-recent detected feature change, or None if no real diff
+    exists. Derived from full_changelog so a metadata-only version (e.g. a
+    `stand`-only re-extract) is not reported as a change date."""
+    changelog = full_changelog(stem)
+    return changelog[-1][1] if changelog else None
 
 
 def first_seen_date(stem: str) -> str | None:
