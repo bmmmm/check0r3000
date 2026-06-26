@@ -298,6 +298,12 @@ class CheckApp(App):
         self._filter_timer: Timer | None = None
         self._market_ident_to_rk: dict[str, str] = {}
         self._fav_ident_to_rk: dict[str, str] = {}
+        # Cross-tab selection: the tariff ident the user currently has held in
+        # the active tab. On a tab switch we re-select it in the newly-active
+        # table if present, else leave the cursor as-is. Lazy (switch-time) sync
+        # instead of eager real-time sync — you only ever see one tab, so there
+        # is no need to move hidden tables, and no echo cascade can form.
+        self._held_ident: str | None = None
         self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
         self._market_rows: dict[str, SnapshotRow] = {}
         self._active_row: SnapshotRow | None = None
@@ -1625,30 +1631,46 @@ class CheckApp(App):
 
     # --- Event handlers ---
 
-    def _sync_cursor_to(self, source_id: str, ident: str) -> None:
-        """Move cursors in all data tables except source_id to the row matching ident.
-        Cascade terminates naturally: Textual skips RowHighlighted when cursor doesn't move."""
-        targets: dict[str, dict[str, str] | None] = {
-            "#market-table": self._market_ident_to_rk,
-            "#fav-table": self._fav_ident_to_rk,
-            "#verlauf-table": None,  # DataTable row_key IS the tariff key in Verlauf
-        }
-        for table_id, index in targets.items():
-            if table_id == source_id:
-                continue
-            try:
-                table = self.query_one(table_id, DataTable)
-            except NoMatches:
-                continue
-            rk = index.get(ident) if index is not None else ident
-            if rk is None:
-                continue
-            try:
-                row_idx = table.get_row_index(rk)
-                if table.cursor_coordinate.row != row_idx:
-                    table.move_cursor(row=row_idx)
-            except Exception:
-                pass
+    def _move_cursor_safe(self, table_id: str, rk: str) -> None:
+        """Move a table's cursor to row-key rk if not already there. Silent on a
+        missing row (RowDoesNotExist) — the held tariff simply isn't in this tab."""
+        try:
+            table = self.query_one(table_id, DataTable)
+            row_idx = table.get_row_index(rk)
+            if table.cursor_coordinate.row != row_idx:
+                table.move_cursor(row=row_idx)
+        except Exception:
+            pass
+
+    def _select_held(self, active: str) -> None:
+        """On a tab switch, re-select the held tariff in the newly-active table
+        and update the active-row state. If the tariff isn't present here, leave
+        the cursor untouched (no forced selection). Moving the cursor fires that
+        table's RowHighlighted handler, which is idempotent with the state set
+        here; setting state directly also covers the cursor-already-there case."""
+        ident = self._held_ident
+        if not ident:
+            return
+        if active == "favorites":
+            rk = self._fav_ident_to_rk.get(ident)
+            if rk and rk in self._fav_rows:
+                row, fav = self._fav_rows[rk]
+                self._active_row, self._active_fav = row, fav
+                self._move_cursor_safe("#fav-table", rk)
+        elif active == "market":
+            rk = self._market_ident_to_rk.get(ident)
+            if rk and rk in self._market_rows:
+                self._active_row, self._active_fav = self._market_rows[rk], None
+                self.selected_row_key = rk
+                self._move_cursor_safe("#market-table", rk)
+        elif active == "verlauf":
+            row = (
+                next((r for r in self._snapshot.rows if r.key == ident), None)
+                if self._snapshot else None
+            )
+            if row is not None:
+                self._active_row, self._active_fav = row, None
+                self._move_cursor_safe("#verlauf-table", ident)
 
     @on(DataTable.RowHighlighted, "#market-table")
     def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -1668,12 +1690,12 @@ class CheckApp(App):
             self.selected_row_key = key
             self._active_row = row
             self._active_fav = None
+            if row.key:
+                self._held_ident = row.key
             if self._detail_visible:
                 self._show_detail()
             else:
                 self._refresh_market_detail()
-        if row.key:
-            self._sync_cursor_to("#market-table", row.key)
 
     @on(DataTable.RowHighlighted, "#fav-table")
     def on_fav_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -1691,13 +1713,13 @@ class CheckApp(App):
         if active == "favorites":
             self._active_row = row  # may be None (favorite not in snapshot)
             self._active_fav = fav
+            ident = self._tariff_key(row, fav)
+            if ident:
+                self._held_ident = ident
             if self._detail_visible:
                 self._show_detail()
             else:
                 self._refresh_fav_detail()
-        ident = self._tariff_key(row, fav)
-        if ident:
-            self._sync_cursor_to("#fav-table", ident)
 
     @on(DataTable.RowHighlighted, "#verlauf-table")
     def on_verlauf_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -1714,13 +1736,13 @@ class CheckApp(App):
         if active == "verlauf":
             self._active_row = row
             self._active_fav = None
+            self._held_ident = key
             if self._detail_visible:
                 try:
                     content = self.query_one("#verlauf-detail-content", Static)
                     content.update(self._render_verlauf_detail(row))
                 except NoMatches:
                     pass
-        self._sync_cursor_to("#verlauf-table", key)
 
     @on(DataTable.RowSelected, "#verlauf-table")
     def on_verlauf_selected(self, event: DataTable.RowSelected) -> None:
@@ -1848,17 +1870,10 @@ class CheckApp(App):
             self.query_one(target).focus()
         except NoMatches:
             pass
-        # When switching to Favorites, restore _active_fav from the synced cursor so
-        # that fav-specific actions ([u], [R], [N]) work immediately without a manual
-        # keypress to re-highlight the row.
-        if active == "favorites" and self._active_row:
-            ident = self._tariff_key(self._active_row)
-            if ident:
-                rk = self._fav_ident_to_rk.get(ident)
-                if rk and rk in self._fav_rows:
-                    fav_row, fav = self._fav_rows[rk]
-                    self._active_row = fav_row
-                    self._active_fav = fav
+        # Re-select the held tariff in the newly-activated table so the same offer
+        # stays highlighted across tabs. Also restores _active_row/_active_fav so
+        # tab-specific actions ([u], [R], [N]) work without a manual keypress.
+        self._select_held(active)
 
     def _reload_all(self) -> None:
         """Reload every data source from disk and repaint both tables, the header
