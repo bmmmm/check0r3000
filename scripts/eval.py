@@ -409,6 +409,11 @@ def main() -> int:
     ap.add_argument("--save-summary", action="store_true",
                     help="write a durable digest to benchmarks/ (results.md + .json) "
                          "for tracking model quality over time")
+    ap.add_argument("--workers", type=int, default=0,
+                    help="max concurrent jobs (0 = auto, min(8, #jobs)); use 1 to "
+                         "serialize so only one local model is resident at a time — "
+                         "avoids OOM when a big model + long-context KV cache already "
+                         "fills RAM")
     args = ap.parse_args()
     models = [m.strip() for m in args.models.split(",") if m.strip()]
     doc_filter = {d.strip() for d in args.docs.split(",")} if args.docs else None
@@ -461,16 +466,19 @@ def main() -> int:
     jobs = [(key, feeds[key], m, r) for key in sorted(feeds) for m in models
             for r in range(repeat) if feeds[key]]
     docs_label = args.docs or "all"
+    workers = args.workers if args.workers and args.workers > 0 else min(8, len(jobs))
+    workers = max(1, min(workers, len(jobs)))
+    mode = "sequentially" if workers == 1 else f"in parallel (<={workers} workers)"
     print(f"Running {len(jobs)} job(s): {len(feeds)} tariff(s) x {len(models)} model(s) "
           f"x {repeat} run(s), docs={docs_label}, filter={'on' if args.filter else 'off'}, "
-          f"in parallel.")
+          f"{mode}.")
     for key in sorted(feeds):
         approx = len(extract.build_payload(schema_text, feeds[key], ROOT, transform)) // 4
         kinds = ",".join(d["doctype"] for d in feeds[key])
         print(f"  {key}: ~{approx // 1000}k tokens payload [{kinds}]")
     print()
 
-    with ThreadPoolExecutor(max_workers=min(8, len(jobs))) as ex:
+    with ThreadPoolExecutor(max_workers=workers) as ex:
         futures = [ex.submit(run_job, key, docs, m, schema_text, schema, transform,
                              filter_tag, r, repeat)
                    for key, docs, m, r in jobs]
