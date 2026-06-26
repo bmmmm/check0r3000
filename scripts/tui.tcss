@@ -1,6 +1,6 @@
 /*
  * check0r3000 — Rechtsschutz-Vergleich
- * Textual CSS stylesheet
+ * Textual CSS stylesheet — uses theme variables throughout; no hardcoded hex.
  */
 
 /* ── App shell ──────────────────────────────────────────────────────────── */
@@ -10,15 +10,15 @@ App {
 }
 
 Header {
-    background: #1e3a5f;
-    color: #a8d4ff;
+    background: $primary-darken-2;
+    color: $text;
     text-style: bold;
     height: 2;
 }
 
 Footer {
-    background: #1e3a5f;
-    color: #7aadcc;
+    background: $primary-darken-2;
+    color: $text-muted;
     height: 1;
 }
 
@@ -45,13 +45,13 @@ TabPane {
     dock: top;
     height: 3;
     margin: 1 0 0 0;
-    border: tall #1e3a5f;
+    border: tall $primary-darken-2;
     background: $surface-darken-1;
     color: $text;
 }
 
 #filter-input:focus {
-    border: tall #5ba0d0;
+    border: tall $primary;
 }
 
 /* Data-availability legend above the Market table */
@@ -72,7 +72,7 @@ TabPane {
     width: 1fr;
     margin: 1 0 0 0;
     padding: 0 1;
-    color: #c9a227;
+    color: $warning;
     background: $surface-darken-1;
 }
 
@@ -86,15 +86,15 @@ TabPane {
 #fav-table {
     width: 1fr;
     height: 1fr;
-    border: tall #8a6d1f;
-    scrollbar-color: #8a6d1f;
+    border: tall $warning-darken-1;
+    scrollbar-color: $warning-darken-1;
     scrollbar-background: $surface-darken-1;
 }
 
 #fav-detail {
     width: 1fr;
     height: 50%;
-    border: tall #8a6d1f;
+    border: tall $warning-darken-1;
     padding: 1 2;
     background: $surface-darken-1;
     margin-top: 1;
@@ -122,19 +122,19 @@ TabPane {
 #market-table {
     width: 1fr;
     height: 1fr;
-    border: tall #1e3a5f;
-    scrollbar-color: #1e3a5f;
+    border: tall $primary-darken-2;
+    scrollbar-color: $primary-darken-2;
     scrollbar-background: $surface-darken-1;
 }
 
 DataTable > .datatable--header {
-    background: #1e3a5f;
-    color: #a8d4ff;
+    background: $primary-darken-2;
+    color: $text;
     text-style: bold;
 }
 
 DataTable > .datatable--cursor {
-    background: #264f78;
+    background: $primary-darken-1;
     color: $text;
 }
 
@@ -150,7 +150,7 @@ DataTable > .datatable--odd-row {
 #detail-panel {
     width: 1fr;
     height: 50%;
-    border: tall #1e3a5f;
+    border: tall $primary-darken-2;
     padding: 1 2;
     background: $surface-darken-1;
     margin-top: 1;
@@ -164,13 +164,47 @@ DataTable > .datatable--odd-row {
 
 #diff-panel {
     height: 1fr;
-    border: tall #1e3a5f;
+    border: tall $primary-darken-2;
     padding: 1 2;
     background: $surface-darken-1;
     margin-top: 1;
 }
 
 #diff-content {
+    color: $text;
+}
+
+/* ── Verlauf tab ────────────────────────────────────────────────────────── */
+
+#verlauf-header {
+    padding: 0 1;
+    color: $text-muted;
+}
+
+#verlauf-layout {
+    height: 1fr;
+    margin-top: 1;
+    layout: vertical;
+}
+
+#verlauf-table {
+    width: 1fr;
+    height: 1fr;
+    border: tall $success-darken-2;
+    scrollbar-color: $success-darken-2;
+    scrollbar-background: $surface-darken-1;
+}
+
+#verlauf-detail {
+    width: 1fr;
+    height: 50%;
+    border: tall $success-darken-2;
+    padding: 1 2;
+    background: $surface-darken-1;
+    margin-top: 1;
+}
+
+#verlauf-detail-content {
     color: $text;
 }
 
@@ -187,7 +221,7 @@ ConfirmFetchScreen, DeleteDataScreen {
     width: 74;
     height: auto;
     padding: 1 2;
-    border: thick #c9a227;
+    border: thick $warning;
     background: $surface-darken-1;
     color: $text;
 }
@@ -209,7 +243,7 @@ QueryUrlScreen {
     height: auto;
     max-height: 80%;
     padding: 1 2;
-    border: thick #5ba0d0;
+    border: thick $primary;
     background: $surface-darken-1;
     color: $text;
 }
@@ -230,7 +264,7 @@ QueryEditScreen {
     width: 80;
     height: 85%;
     padding: 1 2;
-    border: thick #5ba0d0;
+    border: thick $primary;
     background: $surface-darken-1;
     color: $text;
 }
@@ -300,7 +334,7 @@ QuerySaveConfirmScreen {
     height: auto;
     max-height: 80%;
     padding: 1 2;
-    border: thick #5ba0d0;
+    border: thick $primary;
     background: $surface-darken-1;
     color: $text;
 }
@@ -322,7 +356,7 @@ OpenSourceScreen {
     height: auto;
     max-height: 80%;
     padding: 1 2;
-    border: thick #5ba0d0;
+    border: thick $primary;
     background: $surface-darken-1;
     color: $text;
 }
@@ -344,7 +378,7 @@ HelpScreen {
     height: auto;
     max-height: 90%;
     padding: 1 2;
-    border: thick #5ba0d0;
+    border: thick $primary;
     background: $surface-darken-1;
     color: $text;
 }
@@ -365,7 +399,7 @@ NoteEditScreen {
     width: 80;
     height: 60%;
     padding: 1 2;
-    border: thick #c9a227;
+    border: thick $warning;
     background: $surface-darken-1;
     color: $text;
 }
@@ -392,7 +426,7 @@ CompareTextScreen {
     width: 90%;
     height: 85%;
     padding: 1 2;
-    border: thick #5ba0d0;
+    border: thick $primary;
     background: $surface-darken-1;
     color: $text;
 }
@@ -439,7 +473,7 @@ CompareManagerScreen {
     width: 72;
     height: 80%;
     padding: 1 2;
-    border: thick #5ba0d0;
+    border: thick $primary;
     background: $surface-darken-1;
     color: $text;
 }
@@ -460,7 +494,7 @@ CompareManagerScreen {
 /* ── Scrollbars ─────────────────────────────────────────────────────────── */
 
 ScrollableContainer {
-    scrollbar-color: #5ba0d0;
+    scrollbar-color: $primary;
     scrollbar-background: $surface-darken-2;
     scrollbar-corner-color: $surface;
 }

@@ -272,6 +272,7 @@ class CheckApp(App):
         Binding("m", "verlauf_filter", "Verlauf-Filter", show=False),
         Binding("comma", "verlauf_prev_snap", "Älterer Snap", show=False),
         Binding("period", "verlauf_next_snap", "Neuerer Snap", show=False),
+        Binding("T", "next_theme", "Theme", show=False),
     ]
 
     # reactive state
@@ -1701,6 +1702,20 @@ class CheckApp(App):
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
+
+    _THEMES = [
+        "textual-dark", "rose-pine", "rose-pine-moon", "rose-pine-dawn",
+        "nord", "gruvbox", "dracula", "tokyo-night", "catppuccin-mocha",
+        "textual-light",
+    ]
+
+    def action_next_theme(self) -> None:
+        try:
+            idx = self._THEMES.index(self.theme)
+        except ValueError:
+            idx = -1
+        self.theme = self._THEMES[(idx + 1) % len(self._THEMES)]
+        self.notify(f"Theme: {self.theme}", timeout=2)
 
     # --- Build the CHECK24 result URL ([b]) ---
 
