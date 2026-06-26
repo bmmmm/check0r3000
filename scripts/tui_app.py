@@ -82,6 +82,7 @@ from textual.widgets import (  # noqa: E402
     TabPane,
     TextArea,
 )
+from textual.widgets.data_table import CellDoesNotExist, RowDoesNotExist  # noqa: E402
 
 from tui_screens import (  # noqa: E402
     CompareManagerScreen,
@@ -291,7 +292,6 @@ class CheckApp(App):
     filter_text: reactive[str] = reactive("", recompose=False)
     sort_col: reactive[str] = reactive("position")
     sort_asc: reactive[bool] = reactive(True)
-    selected_row_key: reactive[str | None] = reactive(None)
 
     def __init__(self, snapshot_path: Path | None) -> None:
         super().__init__()
@@ -316,6 +316,11 @@ class CheckApp(App):
         self._held_ident: str | None = None
         self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
         self._market_rows: dict[str, SnapshotRow] = {}
+        # Verlauf table row-key -> its row dict, and tariff ident -> row-key, built
+        # in _populate_verlauf. Keys are suffixed (#i) so duplicate snapshot keys
+        # don't raise DuplicateKey; the ident index drives cross-tab re-selection.
+        self._verlauf_rows: dict[str, dict] = {}
+        self._verlauf_ident_to_rk: dict[str, str] = {}
         self._active_row: SnapshotRow | None = None
         self._active_fav: dict | None = None
         # Vergleich tab view state: compact by default (clean ✓/✗/~/— matrix);
@@ -616,7 +621,7 @@ class CheckApp(App):
         for rk, (row, fav) in self._fav_rows.items():
             ident = self._tariff_key(row, fav)
             if ident:
-                self._fav_ident_to_rk[ident] = rk
+                self._fav_ident_to_rk.setdefault(ident, rk)
 
     def _fav_detail_header(self, row: SnapshotRow, fav: dict) -> list[str]:
         lines: list[str] = []
@@ -865,7 +870,12 @@ class CheckApp(App):
                 key=row_key,
             )
 
-        self._market_ident_to_rk = {r.key: rk for rk, r in self._market_rows.items() if r.key}
+        # First occurrence wins, so a held ident re-selects the same row the user
+        # saw rather than the last duplicate (snapshot keys can repeat).
+        self._market_ident_to_rk = {}
+        for rk, r in self._market_rows.items():
+            if r.key:
+                self._market_ident_to_rk.setdefault(r.key, rk)
 
         # rebuild the Vergleich tab while we're refreshing
         self._populate_coverage()
@@ -1658,8 +1668,16 @@ class CheckApp(App):
 
         table.clear(columns=True)
         table.add_columns("#", "Anbieter", "Tarif", "SB", "Alt €/Mo", "Neu €/Mo", "Δ €", "Δ %", "Δ Rang")
-        for r in rows:
-            table.add_row(*self._verlauf_row_cells(r), key=r["key"])
+        # Suffix the row key: r["key"] (insurer|product|SB) can repeat within a
+        # snapshot (snapshot.py permits it), and add_row(key=…) would raise
+        # DuplicateKey on the collision — the same guard the market table uses.
+        self._verlauf_rows = {}
+        self._verlauf_ident_to_rk = {}
+        for i, r in enumerate(rows):
+            row_key = f'{r["key"]}#{i}'
+            table.add_row(*self._verlauf_row_cells(r), key=row_key)
+            self._verlauf_rows[row_key] = r
+            self._verlauf_ident_to_rk.setdefault(r["key"], row_key)
 
     _MODULE_LABELS = {
         "privat": "Privat", "beruf": "Beruf", "verkehr": "Verkehr",
@@ -1762,50 +1780,81 @@ class CheckApp(App):
     # --- Event handlers ---
 
     def _move_cursor_safe(self, table_id: str, rk: str) -> None:
-        """Move a table's cursor to row-key rk if not already there. Silent on a
-        missing row (RowDoesNotExist) — the held tariff simply isn't in this tab."""
+        """Move a table's cursor to row-key rk if not already there. Silent only on
+        the row genuinely not being in this table (the held tariff isn't here) — any
+        other error surfaces instead of being swallowed."""
         try:
             table = self.query_one(table_id, DataTable)
+        except NoMatches:
+            return
+        try:
             row_idx = table.get_row_index(rk)
-            if table.cursor_coordinate.row != row_idx:
-                table.move_cursor(row=row_idx)
-        except Exception:
-            pass
+        except RowDoesNotExist:
+            return
+        if table.cursor_coordinate.row != row_idx:
+            table.move_cursor(row=row_idx)
 
     def _select_held(self, active: str) -> str | None:
-        """On a tab switch, re-select the held tariff in the newly-active table
-        and update the active-row state. If the tariff isn't present here, leave
-        the cursor untouched (no forced selection). Moving the cursor fires that
-        table's RowHighlighted handler, which is idempotent with the state set
-        here; setting state directly also covers the cursor-already-there case.
-        Returns the table id it selected into, or None when nothing matched."""
+        """Best-effort cursor move: if the held tariff is present in the newly-active
+        table, move the cursor onto it; otherwise leave the cursor as-is. This does
+        NOT set the active-selection state — _adopt_cursor_row does that afterwards,
+        from wherever the cursor actually ends up, so a held tariff absent from this
+        tab can't leave the state pointing at the previous tab's row. Returns the
+        table id when it moved onto the held row, else None."""
         ident = self._held_ident
         if not ident:
             return None
+        targets = {
+            "favorites": ("#fav-table", self._fav_ident_to_rk, self._fav_rows),
+            "market": ("#market-table", self._market_ident_to_rk, self._market_rows),
+            "verlauf": ("#verlauf-table", self._verlauf_ident_to_rk, self._verlauf_rows),
+        }
+        spec = targets.get(active)
+        if spec is None:
+            return None
+        table_id, ident_to_rk, rows = spec
+        rk = ident_to_rk.get(ident)
+        if rk and rk in rows:
+            self._move_cursor_safe(table_id, rk)
+            return table_id
+        return None
+
+    def _adopt_cursor_row(self, active: str) -> None:
+        """Reconcile _active_row/_active_fav/_held_ident to the row the cursor is
+        PHYSICALLY on in the active table — the single source of active-selection
+        truth after a tab switch or reload. Without this, a held tariff that isn't
+        in the new tab would leave [u]/[R]/[D] operating on the previous tab's row."""
+        table = self._active_data_table()
+        if table is None or table.row_count == 0:
+            return
+        try:
+            rk = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
+        except CellDoesNotExist:
+            return
+        if rk is None:
+            return
+        rk = str(rk)
         if active == "favorites":
-            rk = self._fav_ident_to_rk.get(ident)
-            if rk and rk in self._fav_rows:
-                row, fav = self._fav_rows[rk]
+            entry = self._fav_rows.get(rk)
+            if entry is not None:
+                row, fav = entry
                 self._active_row, self._active_fav = row, fav
-                self._move_cursor_safe("#fav-table", rk)
-                return "#fav-table"
+                self._held_ident = self._tariff_key(row, fav)
         elif active == "market":
-            rk = self._market_ident_to_rk.get(ident)
-            if rk and rk in self._market_rows:
-                self._active_row, self._active_fav = self._market_rows[rk], None
-                self.selected_row_key = rk
-                self._move_cursor_safe("#market-table", rk)
-                return "#market-table"
-        elif active == "verlauf":
-            row = (
-                next((r for r in self._snapshot.rows if r.key == ident), None)
-                if self._snapshot else None
-            )
+            row = self._market_rows.get(rk)
             if row is not None:
                 self._active_row, self._active_fav = row, None
-                self._move_cursor_safe("#verlauf-table", ident)
-                return "#verlauf-table"
-        return None
+                self._held_ident = row.key or self._held_ident
+        elif active == "verlauf":
+            rdict = self._verlauf_rows.get(rk)
+            if rdict is not None:
+                ident = rdict["key"]
+                self._active_row = (
+                    next((r for r in self._snapshot.rows if r.key == ident), None)
+                    if self._snapshot else None
+                )
+                self._active_fav = None
+                self._held_ident = ident
 
     @on(DataTable.RowHighlighted, "#market-table")
     def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -1822,7 +1871,6 @@ class CheckApp(App):
         except NoMatches:
             active = None
         if active == "market":
-            self.selected_row_key = key
             self._active_row = row
             self._active_fav = None
             if row.key:
@@ -1861,9 +1909,13 @@ class CheckApp(App):
         key = str(event.row_key.value) if event.row_key.value is not None else None
         if not key or not self._snapshot:
             return
-        row = next((r for r in self._snapshot.rows if r.key == key), None)
-        if row is None:
+        rdict = self._verlauf_rows.get(key)  # key is the suffixed row key
+        if rdict is None:
             return
+        ident = rdict["key"]
+        row = next((r for r in self._snapshot.rows if r.key == ident), None)
+        if row is None:
+            return  # removed tariff (only in the old snapshot) — no live detail
         try:
             active = self.query_one("#tabs", TabbedContent).active
         except NoMatches:
@@ -1871,7 +1923,7 @@ class CheckApp(App):
         if active == "verlauf":
             self._active_row = row
             self._active_fav = None
-            self._held_ident = key
+            self._held_ident = ident
             if self._detail_visible:
                 try:
                     content = self.query_one("#verlauf-detail-content", Static)
@@ -2068,13 +2120,14 @@ class CheckApp(App):
             self.query_one(target).focus()
         except NoMatches:
             pass
-        # Re-select the held tariff in the newly-activated table so the same offer
-        # stays highlighted across tabs. Also restores _active_row/_active_fav so
-        # tab-specific actions ([u], [R], [N]) work without a manual keypress.
-        selected = self._select_held(active)
-        if selected:
-            # Center after the pane's layout settles so the viewport height is known.
-            self.call_after_refresh(self._center_cursor_in, selected)
+        # Move the cursor to the held tariff if it is in this tab, then reconcile the
+        # active selection to wherever the cursor actually is (held-absent included)
+        # so tab-specific actions ([u]/[R]/[N]/[D]) never target the previous tab's
+        # row. Center afterwards, once the pane's layout has settled.
+        if active in ("favorites", "market", "verlauf"):
+            self._select_held(active)
+            self._adopt_cursor_row(active)
+            self.call_after_refresh(self._center_cursor_in, target)
 
     def _reload_all(self) -> None:
         """Reload every data source from disk and repaint both tables, the header
@@ -2085,8 +2138,19 @@ class CheckApp(App):
         self._populate_market_table()
         self._populate_verlauf()
         self._update_header()
+        # clear() reset every cursor to row 0; move it back onto the held tariff in
+        # the active tab and reconcile the active state, so a follow-up [u]/[R]/[D]
+        # still targets the same tariff instead of whatever landed at row 0.
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            active = None
+        if active in ("favorites", "market", "verlauf"):
+            self._select_held(active)
+            self._adopt_cursor_row(active)
         self._refresh_market_detail()
         self._refresh_fav_detail()
+        self._refresh_verlauf_detail()
         self._update_status_bar()
 
     def action_refresh_data(self) -> None:
@@ -2937,6 +3001,15 @@ class CheckApp(App):
         if band.display:
             self._render_active_into(("#fav-detail", "#fav-detail-content"))
 
+    def _refresh_verlauf_detail(self) -> None:
+        """Re-render the Verlauf band live — only when it is currently shown."""
+        try:
+            band = self.query_one("#verlauf-detail")
+        except NoMatches:
+            return
+        if band.display:
+            self._render_active_into(("#verlauf-detail", "#verlauf-detail-content"))
+
     # --- On-demand: download + analyze the selected tariff ([g]) ---
 
     def action_fetch_docs(self) -> None:
@@ -3105,14 +3178,10 @@ class CheckApp(App):
         self.call_from_thread(self._after_pipeline, row)
 
     def _after_pipeline(self, row: SnapshotRow) -> None:
-        """Reload data so the freshly extracted record shows, then refresh panels."""
-        self._load_data()
-        self._populate_market_table()
-        self._populate_favorites_table()
-        self._update_header()
-        self._refresh_market_detail()
-        self._refresh_fav_detail()
-        self._update_status_bar()
+        """Reload data so the freshly extracted record shows, then refresh panels.
+        Delegates to _reload_all so the Verlauf tab and the held selection are
+        restored too (not just the market/favorites tables)."""
+        self._reload_all()
         self.notify(
             f"Analyse fertig: {_esc(row.insurer)} {_esc(row.product)} — \\[d] zeigt die Details.",
             timeout=8,
