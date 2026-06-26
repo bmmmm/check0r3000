@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
+#!/usr/bin/env -S uv run
 """Build a CHECK24 Rechtsschutz result URL from the saved quote profile.
 
 CHECK24 has no JSON results API: the comparison is rendered server-side from the URL

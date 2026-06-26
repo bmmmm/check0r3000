@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["jsonschema>=4"]
-# ///
+#!/usr/bin/env -S uv run
 """Regression guard: assert extracted tariff records still satisfy known,
 document-grounded invariants.
 

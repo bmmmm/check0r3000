@@ -1,7 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# dependencies = ["textual>=8.0"]
-# ///
+#!/usr/bin/env -S uv run
 """
 check0r3000 — Rechtsschutz-Vergleich
 Interactive TUI for browsing German legal-protection-insurance tariff comparisons.

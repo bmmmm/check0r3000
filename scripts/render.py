@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
+#!/usr/bin/env -S uv run
 """Render stage: build the comparison overview from the extracted tariff records.
 
 Reads:   out/tariffs/*.json

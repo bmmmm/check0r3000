@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["jsonschema>=4"]
-# ///
+#!/usr/bin/env -S uv run
 """Eval stage: benchmark the extract prompt across models on three axes.
 
   A  Correctness  — schema-valid + hallucination guard + required-field plausibility

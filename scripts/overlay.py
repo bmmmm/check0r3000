@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["jsonschema>=4"]
-# ///
+#!/usr/bin/env -S uv run
 """Overlay stage: merge structured, NON-LLM facts onto the pure extraction records.
 
 The premium (`beitrag`), the chosen service level per module (`modules.<m>.level`)

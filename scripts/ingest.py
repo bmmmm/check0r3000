@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["pypdf>=4"]
-# ///
+#!/usr/bin/env -S uv run
 """Ingest stage: extract text from every source PDF and detect duplicates.
 
 Reads:   data/raw/<insurer>/<tariff>/<doctype>.pdf

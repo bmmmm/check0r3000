@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["playwright"]
-# ///
+#!/usr/bin/env -S uv run
 """Harvest a tariff's source-document URLs from the live CHECK24 result page and merge
 them into data/sources/check24-documents.json — the manual step the README still
 describes (paste check24_scrape.js, call check24Docs, hand-reshape the manifest), now
