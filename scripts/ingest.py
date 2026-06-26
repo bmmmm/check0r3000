@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Ingest stage: extract text from every source PDF and detect duplicates.
 
 Reads:   data/raw/<insurer>/<tariff>/<doctype>.pdf

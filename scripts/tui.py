@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """
 check0r3000 — Rechtsschutz-Vergleich
 Interactive TUI for browsing German legal-protection-insurance tariff comparisons.

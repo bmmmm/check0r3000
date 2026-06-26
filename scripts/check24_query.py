@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Build a CHECK24 Rechtsschutz result URL from the saved quote profile.
 
 CHECK24 has no JSON results API: the comparison is rendered server-side from the URL

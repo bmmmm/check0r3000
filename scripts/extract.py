@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Extract stage: turn each tariff's documents into structured comparison facts.
 
 For every (insurer, tariff) in data/extracted/manifest.json, concatenate the

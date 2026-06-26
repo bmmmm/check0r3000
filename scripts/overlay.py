@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Overlay stage: merge structured, NON-LLM facts onto the pure extraction records.
 
 The premium (`beitrag`), the chosen service level per module (`modules.<m>.level`)

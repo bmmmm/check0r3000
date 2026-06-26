@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Download tariff source PDFs that were persisted as URLs, on demand.
 
 We keep only the *URLs* of the AVB / Produktinfoblatt / weitere Unterlagen in

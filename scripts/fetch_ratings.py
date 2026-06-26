@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Scrape the CHECK24 result page with Playwright headless Chrome.
 
 Waits for Vue.js to hydrate (`.efeedback-button__count` in DOM), then runs

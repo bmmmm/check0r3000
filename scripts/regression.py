@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Regression guard: assert extracted tariff records still satisfy known,
 document-grounded invariants.
 

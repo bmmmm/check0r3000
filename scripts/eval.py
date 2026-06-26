@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Eval stage: benchmark the extract prompt across models on three axes.
 
   A  Correctness  — schema-valid + hallucination guard + required-field plausibility

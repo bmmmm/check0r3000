@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Snapshot the CHECK24 market scan and diff snapshots over time.
 
 The point: keep a dated record of the whole result list (price, Tarifnote,

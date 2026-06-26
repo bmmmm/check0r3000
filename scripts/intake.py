@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Intake stage: sort dropped raw PDFs from data/inbox/ into the canonical layout.
 
 Drop any check24-style PDFs into data/inbox/, then run this. It derives the

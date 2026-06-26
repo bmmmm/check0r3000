@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 """Deterministic naming-normalization for the cross-tariff coverage comparison.
 
 The Vergleich (Diff) view must line up the SAME benefit or exclusion even when two
