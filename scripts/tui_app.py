@@ -50,6 +50,7 @@ from tui_format import (  # noqa: E402
     _col_label,
     _esc,
     _fmt_eur,
+    _level_direction,
     _module_cell,
     _pad_cell,
     _pad_label,
@@ -1736,9 +1737,13 @@ class CheckApp(App):
                 elif ol != nl:
                     old_s = ol or "—"
                     new_s = nl or "—"
-                    col = "bright_green" if (
-                        (nl or "") > (ol or "")
-                    ) else "bright_red"
+                    # Rank-based, not lexicographic: an unknown tier (or a same-rank
+                    # casing-only change) stays neutral instead of being mislabelled
+                    # an up-/downgrade.
+                    direction = _level_direction(ol, nl)
+                    col = ("bright_green" if direction == 1
+                           else "bright_red" if direction == -1
+                           else "cyan")
                     lines.append(f"    {lbl:<22} [{col}]{old_s} → {new_s}[/{col}]")
 
         # --- coverage ---

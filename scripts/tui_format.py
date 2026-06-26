@@ -116,6 +116,22 @@ def _module_cell(mod: dict[str, Any]) -> tuple[str, str]:
     }.get(mod.get("level"), ("✓", "cyan"))
 
 
+# Module quality tiers, worst→best. Comparing level strings directly is wrong in
+# general — it is only accidentally right for Basis/Komfort/Premium (B<K<P) and
+# breaks for any other label or a different casing — so rank them explicitly.
+_LEVEL_RANK = {"basis": 0, "komfort": 1, "premium": 2}
+
+
+def _level_direction(old: str | None, new: str | None) -> int | None:
+    """Compare two module tiers: +1 upgrade, -1 downgrade, 0 same rank, None when
+    either tier is unknown (so the caller can stay neutral instead of guessing)."""
+    o = _LEVEL_RANK.get((old or "").strip().casefold())
+    n = _LEVEL_RANK.get((new or "").strip().casefold())
+    if o is None or n is None:
+        return None
+    return (n > o) - (n < o)
+
+
 def _fmt_eur(v) -> str:
     """A monthly/yearly EUR amount for the detail band. A model may emit a numeric
     string ("12,50") or other type where the schema wants a number; format real
