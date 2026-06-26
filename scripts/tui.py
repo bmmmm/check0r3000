@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# dependencies = ["textual>=0.61.0"]
+# dependencies = ["textual>=8.0"]
 # ///
 """
 check0r3000 — Rechtsschutz-Vergleich
