@@ -391,7 +391,9 @@ class QuerySaveConfirmScreen(ModalScreen[bool]):
 
 class OpenSourceScreen(ModalScreen[str | None]):
     """Choose how to read a tariff's source documents: online in the browser, or
-        the local PDFs from disk. Returns 'online' | 'disk' | None."""
+        the local PDFs from disk. Returns 'online' | 'disk' | None.
+        Only shown when BOTH source types are available; single-source cases are
+        handled directly by action_open_source without pushing this screen."""
 
     BINDINGS = [
         Binding("1", "pick('online')", "Online"),
@@ -400,12 +402,12 @@ class OpenSourceScreen(ModalScreen[str | None]):
         Binding("q", "cancel", "Cancel"),
     ]
 
-    def __init__(self, label: str, docs: list[dict], has_urls: bool,
+    def __init__(self, label: str, docs: list[dict], n_urls: int,
                  n_pdfs: int, stem: str) -> None:
         super().__init__()
         self._label = label
         self._docs = docs
-        self._has_urls = has_urls
+        self._n_urls = n_urls
         self._n_pdfs = n_pdfs
         self._stem = stem
 
@@ -416,11 +418,19 @@ class OpenSourceScreen(ModalScreen[str | None]):
             lines.append("[underline]Dokumente[/underline]")
             for dd in self._docs:
                 lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                lines.append(f"  [cyan]{lbl:<6}[/cyan] {(dd.get('file') or '')[:50]}")
+                fname = (dd.get("file") or "")[:50]
+                doc_url = dd.get("url") or ""
+                if doc_url:
+                    lines.append(
+                        f'  [cyan]{lbl:<6}[/cyan] [link="{doc_url}"]{fname}[/link]'
+                    )
+                else:
+                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
             lines.append("")
+        url_label = f"{self._n_urls} URL{'s' if self._n_urls != 1 else ''}"
         online = (
-            "[bold]\\[1][/bold] Online im Browser"
-            if self._has_urls else "[dim]\\[1] Online — keine URLs hinterlegt[/dim]"
+            f"[bold]\\[1][/bold] Alle {url_label} im Browser öffnen"
+            if self._n_urls else "[dim]\\[1] Online — keine URLs hinterlegt[/dim]"
         )
         disk = (
             f"[bold]\\[2][/bold] Lokale PDFs ({self._n_pdfs}) — "
@@ -431,7 +441,7 @@ class OpenSourceScreen(ModalScreen[str | None]):
         yield Container(Static("\n".join(lines)), id="open-box")
 
     def action_pick(self, choice: str) -> None:
-        if choice == "online" and not self._has_urls:
+        if choice == "online" and not self._n_urls:
             return
         if choice == "disk" and not self._n_pdfs:
             return
@@ -660,6 +670,7 @@ class HelpScreen(ModalScreen[None]):
             ("b", "CHECK24-Query-URL bauen (nur Ansicht)"),
             ("e", "CHECK24-Suche bearbeiten (Levers ändern + speichern)"),
             ("r", "Daten neu laden"),
+            ("T", "Theme wechseln (rose-pine, nord, dracula, …)"),
             ("?", "diese Hilfe"),
             ("q", "Beenden"),
         ]),
