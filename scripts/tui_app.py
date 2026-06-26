@@ -21,6 +21,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import coverage_taxonomy as ctax  # noqa: E402
 import _providers  # noqa: E402
+import scorecard  # noqa: E402  — shared benchmark scoring (eval.py + Benchmark tab)
 
 from tui_data import (  # noqa: E402
     ChangeInfo,
@@ -47,6 +48,7 @@ from tui_data import (  # noqa: E402
 from tui_format import (  # noqa: E402
     STATUS_LEGEND,
     VERGLEICH_LABEL_W,
+    benchmark_markup,
     _bewertung_cell,
     _col_label,
     _esc,
@@ -254,6 +256,7 @@ class CheckApp(App):
         Binding("x", "switch_tab('market')", "Market", show=True),
         Binding("v", "switch_tab('diff')", "Vergleich", show=True),
         Binding("l", "switch_tab('verlauf')", "Verlauf", show=True),
+        Binding("B", "switch_tab('bench')", "Benchmark", show=True),
         # Tab cycles tabs forward, Shift+Tab backward. priority=True beats the
         # Screen's default tab->focus_next; action_cycle_tab restores that default
         # when a modal is open or a text field is focused.
@@ -348,6 +351,7 @@ class CheckApp(App):
         self._populate_favorites_table()
         self._populate_market_table()
         self._populate_verlauf()
+        self._populate_benchmark()
         self._update_header()
         self._prewarm_analyze_model()
 
@@ -429,6 +433,9 @@ class CheckApp(App):
                             "Zeile wählen für Details.",
                             id="verlauf-detail-content",
                         )
+            with TabPane("Benchmark [B]", id="bench"):
+                with ScrollableContainer(id="bench-panel"):
+                    yield Static("Benchmark wird geladen…", id="bench-content")
         yield Label("", id="status-bar")
         yield Footer()
 
@@ -1247,6 +1254,27 @@ class CheckApp(App):
             head += _pad_cell(lbl, col_w)
         return f"[bold underline]{head}[/bold underline]"
 
+    def _populate_benchmark(self) -> None:
+        """Render the durable benchmark digest (benchmarks/results.json) as a ranked,
+        colour-coded scorecard in the Benchmark tab. Scoring shares the same formula
+        as the eval CLI via scorecard.scored_by_tariff (the module-coverage denominator
+        is batch-relative, so points can differ when the row sets differ). Absent or
+        malformed digest -> a message instead of crashing the mount."""
+        try:
+            widget: Static = self.query_one("#bench-content", Static)
+        except NoMatches:
+            return
+        try:
+            results = scorecard.load_results()
+            groups = list(scorecard.scored_by_tariff(results.get("rows", [])))
+            widget.update(benchmark_markup(results, groups))
+        except Exception as exc:  # a hand-edited / old-schema digest must not kill mount
+            widget.update(
+                f"[bright_red]benchmarks/results.json ist unlesbar:[/bright_red] "
+                f"{_esc(exc)}\n[dim]Erwartet das Schema aus scorecard.py / eval.py "
+                "--save-summary.[/dim]"
+            )
+
     def _populate_coverage(self) -> None:
         try:
             widget: Static = self.query_one("#diff-content", Static)
@@ -2047,8 +2075,9 @@ class CheckApp(App):
         except NoMatches:
             pass
 
-    # Tab order for cycling; "diff" (Vergleich) has no table but is still a stop.
-    _TAB_ORDER = ["favorites", "market", "diff", "verlauf"]
+    # Tab order for cycling; "diff" (Vergleich) and "bench" have no table but are
+    # still stops.
+    _TAB_ORDER = ["favorites", "market", "diff", "verlauf", "bench"]
 
     def action_cycle_tab(self, delta: int) -> None:
         """Cycle the active tab forward (Tab) / backward (Shift+Tab). While a modal
@@ -2124,7 +2153,8 @@ class CheckApp(App):
         except NoMatches:
             return
         target = {"favorites": "#fav-table", "market": "#market-table",
-                  "diff": "#diff-panel", "verlauf": "#verlauf-table"}.get(active)
+                  "diff": "#diff-panel", "verlauf": "#verlauf-table",
+                  "bench": "#bench-panel"}.get(active)
         if not target:
             return
         try:
@@ -2148,6 +2178,7 @@ class CheckApp(App):
         self._populate_favorites_table()
         self._populate_market_table()
         self._populate_verlauf()
+        self._populate_benchmark()
         self._update_header()
         # clear() reset every cursor to row 0; move it back onto the held tariff in
         # the active tab and reconcile the active state, so a follow-up [u]/[R]/[D]

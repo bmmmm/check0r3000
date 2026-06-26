@@ -23,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from textual.widgets import DataTable, TabbedContent  # noqa: E402
+from textual.widgets import DataTable, Static, TabbedContent  # noqa: E402
 
 from tui_app import CheckApp  # noqa: E402
 
@@ -83,7 +83,8 @@ async def t_boot_and_tables(app, pilot) -> None:
 
 async def t_tab_shortcuts(app, pilot) -> None:
     """The global single-letter bindings switch tabs."""
-    for key, want in (("x", "market"), ("v", "diff"), ("l", "verlauf"), ("y", "favorites")):
+    for key, want in (("x", "market"), ("v", "diff"), ("l", "verlauf"),
+                      ("B", "bench"), ("y", "favorites")):
         await pilot.press(key)
         await pilot.pause()
         assert _active_tab(app) == want, f"[{key}] -> {_active_tab(app)!r}, want {want!r}"
@@ -92,13 +93,13 @@ async def t_tab_shortcuts(app, pilot) -> None:
 async def t_tab_cycle(app, pilot) -> None:
     """Tab cycles forward through _TAB_ORDER and wraps; Shift+Tab goes back."""
     assert _active_tab(app) == "favorites"
-    for want in ("market", "diff", "verlauf", "favorites"):
+    for want in ("market", "diff", "verlauf", "bench", "favorites"):
         await pilot.press("tab")
         await pilot.pause()
         assert _active_tab(app) == want, f"tab -> {_active_tab(app)!r}, want {want!r}"
     await pilot.press("shift+tab")
     await pilot.pause()
-    assert _active_tab(app) == "verlauf", f"shift+tab -> {_active_tab(app)!r}"
+    assert _active_tab(app) == "bench", f"shift+tab -> {_active_tab(app)!r}"
 
 
 async def t_cross_tab_roundtrip(app, pilot) -> None:
@@ -234,10 +235,26 @@ async def t_markup_hostile_nav(app, pilot) -> None:
     # Reaching here without a MarkupError is the real assertion.
 
 
+async def t_benchmark_tab(app, pilot) -> None:
+    """[B] switches to the Benchmark tab and the scorecard renders on the live path
+    without a MarkupError; the populate replaced the placeholder with either real
+    scorecard content or the explicit empty state."""
+    await pilot.press("B")
+    await pilot.pause()
+    assert _active_tab(app) == "bench", f"[B] -> {_active_tab(app)!r}"
+    content = app.query_one("#bench-content", Static)
+    rendered = content.render()  # Textual 8.x dropped Static.renderable; render() is stable
+    text = rendered.plain if hasattr(rendered, "plain") else str(rendered)
+    assert "wird geladen" not in text, "bench content still the placeholder — populate did not run"
+    assert ("Extraktionsqualität" in text or "Noch keine Benchmark-Daten" in text), (
+        f"bench content neither scorecard nor empty state: {text[:80]!r}")
+
+
 CASES = [
     ("boot_and_tables", t_boot_and_tables),
     ("tab_shortcuts", t_tab_shortcuts),
     ("tab_cycle", t_tab_cycle),
+    ("benchmark_tab", t_benchmark_tab),
     ("cross_tab_roundtrip", t_cross_tab_roundtrip),
     ("cross_tab_held_absent", t_cross_tab_held_absent),
     ("detail_toggle", t_detail_toggle),

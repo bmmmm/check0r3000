@@ -63,7 +63,9 @@ Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_a
 | `[a]` | Tarif in Vergleich aufnehmen / entfernen (Market-Tab) |
 | `[u]` | Favorit an/aus |
 | `[l]` | Verlauf-Tab (Snapshot-Diff + Feature-Diff) |
-| `[x]` | Vergleich-Tab (Coverage-Matrix) |
+| `[x]` | Markt-Tab (Tarifliste) |
+| `[v]` | Vergleich-Tab (Coverage-Matrix) |
+| `[B]` | Benchmark-Tab (Modell-Scorecard aus `benchmarks/results.json`) |
 | `[d]` | Detail-Band ein/aus |
 | `Tab` / `⇧Tab` | Nächster / voriger Tab (zyklisch) |
 | `[?]` | Alle Shortcuts |

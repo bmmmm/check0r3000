@@ -37,6 +37,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import extract  # noqa: E402  — reuse INSTRUCTION / build_payload / coerce_json / avb_transform
 import _providers  # noqa: E402
+from scorecard import scored_by_tariff as _scored_by_tariff  # noqa: E402  — shared scoring
 
 EXTRACTED = ROOT / "data" / "extracted"
 SCHEMA = ROOT / "schema" / "tariff.schema.json"
@@ -389,43 +390,6 @@ def save_summary(rows: list[dict], models: list[str], repeat: int) -> None:
           f"  +  {(BENCH_OUT / 'results.json').name}")
 
 
-SCORECARD_WEIGHTS = {"faithful": 50, "schema": 20, "halluc": 15, "modules": 15}
-
-
-def _score_row(r: dict, max_modules: int) -> dict:
-    """Quality scorecard points for one aggregated row (0-100, correctness only).
-    Faithful 50 / Schema 20 / Hallucination-free 15 / Module coverage 15. Module
-    credit is GATED on the schema-valid rate, so breadth over schema-invalid output
-    earns nothing. Zero successful runs = DNF (total 0). Latency and cost stay OUT
-    of the score by design — a slow free model must not out-point a faithful one."""
-    runs = max(1, r["runs"])
-    if r["ok"] == 0:
-        return {"faithful": 0.0, "schema": 0.0, "halluc": 0.0, "modules": 0.0,
-                "total": 0.0, "dnf": True}
-    schema_rate = r["schema_ok"] / runs
-    faithful = SCORECARD_WEIGHTS["faithful"] * (r["faithful"] / runs)
-    schema = SCORECARD_WEIGHTS["schema"] * schema_rate
-    halluc = max(0.0, SCORECARD_WEIGHTS["halluc"] - 5 * r["unsupported_max"])
-    modules = SCORECARD_WEIGHTS["modules"] * (r["modules_max"] / max_modules) * schema_rate
-    return {"faithful": faithful, "schema": schema, "halluc": halluc,
-            "modules": modules, "total": faithful + schema + halluc + modules,
-            "dnf": False}
-
-
-def _scored_by_tariff(rows: list[dict]):
-    """Yield (tariff, [(row, points), ...]) sorted by total desc. The module-coverage
-    denominator is the best coverage any model achieved in this batch (so 'full' is
-    self-calibrating and the score stays schema-shape-agnostic)."""
-    max_modules = max((r["modules_max"] for r in rows), default=1) or 1
-    by_tariff: dict[str, list[dict]] = {}
-    for r in rows:
-        by_tariff.setdefault(r["tariff"], []).append(r)
-    for tariff in sorted(by_tariff):
-        scored = sorted(((r, _score_row(r, max_modules)) for r in by_tariff[tariff]),
-                        key=lambda rs: rs[1]["total"], reverse=True)
-        yield tariff, scored
-
-
 def print_scorecard(rows: list[dict]) -> None:
     """Ranked quality scorecard; latency/cost are shown but never folded into points."""
     print("\nScorecard — quality points (Faithful 50 / Schema 20 / Halluc-free 15 / "
@@ -501,10 +465,11 @@ def main() -> int:
                          "avoids OOM when a big model + long-context KV cache already "
                          "fills RAM")
     ap.add_argument("--scorecard", action="store_true",
-                    help="print a ranked quality scorecard (Faithful 50 / Schema 20 / "
-                         "Halluc-free 15 / Modules 15; latency & cost shown separately, "
-                         "not scored); with --save-summary also writes "
-                         "benchmarks/scorecard.md")
+                    help="print a ranked quality scorecard to the console (Faithful 50 / "
+                         "Schema 20 / Halluc-free 15 / Modules 15; latency & cost shown "
+                         "separately, not scored). The committable benchmarks/scorecard.md "
+                         "is written by --save-summary regardless, in lockstep with "
+                         "results.json")
     ap.add_argument("--prewarm", action="store_true",
                     help="load each --models spec into its server's RAM (one minimal "
                          "call each) and exit, without running any extraction — pulls a "
@@ -562,10 +527,9 @@ def main() -> int:
         if args.save_summary:
             save_summary(rows, sorted({r["model"] for r in rows}),
                          max((r["runs"] for r in rows), default=1))
+            save_scorecard(rows)  # keep scorecard.md in lockstep with results.json
         if args.scorecard:
             print_scorecard(rows)
-            if args.save_summary:
-                save_scorecard(rows)
         return 0
 
     # Build the fed-document subset (--docs); sources for grounding stay full.
@@ -614,10 +578,9 @@ def main() -> int:
         print_variance(rows)
     if args.save_summary:
         save_summary(rows, models, repeat)
+        save_scorecard(rows)  # keep scorecard.md in lockstep with results.json
     if args.scorecard:
         print_scorecard(rows)
-        if args.save_summary:
-            save_scorecard(rows)
 
     EVAL_OUT.mkdir(parents=True, exist_ok=True)
     (EVAL_OUT / "results.json").write_text(

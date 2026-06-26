@@ -240,3 +240,60 @@ def _price_quartiles(rows: list[SnapshotRow]) -> tuple[float, float, float]:
     median = prices[n // 2]
     q3 = prices[3 * n // 4]
     return q1, median, q3
+
+
+def _score_colour(total: float, dnf: bool) -> str:
+    """Score-band colour: green >=90, yellow >=60, red below / DNF. Used only for the
+    SCORE column — every other column stays neutral so the eye lands on the verdict."""
+    if dnf or total < 60:
+        return "bright_red"
+    return "bright_green" if total >= 90 else "yellow"
+
+
+def benchmark_markup(meta: dict, groups: list) -> str:
+    """Render scored benchmark groups as an aligned, colour-coded markup block for the
+    TUI Benchmark tab. `meta` is the benchmarks/results.json header (generated/commit/
+    repeat); `groups` is the [(tariff, [(row, points), ...]), ...] sequence from
+    scorecard.scored_by_tariff. Duck-typed — dicts in, one markup string out, no data
+    model and no Textual, like every helper here. Only the SCORE column is coloured by
+    value; latency and cost are shown but, by design, never folded into the points."""
+    if not groups:
+        return ("[dim italic]Noch keine Benchmark-Daten.\n"
+                "Ein Lauf mit [bold]--save-summary[/bold] (z. B. \\[g] in der TUI oder "
+                "`check0r-bench … --save-summary`) schreibt benchmarks/results.json — "
+                "dann erscheint hier die Scorecard.[/dim italic]")
+    # Header padding mirrors the data row below exactly (two spaces before ~wall).
+    head = (f"{'Modell':<28} {'Input':<13} {'Fth':>4} {'Sch':>4} {'Hal':>4} "
+            f"{'Mod':>4} {'Score':>5}  {'~wall':>6} {'~Kosten':>8}")
+    out = [
+        f"[bold]Benchmark — Extraktionsqualität[/bold]   "
+        f"[dim]{_esc(meta.get('generated', '?'))} · commit "
+        f"{_esc(meta.get('commit', '?'))} · {_esc(meta.get('repeat', '?'))} "
+        f"Läufe/Zelle[/dim]",
+        "[dim]Punkte = reine Korrektheit (reproduzierbar): Faithful 50 · Schema 20 · "
+        "Halluz-frei 15 · Module 15 = 100. Latenz/Kosten sind Betriebsdaten, nicht im "
+        "Score.  [bright_green]●[/bright_green] ≥90  [yellow]●[/yellow] ≥60  "
+        "[bright_red]●[/bright_red] <60.[/dim]",
+        "",
+    ]
+    for tariff, scored in groups:
+        out.append(f"[bold cyan]{_esc(tariff)}[/bold cyan]")
+        out.append(f"[dim]{head}[/dim]")
+        for r, s in scored:
+            # Local backends (omlx:/mlx:/ollama:) report no cost; flag the model cyan.
+            model_col = "cyan" if r.get("cost_usd") is None else None
+            model_cell = _pad_cell(str(r.get("model", "?")), 28, model_col)
+            input_cell = _pad_cell(str(r.get("input", "")), 13)
+            dnf = bool(s.get("dnf"))
+            score_txt = "DNF" if dnf else f"{s['total']:.0f}"
+            col = _score_colour(s.get("total", 0.0), dnf)
+            score_cell = f"[{col} bold]{score_txt:>5}[/{col} bold]"
+            wall = f"{r['wall_s']:.0f}s" if r.get("wall_s") is not None else "–"
+            cost = f"${r['cost_usd']:.2f}" if r.get("cost_usd") is not None else "–"
+            out.append(
+                f"{model_cell} {input_cell} "
+                f"{s['faithful']:>4.0f} {s['schema']:>4.0f} {s['halluc']:>4.0f} "
+                f"{s['modules']:>4.0f} {score_cell}  {wall:>6} {cost:>8}"
+            )
+        out.append("")
+    return "\n".join(out)
