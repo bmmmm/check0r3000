@@ -595,7 +595,7 @@ class CheckApp(App):
             if ident:
                 self._fav_ident_to_rk[ident] = rk
 
-    def _render_favorite_detail(self, row: SnapshotRow, fav: dict) -> str:
+    def _fav_detail_header(self, row: SnapshotRow, fav: dict) -> list[str]:
         lines: list[str] = []
         lines.append(f"[bold]{row.insurer}[/bold] — [italic]{row.product}[/italic]")
         url = self._build_offer_url(row.position) if row.position else None
@@ -614,18 +614,23 @@ class CheckApp(App):
                 marker, mcolor = "★", "yellow"
             lines.append(f"[{mcolor}]{marker} {tag or 'Referenz'}[/{mcolor}]")
         lines.append("")
+        return lines
 
+    def _fav_detail_note(self, fav: dict) -> list[str]:
         note = fav.get("note", "")
         if note:
-            lines.append(
+            lines: list[str] = [
                 "[bold underline]Notiz[/bold underline]   [dim](\\[N] bearbeiten)[/dim]"
-            )
+            ]
             for nl in note.splitlines() or [note]:
                 lines.append(f"  [italic]{_esc(nl)}[/italic]")
         else:
-            lines.append("[dim]\\[N] Notiz hinzufügen[/dim]")
+            lines = ["[dim]\\[N] Notiz hinzufügen[/dim]"]
         lines.append("")
+        return lines
 
+    def _fav_detail_pricing(self, row: SnapshotRow, fav: dict) -> list[str]:
+        lines: list[str] = []
         nc = _tarifnote_color(row.tarifnote)
         lines.append(f"Tarifnote : [{nc}]{row.tarifnote or '—'}[/{nc}]   [dim](Experten-Note)[/dim]")
         if row.bewertung is not None:
@@ -653,50 +658,61 @@ class CheckApp(App):
                         f"vs. Referenz {ref_sb}) — nicht 1:1[/dim]"
                     )
         lines.append("")
+        return lines
 
-        # self._snapshot can be None here if the snapshot file vanished and the
-        # user pressed [r] while a fav row was still the active detail target
-        # (DataTable.clear() fires no RowHighlighted, so _active_fav survives).
+    def _fav_detail_variants(self, row: SnapshotRow, fav: dict) -> list[str]:
+        # _snapshot can be None if the snapshot file vanished while a fav row was
+        # still the active detail target (DataTable.clear() fires no RowHighlighted).
         # match_favorite() dereferences snapshot.rows, so guard before calling.
         variants: list[SnapshotRow] = []
         if self._snapshot is not None:
             _, variants = match_favorite(self._snapshot, fav)
-        if len(variants) > 1:
-            lines.append("[underline]SB-Varianten[/underline]")
-            for v in sorted(
-                variants, key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0
-            ):
-                p = f"{v.monatlich_eur:.2f}" if v.monatlich_eur is not None else "—"
-                mark = " [bright_yellow]◀ shown[/bright_yellow]" if v.key == row.key else ""
-                lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
-            lines.append("")
+        if len(variants) <= 1:
+            return []
+        lines = ["[underline]SB-Varianten[/underline]"]
+        for v in sorted(
+            variants, key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0
+        ):
+            p = f"{v.monatlich_eur:.2f}" if v.monatlich_eur is not None else "—"
+            mark = " [bright_yellow]◀ shown[/bright_yellow]" if v.key == row.key else ""
+            lines.append(f"  {v.selbstbeteiligung:<18} €{p}{mark}")
+        lines.append("")
+        return lines
 
-        detail_rec = self._detail_for_row(row)
-        has_detail = detail_rec is not None
+    def _fav_detail_docs(self, fav: dict, detail_rec: "DetailRecord | None") -> list[str]:
         docs = self._doc_index.get(fav.get("stem", ""), [])
-        if docs:
-            lines.append("[underline]Quelldokumente (URLs gesichert)[/underline]")
-            for dd in docs:
-                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                fname = (dd.get("file") or "")[:54]
-                doc_url = dd.get("url") or ""
-                if doc_url:
-                    lines.append(
-                        f'  [cyan]{lbl:<6}[/cyan] [link="{doc_url}"]{fname}[/link]'
-                    )
-                else:
-                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
-            if not has_detail:
-                lines.append(
-                    "[bright_yellow]  \\[g] herunterladen + analysieren"
-                    "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
-                )
-                lines.append(
-                    f"  [dim]→ fetch_docs.py {fav.get('stem')} --into-raw"
-                    " → ingest → extract[/dim]"
-                )
-            lines.append("")
+        if not docs:
+            return []
+        lines = ["[underline]Quelldokumente (URLs gesichert)[/underline]"]
+        for dd in docs:
+            lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+            fname = (dd.get("file") or "")[:54]
+            doc_url = dd.get("url") or ""
+            if doc_url:
+                lines.append(f'  [cyan]{lbl:<6}[/cyan] [link="{doc_url}"]{fname}[/link]')
+            else:
+                lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+        if detail_rec is None:
+            lines.append(
+                "[bright_yellow]  \\[g] herunterladen + analysieren"
+                "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
+            )
+            lines.append(
+                f"  [dim]→ fetch_docs.py {fav.get('stem')} --into-raw"
+                " → ingest → extract[/dim]"
+            )
+        lines.append("")
+        return lines
 
+    def _render_favorite_detail(self, row: SnapshotRow, fav: dict) -> str:
+        detail_rec = self._detail_for_row(row)
+        lines: list[str] = [
+            *self._fav_detail_header(row, fav),
+            *self._fav_detail_note(fav),
+            *self._fav_detail_pricing(row, fav),
+            *self._fav_detail_variants(row, fav),
+            *self._fav_detail_docs(fav, detail_rec),
+        ]
         if detail_rec is not None:
             lines.append(
                 "[bold underline]Tarifdetails[/bold underline]   "
@@ -1419,6 +1435,51 @@ class CheckApp(App):
 
     # --- Verlauf dashboard ---
 
+    def _verlauf_filter_rows(self, all_rows: list[dict]) -> list[dict]:
+        filt = self._verlauf_filter
+        if filt == "changed":
+            return [
+                r for r in all_rows
+                if (r["delta_price"] is not None and r["delta_price"] != 0.0)
+                or (r["delta_pos"] is not None and r["delta_pos"] != 0)
+                or r["is_new"] or r["is_removed"]
+            ]
+        if filt == "cheaper":
+            return [r for r in all_rows if r["delta_price"] is not None and r["delta_price"] < 0]
+        if filt == "pricier":
+            return [r for r in all_rows if r["delta_price"] is not None and r["delta_price"] > 0]
+        return all_rows
+
+    def _verlauf_row_cells(self, r: dict) -> tuple[str, str, str, str, str, str, str, str, str]:
+        pos_str = str(r["new_position"]) if r["new_position"] is not None else "—"
+        old_p = f"{r['old_price']:.2f}" if r["old_price"] is not None else "—"
+        new_p = f"{r['new_price']:.2f}" if r["new_price"] is not None else "—"
+        dp = r["delta_price"]
+        if dp is not None and dp != 0.0:
+            sign = "+" if dp > 0 else ""
+            col = "bright_red" if dp > 0 else "bright_green"
+            pct = dp / r["old_price"] * 100 if r["old_price"] else 0.0
+            delta_str = f"[{col}]{sign}{dp:.2f}[/{col}]"
+            pct_str = f"[{col}]{sign}{pct:.1f}%[/{col}]"
+        elif r["is_new"]:
+            delta_str = "[bright_cyan]neu[/bright_cyan]"
+            pct_str = "[bright_cyan]—[/bright_cyan]"
+        elif r["is_removed"]:
+            delta_str = "[dim]weggef.[/dim]"
+            pct_str = "[dim]—[/dim]"
+        else:
+            delta_str = "[dim]—[/dim]"
+            pct_str = "[dim]—[/dim]"
+        dpos = r["delta_pos"]
+        if dpos is not None and dpos != 0:
+            dp_sign = "+" if dpos > 0 else ""
+            dp_col = "bright_red" if dpos > 0 else "bright_green"
+            rank_str = f"[{dp_col}]{dp_sign}{dpos}[/{dp_col}]"
+        else:
+            rank_str = "[dim]—[/dim]"
+        return (pos_str, _esc(r["insurer"]), _esc(r["product"][:38]), _esc(r["sb"]),
+                old_p, new_p, delta_str, pct_str, rank_str)
+
     def _populate_verlauf(self) -> None:
         """Populate the Verlauf DataTable with price-drift data between two snapshots."""
         try:
@@ -1457,68 +1518,12 @@ class CheckApp(App):
             f"  ·  [bold]d[/bold] Details{snap_cycle}[/dim]"
         )
 
-        all_rows = _build_verlauf_rows(old_snap, new_snap)
-
-        filt = self._verlauf_filter
-        if filt == "changed":
-            rows = [
-                r for r in all_rows
-                if (r["delta_price"] is not None and r["delta_price"] != 0.0)
-                or (r["delta_pos"] is not None and r["delta_pos"] != 0)
-                or r["is_new"] or r["is_removed"]
-            ]
-        elif filt == "cheaper":
-            rows = [r for r in all_rows if r["delta_price"] is not None and r["delta_price"] < 0]
-        elif filt == "pricier":
-            rows = [r for r in all_rows if r["delta_price"] is not None and r["delta_price"] > 0]
-        else:
-            rows = all_rows
+        rows = self._verlauf_filter_rows(_build_verlauf_rows(old_snap, new_snap))
 
         table.clear(columns=True)
         table.add_columns("#", "Anbieter", "Tarif", "SB", "Alt €/Mo", "Neu €/Mo", "Δ €", "Δ %", "Δ Rang")
-
         for r in rows:
-            pos_str = str(r["new_position"]) if r["new_position"] is not None else "—"
-            old_p = f"{r['old_price']:.2f}" if r["old_price"] is not None else "—"
-            new_p = f"{r['new_price']:.2f}" if r["new_price"] is not None else "—"
-
-            dp = r["delta_price"]
-            if dp is not None and dp != 0.0:
-                sign = "+" if dp > 0 else ""
-                col = "bright_red" if dp > 0 else "bright_green"
-                pct = dp / r["old_price"] * 100 if r["old_price"] else 0.0
-                delta_str = f"[{col}]{sign}{dp:.2f}[/{col}]"
-                pct_str = f"[{col}]{sign}{pct:.1f}%[/{col}]"
-            elif r["is_new"]:
-                delta_str = "[bright_cyan]neu[/bright_cyan]"
-                pct_str = "[bright_cyan]—[/bright_cyan]"
-            elif r["is_removed"]:
-                delta_str = "[dim]weggef.[/dim]"
-                pct_str = "[dim]—[/dim]"
-            else:
-                delta_str = "[dim]—[/dim]"
-                pct_str = "[dim]—[/dim]"
-
-            dpos = r["delta_pos"]
-            if dpos is not None and dpos != 0:
-                dp_sign = "+" if dpos > 0 else ""
-                dp_col = "bright_red" if dpos > 0 else "bright_green"
-                rank_str = f"[{dp_col}]{dp_sign}{dpos}[/{dp_col}]"
-            else:
-                rank_str = "[dim]—[/dim]"
-
-            table.add_row(
-                pos_str,
-                _esc(r["insurer"]),
-                _esc(r["product"][:38]),
-                _esc(r["sb"]),
-                old_p,
-                new_p,
-                delta_str,
-                pct_str,
-                rank_str,
-                key=r["key"],
-            )
+            table.add_row(*self._verlauf_row_cells(r), key=r["key"])
 
     _MODULE_LABELS = {
         "privat": "Privat", "beruf": "Beruf", "verkehr": "Verkehr",
