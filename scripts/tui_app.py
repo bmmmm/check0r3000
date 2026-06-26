@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import coverage_taxonomy as ctax  # noqa: E402
 
 from tui_data import (  # noqa: E402
+    ChangeInfo,
     DetailRecord,
     REPO_ROOT,
     Snapshot,
@@ -32,6 +33,7 @@ from tui_data import (  # noqa: E402
     _raw_dir_for_stem,
     load_all_details,
     load_all_snapshots,
+    load_change_summary,
     load_doc_by_tariff,
     load_doc_index,
     load_favorites,
@@ -270,6 +272,7 @@ class CheckApp(App):
         Binding("s", "sort_price", "Sort €", show=False),
         Binding("n", "sort_note", "Sort note", show=False),
         Binding("p", "sort_position", "Sort #", show=False),
+        Binding("j", "sort_changed", "Sort Änderungen", show=False),
         Binding("b", "build_query", "Query-URL", show=False),
         Binding("e", "edit_query", "Suche bearbeiten", show=False),
         Binding("u", "toggle_favorite", "Favorite", show=False),
@@ -323,6 +326,8 @@ class CheckApp(App):
         # Verlauf tab state
         self._verlauf_filter: str = "all"
         self._verlauf_old_idx: int = 0  # index into _all_snapshots for the "from" snapshot
+        # Change tracking: loaded once at startup, refreshed on [r]
+        self._change_summary: dict[str, ChangeInfo] = {}
 
     # --- Lifecycle ---
 
@@ -353,6 +358,7 @@ class CheckApp(App):
             t["stem"]: t for t in self._doc_by_tariff.values() if t.get("stem")
         }
         self._details_by_stem = dict(load_all_details())
+        self._change_summary = load_change_summary()
         # invalidate cached offer URL base (profile may have changed)
         if hasattr(self, "_offer_url_cache"):
             del self._offer_url_cache
@@ -740,6 +746,27 @@ class CheckApp(App):
 
     # --- Market table ---
 
+    def _change_cell(self, stem: str | None) -> str:
+        """Rich markup cell for the Δ (change count) column in the market table."""
+        if not stem:
+            return "[dim]—[/dim]"
+        ci = self._change_summary.get(stem)
+        if ci is None:
+            return "[dim]—[/dim]"
+        total = ci.feature_changes + ci.price_changes
+        if total == 0:
+            return "[dim]·[/dim]"
+        lcd = ci.last_change_date
+        recent = False
+        if lcd:
+            import datetime
+            try:
+                recent = (datetime.date.today() - datetime.date.fromisoformat(lcd)).days <= 30
+            except (ValueError, TypeError):
+                pass
+        color = "bright_yellow" if recent else "cyan"
+        return f"[{color}]Δ{total}[/{color}]"
+
     def _visible_rows(self) -> list[SnapshotRow]:
         if not self._snapshot:
             return []
@@ -767,6 +794,13 @@ class CheckApp(App):
                 key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0,
                 reverse=not self.sort_asc,
             )
+        elif key == "changed":
+            def changed_key(r: SnapshotRow) -> tuple:
+                ci = self._change_summary.get(r.stem or "")
+                if ci is None:
+                    return ("", 0)
+                return (ci.last_change_date or "", ci.feature_changes + ci.price_changes)
+            rows.sort(key=changed_key, reverse=not self.sort_asc)
         return rows
 
     def _populate_market_table(self) -> None:
@@ -776,7 +810,7 @@ class CheckApp(App):
             return
 
         table.clear(columns=True)
-        table.add_columns("#", "St", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB")
+        table.add_columns("#", "St", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB", "Δ")
 
         rows = self._visible_rows()
         row_count_label = self.query_one("#filter-input", Input)
@@ -822,6 +856,7 @@ class CheckApp(App):
                 _bewertung_cell(r),
                 price_col,
                 r.selbstbeteiligung or "—",
+                self._change_cell(r.stem),
                 key=row_key,
             )
 
@@ -926,6 +961,87 @@ class CheckApp(App):
             return self._details_by_stem[row.stem]
         return _load_detail(row.insurer, row.product)
 
+    def _render_change_history_block(self, row: SnapshotRow) -> str:
+        """Compact Änderungshistorie section for the market detail band."""
+        import datetime
+        stem = row.stem
+        if not stem:
+            return ""
+        ci = self._change_summary.get(stem)
+        if ci is None:
+            return ""
+        today = datetime.date.today()
+        total = ci.feature_changes + ci.price_changes
+        lad = ci.last_analysis_date
+
+        stale_warn = ""
+        if lad:
+            try:
+                days = (today - datetime.date.fromisoformat(lad)).days
+                if days > 60:
+                    stale_warn = f"[yellow]⚠ Letzte Analyse: {lad} ({days} Tage)[/yellow]"
+            except (ValueError, TypeError):
+                pass
+
+        lines: list[str] = []
+
+        if total == 0:
+            if lad:
+                fsd = ci.first_seen_date or lad
+                lines.append(
+                    f"[bold underline]Änderungen[/bold underline]   "
+                    f"[dim]analysiert seit {fsd}, keine Änderungen erkannt[/dim]"
+                )
+            if stale_warn:
+                lines.append(f"  {stale_warn}")
+            return "\n".join(lines) if lines else ""
+
+        lines.append("[bold underline]Änderungshistorie[/bold underline]")
+        if stale_warn:
+            lines.append(f"  {stale_warn}")
+
+        if ci.feature_changes:
+            pl = "en" if ci.feature_changes != 1 else ""
+            lines.append(
+                f"  Leistungen: [cyan]{ci.feature_changes} Änderung{pl}[/cyan]"
+            )
+            for old_d, new_d, diff in ci.feature_changelog:
+                parts: list[str] = []
+                if diff.get("leistungen"):
+                    for a in diff["leistungen"].get("added", [])[:3]:
+                        parts.append(f"[bright_green]+{_esc(a[:38])}[/bright_green]")
+                    for r in diff["leistungen"].get("removed", [])[:2]:
+                        parts.append(f"[bright_red]−{_esc(r[:38])}[/bright_red]")
+                if diff.get("modules"):
+                    for ch in diff["modules"][:2]:
+                        lbl = self._MODULE_LABELS.get(ch["key"], ch["key"])
+                        if ch["old_included"] != ch["new_included"]:
+                            col = "bright_green" if ch["new_included"] else "bright_red"
+                            gl = "+" if ch["new_included"] else "−"
+                            parts.append(f"[{col}]{gl}Modul {lbl}[/{col}]")
+                        elif ch["old_level"] != ch["new_level"]:
+                            parts.append(
+                                f"[cyan]{lbl}: {ch['old_level'] or '—'}→{ch['new_level'] or '—'}[/cyan]"
+                            )
+                summary = "  ".join(parts) if parts else "Änderung erkannt"
+                lines.append(f"    {new_d}: {summary}")
+
+        if ci.price_changes:
+            pl = "en" if ci.price_changes != 1 else ""
+            lines.append(
+                f"  Preis: [cyan]{ci.price_changes} Änderung{pl}[/cyan]"
+            )
+            for ch in ci.price_changelog[-3:]:
+                sign = "+" if ch["delta"] > 0 else ""
+                col = "bright_red" if ch["delta"] > 0 else "bright_green"
+                lines.append(
+                    f"    {ch['date']}: "
+                    f"{ch['old_price']:.2f} → {ch['new_price']:.2f}  "
+                    f"[{col}]{sign}{ch['delta']:.2f}[/{col}]"
+                )
+
+        return "\n".join(lines) if len(lines) > 1 else ""
+
     def _render_market_detail(self, row: SnapshotRow) -> str:
         """Full tariff detail (modules, coverage, premium, benefits, exclusions)
             plus the source-document / [g] block, for the inline Market band."""
@@ -934,6 +1050,9 @@ class CheckApp(App):
         docs = self._render_docs_block(row, detail)
         if docs:
             parts.append(docs)
+        change_hist = self._render_change_history_block(row)
+        if change_hist:
+            parts.append(change_hist)
         result = "\n\n".join(parts)
         url = self._build_offer_url(row.position) if row.position else None
         if url:
@@ -1846,6 +1965,11 @@ class CheckApp(App):
     def action_sort_position(self) -> None:
         self.sort_col = "position"
         self.sort_asc = True
+        self._populate_market_table()
+
+    def action_sort_changed(self) -> None:
+        self.sort_col = "changed"
+        self.sort_asc = False  # most-recently changed first
         self._populate_market_table()
 
     def action_switch_tab(self, tab_id: str) -> None:

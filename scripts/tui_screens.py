@@ -675,7 +675,7 @@ class HelpScreen(ModalScreen[None]):
         ("Markt", [
             ("f", "Filter (Versicherer / Produkt)"),
             ("Esc", "Filter leeren"),
-            ("s / n / p", "Sortierung: €/Monat · Note · Position"),
+            ("s / n / p / j", "Sortierung: €/Monat · Note · Position · Jüngste Änderung"),
         ]),
         ("Werkzeuge", [
             ("b", "CHECK24-Query-URL bauen (nur Ansicht)"),

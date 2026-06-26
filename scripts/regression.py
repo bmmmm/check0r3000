@@ -123,6 +123,9 @@ def main() -> int:
     ap.add_argument("--record", default=None,
                     help="check a single record file against the matching tariff "
                          "(by filename stem) instead of all of out/tariffs/")
+    ap.add_argument("--since", metavar="DATE",
+                    help="only check stems whose out/tariffs/ file was modified on or "
+                         "after DATE (YYYY-MM-DD) — useful as a post-extract CI filter")
     args = ap.parse_args()
 
     golden_doc = json.loads(Path(args.golden).read_text(encoding="utf-8"))
@@ -139,6 +142,27 @@ def main() -> int:
         targets = [(key, path)]
     else:
         targets = [(key, TARIFFS / f"{key}.json") for key in sorted(tariffs)]
+
+    if args.since:
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", args.since):
+            print(f"error: --since expects YYYY-MM-DD, got {args.since!r}", file=sys.stderr)
+            return 2
+        import datetime
+        since_dt = datetime.date.fromisoformat(args.since)
+
+        def _file_is_recent(p: Path) -> bool:
+            if not p.exists():
+                return True  # include so it fails with a proper error
+            return datetime.date.fromtimestamp(p.stat().st_mtime) >= since_dt
+
+        before = len(targets)
+        targets = [(key, path) for key, path in targets if _file_is_recent(path)]
+        skipped = before - len(targets)
+        if skipped:
+            print(f"[--since {args.since}] skipped {skipped} stem(s) not re-extracted since then.")
+        if not targets:
+            print(f"No tariffs re-extracted since {args.since} — nothing to check.")
+            return 0
 
     failed = 0
     for key, path in targets:

@@ -76,6 +76,19 @@ class Snapshot:
 
 
 @dataclass
+class ChangeInfo:
+    """Aggregated change tracking for one stem: Leistungs- + Preisänderungen."""
+
+    feature_changes: int            # number of detected Leistungs-changes
+    price_changes: int              # number of detected snapshot price changes
+    last_change_date: str | None    # most-recent change (feature or price), YYYY-MM-DD
+    last_analysis_date: str | None  # most-recent re-analysis regardless of change
+    first_seen_date: str | None     # date of the baseline history entry
+    feature_changelog: list         # [(old_date, new_date, diff_dict), ...]
+    price_changelog: list           # [{date, old_price, new_price, delta}, ...]
+
+
+@dataclass
 class DetailRecord:
     """Loaded out/tariffs or out/enriched record."""
 
@@ -425,6 +438,82 @@ def match_favorite(
         priced = [r for r in variants if r.monatlich_eur is not None]
         chosen = min(priced, key=lambda r: r.monatlich_eur) if priced else variants[0]
     return chosen, variants
+
+
+# ---------------------------------------------------------------------------
+# Change-summary: feature history + price history combined
+# ---------------------------------------------------------------------------
+
+def load_change_summary() -> dict[str, ChangeInfo]:
+    """Build per-stem change info by merging feature_history and price_history.
+
+    Loads all tariff-history dirs and all snapshot price series. Returned dict
+    contains only stems for which at least one data source has an entry.
+    """
+    import sys as _sys
+    _scripts = str(REPO_ROOT / "scripts")
+    if _scripts not in _sys.path:
+        _sys.path.insert(0, _scripts)
+
+    try:
+        import feature_history as fh
+        import price_history as ph
+    except ImportError:
+        return {}
+
+    result: dict[str, ChangeInfo] = {}
+
+    # 1. Feature history — one sub-dir per stem
+    hist_dir = REPO_ROOT / "out" / "tariff-history"
+    if hist_dir.is_dir():
+        for stem_dir in sorted(hist_dir.iterdir()):
+            if not stem_dir.is_dir():
+                continue
+            stem = stem_dir.name
+            result[stem] = ChangeInfo(
+                feature_changes=fh.change_count(stem),
+                price_changes=0,
+                last_change_date=fh.last_change_date(stem),
+                last_analysis_date=fh.last_analysis_date(stem),
+                first_seen_date=fh.first_seen_date(stem),
+                feature_changelog=fh.full_changelog(stem),
+                price_changelog=[],
+            )
+
+    # 2. Price history — derive from all snapshots via resolve_stem
+    try:
+        price_hist = ph.load_all_price_history(resolve_stem)
+    except Exception:
+        price_hist = {}
+
+    for stem, series in price_hist.items():
+        pcl = ph.price_changelog(series)
+        pc = len(pcl)
+        lcd_price = ph.last_price_change_date(series)
+        if stem in result:
+            ci = result[stem]
+            dates = [d for d in [ci.last_change_date, lcd_price] if d]
+            result[stem] = ChangeInfo(
+                feature_changes=ci.feature_changes,
+                price_changes=pc,
+                last_change_date=max(dates) if dates else None,
+                last_analysis_date=ci.last_analysis_date,
+                first_seen_date=ci.first_seen_date,
+                feature_changelog=ci.feature_changelog,
+                price_changelog=pcl,
+            )
+        elif pc > 0:
+            result[stem] = ChangeInfo(
+                feature_changes=0,
+                price_changes=pc,
+                last_change_date=lcd_price,
+                last_analysis_date=None,
+                first_seen_date=None,
+                feature_changelog=[],
+                price_changelog=pcl,
+            )
+
+    return result
 
 
 # ---------------------------------------------------------------------------

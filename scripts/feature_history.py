@@ -198,6 +198,60 @@ def backfill(date: str) -> int:
     return written
 
 
+def last_analysis_date(stem: str) -> str | None:
+    """Date of the most-recent history entry (any re-analysis, changed or not)."""
+    newest = _newest_version(HISTORY_DIR / stem)
+    return newest.get("_history_date") if newest else None
+
+
+def change_count(stem: str) -> int:
+    """Number of detected Leistungs-changes (0 = baseline only or no history)."""
+    stem_dir = HISTORY_DIR / stem
+    if not stem_dir.is_dir():
+        return 0
+    n = sum(1 for p in stem_dir.glob("*.json") if _DATE_RE.match(p.stem))
+    return max(0, n - 1)
+
+
+def last_change_date(stem: str) -> str | None:
+    """Date of the most-recent detected change, or None if ≤1 history entries."""
+    stem_dir = HISTORY_DIR / stem
+    if not stem_dir.is_dir():
+        return None
+    files = sorted(p for p in stem_dir.glob("*.json") if _DATE_RE.match(p.stem))
+    return files[-1].stem if len(files) >= 2 else None
+
+
+def first_seen_date(stem: str) -> str | None:
+    """Date of the first (baseline) history entry, or None."""
+    stem_dir = HISTORY_DIR / stem
+    if not stem_dir.is_dir():
+        return None
+    files = sorted(p for p in stem_dir.glob("*.json") if _DATE_RE.match(p.stem))
+    return files[0].stem if files else None
+
+
+def full_changelog(stem: str) -> list:
+    """Return [(old_date, new_date, diff), ...] for all consecutive version pairs that changed."""
+    stem_dir = HISTORY_DIR / stem
+    if not stem_dir.is_dir():
+        return []
+    files = sorted(p for p in stem_dir.glob("*.json") if _DATE_RE.match(p.stem))
+    if len(files) < 2:
+        return []
+    result = []
+    for old_f, new_f in zip(files, files[1:]):
+        try:
+            old = json.loads(old_f.read_text(encoding="utf-8"))
+            new = json.loads(new_f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        d = diff_features(old, new)
+        if d:
+            result.append((old_f.stem, new_f.stem, d))
+    return result
+
+
 if __name__ == "__main__":
     import argparse
 
