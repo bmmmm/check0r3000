@@ -38,15 +38,62 @@ DEFAULT_ENDPOINTS = {
 }
 
 
+def _env_files() -> list[str]:
+    """`.env` files consulted as a key fallback, most-specific first. Override the
+    first candidate with CHECK0R_ENV_FILE."""
+    files = []
+    override = os.environ.get("CHECK0R_ENV_FILE")
+    if override:
+        files.append(os.path.expanduser(override))
+    files.append(os.path.join(os.getcwd(), ".env"))
+    files.append(os.path.expanduser("~/.env"))
+    return files
+
+
+def _parse_env_file(path: str) -> dict[str, str]:
+    """Minimal stdlib .env reader: KEY=VALUE lines, with `export ` prefix and a
+    matching pair of surrounding quotes stripped. Returns {} if unreadable. Values
+    are kept in-process only and never logged."""
+    out: dict[str, str] = {}
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            raw_lines = fh.readlines()
+    except OSError:
+        return out
+    for raw in raw_lines:
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[len("export "):].lstrip()
+        key, sep, val = line.partition("=")
+        if not sep:
+            continue
+        key = key.strip()
+        val = val.strip()
+        if len(val) >= 2 and val[0] == val[-1] and val[0] in ("'", '"'):
+            val = val[1:-1]
+        if key and val:
+            out[key] = val
+    return out
+
+
 def _api_key(provider: str) -> str | None:
-    """Bearer token for a key-gated OpenAI-compatible backend, from the environment
-    only. Checked in order: <PROVIDER>_API_KEY (e.g. OMLX_API_KEY), then
-    OPENAI_API_KEY. Never hardcoded, never logged. Servers needing no key work
-    without one (no header is sent)."""
-    for var in (f"{provider.upper()}_API_KEY", "OPENAI_API_KEY"):
+    """Bearer token for a key-gated OpenAI-compatible backend. Checked in order:
+    <PROVIDER>_API_KEY (e.g. OMLX_API_KEY), then OPENAI_API_KEY — first from the
+    environment, then from a `.env` file (project, then ~/.env) so non-interactive
+    shells that don't source the user's rc still find it. Never hardcoded, never
+    logged. Servers needing no key work without one (no header is sent)."""
+    names = (f"{provider.upper()}_API_KEY", "OPENAI_API_KEY")
+    for var in names:
         v = os.environ.get(var)
         if v:
             return v
+    maps = [_parse_env_file(p) for p in _env_files()]
+    for var in names:           # PROVIDER_API_KEY beats OPENAI_API_KEY
+        for m in maps:          # project .env beats ~/.env
+            if m.get(var):
+                return m[var]
     return None
 
 
