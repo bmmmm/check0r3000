@@ -577,7 +577,13 @@ class CheckApp(App):
             for dd in docs:
                 lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
                 fname = (dd.get("file") or "")[:54]
-                lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+                doc_url = dd.get("url") or ""
+                if doc_url:
+                    lines.append(
+                        f'  [cyan]{lbl:<6}[/cyan] [link="{doc_url}"]{fname}[/link]'
+                    )
+                else:
+                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
             if not has_detail:
                 lines.append(
                     "[bright_yellow]  \\[g] herunterladen + analysieren"
@@ -741,7 +747,13 @@ class CheckApp(App):
             for dd in entry["docs"]:
                 lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
                 fname = (dd.get("file") or "")[:60]
-                lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+                doc_url = dd.get("url") or ""
+                if doc_url:
+                    lines.append(
+                        f'  [cyan]{lbl:<6}[/cyan] [link="{doc_url}"]{fname}[/link]'
+                    )
+                else:
+                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
             if detail:
                 lines.append("[bright_green]  ✓ analysiert[/bright_green]")
             else:
@@ -1989,6 +2001,13 @@ class CheckApp(App):
                 self.notify(f"Öffnen fehlgeschlagen: {exc}", severity="error", timeout=6)
                 return
         self.notify(f"{opened} geöffnet.", timeout=3)
+
+    def on_click(self, event) -> None:
+        style = getattr(event, "style", None)
+        link = style.link if (style is not None and hasattr(style, "link")) else None
+        if link and link.startswith("http"):
+            self._open_external([link])
+            event.stop()
 
     def _get_offer_url_base(self):
         """Cache (cq_module, base_url, pairs_without_pin) for _build_offer_url.
