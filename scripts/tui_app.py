@@ -170,6 +170,65 @@ def _compute_diff(
     removed = [k for k in old_map if k not in new_map]
     return changes, added, removed
 
+
+def _build_verlauf_rows(old_snap: Snapshot, new_snap: Snapshot) -> list[dict]:
+    """Build one dict per row for the Verlauf DataTable, joining old and new snapshots by key."""
+    old_map = {r.key: r for r in old_snap.rows}
+    new_map = {r.key: r for r in new_snap.rows}
+    rows = []
+    for new_row in new_snap.rows:
+        old_row = old_map.get(new_row.key)
+        old_price = old_row.monatlich_eur if old_row else None
+        new_price = new_row.monatlich_eur
+        delta_price = (
+            (new_price - old_price)
+            if (old_price is not None and new_price is not None)
+            else None
+        )
+        delta_pos = (new_row.position - old_row.position) if old_row else None
+        rows.append({
+            "key": new_row.key,
+            "insurer": new_row.insurer,
+            "product": new_row.product,
+            "sb": new_row.selbstbeteiligung,
+            "new_position": new_row.position,
+            "old_price": old_price,
+            "new_price": new_price,
+            "delta_price": delta_price,
+            "delta_pos": delta_pos,
+            "old_note": old_row.tarifnote if old_row else None,
+            "new_note": new_row.tarifnote,
+            "is_new": old_row is None,
+            "is_removed": False,
+        })
+    for old_row in old_snap.rows:
+        if old_row.key not in new_map:
+            rows.append({
+                "key": old_row.key,
+                "insurer": old_row.insurer,
+                "product": old_row.product,
+                "sb": old_row.selbstbeteiligung,
+                "new_position": None,
+                "old_price": old_row.monatlich_eur,
+                "new_price": None,
+                "delta_price": None,
+                "delta_pos": None,
+                "old_note": old_row.tarifnote,
+                "new_note": None,
+                "is_new": False,
+                "is_removed": True,
+            })
+    return rows
+
+
+_VERLAUF_FILTERS = ["all", "changed", "cheaper", "pricier"]
+_VERLAUF_FILTER_LABELS = {
+    "all": "Alle",
+    "changed": "Geändert",
+    "cheaper": "Günstiger",
+    "pricier": "Teurer",
+}
+
 # ---------------------------------------------------------------------------
 # The App
 # ---------------------------------------------------------------------------
@@ -185,6 +244,7 @@ class CheckApp(App):
         Binding("y", "switch_tab('favorites')", "Favorites", show=True),
         Binding("x", "switch_tab('market')", "Market", show=True),
         Binding("v", "switch_tab('diff')", "Vergleich", show=True),
+        Binding("l", "switch_tab('verlauf')", "Verlauf", show=True),
         Binding("d", "toggle_detail", "Details", show=True),
         Binding("g", "fetch_docs", "Get docs", show=True),
         Binding("question_mark", "help", "Help", show=True, key_display="?"),
@@ -209,6 +269,9 @@ class CheckApp(App):
         Binding("R", "set_reference", "Reference", show=False),
         Binding("D", "delete_data", "Delete data", show=False),
         Binding("r", "refresh_data", "Reload", show=True),
+        Binding("m", "verlauf_filter", "Verlauf-Filter", show=False),
+        Binding("comma", "verlauf_prev_snap", "Älterer Snap", show=False),
+        Binding("period", "verlauf_next_snap", "Neuerer Snap", show=False),
     ]
 
     # reactive state
@@ -238,6 +301,9 @@ class CheckApp(App):
         # detail band visibility intent: True = auto-show on navigation,
         # False = user explicitly closed it ([d]); Enter always re-opens.
         self._detail_visible: bool = True
+        # Verlauf tab state
+        self._verlauf_filter: str = "all"
+        self._verlauf_old_idx: int = 0  # index into _all_snapshots for the "from" snapshot
 
     # --- Lifecycle ---
 
@@ -245,6 +311,7 @@ class CheckApp(App):
         self._load_data()
         self._populate_favorites_table()
         self._populate_market_table()
+        self._populate_verlauf()
         self._update_header()
 
     def _load_data(self) -> None:
@@ -297,6 +364,15 @@ class CheckApp(App):
             with TabPane("Vergleich [v]", id="diff"):
                 with ScrollableContainer(id="diff-panel"):
                     yield Static("Loading diff…", id="diff-content")
+            with TabPane("Verlauf [l]", id="verlauf"):
+                yield Label("", id="verlauf-header")
+                with Vertical(id="verlauf-layout"):
+                    yield DataTable(id="verlauf-table", cursor_type="row", zebra_stripes=True)
+                    with ScrollableContainer(id="verlauf-detail", classes="detail-band"):
+                        yield Static(
+                            "Zeile wählen für Details.",
+                            id="verlauf-detail-content",
+                        )
         yield Label("", id="status-bar")
         yield Footer()
 
@@ -1305,6 +1381,109 @@ class CheckApp(App):
             lines.append("[dim italic]keine Änderungen zwischen den Snapshots.[/dim italic]")
         return "\n".join(lines)
 
+    # --- Verlauf dashboard ---
+
+    def _populate_verlauf(self) -> None:
+        """Populate the Verlauf DataTable with price-drift data between two snapshots."""
+        try:
+            header: Label = self.query_one("#verlauf-header", Label)
+            table: DataTable = self.query_one("#verlauf-table", DataTable)
+        except NoMatches:
+            return
+
+        snaps = self._all_snapshots
+        if len(snaps) < 2:
+            header.update(
+                "[dim italic]Mindestens 2 Snapshots erforderlich. "
+                "Erneut scrapen, um einen zweiten zu erstellen.[/dim italic]"
+            )
+            table.clear(columns=True)
+            return
+
+        old_idx = max(0, min(self._verlauf_old_idx, len(snaps) - 2))
+        old_date, old_path = snaps[old_idx]
+        new_date, new_path = snaps[-1]
+        old_snap = load_snapshot(old_path)
+        new_snap = load_snapshot(new_path)
+        if old_snap is None or new_snap is None:
+            return
+
+        n_snaps = len(snaps)
+        snap_cycle = (
+            f"  ·  [dim],[/dim]/[dim].[/dim] Snapshot ({old_idx + 1}/{n_snaps - 1})"
+            if n_snaps > 2
+            else ""
+        )
+        filter_lbl = _VERLAUF_FILTER_LABELS.get(self._verlauf_filter, "Alle")
+        header.update(
+            f"[bold]Verlauf:[/bold]  {old_date} → {new_date}"
+            f"  ·  [dim]Filter: [bold]{filter_lbl}[/bold]  ·  [bold]m[/bold] wechseln"
+            f"  ·  [bold]d[/bold] Details{snap_cycle}[/dim]"
+        )
+
+        all_rows = _build_verlauf_rows(old_snap, new_snap)
+
+        filt = self._verlauf_filter
+        if filt == "changed":
+            rows = [
+                r for r in all_rows
+                if (r["delta_price"] is not None and r["delta_price"] != 0.0)
+                or (r["delta_pos"] is not None and r["delta_pos"] != 0)
+                or r["is_new"] or r["is_removed"]
+            ]
+        elif filt == "cheaper":
+            rows = [r for r in all_rows if r["delta_price"] is not None and r["delta_price"] < 0]
+        elif filt == "pricier":
+            rows = [r for r in all_rows if r["delta_price"] is not None and r["delta_price"] > 0]
+        else:
+            rows = all_rows
+
+        table.clear(columns=True)
+        table.add_columns("#", "Anbieter", "Tarif", "SB", "Alt €/Mo", "Neu €/Mo", "Δ €", "Δ %", "Δ Rang")
+
+        for r in rows:
+            pos_str = str(r["new_position"]) if r["new_position"] is not None else "—"
+            old_p = f"{r['old_price']:.2f}" if r["old_price"] is not None else "—"
+            new_p = f"{r['new_price']:.2f}" if r["new_price"] is not None else "—"
+
+            dp = r["delta_price"]
+            if dp is not None and dp != 0.0:
+                sign = "+" if dp > 0 else ""
+                col = "bright_red" if dp > 0 else "bright_green"
+                pct = dp / r["old_price"] * 100 if r["old_price"] else 0.0
+                delta_str = f"[{col}]{sign}{dp:.2f}[/{col}]"
+                pct_str = f"[{col}]{sign}{pct:.1f}%[/{col}]"
+            elif r["is_new"]:
+                delta_str = "[bright_cyan]neu[/bright_cyan]"
+                pct_str = "[bright_cyan]—[/bright_cyan]"
+            elif r["is_removed"]:
+                delta_str = "[dim]weggef.[/dim]"
+                pct_str = "[dim]—[/dim]"
+            else:
+                delta_str = "[dim]—[/dim]"
+                pct_str = "[dim]—[/dim]"
+
+            dpos = r["delta_pos"]
+            if dpos is not None and dpos != 0:
+                dp_sign = "+" if dpos > 0 else ""
+                dp_col = "bright_red" if dpos > 0 else "bright_green"
+                rank_str = f"[{dp_col}]{dp_sign}{dpos}[/{dp_col}]"
+            else:
+                rank_str = "[dim]—[/dim]"
+
+            table.add_row(
+                pos_str,
+                _esc(r["insurer"]),
+                _esc(r["product"][:38]),
+                _esc(r["sb"]),
+                old_p,
+                new_p,
+                delta_str,
+                pct_str,
+                rank_str,
+                key=r["key"],
+            )
+
     # --- Event handlers ---
 
     @on(DataTable.RowHighlighted, "#market-table")
@@ -1341,18 +1520,58 @@ class CheckApp(App):
         else:
             self._refresh_fav_detail()
 
-    # Enter / click-on-highlighted: open+focus the detail band.
+    @on(DataTable.RowHighlighted, "#verlauf-table")
+    def on_verlauf_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        key = str(event.row_key.value) if event.row_key.value is not None else None
+        if not key or not self._snapshot:
+            return
+        row = next((r for r in self._snapshot.rows if r.key == key), None)
+        if row is None:
+            return
+        self._active_row = row
+        self._active_fav = None
+        if self._detail_visible:
+            try:
+                content = self.query_one("#verlauf-detail-content", Static)
+                content.update(self._render_market_detail(row))
+            except NoMatches:
+                pass
+
+    @on(DataTable.RowSelected, "#verlauf-table")
+    def on_verlauf_selected(self, event: DataTable.RowSelected) -> None:
+        self.on_verlauf_highlighted(event)
+        self._detail_visible = True
+        try:
+            band = self.query_one("#verlauf-detail")
+            band.display = True
+            content = self.query_one("#verlauf-detail-content", Static)
+            if self._active_row:
+                content.update(self._render_market_detail(self._active_row))
+            band.scroll_home(animate=False)
+            band.focus()
+        except NoMatches:
+            pass
+
+    # Enter / double-click: open the offer on CHECK24 + ensure detail band is visible.
     @on(DataTable.RowSelected, "#market-table")
     def on_market_selected(self, event: DataTable.RowSelected) -> None:
         self.on_market_highlighted(event)  # ensure active row is current
         self._detail_visible = True
         self._show_detail(focus=True)
+        if self._active_row and self._active_row.position:
+            url = self._build_offer_url(self._active_row.position)
+            if url:
+                self._open_external([url])
 
     @on(DataTable.RowSelected, "#fav-table")
     def on_fav_selected(self, event: DataTable.RowSelected) -> None:
         self.on_fav_highlighted(event)
         self._detail_visible = True
         self._show_detail(focus=True)
+        if self._active_row and self._active_row.position:
+            url = self._build_offer_url(self._active_row.position)
+            if url:
+                self._open_external([url])
 
     @on(DataTable.HeaderSelected, "#market-table")
     def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
@@ -1435,7 +1654,7 @@ class CheckApp(App):
         except NoMatches:
             return
         target = {"favorites": "#fav-table", "market": "#market-table",
-                  "diff": "#diff-panel"}.get(active)
+                  "diff": "#diff-panel", "verlauf": "#verlauf-table"}.get(active)
         if not target:
             return
         try:
@@ -1450,6 +1669,7 @@ class CheckApp(App):
         self._load_data()
         self._populate_favorites_table()
         self._populate_market_table()
+        self._populate_verlauf()
         self._update_header()
         self._refresh_market_detail()
         self._refresh_fav_detail()
@@ -1458,6 +1678,26 @@ class CheckApp(App):
     def action_refresh_data(self) -> None:
         self._reload_all()
         self.notify("Daten neu geladen.", timeout=3)
+
+    def action_verlauf_filter(self) -> None:
+        idx = _VERLAUF_FILTERS.index(self._verlauf_filter) if self._verlauf_filter in _VERLAUF_FILTERS else 0
+        self._verlauf_filter = _VERLAUF_FILTERS[(idx + 1) % len(_VERLAUF_FILTERS)]
+        self._populate_verlauf()
+        lbl = _VERLAUF_FILTER_LABELS.get(self._verlauf_filter, "")
+        self.notify(f"Verlauf-Filter: {lbl}", timeout=2)
+
+    def action_verlauf_prev_snap(self) -> None:
+        if len(self._all_snapshots) < 3:
+            return
+        self._verlauf_old_idx = max(0, self._verlauf_old_idx - 1)
+        self._populate_verlauf()
+
+    def action_verlauf_next_snap(self) -> None:
+        max_idx = len(self._all_snapshots) - 2
+        if max_idx <= 0:
+            return
+        self._verlauf_old_idx = min(max_idx, self._verlauf_old_idx + 1)
+        self._populate_verlauf()
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
@@ -2145,6 +2385,8 @@ class CheckApp(App):
             return "#fav-detail", "#fav-detail-content"
         if active == "market":
             return "#detail-panel", "#detail-content"
+        if active == "verlauf":
+            return "#verlauf-detail", "#verlauf-detail-content"
         return None
 
     def _render_active_into(self, ids: tuple[str, str]) -> None:
@@ -2168,6 +2410,12 @@ class CheckApp(App):
                 )
             else:
                 content.update(self._render_favorite_detail(row, fav))
+        elif band_id == "#verlauf-detail":
+            row = self._active_row
+            if row is None:
+                content.update("[dim]Verlauf-Zeile wählen (Pfeile / Enter).[/dim]")
+            else:
+                content.update(self._render_market_detail(row))
         else:  # market band
             row = self._active_row
             if row is None:
