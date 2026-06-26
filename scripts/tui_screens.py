@@ -651,6 +651,7 @@ class HelpScreen(ModalScreen[None]):
     GROUPS = [
         ("Navigation", [
             ("y / x / v", "Favoriten / Markt / Vergleich"),
+            ("Tab / ⇧Tab", "nächster / voriger Tab (zyklisch)"),
             ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
             ("d", "Detail-Band unter der Tabelle ein/aus"),
         ]),

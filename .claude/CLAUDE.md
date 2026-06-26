@@ -65,6 +65,7 @@ Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_a
 | `[l]` | Verlauf-Tab (Snapshot-Diff + Feature-Diff) |
 | `[x]` | Vergleich-Tab (Coverage-Matrix) |
 | `[d]` | Detail-Band ein/aus |
+| `Tab` / `⇧Tab` | Nächster / voriger Tab (zyklisch) |
 | `[?]` | Alle Shortcuts |
 
 ## Wichtige Constraints

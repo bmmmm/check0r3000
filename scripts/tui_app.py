@@ -77,6 +77,7 @@ from textual.widgets import (  # noqa: E402
     Static,
     TabbedContent,
     TabPane,
+    TextArea,
 )
 
 from tui_screens import (  # noqa: E402
@@ -247,6 +248,11 @@ class CheckApp(App):
         Binding("x", "switch_tab('market')", "Market", show=True),
         Binding("v", "switch_tab('diff')", "Vergleich", show=True),
         Binding("l", "switch_tab('verlauf')", "Verlauf", show=True),
+        # Tab cycles tabs forward, Shift+Tab backward. priority=True beats the
+        # Screen's default tab->focus_next; action_cycle_tab restores that default
+        # when a modal is open or a text field is focused.
+        Binding("tab", "cycle_tab(1)", "Next tab", show=False, priority=True),
+        Binding("shift+tab", "cycle_tab(-1)", "Prev tab", show=False, priority=True),
         Binding("d", "toggle_detail", "Details", show=True),
         Binding("g", "fetch_docs", "Get docs", show=True),
         Binding("question_mark", "help", "Help", show=True, key_display="?"),
@@ -1642,27 +1648,30 @@ class CheckApp(App):
         except Exception:
             pass
 
-    def _select_held(self, active: str) -> None:
+    def _select_held(self, active: str) -> str | None:
         """On a tab switch, re-select the held tariff in the newly-active table
         and update the active-row state. If the tariff isn't present here, leave
         the cursor untouched (no forced selection). Moving the cursor fires that
         table's RowHighlighted handler, which is idempotent with the state set
-        here; setting state directly also covers the cursor-already-there case."""
+        here; setting state directly also covers the cursor-already-there case.
+        Returns the table id it selected into, or None when nothing matched."""
         ident = self._held_ident
         if not ident:
-            return
+            return None
         if active == "favorites":
             rk = self._fav_ident_to_rk.get(ident)
             if rk and rk in self._fav_rows:
                 row, fav = self._fav_rows[rk]
                 self._active_row, self._active_fav = row, fav
                 self._move_cursor_safe("#fav-table", rk)
+                return "#fav-table"
         elif active == "market":
             rk = self._market_ident_to_rk.get(ident)
             if rk and rk in self._market_rows:
                 self._active_row, self._active_fav = self._market_rows[rk], None
                 self.selected_row_key = rk
                 self._move_cursor_safe("#market-table", rk)
+                return "#market-table"
         elif active == "verlauf":
             row = (
                 next((r for r in self._snapshot.rows if r.key == ident), None)
@@ -1671,6 +1680,8 @@ class CheckApp(App):
             if row is not None:
                 self._active_row, self._active_fav = row, None
                 self._move_cursor_safe("#verlauf-table", ident)
+                return "#verlauf-table"
+        return None
 
     @on(DataTable.RowHighlighted, "#market-table")
     def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -1844,6 +1855,64 @@ class CheckApp(App):
         except NoMatches:
             pass
 
+    # Tab order for cycling; "diff" (Vergleich) has no table but is still a stop.
+    _TAB_ORDER = ["favorites", "market", "diff", "verlauf"]
+
+    def action_cycle_tab(self, delta: int) -> None:
+        """Cycle the active tab forward (Tab) / backward (Shift+Tab). While a modal
+        is open or a text field is focused, fall back to Textual's default focus
+        navigation so Tab keeps moving between fields there."""
+        if len(self.screen_stack) > 1 or isinstance(self.focused, (Input, TextArea)):
+            if delta > 0:
+                self.screen.focus_next()
+            else:
+                self.screen.focus_previous()
+            return
+        try:
+            tabs = self.query_one("#tabs", TabbedContent)
+        except NoMatches:
+            return
+        if tabs.active not in self._TAB_ORDER:
+            return
+        idx = (self._TAB_ORDER.index(tabs.active) + delta) % len(self._TAB_ORDER)
+        tabs.active = self._TAB_ORDER[idx]
+
+    def _center_cursor(self, table: DataTable) -> None:
+        """Scroll so the cursor row sits in the vertical middle of the viewport.
+        Used after a tab switch and after toggling the detail band, so the
+        selection is never left off-screen or hidden behind the band."""
+        try:
+            region = table._get_cell_region(table.cursor_coordinate)
+            table.scroll_to_region(region, animate=False, center=True, immediate=True)
+        except Exception:
+            pass
+
+    def _center_cursor_in(self, table_id: str) -> None:
+        try:
+            table = self.query_one(table_id, DataTable)
+        except NoMatches:
+            return
+        self._center_cursor(table)
+
+    def _active_data_table(self) -> "DataTable | None":
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            return None
+        tid = {"favorites": "#fav-table", "market": "#market-table",
+               "verlauf": "#verlauf-table"}.get(active)
+        if not tid:
+            return None
+        try:
+            return self.query_one(tid, DataTable)
+        except NoMatches:
+            return None
+
+    def _center_active_cursor(self) -> None:
+        table = self._active_data_table()
+        if table is not None:
+            self._center_cursor(table)
+
     def on_tabbed_content_tab_activated(
         self, event: TabbedContent.TabActivated
     ) -> None:
@@ -1873,7 +1942,10 @@ class CheckApp(App):
         # Re-select the held tariff in the newly-activated table so the same offer
         # stays highlighted across tabs. Also restores _active_row/_active_fav so
         # tab-specific actions ([u], [R], [N]) work without a manual keypress.
-        self._select_held(active)
+        selected = self._select_held(active)
+        if selected:
+            # Center after the pane's layout settles so the viewport height is known.
+            self.call_after_refresh(self._center_cursor_in, selected)
 
     def _reload_all(self) -> None:
         """Reload every data source from disk and repaint both tables, the header
@@ -2675,6 +2747,9 @@ class CheckApp(App):
             self._render_active_into(ids)
             band.scroll_home(animate=False)
             band.focus()
+        # The table just shrank (open) or grew (close); re-center the cursor once
+        # the new layout settles so the selection is never hidden behind the band.
+        self.call_after_refresh(self._center_active_cursor)
 
     def _show_detail(self, focus: bool = False) -> None:
         """Reveal the active tab's detail band and render the active row.
