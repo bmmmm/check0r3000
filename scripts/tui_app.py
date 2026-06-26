@@ -296,6 +296,8 @@ class CheckApp(App):
         self._doc_by_stem: dict[str, dict] = {}
         self._details_by_stem: dict[str, DetailRecord] = {}
         self._filter_timer: Timer | None = None
+        self._market_ident_to_rk: dict[str, str] = {}
+        self._fav_ident_to_rk: dict[str, str] = {}
         self._fav_rows: dict[str, tuple[SnapshotRow, dict]] = {}
         self._market_rows: dict[str, SnapshotRow] = {}
         self._active_row: SnapshotRow | None = None
@@ -342,6 +344,19 @@ class CheckApp(App):
         # invalidate cached offer URL base (profile may have changed)
         if hasattr(self, "_offer_url_cache"):
             del self._offer_url_cache
+
+    def _tariff_key(self, row: "SnapshotRow | None", fav: dict | None = None) -> str | None:
+        """Canonical cross-tab matching key for a tariff: row.key when available,
+        otherwise built from the fav dict fields (for favorites without a snapshot hit)."""
+        if row is not None:
+            return row.key
+        if fav is not None:
+            ins = fav.get("insurer", "")
+            prod = fav.get("product", "")
+            sb = fav.get("sb", "")
+            if ins and prod:
+                return f"{ins}|{prod}|{sb}"
+        return None
 
     # --- Layout ---
 
@@ -575,6 +590,12 @@ class CheckApp(App):
                 key=key,
             )
 
+        self._fav_ident_to_rk = {}
+        for rk, (row, fav) in self._fav_rows.items():
+            ident = self._tariff_key(row, fav)
+            if ident:
+                self._fav_ident_to_rk[ident] = rk
+
     def _render_favorite_detail(self, row: SnapshotRow, fav: dict) -> str:
         lines: list[str] = []
         lines.append(f"[bold]{row.insurer}[/bold] — [italic]{row.product}[/italic]")
@@ -776,6 +797,8 @@ class CheckApp(App):
                 r.selbstbeteiligung or "—",
                 key=row_key,
             )
+
+        self._market_ident_to_rk = {r.key: rk for rk, r in self._market_rows.items() if r.key}
 
         # rebuild the Vergleich tab while we're refreshing
         self._populate_coverage()
@@ -1598,23 +1621,54 @@ class CheckApp(App):
 
     # --- Event handlers ---
 
+    def _sync_cursor_to(self, source_id: str, ident: str) -> None:
+        """Move cursors in all data tables except source_id to the row matching ident.
+        Cascade terminates naturally: Textual skips RowHighlighted when cursor doesn't move."""
+        targets: dict[str, dict[str, str] | None] = {
+            "#market-table": self._market_ident_to_rk,
+            "#fav-table": self._fav_ident_to_rk,
+            "#verlauf-table": None,  # DataTable row_key IS the tariff key in Verlauf
+        }
+        for table_id, index in targets.items():
+            if table_id == source_id:
+                continue
+            try:
+                table = self.query_one(table_id, DataTable)
+            except NoMatches:
+                continue
+            rk = index.get(ident) if index is not None else ident
+            if rk is None:
+                continue
+            try:
+                row_idx = table.get_row_index(rk)
+                table.move_cursor(row=row_idx)
+            except Exception:
+                pass
+
     @on(DataTable.RowHighlighted, "#market-table")
     def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """A single click / arrow move highlights a row — track it as the active
             target and show/refresh the detail band when _detail_visible is set."""
         key = str(event.row_key.value) if event.row_key.value is not None else None
-        self.selected_row_key = key
         if not self._snapshot or key is None:
             return
         row = self._market_rows.get(key)
         if row is None:
             return
-        self._active_row = row  # target for the [g] download/analyze action
-        self._active_fav = None
-        if self._detail_visible:
-            self._show_detail()
-        else:
-            self._refresh_market_detail()
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            active = None
+        if active == "market":
+            self.selected_row_key = key
+            self._active_row = row
+            self._active_fav = None
+            if self._detail_visible:
+                self._show_detail()
+            else:
+                self._refresh_market_detail()
+        if row.key:
+            self._sync_cursor_to("#market-table", row.key)
 
     @on(DataTable.RowHighlighted, "#fav-table")
     def on_fav_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -1625,12 +1679,20 @@ class CheckApp(App):
         if entry is None:
             return
         row, fav = entry
-        self._active_row = row  # may be None (favorite not in snapshot)
-        self._active_fav = fav
-        if self._detail_visible:
-            self._show_detail()
-        else:
-            self._refresh_fav_detail()
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            active = None
+        if active == "favorites":
+            self._active_row = row  # may be None (favorite not in snapshot)
+            self._active_fav = fav
+            if self._detail_visible:
+                self._show_detail()
+            else:
+                self._refresh_fav_detail()
+        ident = self._tariff_key(row, fav)
+        if ident:
+            self._sync_cursor_to("#fav-table", ident)
 
     @on(DataTable.RowHighlighted, "#verlauf-table")
     def on_verlauf_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -1640,14 +1702,20 @@ class CheckApp(App):
         row = next((r for r in self._snapshot.rows if r.key == key), None)
         if row is None:
             return
-        self._active_row = row
-        self._active_fav = None
-        if self._detail_visible:
-            try:
-                content = self.query_one("#verlauf-detail-content", Static)
-                content.update(self._render_verlauf_detail(row))
-            except NoMatches:
-                pass
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            active = None
+        if active == "verlauf":
+            self._active_row = row
+            self._active_fav = None
+            if self._detail_visible:
+                try:
+                    content = self.query_one("#verlauf-detail-content", Static)
+                    content.update(self._render_verlauf_detail(row))
+                except NoMatches:
+                    pass
+        self._sync_cursor_to("#verlauf-table", key)
 
     @on(DataTable.RowSelected, "#verlauf-table")
     def on_verlauf_selected(self, event: DataTable.RowSelected) -> None:
@@ -1775,6 +1843,17 @@ class CheckApp(App):
             self.query_one(target).focus()
         except NoMatches:
             pass
+        # When switching to Favorites, restore _active_fav from the synced cursor so
+        # that fav-specific actions ([u], [R], [N]) work immediately without a manual
+        # keypress to re-highlight the row.
+        if active == "favorites" and self._active_row:
+            ident = self._tariff_key(self._active_row)
+            if ident:
+                rk = self._fav_ident_to_rk.get(ident)
+                if rk and rk in self._fav_rows:
+                    fav_row, fav = self._fav_rows[rk]
+                    self._active_row = fav_row
+                    self._active_fav = fav
 
     def _reload_all(self) -> None:
         """Reload every data source from disk and repaint both tables, the header
