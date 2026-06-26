@@ -35,6 +35,7 @@ from tui_data import (  # noqa: E402
     load_doc_by_tariff,
     load_doc_index,
     load_favorites,
+    load_feature_diff,
     load_snapshot,
     match_favorite,
     resolve_stem,
@@ -1497,6 +1498,104 @@ class CheckApp(App):
                 key=r["key"],
             )
 
+    _MODULE_LABELS = {
+        "privat": "Privat", "beruf": "Beruf", "verkehr": "Verkehr",
+        "wohnen_immobilien": "Wohnen", "internet_web": "Internet",
+        "steuer": "Steuer", "sozialgericht": "Sozialgericht",
+        "verwaltungsrecht": "Verwaltungsrecht",
+    }
+
+    def _render_verlauf_detail(self, row: SnapshotRow) -> str:
+        """Market detail + feature-diff section for the Verlauf tab."""
+        base = self._render_market_detail(row)
+        if not row.stem or not self._all_snapshots or len(self._all_snapshots) < 2:
+            return base
+
+        old_idx = max(0, min(self._verlauf_old_idx, len(self._all_snapshots) - 2))
+        old_date = self._all_snapshots[old_idx][0]
+        new_date = self._all_snapshots[-1][0]
+
+        old_state, new_state, diff = load_feature_diff(row.stem, old_date, new_date)
+
+        lines = [
+            "",
+            f"[bold underline]Leistungsänderungen[/bold underline]   "
+            f"[dim]{old_date} → {new_date}[/dim]",
+        ]
+
+        if old_state is None and new_state is None:
+            lines.append("[dim italic]  nicht analysiert — keine Leistungs-Historie[/dim italic]")
+            return base + "\n\n" + "\n".join(lines)
+
+        if old_state is None:
+            dt = new_state.get("_history_date", new_date)
+            lines.append(f"  [cyan]erstmals analysiert am {dt}[/cyan]")
+            return base + "\n\n" + "\n".join(lines)
+
+        if not diff:
+            lines.append("[dim italic]  keine Leistungsänderungen im gewählten Zeitraum[/dim italic]")
+            return base + "\n\n" + "\n".join(lines)
+
+        # --- modules ---
+        if diff.get("modules"):
+            lines.append("  [bold]Module[/bold]")
+            for ch in diff["modules"]:
+                lbl = self._MODULE_LABELS.get(ch["key"], ch["key"])
+                oi, ni = ch["old_included"], ch["new_included"]
+                ol, nl = ch["old_level"], ch["new_level"]
+                if oi != ni:
+                    if ni:
+                        lines.append(f"    {lbl:<22} [bright_green]+ neu enthalten[/bright_green]")
+                    else:
+                        lines.append(f"    {lbl:<22} [bright_red]− nicht mehr enthalten[/bright_red]")
+                elif ol != nl:
+                    old_s = ol or "—"
+                    new_s = nl or "—"
+                    col = "bright_green" if (
+                        (nl or "") > (ol or "")
+                    ) else "bright_red"
+                    lines.append(f"    {lbl:<22} [{col}]{old_s} → {new_s}[/{col}]")
+
+        # --- coverage ---
+        if diff.get("coverage"):
+            lines.append("  [bold]Deckung[/bold]")
+            for ch in diff["coverage"]:
+                old_v = str(ch["old"]) if ch["old"] is not None else "—"
+                new_v = str(ch["new"]) if ch["new"] is not None else "—"
+                lines.append(f"    {ch['field']:<22} [dim]{old_v}[/dim] → {new_v}")
+
+        # --- leistungen ---
+        if diff.get("leistungen"):
+            lst = diff["leistungen"]
+            if lst.get("added") or lst.get("removed"):
+                lines.append("  [bold]Leistungen[/bold]")
+                for item in lst.get("added", []):
+                    lines.append(f"    [bright_green]+[/bright_green] {_esc(item)}")
+                for item in lst.get("removed", []):
+                    lines.append(f"    [bright_red]−[/bright_red] {_esc(item)}")
+
+        # --- ausschluesse (reversed color: added=worse, removed=better) ---
+        if diff.get("ausschluesse"):
+            asl = diff["ausschluesse"]
+            if asl.get("added") or asl.get("removed"):
+                lines.append("  [bold]Ausschlüsse[/bold]")
+                for item in asl.get("added", []):
+                    lines.append(f"    [bright_red]+[/bright_red] {_esc(item)}  [dim](neu ausgeschlossen)[/dim]")
+                for item in asl.get("removed", []):
+                    lines.append(f"    [bright_green]−[/bright_green] {_esc(item)}  [dim](nicht mehr ausgeschlossen)[/dim]")
+
+        # --- besonderheiten ---
+        if diff.get("besonderheiten"):
+            bsl = diff["besonderheiten"]
+            if bsl.get("added") or bsl.get("removed"):
+                lines.append("  [bold]Besonderheiten[/bold]")
+                for item in bsl.get("added", []):
+                    lines.append(f"    [cyan]+[/cyan] {_esc(item)}")
+                for item in bsl.get("removed", []):
+                    lines.append(f"    [dim]−[/dim] {_esc(item)}")
+
+        return base + "\n\n" + "\n".join(lines)
+
     # --- Event handlers ---
 
     @on(DataTable.RowHighlighted, "#market-table")
@@ -1546,7 +1645,7 @@ class CheckApp(App):
         if self._detail_visible:
             try:
                 content = self.query_one("#verlauf-detail-content", Static)
-                content.update(self._render_market_detail(row))
+                content.update(self._render_verlauf_detail(row))
             except NoMatches:
                 pass
 
@@ -1559,7 +1658,7 @@ class CheckApp(App):
             band.display = True
             content = self.query_one("#verlauf-detail-content", Static)
             if self._active_row:
-                content.update(self._render_market_detail(self._active_row))
+                content.update(self._render_verlauf_detail(self._active_row))
             band.scroll_home(animate=False)
             band.focus()
         except NoMatches:
@@ -2256,6 +2355,7 @@ class CheckApp(App):
     def _open_external(self, targets: list[str]) -> None:
         """Hand off URLs / paths to the OS opener (browser / Finder). Best-effort:
             a missing opener or a launch error is surfaced, never fatal."""
+        import re
         import shutil
         import subprocess
 
@@ -2274,10 +2374,52 @@ class CheckApp(App):
                     stderr=subprocess.DEVNULL,
                 )
                 opened += 1
+                if sys.platform == "darwin":
+                    m = re.search(r'[?&]tariff_position=(\d+)', t)
+                    if m:
+                        self._schedule_tarifdetails_click(m.group(1))
             except OSError as exc:
                 self.notify(f"Öffnen fehlgeschlagen: {exc}", severity="error", timeout=6)
                 return
         self.notify(f"{opened} geöffnet.", timeout=3)
+
+    def _schedule_tarifdetails_click(self, position: str) -> None:
+        """macOS only: after opening a CHECK24 offer URL, inject JS into the
+        front Chrome tab to auto-expand the Tarifdetails accordion for the
+        given tariff_position. Polls until the element appears (page lazy-loads)."""
+        import subprocess
+        import threading
+
+        def _run() -> None:
+            # Use \' to quote the attribute value inside the single-quoted JS string
+            # so the CSS selector is valid.  No double-quotes anywhere in the JS →
+            # no conflict with the AppleScript string delimiter.
+            js = (
+                "(function poll(n){"
+                f"var b=document.querySelector('[data-tariff-position=\\'{position}\\'] .details_button_show');"
+                "if(b){b.click();return;}"
+                "if(n>0)setTimeout(function(){poll(n-1);},500);"
+                "})(20)"
+            )
+            script = (
+                'tell application "Google Chrome"\n'
+                "  repeat 20 times\n"
+                "    if not loading of front window's active tab then exit repeat\n"
+                "    delay 0.5\n"
+                "  end repeat\n"
+                f'  execute front window\'s active tab javascript "{js}"\n'
+                "end tell"
+            )
+            try:
+                subprocess.run(
+                    ["osascript", "-e", script],
+                    capture_output=True,
+                    timeout=15,
+                )
+            except Exception:
+                pass
+
+        threading.Thread(target=_run, daemon=True).start()
 
     def on_click(self, event) -> None:
         style = getattr(event, "style", None)
@@ -2452,7 +2594,7 @@ class CheckApp(App):
             if row is None:
                 content.update("[dim]Verlauf-Zeile wählen (Pfeile / Enter).[/dim]")
             else:
-                content.update(self._render_market_detail(row))
+                content.update(self._render_verlauf_detail(row))
         else:  # market band
             row = self._active_row
             if row is None:

@@ -1,0 +1,101 @@
+{
+  "stand": "01.2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": "Komfort",
+      "note": null
+    },
+    "beruf": {
+      "included": true,
+      "level": "Komfort",
+      "note": "berufliche, nicht selbstständige Tätigkeit"
+    },
+    "verkehr": {
+      "included": true,
+      "level": "Komfort",
+      "note": "keine Wartezeit im Verkehrsbereich"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": "Komfort",
+      "note": "Immobilien-RS stets Bestandteil des Pakets"
+    },
+    "internet_web": {
+      "included": true,
+      "level": "Komfort",
+      "note": "Internet-RS Komfort bis 1.250 EUR/Jahr"
+    },
+    "steuer": {
+      "included": true,
+      "level": "Komfort",
+      "note": "inkl. vorgerichtliches Widerspruchsverfahren"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": "Komfort",
+      "note": "inkl. Widerspruchsverfahren"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": "Komfort",
+      "note": "privat und verkehrsrechtlich"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "wählbar (Flex-SB oder feste Selbstbeteiligung)",
+    "wartezeit_monate": 6,
+    "wartezeit_ausnahmen": [
+      "Verkehrsbereich: keine Wartezeit",
+      "Schadenersatz-, Straf-, Ordnungswidrigkeiten-RS: keine",
+      "Eherecht: 1 Jahr",
+      "Studienplatzklagen: 3 Jahre"
+    ],
+    "geltungsbereich": "Europa, Mittelmeer-Anrainer, Kanaren, Madeira, Azoren; weltweit temporär (bis 1 Jahr Auslandsaufenthalt)",
+    "vertragslaufzeit": "1, 2, 3, 4 oder 5 Jahre"
+  },
+  "leistungen": [
+    "telefonische Rechtsberatung (JurLine)",
+    "Online-Rechtsberatung",
+    "Mediation / außergerichtliche Konfliktbeilegung",
+    "Vertrags- und Dokumentencheck",
+    "Strafkaution als zinsloses Darlehen (bis 500.000 EUR)",
+    "Bonus-Rechtsberatung nach 3 schadenfreien Jahren",
+    "Internet- und Daten-Rechtsschutz",
+    "Opfer-Rechtsschutz",
+    "Familien-, Ehe- und Erbrecht (Beratung)",
+    "Rechtsschutz in Betreuungsverfahren",
+    "Online-Schutz-Radar / Webseiten-Prüfung"
+  ],
+  "ausschluesse": [
+    "Baurisiko / Baufinanzierung",
+    "Kapitalanlagen",
+    "Patent-, Marken-, Urheberrecht / geistiges Eigentum",
+    "Kartell- und Wettbewerbsrecht",
+    "Insolvenzverfahren",
+    "Spiel-/Wettverträge, Gewinnzusagen",
+    "Asyl-/Ausländer-/Migrationsrecht",
+    "Verfassungs- und internationale Gerichte",
+    "Vorsatzstraftaten",
+    "gewerbliche/selbstständige Tätigkeit (im Privat-RS)"
+  ],
+  "besonderheiten": [
+    "Bausteinprinzip, frei kombinierbar",
+    "Leistungs-Update-Garantie (neueste ARB bei gleichem Beitrag)",
+    "Flex-Selbstbeteiligung: SB-Halbierung bei Vorab-Kontakt",
+    "Strafkaution Komfort bis 500.000 EUR",
+    "Zahlungspause bei Arbeitslosigkeit (bis 1 Jahr beitragsfrei)",
+    "Differenzdeckung zum Vorversicherer möglich",
+    "Junge-Leute-Tarif (Nachlass bis 35 J.)",
+    "Tarif-Besonderheit: 6 Monate Wartezeit statt 3",
+    "Versicherungssumme unbegrenzt"
+  ],
+  "beitrag": null,
+  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
+  "tariff": "Top-Rechtsschutz Komfort",
+  "stem": "roland__top-rechtsschutz-komfort-strafrechtplus",
+  "_history_date": "2026-06-24",
+  "_content_sha256": "5eff5ec005bde4a8fed3d7db669f7446ba0b5c66a30aa89cedf2429f35611a45",
+  "_supersedes": null
+}
