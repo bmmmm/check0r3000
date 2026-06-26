@@ -23,9 +23,19 @@ def load_all_price_history(resolve_stem_fn) -> dict[str, list[dict]]:
 
     resolve_stem_fn(insurer, product) -> str | None  (tui_data.resolve_stem)
 
-    Returns dict[stem, [{"date": str, "price": float | None}, ...]] oldest→newest.
-    Each snapshot entry uses the lowest priced variant seen for that stem
-    (representative price across SB bands).
+    Returns dict[stem, [{"date": str, "price": float | None}, ...]] oldest→newest,
+    one entry per snapshot the stem appeared in.
+
+    The series is pinned to ONE Selbstbeteiligung band per stem — the band present
+    in the most snapshots, cheapest as tie-break — so consecutive prices are always
+    compared like-for-like. Taking the cheapest variant per snapshot instead (the
+    old behaviour) reports a PHANTOM price change whenever the set of scraped SB
+    bands shifts between snapshots: if the previously-cheapest band drops out, the
+    min jumps to the next band and looks like a hike though no band actually moved.
+    Snapshots where the pinned band is absent become price=None (a gap, skipped by
+    price_changelog) rather than a fabricated jump. Trade-off: a price change
+    isolated to a non-pinned band is not surfaced — acceptable because a real rate
+    change moves all bands together, so the pinned band reflects it too.
     """
     if not SNAPSHOT_DIR.is_dir():
         return {}
@@ -34,7 +44,11 @@ def load_all_price_history(resolve_stem_fn) -> dict[str, list[dict]]:
         p for p in SNAPSHOT_DIR.glob("*.json") if _DATE_RE.match(p.stem)
     )
 
-    by_stem: dict[str, dict[str, float | None]] = {}
+    # stem -> date -> sb_band -> price  (price-bearing variants only)
+    prices: dict[str, dict[str, dict[str, float]]] = {}
+    # stem -> set of dates it appeared in at all (priced or not), so the emitted
+    # series spans exactly the snapshots the stem was present in.
+    appeared: dict[str, set[str]] = {}
 
     for snap_path in snap_files:
         date = snap_path.stem
@@ -42,25 +56,44 @@ def load_all_price_history(resolve_stem_fn) -> dict[str, list[dict]]:
             data = json.loads(snap_path.read_text(encoding="utf-8"))
         except Exception:
             continue
-        snap_prices: dict[str, float | None] = {}
         for t in data.get("tariffs", []):
             ins = t.get("insurer", "")
             prod = t.get("product", "")
             stem = resolve_stem_fn(ins, prod)
             if not stem:
                 continue
+            appeared.setdefault(stem, set()).add(date)
             price = t.get("monatlich_eur")
-            if price is None:
-                snap_prices.setdefault(stem, None)
-            elif stem not in snap_prices or snap_prices[stem] is None or price < snap_prices[stem]:
-                snap_prices[stem] = price
-        for stem, price in snap_prices.items():
-            by_stem.setdefault(stem, {})[date] = price
+            if isinstance(price, bool) or not isinstance(price, (int, float)):
+                continue
+            band = (t.get("selbstbeteiligung") or "").strip()
+            day = prices.setdefault(stem, {}).setdefault(date, {})
+            # A snapshot may list the same (stem, SB) twice (snapshot.py permits
+            # duplicate keys); keep the cheapest so each band has one price per date.
+            if band not in day or price < day[band]:
+                day[band] = price
 
-    return {
-        stem: [{"date": d, "price": p} for d, p in sorted(dp.items())]
-        for stem, dp in by_stem.items()
-    }
+    result: dict[str, list[dict]] = {}
+    for stem, dates_set in appeared.items():
+        dates_seen = sorted(dates_set)
+        # Invert to band -> {date: price} to find the band with the widest coverage.
+        band_dates: dict[str, dict[str, float]] = {}
+        for date in dates_seen:
+            for band, price in prices.get(stem, {}).get(date, {}).items():
+                band_dates.setdefault(band, {})[date] = price
+        if not band_dates:
+            # Stem seen but never priced — preserve it with a None series.
+            result[stem] = [{"date": d, "price": None} for d in dates_seen]
+            continue
+        # Pin: most snapshots first (kills the phantom), cheapest as tie-break
+        # (keeps the representative-low intent), band string last for determinism.
+        _, pinned = min(
+            band_dates.items(),
+            key=lambda kv: (-len(kv[1]), min(kv[1].values()), kv[0]),
+        )
+        result[stem] = [{"date": d, "price": pinned.get(d)} for d in dates_seen]
+
+    return result
 
 
 def price_changelog(series: list[dict]) -> list[dict]:
