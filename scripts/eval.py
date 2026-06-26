@@ -389,6 +389,92 @@ def save_summary(rows: list[dict], models: list[str], repeat: int) -> None:
           f"  +  {(BENCH_OUT / 'results.json').name}")
 
 
+SCORECARD_WEIGHTS = {"faithful": 50, "schema": 20, "halluc": 15, "modules": 15}
+
+
+def _score_row(r: dict, max_modules: int) -> dict:
+    """Quality scorecard points for one aggregated row (0-100, correctness only).
+    Faithful 50 / Schema 20 / Hallucination-free 15 / Module coverage 15. Module
+    credit is GATED on the schema-valid rate, so breadth over schema-invalid output
+    earns nothing. Zero successful runs = DNF (total 0). Latency and cost stay OUT
+    of the score by design — a slow free model must not out-point a faithful one."""
+    runs = max(1, r["runs"])
+    if r["ok"] == 0:
+        return {"faithful": 0.0, "schema": 0.0, "halluc": 0.0, "modules": 0.0,
+                "total": 0.0, "dnf": True}
+    schema_rate = r["schema_ok"] / runs
+    faithful = SCORECARD_WEIGHTS["faithful"] * (r["faithful"] / runs)
+    schema = SCORECARD_WEIGHTS["schema"] * schema_rate
+    halluc = max(0.0, SCORECARD_WEIGHTS["halluc"] - 5 * r["unsupported_max"])
+    modules = SCORECARD_WEIGHTS["modules"] * (r["modules_max"] / max_modules) * schema_rate
+    return {"faithful": faithful, "schema": schema, "halluc": halluc,
+            "modules": modules, "total": faithful + schema + halluc + modules,
+            "dnf": False}
+
+
+def _scored_by_tariff(rows: list[dict]):
+    """Yield (tariff, [(row, points), ...]) sorted by total desc. The module-coverage
+    denominator is the best coverage any model achieved in this batch (so 'full' is
+    self-calibrating and the score stays schema-shape-agnostic)."""
+    max_modules = max((r["modules_max"] for r in rows), default=1) or 1
+    by_tariff: dict[str, list[dict]] = {}
+    for r in rows:
+        by_tariff.setdefault(r["tariff"], []).append(r)
+    for tariff in sorted(by_tariff):
+        scored = sorted(((r, _score_row(r, max_modules)) for r in by_tariff[tariff]),
+                        key=lambda rs: rs[1]["total"], reverse=True)
+        yield tariff, scored
+
+
+def print_scorecard(rows: list[dict]) -> None:
+    """Ranked quality scorecard; latency/cost are shown but never folded into points."""
+    print("\nScorecard — quality points (Faithful 50 / Schema 20 / Halluc-free 15 / "
+          "Modules 15; latency & cost operational, not scored):")
+    for tariff, scored in _scored_by_tariff(rows):
+        print(f"\n  {tariff}")
+        print(f"  {'model':<34} {'input':<13} {'fth':>4} {'sch':>4} {'hal':>4} "
+              f"{'mod':>4} {'SCORE':>6}  {'~wall_s':>8} {'~cost':>7}")
+        print("  " + "-" * 98)
+        for r, s in scored:
+            model = r["model"] if len(r["model"]) <= 34 else r["model"][:33] + "…"
+            cost = f"${r['cost_usd']:.3f}" if r["cost_usd"] is not None else "–"
+            wall = f"{r['wall_s']:.0f}" if r["wall_s"] is not None else "–"
+            score = "DNF" if s["dnf"] else f"{s['total']:.0f}"
+            print(f"  {model:<34} {r['input']:<13} {s['faithful']:>4.0f} "
+                  f"{s['schema']:>4.0f} {s['halluc']:>4.0f} {s['modules']:>4.0f} "
+                  f"{score:>6}  {wall:>8} {cost:>7}")
+
+
+def save_scorecard(rows: list[dict]) -> None:
+    """Write the ranked quality scorecard to benchmarks/scorecard.md (committable)."""
+    BENCH_OUT.mkdir(parents=True, exist_ok=True)
+    date = datetime.date.today().isoformat()
+    rev = _git_rev()
+    lines = ["# Benchmark — Scorecard (Extraktionsqualität)", "",
+             f"_Snapshot {date}, commit `{rev}`. Punkte = reine Korrektheit "
+             "(reproduzierbar). **Faithful 50 / Schema 20 / Halluzinations-frei 15 / "
+             "Modulabdeckung 15**; Module zählen nur bei schema-validem Output. "
+             "Latenz/Kosten sind Betriebs-Spalten und fließen NICHT in den Score. "
+             "DNF = kein erfolgreicher Lauf (z.B. oMLX-RAM-Guard). Modul-Nenner = "
+             "beste Abdeckung im Batch. Rohdaten je Lauf: `tmp/eval/` (gitignored)._",
+             ""]
+    for tariff, scored in _scored_by_tariff(rows):
+        lines += [f"## {tariff}", "",
+                  "| Modell | Input | Faithful (50) | Schema (20) | Halluz-frei (15) | "
+                  "Module (15) | **Score** | ~wall_s | ~Kosten |",
+                  "|---|---|--:|--:|--:|--:|--:|--:|--:|"]
+        for r, s in scored:
+            cost = f"${r['cost_usd']:.3f}" if r["cost_usd"] is not None else "–"
+            wall = f"{r['wall_s']:.0f}" if r["wall_s"] is not None else "–"
+            score = "**DNF**" if s["dnf"] else f"**{s['total']:.0f}**"
+            lines.append(f"| {r['model']} | {r['input']} | {s['faithful']:.0f} | "
+                         f"{s['schema']:.0f} | {s['halluc']:.0f} | {s['modules']:.0f} | "
+                         f"{score} | {wall} | {cost} |")
+        lines.append("")
+    (BENCH_OUT / "scorecard.md").write_text("\n".join(lines), encoding="utf-8")
+    print(f"Scorecard -> {(BENCH_OUT / 'scorecard.md').relative_to(ROOT)}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Benchmark extract across models.")
     ap.add_argument("--models", default="haiku,sonnet,opus",
@@ -414,6 +500,11 @@ def main() -> int:
                          "serialize so only one local model is resident at a time — "
                          "avoids OOM when a big model + long-context KV cache already "
                          "fills RAM")
+    ap.add_argument("--scorecard", action="store_true",
+                    help="print a ranked quality scorecard (Faithful 50 / Schema 20 / "
+                         "Halluc-free 15 / Modules 15; latency & cost shown separately, "
+                         "not scored); with --save-summary also writes "
+                         "benchmarks/scorecard.md")
     args = ap.parse_args()
     models = [m.strip() for m in args.models.split(",") if m.strip()]
     doc_filter = {d.strip() for d in args.docs.split(",")} if args.docs else None
@@ -454,6 +545,10 @@ def main() -> int:
         if args.save_summary:
             save_summary(rows, sorted({r["model"] for r in rows}),
                          max((r["runs"] for r in rows), default=1))
+        if args.scorecard:
+            print_scorecard(rows)
+            if args.save_summary:
+                save_scorecard(rows)
         return 0
 
     # Build the fed-document subset (--docs); sources for grounding stay full.
@@ -502,6 +597,10 @@ def main() -> int:
         print_variance(rows)
     if args.save_summary:
         save_summary(rows, models, repeat)
+    if args.scorecard:
+        print_scorecard(rows)
+        if args.save_summary:
+            save_scorecard(rows)
 
     EVAL_OUT.mkdir(parents=True, exist_ok=True)
     (EVAL_OUT / "results.json").write_text(
