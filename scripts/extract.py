@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -238,7 +239,12 @@ def main() -> int:
         empty = [k for k in ("modules", "coverage") if not record.get(k)]
         if empty:
             print(f"    warn: {insurer}/{tariff}: model returned empty {empty}", file=sys.stderr)
-        out_path.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
+        # Atomic write (tmp twin + os.replace): a crash — or a second pipeline run
+        # racing on the same record — must never leave truncated/interleaved JSON
+        # that load_all_details() would then silently drop.
+        tmp_out = out_path.with_suffix(".json.tmp")
+        tmp_out.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp_out, out_path)
         print(f"    -> {out_path.relative_to(ROOT)}")
         if feature_history.archive_version(out_path.stem, record):
             print(f"    -> history archived ({out_path.stem})")

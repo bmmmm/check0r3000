@@ -334,6 +334,10 @@ class CheckApp(App):
         self._verlauf_old_idx: int = 0  # index into _all_snapshots for the "from" snapshot
         # Change tracking: loaded once at startup, refreshed on [r]
         self._change_summary: dict[str, ChangeInfo] = {}
+        # Single-flight guard for the analyze pipeline. @work's exclusive=True only
+        # cancels the worker — it cannot abort a blocked subprocess.run, so two
+        # pipelines would run ingest/extract concurrently. Refuse a second start.
+        self._pipeline_running: bool = False
 
     # --- Lifecycle ---
 
@@ -2587,6 +2591,14 @@ class CheckApp(App):
             return
 
         # Queued but not analyzed yet — analyze it so the column can appear.
+        if self._pipeline_running:
+            self.notify(
+                f"Zum Vergleich vorgemerkt — eine Analyse läuft, \\[g] startet "
+                f"{_esc(insurer)} {_esc(product)} danach.",
+                timeout=6,
+            )
+            self._reload_all()
+            return
         row = self._snapshot_row_for(stem, insurer, product)
         entry = self._doc_entry(row) if row is not None else None
         if row is not None and entry and entry.get("docs"):
@@ -3012,9 +3024,23 @@ class CheckApp(App):
 
     # --- On-demand: download + analyze the selected tariff ([g]) ---
 
+    def _pipeline_busy(self) -> bool:
+        """True (after a notify) when an analyze pipeline is already running — used
+        to refuse a second [g]/[G]/[H] rather than race the running subprocess."""
+        if self._pipeline_running:
+            self.notify(
+                "Eine Analyse läuft bereits — bitte abwarten.",
+                severity="warning",
+                timeout=5,
+            )
+            return True
+        return False
+
     def action_fetch_docs(self) -> None:
         """Resolve the selected row to its harvested source PDFs and, after a
             confirm, download + run the analyze pipeline in the background."""
+        if self._pipeline_busy():
+            return
         row = self._active_row
         if row is None:
             self.notify("Erst eine Zeile wählen (↵).", severity="warning")
@@ -3045,6 +3071,8 @@ class CheckApp(App):
             extract, no download. For PDFs kept from a prior [g] or dropped in
             manually. Gated on data/raw/<stem>/ containing PDFs; still confirms
             because extract is a paid model call."""
+        if self._pipeline_busy():
+            return
         row = self._active_row
         if row is None:
             self.notify("Erst eine Zeile wählen (↵).", severity="warning")
@@ -3082,6 +3110,8 @@ class CheckApp(App):
             tariff whose source URLs were never harvested (e.g. KS/Auxilia — JURPRIVAT).
             Heavier than [g]/[G] (loads the full all-insurers result page), so it
             confirms first."""
+        if self._pipeline_busy():
+            return
         row = self._active_row
         if row is None:
             self.notify("Erst eine Zeile wählen (↵).", severity="warning")
@@ -3110,14 +3140,27 @@ class CheckApp(App):
 
         self.push_screen(ConfirmFetchScreen(pseudo, ANALYZE_MODEL, harvest=True), _go)
 
-    @work(thread=True, exclusive=True, group="pipeline")
+    @work(thread=True, group="pipeline")
     def _run_pipeline(self, entry: dict, row: SnapshotRow,
                       *, skip_download: bool = False, harvest: bool = False) -> None:
         """Run the analyze pipeline for one tariff off the UI thread; status is
             posted back via call_from_thread. With harvest, a headless harvest_docs
             pass (--download) fetches the source URLs + PDFs first; with skip_download
             the PDFs are already in data/raw/<stem>/ and only ingest → extract run;
-            otherwise fetch_docs --into-raw downloads them first."""
+            otherwise fetch_docs --into-raw downloads them first.
+
+            Guarded by _pipeline_running (set here, cleared in finally) so a second
+            invocation is refused at the action layer rather than racing the OS
+            subprocess of this one."""
+        self._pipeline_running = True
+        try:
+            self._run_pipeline_steps(entry, row, skip_download=skip_download,
+                                     harvest=harvest)
+        finally:
+            self._pipeline_running = False
+
+    def _run_pipeline_steps(self, entry: dict, row: SnapshotRow, *,
+                            skip_download: bool, harvest: bool) -> None:
         import subprocess
 
         stem = entry.get("stem", "")
