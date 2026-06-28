@@ -113,9 +113,18 @@ def resolve_rows(rows: list[dict], args) -> list[dict]:
     """Map the requested selectors onto the FRESH page rows, then collapse same-product
     duplicates. Selectors compose: --insurer narrows --match/--positions; given alone,
     each selects on its own."""
+    # Every path harvests by clicking a position, and picked/_collapse sort on it, so a
+    # row whose position didn't parse (check24_scrape sets it null on a markup shift)
+    # can't be used — drop it up front. Without this, --match/--insurer keyed picked on
+    # a None and sorted({None, 7, …}) crashed with a TypeError.
+    dropped = sum(1 for r in rows if not r.get("position"))
+    if dropped:
+        print(f"  ! {dropped} scraped row(s) had no parseable position (CHECK24 markup "
+              "shift) and were skipped — re-run if a wanted tariff is missing below",
+              file=sys.stderr)
+    rows = [r for r in rows if r.get("position")]
     if args.all:
-        ordered = sorted((r for r in rows if r.get("position")), key=lambda r: r["position"])
-        return _collapse_by_product(ordered)
+        return _collapse_by_product(sorted(rows, key=lambda r: r["position"]))
 
     ins = args.insurer.casefold() if args.insurer else None
 
@@ -167,34 +176,64 @@ def _unique_stem(base: str, used: set[str], existing_stems: set[str]) -> str:
     return stem
 
 
+def _fold(s: str) -> str:
+    """Lowercase + fold German umlauts/ß so a legal-entity name in a PDF filename
+    matches the branded insurer name. Without this, 'ÖRAG' tokenizes to the dropped
+    3-char 'rag' (the umlaut splits the token), so a correctly-attributed ÖRAG bundle
+    fails the insurer check and prints a spurious mismatch warning."""
+    s = s.lower()
+    for a, b in (("ä", "a"), ("ö", "o"), ("ü", "u"), ("ß", "ss")):
+        s = s.replace(a, b)
+    return s
+
+
+def _bundle_files(group: dict) -> list[dict]:
+    """The {file, url} of a raw harvested bundle, for the insurer sanity check BEFORE
+    a stem is assigned (so a rejected bundle never pollutes the stem bookkeeping)."""
+    return [{"file": _file_from_url(d.get("url", "")), "url": d.get("url", "")}
+            for d in group.get("docs", [])]
+
+
 def _bundle_matches_insurer(insurer: str, docs: list[dict]) -> bool:
     """Soft attribution sanity check: does the harvested bundle's filenames mention the
     insurer? Guards against a lazy-load race misattributing a hash to the wrong row.
     Insurers with no token >= 4 chars (e.g. 'DMB') can't be checked -> pass."""
-    blob = " ".join((d.get("file") or "") + " " + (d.get("url") or "") for d in docs).lower()
-    toks = [t for t in re.split(r"[^a-z0-9]+", insurer.lower()) if len(t) >= 4]
+    blob = _fold(" ".join((d.get("file") or "") + " " + (d.get("url") or "") for d in docs))
+    toks = [t for t in re.split(r"[^a-z0-9]+", _fold(insurer)) if len(t) >= 4]
     return any(t in blob for t in toks) if toks else True
 
 
-def build_entry(row: dict, group: dict, existing_by_hash: dict, existing_stems: set[str],
-                used_stems: set[str], today: str) -> dict:
+def _same_product(row: dict, entry: dict) -> bool:
+    """Does a manifest/harvested entry describe the SAME product as this fresh row?
+    (entry stores the product under 'tariff', the row under 'product'.)"""
+    return ((row.get("insurer", "") or "").casefold() == (entry.get("insurer", "") or "").casefold()
+            and (row.get("product", "") or "").casefold() == (entry.get("tariff", "") or "").casefold())
+
+
+def build_entry(row: dict, group: dict, existing_by_hash: dict, existing_by_stem: dict,
+                used_by_stem: dict, today: str) -> dict:
     """Turn one (fresh row, harvested filestore bundle) into a manifest entry. Stem
     resolution, in order, so the same tariff maps to ONE stable stem across re-harvests:
       1. this exact filestore hash is already in the manifest -> reuse its stem (matches
          the hand-authored stems of the original 10 when their PDFs are unchanged);
-      2. else the product's _slug already names an entry -> reuse it (a re-harvest that
-         grabbed a different variant-row/hash still lands on the same stem);
-      3. else a genuinely new product -> its _slug (suffixed only on a cross-product
-         slug collision, which is rare)."""
+      2. else the product's _slug already names an entry FOR THE SAME PRODUCT -> reuse it
+         (a re-harvest that grabbed a different variant-row/hash still lands on the same
+         stem);
+      3. else its _slug, suffixed (_unique_stem) if a DIFFERENT product already holds the
+         bare slug — so two genuinely-different products whose lossy slug collides never
+         clobber each other in the tracked manifest."""
     h = group["hash"]
     slug = _slug(row["insurer"], row["product"])
     if h in existing_by_hash:
         stem = existing_by_hash[h]["stem"]
-    elif slug in existing_stems or slug in used_stems:
-        stem = slug
     else:
-        stem = _unique_stem(slug, used_stems, existing_stems)
-    used_stems.add(stem)
+        incumbent = existing_by_stem.get(slug) or used_by_stem.get(slug)
+        if incumbent is not None and _same_product(row, incumbent):
+            stem = slug  # same product, a different variant-row/hash -> same stem
+        elif slug not in existing_by_stem and slug not in used_by_stem:
+            stem = slug  # genuinely new product, slug free
+        else:
+            stem = _unique_stem(slug, used_by_stem, existing_by_stem)  # collision -> suffix
 
     docs = []
     for d in group.get("docs", []):
@@ -206,7 +245,7 @@ def build_entry(row: dict, group: dict, existing_by_hash: dict, existing_stems: 
             "file": _file_from_url(url),
             "url": url,
         })
-    return {
+    entry = {
         "stem": stem,
         "insurer": row["insurer"],
         "tariff": row["product"],
@@ -215,9 +254,11 @@ def build_entry(row: dict, group: dict, existing_by_hash: dict, existing_stems: 
         "harvested": today,
         "docs": docs,
     }
+    used_by_stem[stem] = entry  # claim the stem so a later collision suffixes around it
+    return entry
 
 
-async def harvest(url: str, args, existing_by_hash: dict, existing_stems: set[str],
+async def harvest(url: str, args, existing_by_hash: dict, existing_by_stem: dict,
                   today: str) -> tuple[list[dict], list[dict]]:
     """Load the page once, scrape rows, then expand the selected tariffs' Tarifdetails
     panels one at a time and attribute each NEWLY revealed filestore bundle to the
@@ -253,7 +294,7 @@ async def harvest(url: str, args, existing_by_hash: dict, existing_stems: set[st
               f"(one panel + ~3s lazy-load each):")
 
         seen_hashes: set[str] = set()
-        used_stems: set[str] = set()
+        used_by_stem: dict = {}
         entries: list[dict] = []
         for r in selected:
             pos = r["position"]
@@ -267,17 +308,37 @@ async def harvest(url: str, args, existing_by_hash: dict, existing_stems: set[st
                 continue
             new = [g for g in (frag or [])
                    if g.get("hash") and g["hash"] not in seen_hashes]
-            for g in new:
-                seen_hashes.add(g["hash"])
             if not new:
-                print(f"  ! pos {pos} ({label}): no new document bundle "
-                      "(panel empty or lazy-load too slow)", file=sys.stderr)
+                # Distinguish "already attributed to an earlier position" (shared bundle
+                # / same terms) from a genuinely empty/slow panel — the former is benign,
+                # the latter means we missed a doc, so they warrant different actions.
+                if any(g.get("hash") for g in (frag or [])):
+                    print(f"  ! pos {pos} ({label}): bundle(s) already attributed to an "
+                          "earlier position (same underlying terms) — no separate entry; "
+                          "harvest it alone if it's a distinct product", file=sys.stderr)
+                else:
+                    print(f"  ! pos {pos} ({label}): no document bundle "
+                          "(panel empty or lazy-load too slow)", file=sys.stderr)
                 continue
             if len(new) > 1:
-                print(f"  ! pos {pos} ({label}): {len(new)} new bundles appeared at once "
-                      "(lazy-load race) — recording all, verify attribution", file=sys.stderr)
+                # A late-lazy-loading sibling panel can dump ITS bundle into this scan.
+                # Keep only bundles whose filenames name this insurer; leave the rest
+                # unseen so their own position can still claim them. If the insurer is
+                # un-checkable or none match, fall back to recording all (verify warning).
+                matched = [g for g in new
+                           if _bundle_matches_insurer(r.get("insurer", ""), _bundle_files(g))]
+                if matched and len(matched) < len(new):
+                    print(f"  ! pos {pos} ({label}): {len(new)} bundles appeared at once "
+                          f"(lazy-load race) — keeping {len(matched)} that name the insurer, "
+                          "leaving the rest for their position", file=sys.stderr)
+                    new = matched
+                else:
+                    print(f"  ! pos {pos} ({label}): {len(new)} new bundles appeared at once "
+                          "(lazy-load race) — recording all, verify attribution", file=sys.stderr)
             for g in new:
-                entry = build_entry(r, g, existing_by_hash, existing_stems, used_stems, today)
+                seen_hashes.add(g["hash"])  # only mark the bundles we actually attribute
+                entry = build_entry(r, g, existing_by_hash, existing_by_stem,
+                                    used_by_stem, today)
                 if not _bundle_matches_insurer(r.get("insurer", ""), entry["docs"]):
                     print(f"  ? pos {pos} ({label}): bundle filenames don't mention the "
                           f"insurer — stem {entry['stem']!r}, verify it's the right tariff",
@@ -358,10 +419,10 @@ def main() -> int:
     today = datetime.date.today().isoformat()
     manifest = load_manifest()
     existing_by_hash = {t["hash"]: t for t in manifest["tariffs"] if t.get("hash")}
-    existing_stems = {t["stem"] for t in manifest["tariffs"] if t.get("stem")}
+    existing_by_stem = {t["stem"]: t for t in manifest["tariffs"] if t.get("stem")}
 
     url = build_url()
-    rows, entries = asyncio.run(harvest(url, args, existing_by_hash, existing_stems, today))
+    rows, entries = asyncio.run(harvest(url, args, existing_by_hash, existing_by_stem, today))
     if not rows:
         sys.exit("No rows scraped — the page may not have loaded.")
     if not entries:
