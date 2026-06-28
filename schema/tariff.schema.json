@@ -33,7 +33,7 @@
       "additionalProperties": false,
       "properties": {
         "versicherungssumme":       { "type": ["string", "null"], "description": "Sum insured per case, e.g. 'unbegrenzt' or '300000 EUR'." },
-        "selbstbeteiligung":        { "type": ["string", "null"], "description": "Deductible per case, e.g. '0 EUR', '150 EUR', or 'wählbar 150/300 EUR'." },
+        "selbstbeteiligung":        { "type": ["string", "null"], "description": "Deductible per case, e.g. '0 EUR', '150 EUR', 'wählbar 150/300 EUR', or — when the docs establish that a deductible applies but state no fixed tariff amount — qualitative, e.g. 'vereinbart (Höhe im Versicherungsschein)'." },
         "wartezeit_monate":         { "type": ["integer", "null"], "description": "General waiting period in months; 0 if none." },
         "wartezeit_ausnahmen":      { "type": "array", "items": { "type": "string" }, "description": "Areas with deviating / no waiting period." },
         "geltungsbereich":          { "type": ["string", "null"], "description": "Geographic scope, e.g. 'Europa + Mittelmeeranrainer; weltweit temporär'." },

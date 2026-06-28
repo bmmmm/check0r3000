@@ -59,6 +59,11 @@ a number.
 variant THIS tariff actually has. If they merely list the variants as selectable \
 options without naming the chosen one (typical for AVB/PIB), use null — never guess \
 a level.
+- For `coverage.selbstbeteiligung`: if the documents establish that a deductible \
+applies (a 'vereinbarte Selbstbeteiligung', a per-scenario amount, or a waiver \
+clause) but state no single fixed tariff amount, describe the arrangement \
+qualitatively (e.g. 'vereinbart, Höhe im Versicherungsschein') instead of null. \
+Describing a stated arrangement is not guessing a number.
 - Keep array entries short (a few words each), in German.
 - Omit the `sources` field entirely — the pipeline adds provenance; never invent \
 content hashes."""
