@@ -16,7 +16,9 @@ on one comparable footing so the benchmark can pit them against each other.
 Every backend returns the SAME dict shape:
     {text, error, cost_usd, wall_s, api_s, input_tokens, output_tokens, context_window}
 `text` is the raw model reply (possibly fenced / prose-wrapped — the caller coerces
-it to JSON). Local backends report cost_usd = None (free / unpriced).
+it to JSON). Only the `claude` CLI reports a real cost_usd; every OpenAI-compatible
+backend reports cost_usd = None (the API returns no price), so a billed `openai:` spec
+shows as unpriced too — read cost as claude-only.
 
 stdlib only: the OpenAI-compatible path uses urllib, no requests/httpx.
 """
@@ -73,24 +75,33 @@ def _parse_env_file(path: str) -> dict[str, str]:
         val = val.strip()
         if len(val) >= 2 and val[0] == val[-1] and val[0] in ("'", '"'):
             val = val[1:-1]
+        else:
+            # Unquoted value: drop a trailing inline comment (` #…`) like python-dotenv
+            # does, so `KEY=abc  # note` yields 'abc', not a silently mangled key that
+            # 401s. Only ` #` (space-hash) splits; a '#' inside the value survives.
+            hash_at = val.find(" #")
+            if hash_at != -1:
+                val = val[:hash_at].rstrip()
         if key and val:
             out[key] = val
     return out
 
 
 def _api_key(provider: str) -> str | None:
-    """Bearer token for a key-gated OpenAI-compatible backend. Checked in order:
-    <PROVIDER>_API_KEY (e.g. OMLX_API_KEY), then OPENAI_API_KEY — first from the
-    environment, then from a `.env` file (project, then ~/.env) so non-interactive
-    shells that don't source the user's rc still find it. Never hardcoded, never
-    logged. Servers needing no key work without one (no header is sent)."""
-    names = (f"{provider.upper()}_API_KEY", "OPENAI_API_KEY")
-    for var in names:
+    """Bearer token for a key-gated OpenAI-compatible backend. The provider-specific
+    name (<PROVIDER>_API_KEY, e.g. OMLX_API_KEY) is fully resolved — environment THEN
+    `.env` (project, then ~/.env) — before falling back to the generic OPENAI_API_KEY.
+    Resolving per-name across both sources matters: a globally-exported OPENAI_API_KEY
+    must NOT shadow a provider-specific key the user put in `.env` and then get sent as
+    a Bearer to whatever (possibly remote) endpoint the spec names. Never hardcoded,
+    never logged. Servers needing no key work without one (no header is sent)."""
+    maps = None  # parse the .env files lazily — only if the environment misses
+    for var in (f"{provider.upper()}_API_KEY", "OPENAI_API_KEY"):
         v = os.environ.get(var)
         if v:
             return v
-    maps = [_parse_env_file(p) for p in _env_files()]
-    for var in names:           # PROVIDER_API_KEY beats OPENAI_API_KEY
+        if maps is None:
+            maps = [_parse_env_file(p) for p in _env_files()]
         for m in maps:          # project .env beats ~/.env
             if m.get(var):
                 return m[var]
@@ -107,6 +118,9 @@ def parse_spec(spec: str) -> tuple[str, str | None, str | None]:
     else:
         provider, model = "claude", spec
     provider = provider.strip().lower()  # 'Claude:Opus' / 'OLLAMA:…' route the same
+    model = model.strip()                # stray spaces must not reach the argv/request
+    if endpoint is not None:
+        endpoint = endpoint.strip() or None
     if provider == "claude" and model.lower() in ("", "claude", "default"):
         model = None
     return provider, model, endpoint
@@ -147,14 +161,20 @@ def _run_claude(model: str | None, instruction: str, payload: str, timeout: int)
 
     usage = outer.get("usage")
     usage = usage if isinstance(usage, dict) else {}
-    mu = next(iter((outer.get("modelUsage") or {}).values()), {})
+    # Guard the CONTAINER too, not just the inner value: a non-dict modelUsage has no
+    # .values(), and a string duration_ms breaks the division — either would escape
+    # run() unhandled and crash the caller, defeating the uniform-dict contract _err
+    # upholds. Coerce both defensively.
+    mv = outer.get("modelUsage")
+    mu = next(iter(mv.values()), {}) if isinstance(mv, dict) else {}
     mu = mu if isinstance(mu, dict) else {}
+    dur = outer.get("duration_ms")
     res = {
         "text": outer.get("result"),
         "error": None,
         "cost_usd": outer.get("total_cost_usd"),
         "wall_s": round(wall, 1),
-        "api_s": round((outer.get("duration_ms") or 0) / 1000, 1),
+        "api_s": round(dur / 1000, 1) if isinstance(dur, (int, float)) else None,
         "input_tokens": usage.get("input_tokens"),
         "output_tokens": usage.get("output_tokens"),
         "context_window": mu.get("contextWindow"),
@@ -264,8 +284,12 @@ def _run_openai(provider: str, model: str | None, endpoint: str | None,
     usage = data.get("usage") or {}
     return {
         "text": text,
+        # The OpenAI /chat/completions response carries no price, so cost is UNKNOWN
+        # for every backend on this path — local (free) AND a billed cloud `openai:`
+        # spec alike. Reported as None (shown as "-" = unpriced/unknown, never "$0").
+        # Only the `claude` CLI surfaces a real total_cost_usd.
         "error": None,
-        "cost_usd": None,  # local / unpriced
+        "cost_usd": None,
         "wall_s": round(wall, 1),
         "api_s": round(wall, 1),
         "input_tokens": usage.get("prompt_tokens"),
