@@ -1,6 +1,4 @@
 {
-  "insurer": "ADVOCARD Rechtsschutzversicherung AG",
-  "tariff": "Rechtsschutzversicherung",
   "stand": null,
   "modules": {
     "privat": {
@@ -85,17 +83,10 @@
     "Verschiedene Wartezeiten je Leistungsart (z.B. 1 Jahr für Familienrecht, Studienplätze)"
   ],
   "beitrag": null,
-  "_input_hash": "69398a9b985dc786b4ae71c948fc6146322ded2be457388b2da29437b90e1960",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "c096fe09af144332fa693f1520431bbb5e5aa544e995c211cf4a55130c05deb7"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "3f59b041e5545823b4e7d46aad1cc5118975fd7e604ce2dab5efbfb2155f8aec"
-    }
-  ]
+  "insurer": "ADVOCARD Rechtsschutzversicherung AG",
+  "tariff": "Rechtsschutzversicherung",
+  "stem": "advocard__360-privat-rechtsschutz",
+  "_history_date": "2026-06-28",
+  "_content_sha256": "729261607feaeca2daa7a94dacb993c8918e36e0d5e37e7f1b9e56228e5d5dc5",
+  "_supersedes": "2026-06-24"
 }

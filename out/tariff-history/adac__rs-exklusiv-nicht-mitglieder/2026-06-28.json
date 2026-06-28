@@ -1,6 +1,4 @@
 {
-  "insurer": "ADAC Versicherung AG",
-  "tariff": "ADAC Rechtsschutz",
   "stand": "01.03.2022",
   "modules": {
     "privat": {
@@ -84,21 +82,10 @@
     "Selbstbeteiligung entfällt bei Erstberatung und Mediation durch benannte Vermittler"
   ],
   "beitrag": null,
-  "_input_hash": "26f262908fef8b5429ac1a6f73c17191a0dfe4411bfa414538ab79662d7c21ec",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "898bc16ad6310899b2e7dca18f38f91acdc30917eb22a7b2bc551519ccffa774"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "2dd24f0e0ac5470d590288b147be2f4ba976783b79b88265b04b5caa9890407e"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "05ce3daa62f4243efcfef3c39a1f4b42c7d41c91c9d41dc98b4006fdfe7dcb2b"
-    }
-  ]
+  "insurer": "ADAC Versicherung AG",
+  "tariff": "ADAC Rechtsschutz",
+  "stem": "adac__rs-exklusiv-nicht-mitglieder",
+  "_history_date": "2026-06-28",
+  "_content_sha256": "c8efe5247e6d40193e032680a40f9a3dc51c9483dec325eced8c654ca8f09e99",
+  "_supersedes": "2026-06-24"
 }

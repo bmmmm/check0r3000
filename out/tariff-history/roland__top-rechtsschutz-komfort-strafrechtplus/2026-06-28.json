@@ -1,6 +1,4 @@
 {
-  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
-  "tariff": "Rechtsschutz-Versicherung",
   "stand": "2026",
   "modules": {
     "privat": {
@@ -96,25 +94,10 @@
     "Automatische Umwandlung bei Betriebsgründung: Vertrag passt sich automatisch an (F, Vg, Ig + P, B, Vp, Ip)"
   ],
   "beitrag": null,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "cdf6c776341c6e20ad1055baeb5ede5abae97d14587b61e0d8727adf8d3ab0b3"
-    },
-    {
-      "doctype": "avb_besondere",
-      "content_sha256": "571eb91075528a76d968db0576ae640a5e05cf63200b7a26151b91c45f8aebc4"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "db9e5d24a2bd8d9bd42823cfa4a69c83bb7a613a610c1090c3ca4a5ec547d4a6"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "ff54d5234ca4059c95120ab9d28b508c2324a3fc11e44cbd4efe7b63f7a97193"
-    }
-  ],
-  "_input_hash": "2421f76021894d71cdc2d46f4c6f66ac311b86b6826a0dcc8a703cdc4809830e",
-  "_model": "haiku",
-  "_filter": "avb-filter"
+  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
+  "tariff": "Rechtsschutz-Versicherung",
+  "stem": "roland__top-rechtsschutz-komfort-strafrechtplus",
+  "_history_date": "2026-06-28",
+  "_content_sha256": "f15b68e097d009ba710d3f5d6f043216a574b6142830ed6b1e0d500f2b6ff90d",
+  "_supersedes": "2026-06-24"
 }

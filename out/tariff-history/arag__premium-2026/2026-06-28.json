@@ -1,101 +1,111 @@
 {
-  "stand": "03.2026",
+  "stand": "02.2022",
   "modules": {
     "privat": {
       "included": true,
-      "level": null,
-      "note": "Aktiv-Rechtsschutz für Privatpersonen, Risiken des täglichen Lebens (§ 26/26 b/26 p)"
+      "level": null
     },
     "beruf": {
       "included": true,
-      "level": null,
-      "note": "Arbeits-Rechtsschutz, beruflich nicht selbstständig; abwählbarer Baustein (§ 2 b, § 26 Abs. 1 b)"
+      "level": null
     },
     "verkehr": {
       "included": true,
-      "level": null,
-      "note": "Verkehrsbereich bzw. eigener Aktiv-Rechtsschutz Verkehr (§ 21/21 b/21 p, § 26 Abs. 1 d)"
+      "level": null
     },
     "wohnen_immobilien": {
       "included": true,
-      "level": null,
-      "note": "Wohnungs-/Grundstücks-Rechtsschutz; Immobilienbereich bzw. Aktiv-Rechtsschutz Immobilie (§ 2 c, § 29/29 b/29 p)"
+      "level": null
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "Optionaler Baustein ARAG web@ktiv (Basis/Komfort/Premium, Sonderbedingung 12/12 a/12 b)"
+      "note": "optional via web@ktiv addon"
     },
     "steuer": {
       "included": true,
-      "level": null,
-      "note": "Steuer-Rechtsschutz vor Finanz-/Verwaltungsgerichten (§ 2 e)"
+      "level": null
     },
     "sozialgericht": {
       "included": true,
-      "level": null,
-      "note": "Sozial-Rechtsschutz vor Sozialgerichten (§ 2 f)"
+      "level": null
     },
     "verwaltungsrecht": {
       "included": true,
-      "level": null,
-      "note": "Verwaltungs-Rechtsschutz Verkehrs- und Nichtverkehrssachen (§ 2 g)"
+      "level": null
     }
   },
   "coverage": {
-    "versicherungssumme": "unbegrenzt in Europa (Kaution und weltweit je nach Variante begrenzt)",
+    "versicherungssumme": "unbegrenzt (Europa); 350.000 EUR (weltweit bis 12 Monate Aufenthalt)",
     "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein); kein Abzug bei Erledigung durch anwaltliche Erstberatung",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "keine Wartezeit: Schadenersatz, Verkehr, Straf/OWi",
-      "keine Wartezeit: Mediation",
-      "6 Monate: Bauherren-Rechtsschutz, Vorsorge-Rechtsschutz",
-      "1 Jahr: Unterhalts-Rechtsschutz, Erb-Rechtsschutz",
-      "3 Jahre: Ehe-Rechtsschutz, Studienplatzklagen"
+      "Steuer-Rechtsschutz",
+      "Sozial-Rechtsschutz",
+      "Schadenersatz-Rechtsschutz"
     ],
-    "geltungsbereich": "Europa, Mittelmeer-Anrainer, Kanaren, Madeira, Azoren; weltweit temporär bis 1 Jahr Aufenthalt",
-    "vertragslaufzeit": "1 oder 3 Jahre, danach stillschweigende Verlängerung um je 1 Jahr"
+    "geltungsbereich": "Europa; Anliegerstaaten des Mittelmeers; Kanarische Inseln; Madeira; Azoren; weltweit bei bis zu 12 Monaten Aufenthalt",
+    "vertragslaufzeit": "1 oder 3 Jahre"
   },
   "leistungen": [
-    "telefonische Rechtsberatung (ARAG JuraTel®)",
-    "Mediation bis 3.000 €/Fall, 6.000 €/Jahr",
-    "Mobiler Anwalt (Hausbesuch)",
-    "Strafkaution als zinsloses Darlehen",
-    "Online-Rechtsberatung und Dokumenten-Center",
-    "telefonische psychologische Soforthilfe",
-    "Vermittlung von Legal-Tech-Dienstleistern",
-    "Vertrags- und Arbeitszeugnis-Check (ARAG JuraCheck®)",
-    "Übersetzung und Dolmetscher im Ausland",
-    "freie Anwaltswahl",
-    "Schieds-/Stichentscheid bei Deckungsablehnung"
+    "ARAG JuraTel® (telefonische Rechtsberatung)",
+    "Mobiler Anwalt (Besuch bei Ihnen zu Hause)",
+    "Mediation (bis 6.000 EUR pro Kalenderjahr)",
+    "ARAG Dokumenten-Center",
+    "Anwaltsempfehlung",
+    "Onlinerechtsberatung",
+    "Vertrags- und Arbeitszeugnischeck",
+    "Webcheck (rechtliche Prüfung Homepage)",
+    "Schadenersatz-Rechtsschutz",
+    "Arbeits-Rechtsschutz",
+    "Wohnungs- und Grundstücks-Rechtsschutz",
+    "Rechtsschutz im Vertrags- und Sachenrecht",
+    "Steuer-Rechtsschutz",
+    "Sozial-Rechtsschutz",
+    "Verwaltungs-Rechtsschutz",
+    "Disziplinar- und Standes-Rechtsschutz",
+    "Straf-Rechtsschutz",
+    "Ordnungswidrigkeiten-Rechtsschutz",
+    "Beratungs-Rechtsschutz in Familien-, Lebenspartnerschafts- und Erbrecht",
+    "Erweiterter Beratungs-Rechtsschutz im Familienrecht (bis 500 EUR)",
+    "Rechtsschutz in Ehesachen (30.000 EUR je Fall)",
+    "Rechtsschutz in Unterhaltssachen (30.000 EUR je Fall)",
+    "Rechtsschutz für Opfer von Gewaltstraftaten",
+    "Daten-Rechtsschutz vor Gerichten (250 EUR je Fall)",
+    "Beratungs-Rechtsschutz zur Haustierverfügung (250 EUR pro Kalenderjahr)",
+    "Beratungs-Rechtsschutz zur Patientenverfügung (500 EUR pro Kalenderjahr)",
+    "Erb-Rechtsschutz (10.000 EUR pro Vertragsdauer)",
+    "Bauherren-Rechtsschutz (10.000 EUR pro Vertragsdauer)",
+    "Rechtsschutz für Kapitalanlagen (10.000 EUR je Fall)"
   ],
   "ausschluesse": [
-    "Baufinanzierung und Errichtung/Kauf bebaubarer Grundstücke",
-    "Kapitalanlagegeschäfte",
-    "Patent-, Marken-, Urheber-, Designrecht (geistiges Eigentum)",
-    "Kartell- und Wettbewerbsrecht",
-    "Familien-/Lebenspartnerschafts-/Erbrecht (nur Beratungs-Rechtsschutz)",
-    "Spiel-/Wettverträge, Gewinnzusagen",
-    "Verfassungsgerichte und internationale Gerichtshöfe",
-    "vorsätzlich begangene Straftaten",
-    "eigenes Insolvenzverfahren des Versicherungsnehmers",
-    "Asyl- und Ausländerrecht",
-    "Enteignung/Planfeststellung (außer Premium)"
+    "Krieg, feindliche Handlungen, Aufruhr, innere Unruhen, Streik, Aussperrung",
+    "Nuklearschäden und genetische Schäden",
+    "Bergbauschäden",
+    "Finanzierung von Baugrundstücken oder Gebäuden",
+    "Patent-, Urheber-, Marken- oder Designrechte",
+    "Spiel- oder Wettverträge und Gewinnzusagen",
+    "Erbstreitigkeiten (vor Gericht; begrenzte Beratung möglich)",
+    "Streitigkeiten mit mitversicherten Personen untereinander",
+    "Vorsätzlich herbeigeführte Streitigkeiten",
+    "Streitigkeiten aus rassistischen, extremistischen oder sittenwidrigen Angeboten"
   ],
   "besonderheiten": [
-    "drei Leistungsstufen Basis/Komfort/Premium wählbar",
-    "Update-Garantie für beitragsneutrale Leistungserweiterungen",
-    "Vorsorge-Rechtsschutz für neu hinzukommende Risiken",
-    "Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren",
-    "Vorversicherungs-Garantie (Premium)",
-    "Schutzbrief-Bausteine inkl. Auslandskrankenschutz",
-    "Bündelrabatte bei Kombination mehrerer Bausteine"
+    "Drei Leistungsvarianten verfügbar: Basis, Komfort, Premium",
+    "Modular aufgebaut mit optionalen Zusatzmodulen (web@ktiv, Immobilien, Landwirtschaft)",
+    "Wartezeiten für Berufsrecht und Immobilienrecht (3 Monate)",
+    "Verzicht auf Selbstbeteiligung bei Erledigung durch Erstberatung",
+    "Vorversicherungs-Garantie beim Versichererswechsel",
+    "Update-Garantie für beitragsneutrale Leistungsverbesserungen",
+    "Versicherungsschutz auch außerhalb Europas bei bis zu 12 Monaten kontinuierlichem Aufenthalt",
+    "Kostenersatz für Mediation mit bis zu 6.000 EUR jährlich",
+    "Beratungs-Rechtsschutz mit bis zu 250 EUR pro Beratung in vielen Spezialgebieten"
   ],
   "beitrag": null,
   "insurer": "ARAG SE",
-  "tariff": "Aktiv-Rechtsschutz (ARB 2026)",
+  "tariff": "Aktiv-Rechtsschutz Komfort für Privatpersonen",
   "stem": "arag__premium-2026",
   "_history_date": "2026-06-28",
-  "_content_sha256": "8d7afe3ac3c53eac06222866fd5444ed8693af063dafa69bb3d8a4ae7a1bde40",
+  "_content_sha256": "3086d2044d1209e1b5cc309953beda9b6a6c6075eb9e1565c0df8b19902f3f46",
   "_supersedes": "2026-06-24"
 }

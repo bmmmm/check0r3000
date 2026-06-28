@@ -1,6 +1,4 @@
 {
-  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
-  "tariff": "Rechtsschutz-Versicherung",
   "stand": "10.2023",
   "modules": {
     "privat": {
@@ -90,21 +88,10 @@
     "Kündigung möglich nach 2+ Versicherungsfällen innerhalb 12 Monaten"
   ],
   "beitrag": null,
-  "_input_hash": "061a8d9bfe5af94873e3d732a656bbb61038eb6f6cafaf81239fa2ccc676f78b",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "cdf6c776341c6e20ad1055baeb5ede5abae97d14587b61e0d8727adf8d3ab0b3"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "db9e5d24a2bd8d9bd42823cfa4a69c83bb7a613a610c1090c3ca4a5ec547d4a6"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "ff54d5234ca4059c95120ab9d28b508c2324a3fc11e44cbd4efe7b63f7a97193"
-    }
-  ]
+  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
+  "tariff": "Rechtsschutz-Versicherung",
+  "stem": "roland__top-rechtsschutz-premium",
+  "_history_date": "2026-06-28",
+  "_content_sha256": "90047dcb4bec53a200e5686f12f276f692d6de280a94c3fccfd9e6c7b29e4ed0",
+  "_supersedes": "2026-06-24"
 }

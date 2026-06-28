@@ -1,6 +1,4 @@
 {
-  "insurer": "ARAG SE",
-  "tariff": "Aktiv-Rechtsschutz Premium für Privatpersonen",
   "stand": "02.2022",
   "modules": {
     "privat": {
@@ -93,21 +91,10 @@
     "Flexible Modul-Konfiguration möglich"
   ],
   "beitrag": null,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "5de19b50976366a9bc61aaa26bd325fd2fa44c061fa95f6c45f2027ea3489d0a"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "45ddaf8573f0cf3febe87f0ecdb8c1f0d43d5c63e37a771a456cea46e04347cf"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "6abaeef287ab921ae35ee3f0bdf66304abe80ad913f5f43b4e6b04331151c049"
-    }
-  ],
-  "_input_hash": "01429f7b6ef891f2590eda6939ede8809b6e80925ec876398441947d37bc855a",
-  "_model": "haiku",
-  "_filter": "avb-filter"
+  "insurer": "ARAG SE",
+  "tariff": "Aktiv-Rechtsschutz Premium für Privatpersonen",
+  "stem": "arag__premium-flex-2026",
+  "_history_date": "2026-06-28",
+  "_content_sha256": "0a1fd20344e254159490e818741582ae6b6b051dea2fb46c3fd43f32741b53f5",
+  "_supersedes": "2026-06-24"
 }
