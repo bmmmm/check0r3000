@@ -235,6 +235,31 @@ async def t_markup_hostile_nav(app, pilot) -> None:
     # Reaching here without a MarkupError is the real assertion.
 
 
+async def t_table_less_tab_guards(app, pilot) -> None:
+    """A row-cursor action must NOT fire on the last table tab's stale, now-invisible
+    selection while a table-less tab (Benchmark) is active — the [D]-rmtrees-an-unseen-
+    row class. Select a Market row, switch to Benchmark, and assert the active identity
+    is gone and [D] opens no DeleteDataScreen."""
+    await pilot.press("x")
+    await pilot.pause()
+    market = _table(app, "#market-table")
+    market.move_cursor(row=0)
+    await pilot.pause()
+    assert app._active_identity() is not None, "Market row should have an identity"
+    assert app._row_tab_active() is True, "Market is a row tab"
+
+    await pilot.press("B")        # table-less Benchmark tab
+    await pilot.pause()
+    assert _active_tab(app) == "bench"
+    assert app._row_tab_active() is False, "bench must not count as a row tab"
+    assert app._active_identity() is None, (
+        "identity must be None on a table-less tab — else [D]/[g] hit the stale row")
+    base = len(app.screen_stack)
+    await pilot.press("D")        # delete must no-op here, not push DeleteDataScreen
+    assert await _wait_until(pilot, lambda: True) and len(app.screen_stack) == base, (
+        "[D] on the Benchmark tab opened a modal — it targeted the invisible row")
+
+
 async def t_benchmark_tab(app, pilot) -> None:
     """[B] switches to the Benchmark tab and the scorecard renders on the live path
     without a MarkupError; the populate replaced the placeholder with either real
@@ -255,6 +280,7 @@ CASES = [
     ("tab_shortcuts", t_tab_shortcuts),
     ("tab_cycle", t_tab_cycle),
     ("benchmark_tab", t_benchmark_tab),
+    ("table_less_tab_guards", t_table_less_tab_guards),
     ("cross_tab_roundtrip", t_cross_tab_roundtrip),
     ("cross_tab_held_absent", t_cross_tab_held_absent),
     ("detail_toggle", t_detail_toggle),

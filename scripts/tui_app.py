@@ -2454,8 +2454,24 @@ class CheckApp(App):
             return False
         return any(f.get("stem") == stem for f in self._favorites.get("favorites", []))
 
+    def _row_tab_active(self) -> bool:
+        """True only on a tab that shows a selectable row (favorites/market/verlauf).
+        The table-less diff/bench tabs carry no row, yet _active_row/_active_fav keep
+        the LAST table tab's selection (the tab-switch reconcile skips table-less tabs).
+        Row-cursor actions ([u]/[R]/[a]/[N]/[o]/[D]/[g]/[G]/[H]) must consult this so they
+        never fire on that stale, now-invisible row — [D] rmtrees it, [g]/[H] pay for it."""
+        try:
+            return self.query_one("#tabs", TabbedContent).active in (
+                "favorites", "market", "verlauf")
+        except NoMatches:
+            return False
+
     def _active_identity(self) -> tuple[str, str, str | None] | None:
-        """(insurer, product, stem) of the active favorite or market row, or None."""
+        """(insurer, product, stem) of the active favorite or market row, or None.
+        None on a table-less tab, so the actions' existing "Erst eine Zeile wählen"
+        guard fires instead of targeting the previous tab's invisible selection."""
+        if not self._row_tab_active():
+            return None
         if self._active_fav is not None:
             f = self._active_fav
             return f.get("insurer", ""), f.get("product", ""), f.get("stem")
@@ -3079,6 +3095,10 @@ class CheckApp(App):
             confirm, download + run the analyze pipeline in the background."""
         if self._pipeline_busy():
             return
+        if not self._row_tab_active():
+            self.notify("Nur auf Markt/Favoriten/Verlauf — dort eine Zeile wählen.",
+                        severity="warning")
+            return
         row = self._active_row
         if row is None:
             self.notify("Erst eine Zeile wählen (↵).", severity="warning")
@@ -3110,6 +3130,10 @@ class CheckApp(App):
             manually. Gated on data/raw/<stem>/ containing PDFs; still confirms
             because extract is a paid model call."""
         if self._pipeline_busy():
+            return
+        if not self._row_tab_active():
+            self.notify("Nur auf Markt/Favoriten/Verlauf — dort eine Zeile wählen.",
+                        severity="warning")
             return
         row = self._active_row
         if row is None:
@@ -3149,6 +3173,10 @@ class CheckApp(App):
             Heavier than [g]/[G] (loads the full all-insurers result page), so it
             confirms first."""
         if self._pipeline_busy():
+            return
+        if not self._row_tab_active():
+            self.notify("Nur auf Markt/Favoriten/Verlauf — dort eine Zeile wählen.",
+                        severity="warning")
             return
         row = self._active_row
         if row is None:
