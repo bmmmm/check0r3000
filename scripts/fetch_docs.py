@@ -20,7 +20,9 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import http.client
+import os
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -97,7 +99,7 @@ def select(tariffs: list[dict], stems: list[str], insurer: str | None) -> list[d
     return tariffs
 
 
-def target_for(doc: dict) -> Path:
+def target_for(doc: dict, used: set[str]) -> Path:
     # Prefer the manifest's `file`, else derive from the URL's last path segment so
     # each doc keeps a distinct, CHECK24-style name (intake.py classifies by it).
     # basename only — third-party data must never write outside data/inbox/ via a
@@ -106,6 +108,16 @@ def target_for(doc: dict) -> Path:
     name = Path(name).name or "unnamed"
     if not name.lower().endswith(".pdf"):
         name += ".pdf"
+    # The inbox is flat, so two docs sharing a filename would collide on one dest —
+    # one would silently overwrite the other (and two parallel writers race on the same
+    # file). Disambiguate with a numeric suffix so every doc lands distinctly.
+    if name in used:
+        base = name[:-4]
+        i = 2
+        while f"{base}-{i}.pdf" in used:
+            i += 1
+        name = f"{base}-{i}.pdf"
+    used.add(name)
     return INBOX / name
 
 
@@ -115,6 +127,13 @@ def raw_target_for(stem: str, doc: dict, used: set[str]) -> Path:
     `<stem>.json` without any filename guessing. Disambiguates a repeated doctype with
     a numeric suffix so no document is lost."""
     insurer_part, _, tariff_part = stem.partition("__")
+    # The manifest is hand-reshaped with no schema gate, so a typo'd stem must not
+    # escape data/raw/. Path(...).name does NOT neutralize '..' (Path('..').name == '..'),
+    # so reject path-escaping segments explicitly rather than trust a basename.
+    for seg in (insurer_part, tariff_part):
+        if seg in ("", ".", "..") or "/" in seg or "\\" in seg:
+            sys.exit(f"Refusing unsafe stem {stem!r}: segment {seg!r} would escape "
+                     f"data/raw/. Fix data/sources/check24-documents.json.")
     doctype = KIND_TO_DOCTYPE.get(doc.get("kind", ""), doc.get("doctype") or "unsortiert")
     name = doctype
     i = 2
@@ -122,8 +141,7 @@ def raw_target_for(stem: str, doc: dict, used: set[str]) -> Path:
         name = f"{doctype}-{i}"
         i += 1
     used.add(name)
-    # stem parts are our own slugs (no slashes); still take basename defensively.
-    return RAW / Path(insurer_part).name / Path(tariff_part).name / f"{name}.pdf"
+    return RAW / insurer_part / tariff_part / f"{name}.pdf"
 
 
 def check(url: str) -> str:
@@ -184,9 +202,23 @@ def download(url: str, dest: Path) -> str:
         return f"FAILED (short body: got {len(data)} of {clen} bytes)"
     if ctype != "application/pdf" and data[:5] != b"%PDF-":
         return f"FAILED (not a PDF: {ctype})"
-    tmp = dest.with_suffix(dest.suffix + ".part")  # atomic: don't leave a half file
-    tmp.write_bytes(data)
-    tmp.replace(dest)
+    # Atomic AND collision-safe: a per-worker UNIQUE temp in the dest dir, then replace.
+    # A shared `<dest>.part` let two workers aiming at the same dest tear the file or
+    # crash the 2nd replace with FileNotFoundError (which aborted the whole pool). The
+    # write/replace is inside the try so a disk-full/permission error becomes a per-doc
+    # FAILED string instead of an unhandled exception, and the temp is always cleaned up.
+    tmp_path = None
+    try:
+        fd, tmp_name = tempfile.mkstemp(dir=str(dest.parent), prefix=dest.name + ".",
+                                        suffix=".part")
+        tmp_path = Path(tmp_name)
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(data)
+        os.replace(tmp_path, dest)
+    except OSError as e:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+        return f"FAILED (write {dest.name}: {e})"
     return f"ok ({len(data) // 1024} KiB)"
 
 
@@ -197,12 +229,15 @@ def plan(tariffs: list[dict], into_raw: bool) -> list[tuple[dict, list[dict]]]:
     summary can print per tariff in manifest order even though downloads finish out of
     order. Each doc-item is a fresh dict the worker stores its `result` into."""
     groups: list[tuple[dict, list[dict]]] = []
+    # raw targets disambiguate per tariff dir; the flat inbox disambiguates globally so
+    # no two docs across tariffs collide on one inbox filename.
+    inbox_used: set[str] = set()
     for t in tariffs:
         stem = t.get("stem", "")
         used: set[str] = set()
         items: list[dict] = []
         for doc in t.get("docs", []):
-            dest = raw_target_for(stem, doc, used) if into_raw else target_for(doc)
+            dest = raw_target_for(stem, doc, used) if into_raw else target_for(doc, inbox_used)
             items.append({
                 "doctype": doc.get("doctype"),
                 "url": doc.get("url", ""),
