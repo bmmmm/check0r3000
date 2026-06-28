@@ -233,11 +233,14 @@ def cross_model(results: list[dict]) -> dict:
 
 
 def _input_label(r: dict) -> str:
+    """Full, collision-free input label (variant + filter). NOT truncated: the
+    aggregated row stores this verbatim, so two distinct (variant, filter) groups can
+    never collapse to one ambiguous key. Console tables truncate it at display time."""
     inp = (r.get("variant", "?").replace("produktinfoblatt", "pib")
            .replace("weitere_unterlagen", "weit"))
     if r.get("filter") and r["filter"] != "none":
         inp += "/filt"
-    return inp[:12]
+    return inp
 
 
 def print_table(results: list[dict]) -> None:
@@ -250,7 +253,7 @@ def print_table(results: list[dict]) -> None:
         ctx = r.get("context_window")
         schema = "ok" if r.get("schema_valid") else ("FAIL" if r["status"] == "ok" else "-")
         faith = "YES" if r.get("faithful") else ("no" if r["status"] == "ok" else "-")
-        print(f"{r['tariff']:<26} {r['model']:<20} {_input_label(r):<12} {r['status']:<6} "
+        print(f"{r['tariff']:<26} {r['model']:<20} {_input_label(r)[:12]:<12} {r['status']:<6} "
               f"{cost:>8} {str(r.get('wall_s', '-')):>7} "
               f"{(intok if intok is not None else '-'):>8} "
               f"{(f'{ctx // 1000}k' if ctx else '-'):>6} {schema:>6} "
@@ -308,8 +311,11 @@ def aggregate(results: list[dict]) -> list[dict]:
         inp = _input_label(runs[0])
         ok = [r for r in runs if r["status"] == "ok"]
         mods = [len(r.get("modules_included", [])) for r in ok]
-        costs = [r["cost_usd"] for r in runs if r.get("cost_usd") is not None]
-        walls = [r["wall_s"] for r in runs if isinstance(r.get("wall_s"), (int, float))]
+        # Cost/latency means are over the SUCCESSFUL runs (the docstring's claim) — an
+        # errored run's wall/cost would skew the mean for a number meant to describe a
+        # working extraction.
+        costs = [r["cost_usd"] for r in ok if r.get("cost_usd") is not None]
+        walls = [r["wall_s"] for r in ok if isinstance(r.get("wall_s"), (int, float))]
         rows.append({
             "tariff": tariff, "model": model, "input": inp,
             "runs": len(runs), "ok": len(ok),
@@ -340,7 +346,7 @@ def print_variance(rows: list[dict]) -> None:
         cost = f"${r['cost_usd']:.3f}" if r["cost_usd"] is not None else "-"
         schema = f"{r['schema_ok']}/{r['runs']}"
         faith = f"{r['faithful']}/{r['runs']}"
-        print(f"{r['tariff']:<26} {r['model']:<18} {r['input']:<12} {r['runs']:>4} "
+        print(f"{r['tariff']:<26} {r['model']:<18} {r['input'][:12]:<12} {r['runs']:>4} "
               f"{schema:>7} {faith:>7} {_modules_cell(r):>8} {cost:>7}")
 
 
@@ -352,9 +358,34 @@ def _git_rev() -> str:
         return "?"
 
 
-def save_summary(rows: list[dict], models: list[str], repeat: int) -> None:
+def _merge_rows(fresh: list[dict]) -> list[dict]:
+    """Merge this run's rows INTO the existing benchmarks/results.json instead of
+    replacing it. Keyed on (tariff, model, input); a fresh cell wins, every other cell
+    is preserved. Without this a partial run (e.g. `--tariff premium-2026 --save-summary`)
+    silently dropped every other tariff's rows that the TUI Benchmark tab still reads."""
+    prev: dict[tuple, dict] = {}
+    existing = BENCH_OUT / "results.json"
+    if existing.exists():
+        try:
+            for r in json.loads(existing.read_text(encoding="utf-8")).get("rows", []):
+                prev[(r.get("tariff"), r.get("model"), r.get("input"))] = r
+        except (json.JSONDecodeError, OSError):
+            prev = {}
+    fresh_keys = {(r["tariff"], r["model"], r["input"]) for r in fresh}
+    kept = [r for k, r in prev.items() if k not in fresh_keys]
+    merged = sorted(kept + fresh, key=lambda r: (r["tariff"], r["model"], r["input"]))
+    if kept:
+        print(f"  (merged: {len(fresh)} cell(s) updated, {len(kept)} preserved from "
+              "prior runs — use a fresh benchmarks/results.json to start over)")
+    return merged
+
+
+def save_summary(rows: list[dict], models: list[str], repeat: int) -> list[dict]:
     """Write a durable, committable digest to benchmarks/ (correctness reproducible;
-    cost/latency are indicative snapshots, raw per-run records stay in tmp/eval)."""
+    cost/latency are indicative snapshots, raw per-run records stay in tmp/eval).
+    Returns the merged row set so the scorecard is written from the SAME rows."""
+    rows = _merge_rows(rows)
+    models = sorted({r["model"] for r in rows})  # reflect every model in the digest
     BENCH_OUT.mkdir(parents=True, exist_ok=True)
     date = datetime.date.today().isoformat()
     rev = _git_rev()
@@ -388,6 +419,7 @@ def save_summary(rows: list[dict], models: list[str], repeat: int) -> None:
          "rows": rows}, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nDurable summary -> {(BENCH_OUT / 'results.md').relative_to(ROOT)}"
           f"  +  {(BENCH_OUT / 'results.json').name}")
+    return rows
 
 
 def print_scorecard(rows: list[dict]) -> None:
@@ -404,7 +436,7 @@ def print_scorecard(rows: list[dict]) -> None:
             cost = f"${r['cost_usd']:.3f}" if r["cost_usd"] is not None else "–"
             wall = f"{r['wall_s']:.0f}" if r["wall_s"] is not None else "–"
             score = "DNF" if s["dnf"] else f"{s['total']:.0f}"
-            print(f"  {model:<34} {r['input']:<13} {s['faithful']:>4.0f} "
+            print(f"  {model:<34} {r['input'][:13]:<13} {s['faithful']:>4.0f} "
                   f"{s['schema']:>4.0f} {s['halluc']:>4.0f} {s['modules']:>4.0f} "
                   f"{score:>6}  {wall:>8} {cost:>7}")
 
@@ -525,9 +557,9 @@ def main() -> int:
         if any(r["runs"] > 1 for r in rows):
             print_variance(rows)
         if args.save_summary:
-            save_summary(rows, sorted({r["model"] for r in rows}),
-                         max((r["runs"] for r in rows), default=1))
-            save_scorecard(rows)  # keep scorecard.md in lockstep with results.json
+            merged = save_summary(rows, sorted({r["model"] for r in rows}),
+                                  max((r["runs"] for r in rows), default=1))
+            save_scorecard(merged)  # keep scorecard.md in lockstep with results.json
         if args.scorecard:
             print_scorecard(rows)
         return 0
@@ -577,8 +609,8 @@ def main() -> int:
     if repeat > 1:
         print_variance(rows)
     if args.save_summary:
-        save_summary(rows, models, repeat)
-        save_scorecard(rows)  # keep scorecard.md in lockstep with results.json
+        merged = save_summary(rows, models, repeat)
+        save_scorecard(merged)  # keep scorecard.md in lockstep with results.json
     if args.scorecard:
         print_scorecard(rows)
 
