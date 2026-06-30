@@ -98,5 +98,11 @@ Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_a
 ## Modell-Empfehlung
 
 `haiku --filter` ist der Sweet-Spot: getrimmte AVB passt ins 200k-Fenster, ~7× günstiger
-als Opus, Korrektheit vergleichbar. `--repeat 3` bei günstigeren Modellen wegen
-Run-to-Run-Varianz. Lokale Backends (`omlx:`, `mlx:`, `ollama:`) haben `cost_usd = null`.
+als Opus, Korrektheit vergleichbar. `--repeat N` (z.B. 3) extrahiert jeden Tarif N-mal und
+**unioniert `leistungen`/`ausschluesse`** über die Runs (alle anderen Felder vom
+vollständigsten Run) — dämpft die Omissions-Varianz billiger Modelle (Recall ~2–3×).
+`--only <stem>…` beschränkt auf eine Shortlist. **Vorsicht bei kuratierten Tarifen:**
+Re-Extraktion überschreibt Hand-Patches (z.B. arags qualitative SB, golden-gepinnte
+`module.level: null` — haiku halluziniert sonst `level` aus dem Tarifnamen); nach
+`--repeat` auf gepinnte/kuratierte Stems immer gegen HEAD reconcilen + `regression.py`.
+Lokale Backends (`omlx:`, `mlx:`, `ollama:`) haben `cost_usd = null`.

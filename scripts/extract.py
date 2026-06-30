@@ -17,6 +17,7 @@ Run:  python3 scripts/extract.py                  (all tariffs, cached)
       python3 scripts/extract.py --model opus
       python3 scripts/extract.py --model haiku --filter   (trim oversized AVBs)
       python3 scripts/extract.py --model ollama:llama3.1:8b
+      python3 scripts/extract.py --only arag__premium-2026 --repeat 3
 """
 from __future__ import annotations
 
@@ -31,6 +32,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _filter  # noqa: E402
 import _providers  # noqa: E402
+import coverage_taxonomy  # noqa: E402
 import feature_history  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -171,6 +173,53 @@ def avb_transform(doctype: str, text: str) -> str:
     return _filter.filter_text(text) if doctype == "avb" else text
 
 
+# Fields whose cross-run UNION we keep when --repeat > 1. Run-to-run variance in
+# cheap models shows up as *omission*: a real benefit/exclusion present in one run is
+# dropped in another (observed between near-identical sibling tariffs). Unioning these
+# two string-array fields maximizes recall — which is exactly what stabilizes the
+# downstream leistung_cov score. Every other field is taken verbatim from the single
+# most-complete run, because a cross-run merge of structured/scalar data (module
+# levels, coverage amounts, notes) would risk inventing a combination no run produced.
+_UNION_FIELDS = ("leistungen", "ausschluesse")
+
+
+def extract_once(model: str, payload: str) -> tuple[dict | None, str | None]:
+    """One model call → (record, None) or (None, error). No side effects."""
+    result = _providers.run(model, INSTRUCTION, payload)
+    if result["error"] or not result["text"]:
+        return None, result["error"] or "empty response"
+    try:
+        return coerce_json(result["text"]), None
+    except Exception as e:  # noqa: BLE001 — surface any parse failure as a run error
+        return None, f"could not parse JSON: {e}"
+
+
+def merge_records(records: list[dict]) -> dict:
+    """Stabilize N extraction runs of the SAME tariff into one record.
+
+    Base = the single most-complete run (longest serialization), copied verbatim so
+    structured fields stay internally consistent. Then `_UNION_FIELDS` are replaced by
+    the deduplicated union across all runs (base's items first, novel items from other
+    runs appended), deduped by `coverage_taxonomy.normalize` so differently-glyphed
+    spellings of the same item don't double up.
+    """
+    base = max(records, key=lambda r: len(json.dumps(r, ensure_ascii=False)))
+    merged = json.loads(json.dumps(base, ensure_ascii=False))  # deep copy
+    ordered = [base] + [r for r in records if r is not base]
+    for field in _UNION_FIELDS:
+        seen: dict[str, str] = {}
+        for rec in ordered:
+            for item in (rec.get(field) or []):
+                if not isinstance(item, str):
+                    continue
+                key = coverage_taxonomy.normalize(item)
+                if key and key not in seen:
+                    seen[key] = item
+        if seen:
+            merged[field] = list(seen.values())
+    return merged
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true", help="ignore cache, re-extract all")
@@ -180,7 +229,19 @@ def main() -> int:
     ap.add_argument("--filter", action="store_true",
                     help="trim oversized AVBs to comparison-relevant passages so "
                          "small/cheap/local models fit them")
+    ap.add_argument("--repeat", type=int, default=1, metavar="N",
+                    help="extract each tariff N times and merge (union of "
+                         "leistungen/ausschluesse) to damp run-to-run variance of "
+                         "cheap models; default 1")
+    ap.add_argument("--only", nargs="+", metavar="STEM", default=None,
+                    help="restrict to these stems (insurer__tariff); useful with "
+                         "--repeat to re-extract just a shortlist")
     args = ap.parse_args()
+
+    if args.repeat < 1:
+        print("error: --repeat must be >= 1", file=sys.stderr)
+        return 2
+    only = set(args.only) if args.only else None
 
     transform = avb_transform if args.filter else None
     filter_tag = "avb-filter" if args.filter else "none"
@@ -199,13 +260,22 @@ def main() -> int:
     for d in manifest["documents"]:
         tariffs.setdefault((d["insurer"], d["tariff"]), []).append(d)
 
+    # --repeat only changes the cache signature when >1, so the default path keeps
+    # producing the exact same hashes (no mass cache invalidation of existing records).
+    repeat_tag = f"|repeat={args.repeat}" if args.repeat > 1 else ""
+
     rc = 0
+    seen_stems: set[str] = set()
     for (insurer, tariff), docs in sorted(tariffs.items()):
+        stem = f"{slug(insurer)}__{slug(tariff)}"
+        seen_stems.add(stem)
+        if only is not None and stem not in only:
+            continue
         docs = sorted(docs, key=lambda d: d["doctype"])
-        sig = (PROMPT_VERSION + f"|model={args.model}|filter={filter_tag}|"
+        sig = (PROMPT_VERSION + f"|model={args.model}|filter={filter_tag}{repeat_tag}|"
                + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs))
         input_hash = hashlib.sha256(sig.encode()).hexdigest()
-        out_path = OUT / f"{slug(insurer)}__{slug(tariff)}.json"
+        out_path = OUT / f"{stem}.json"
 
         if out_path.exists() and not args.force:
             try:
@@ -218,22 +288,29 @@ def main() -> int:
 
         payload = build_payload(schema_text, docs, ROOT, transform)
 
-        print(f"  extract   {insurer} / {tariff}  ({len(payload)} chars, {args.model}) ...")
-        result = _providers.run(args.model, INSTRUCTION, payload)
-        if result["error"] or not result["text"]:
-            print(f"    FAILED: {result['error'] or 'empty response'}", file=sys.stderr)
+        rep = f", repeat={args.repeat}" if args.repeat > 1 else ""
+        print(f"  extract   {insurer} / {tariff}  ({len(payload)} chars, {args.model}{rep}) ...")
+        runs: list[dict] = []
+        last_err = None
+        for n in range(args.repeat):
+            rec, err = extract_once(args.model, payload)
+            if rec is not None:
+                runs.append(rec)
+            else:
+                last_err = err
+                print(f"    run {n + 1}/{args.repeat} failed: {err}", file=sys.stderr)
+        if not runs:
+            print(f"    FAILED: {last_err or 'all runs failed'}", file=sys.stderr)
             rc = 1
             continue
-        try:
-            record = coerce_json(result["text"])
-        except Exception as e:
-            print(f"    FAILED: could not parse JSON: {e}", file=sys.stderr)
-            rc = 1
-            continue
+        record = merge_records(runs) if len(runs) > 1 else runs[0]
 
         record["_input_hash"] = input_hash
         record["_model"] = args.model
         record["_filter"] = filter_tag
+        if args.repeat > 1:
+            record["_repeat"] = args.repeat
+            record["_repeat_ok"] = len(runs)
         # Identity is known from the manifest — never let a model leave it null.
         record["insurer"] = record.get("insurer") or insurer
         record["tariff"] = record.get("tariff") or tariff
@@ -253,6 +330,13 @@ def main() -> int:
         print(f"    -> {out_path.relative_to(ROOT)}")
         if feature_history.archive_version(out_path.stem, record):
             print(f"    -> history archived ({out_path.stem})")
+
+    if only is not None:
+        missing = sorted(only - seen_stems)
+        if missing:
+            print(f"warn: --only stem(s) not found in manifest: {', '.join(missing)}",
+                  file=sys.stderr)
+            rc = rc or 3
 
     return rc
 
