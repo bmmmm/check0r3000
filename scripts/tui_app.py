@@ -50,6 +50,7 @@ from tui_format import (  # noqa: E402
     VERGLEICH_LABEL_W,
     benchmark_markup,
     _bewertung_cell,
+    _bewertung_color,
     _col_label,
     _esc,
     _fmt_eur,
@@ -590,8 +591,16 @@ class CheckApp(App):
         if len(variants) > 1:
             sb_cell = f"{sb_cell} [dim]·{len(variants)}▾[/dim]"
         docs_cell = f"{_status_glyph(row)} {self._docs_label(fav.get('stem', ''))}"
-        return (star, _esc(row.insurer), _esc(row.product), note_col, _bewertung_cell(row),
+        return (star, _esc(row.insurer), _esc(row.product), note_col,
+                _bewertung_cell(row, *self._bew_lohi()),
                 price_col, sb_cell, delta_col, docs_cell)
+
+    def _bew_lohi(self) -> tuple[float | None, float | None]:
+        """Snapshot-wide customer-rating min/max for the data-relative bewertung colour."""
+        snap = self._snapshot
+        if snap is not None:
+            return snap.bewertung_lo, snap.bewertung_hi
+        return None, None
 
     def _populate_favorites_table(self) -> None:
         try:
@@ -676,7 +685,8 @@ class CheckApp(App):
         nc = _tarifnote_color(row.tarifnote)
         lines.append(f"Tarifnote : [{nc}]{row.tarifnote or '—'}[/{nc}]   [dim](Experten-Note)[/dim]")
         if row.bewertung is not None:
-            lines.append(f"Bewertung : {_bewertung_cell(row)}   [dim](Kundenbewertung /5)[/dim]")
+            lines.append(f"Bewertung : {_bewertung_cell(row, *self._bew_lohi())}   "
+                         "[dim](Kundenbewertung /5)[/dim]")
         price = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
         lines.append(
             f"€/Monat   : [bright_green]{price}[/bright_green]   "
@@ -877,7 +887,7 @@ class CheckApp(App):
                 _esc(r.insurer),
                 _esc(r.product),
                 note_col,
-                _bewertung_cell(r),
+                _bewertung_cell(r, *self._bew_lohi()),
                 price_col,
                 _esc(r.selbstbeteiligung or "—"),
                 self._change_cell(r.stem),
@@ -1400,7 +1410,7 @@ class CheckApp(App):
             if srow and srow.bewertung is not None:
                 v = srow.bewertung
                 cnt = f" ({srow.bewertung_anzahl})" if srow.bewertung_anzahl else ""
-                color = "bright_green" if v >= 4.5 else "yellow" if v >= 3.5 else "bright_red"
+                color = _bewertung_color(v, *self._bew_lohi())
                 row += _pad_cell(f"{v:.1f}★{cnt}", col_w, color)
             else:
                 row += _pad_cell("—", col_w, "dim")

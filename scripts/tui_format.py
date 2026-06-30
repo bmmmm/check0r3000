@@ -31,13 +31,45 @@ STATUS_LEGEND = (
 )
 
 
-def _bewertung_cell(row: SnapshotRow) -> str:
-    """CHECK24 customer rating (0-5 stars), distinct from the expert Tarifnote.
-    Shows '—' until a scrape with rating support has populated the snapshot."""
+# Customer-rating colour anchors for the 4.x gradient (gold-yellow → vivid green).
+# Stretched across the snapshot's OBSERVED >=4.0 range so neighbours (4.1 vs 4.2)
+# differ clearly — a fixed scale paints the whole 3.8-4.2 cluster one colour.
+_BEW_LOW = (0xE5, 0xC0, 0x00)
+_BEW_HIGH = (0x3A, 0xE6, 0x6B)
+
+
+def _lerp_hex(c0: tuple[int, int, int], c1: tuple[int, int, int], t: float) -> str:
+    """Linear RGB interpolation between two colours → a #rrggbb string."""
+    t = 0.0 if t < 0.0 else 1.0 if t > 1.0 else t
+    r, g, b = (round(a + (z - a) * t) for a, z in zip(c0, c1))
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def _bewertung_color(v: float, lo: float | None = None, hi: float | None = None) -> str:
+    """Colour for a CHECK24 customer rating (0-5). Ratings cluster tightly in the 4.x
+    band (live: 3.8-4.2, ~80% at 4.1), so the >=4.0 band gets a fine data-relative
+    gradient stretched across the observed [lo, hi]; below 4.0 a coarse two-band split
+    is enough. lo/hi are the snapshot's bewertung min/max — falls back when unknown."""
+    if v < 3.5:
+        return "bright_red"
+    if v < 4.0:
+        return "#d78700"  # coarse amber for the sub-4.0 ratings (3.5-3.9)
+    base = lo if (lo is not None and lo >= 4.0) else 4.0
+    top = hi if (hi is not None and hi > base) else base + 0.5
+    span = top - base
+    t = 1.0 if span < 0.05 else (v - base) / span
+    return _lerp_hex(_BEW_LOW, _BEW_HIGH, t)
+
+
+def _bewertung_cell(row: SnapshotRow, lo: float | None = None,
+                    hi: float | None = None) -> str:
+    """CHECK24 customer rating (0-5 stars), distinct from the expert Tarifnote. Shows
+    '—' until a scrape with rating support has populated the snapshot. lo/hi are the
+    snapshot-wide rating range for the data-relative colour (see _bewertung_color)."""
     if row.bewertung is None:
         return "[dim]—[/dim]"
     v = row.bewertung
-    color = "bright_green" if v >= 4.5 else "yellow" if v >= 3.5 else "bright_red"
+    color = _bewertung_color(v, lo, hi)
     val = f"{v:.1f}".replace(".", ",")
     cnt = f" [dim]({row.bewertung_anzahl})[/dim]" if row.bewertung_anzahl else ""
     return f"[{color}]{val}★[/{color}]{cnt}"

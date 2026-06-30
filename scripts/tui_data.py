@@ -73,6 +73,9 @@ class Snapshot:
     source: str
     count: int
     rows: list[SnapshotRow] = field(default_factory=list)
+    # Snapshot-wide customer-rating range, for the data-relative bewertung colour.
+    bewertung_lo: float | None = None
+    bewertung_hi: float | None = None
 
 
 @dataclass
@@ -288,12 +291,15 @@ def load_snapshot(path: Path) -> Snapshot | None:
         )
         rows.append(row)
 
+    bews = [r.bewertung for r in rows if r.bewertung is not None]
     return Snapshot(
         date=data.get("date", ""),
         profile=data.get("profile", ""),
         source=data.get("source", ""),
         count=data.get("count", len(rows)),
         rows=rows,
+        bewertung_lo=min(bews) if bews else None,
+        bewertung_hi=max(bews) if bews else None,
     )
 
 
