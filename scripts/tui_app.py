@@ -98,6 +98,7 @@ from tui_screens import (  # noqa: E402
     ConfirmFetchScreen,
     DeleteDataScreen,
     HelpScreen,
+    MagicScanScreen,
     NoteEditScreen,
     OpenSourceScreen,
     QueryEditScreen,
@@ -285,6 +286,7 @@ class CheckApp(App):
         Binding("G", "analyze_local", "Analyze local", show=False),
         Binding("H", "harvest", "Harvest+Analyze", show=False),
         Binding("M", "switch_tab('magic')", "Magic Find", show=False),
+        Binding("F", "magic_scan", "Markt-Scan", show=False),
         Binding("a", "add_to_compare", "Zum Vergleich", show=False),
         Binding("c", "manage_compare", "Vergleich verwalten", show=False),
         Binding("w", "toggle_compare_wording", "Wording", show=False),
@@ -3299,7 +3301,7 @@ class CheckApp(App):
 
     def _pipeline_busy(self) -> bool:
         """True (after a notify) when an analyze pipeline is already running — used
-        to refuse a second [g]/[G]/[H] rather than race the running subprocess."""
+        to refuse a second [g]/[G]/[H]/[F] rather than race the running subprocess."""
         if self._pipeline_running:
             self.notify(
                 "Eine Analyse läuft bereits — bitte abwarten.",
@@ -3308,6 +3310,26 @@ class CheckApp(App):
             )
             return True
         return False
+
+    def _claim_pipeline(self) -> bool:
+        """Atomically claim the single-flight pipeline slot on the UI thread, at the
+        moment a confirm is accepted. The action-dispatch _pipeline_busy() check runs
+        BEFORE the confirm modal opens, and App bindings keep firing while a modal is
+        up — so a second [g]/[G]/[H]/[F] can stack another confirm and, without this,
+        both _go callbacks would launch a worker (the workers set _pipeline_running
+        only once they start on their thread, too late to block the sibling). Claiming
+        here — single-threaded event loop, so check-then-set is atomic — closes that
+        window: the first accepted confirm wins, any later one gets the busy notify.
+        Returns False (after notifying) when the slot is already taken."""
+        if self._pipeline_running:
+            self.notify(
+                "Eine Analyse läuft bereits — bitte abwarten.",
+                severity="warning",
+                timeout=5,
+            )
+            return False
+        self._pipeline_running = True
+        return True
 
     def action_fetch_docs(self) -> None:
         """Resolve the selected row to its harvested source PDFs and, after a
@@ -3338,7 +3360,7 @@ class CheckApp(App):
             return
 
         def _go(confirmed: bool | None) -> None:
-            if confirmed:
+            if confirmed and self._claim_pipeline():
                 self._run_pipeline(entry, row)
 
         self.push_screen(ConfirmFetchScreen(entry, ANALYZE_MODEL), _go)
@@ -3378,7 +3400,7 @@ class CheckApp(App):
         entry = {"stem": stem, "insurer": row.insurer, "tariff": row.product}
 
         def _go(confirmed: bool | None) -> None:
-            if confirmed:
+            if confirmed and self._claim_pipeline():
                 self._run_pipeline(entry, row, skip_download=True)
 
         self.push_screen(
@@ -3420,10 +3442,142 @@ class CheckApp(App):
         pseudo = {"insurer": row.insurer, "tariff": row.product}
 
         def _go(confirmed: bool | None) -> None:
-            if confirmed:
+            if confirmed and self._claim_pipeline():
                 self._run_pipeline(pseudo, row, harvest=True)
 
         self.push_screen(ConfirmFetchScreen(pseudo, ANALYZE_MODEL, harvest=True), _go)
+
+    # --- Magic deep-scan funnel ([F]) ---
+
+    def action_magic_scan(self) -> None:
+        """Deep-scan funnel: prescore the whole market, then harvest + analyze the
+            top-pool_k candidates that still lack an analyzed record, and re-rank.
+            Market-wide — needs no row selection. Shares the [g]/[G]/[H] single-flight
+            guard so it can't race a running pipeline. Magic stays read-only over
+            out/tariffs (price is shown, never scored)."""
+        if self._pipeline_busy():
+            return
+        if not self._snapshot:
+            self.notify("Kein Snapshot geladen — nichts zu scannen.",
+                        severity="warning")
+            return
+        weights = magic.load_weights()
+        pre = magic.prescore(self._snapshot.rows)
+        selected, dropped = magic.select_candidates(pre, weights.pool_k)
+        missing = [p for p in selected if not p.has_detail]
+        if not missing:
+            self.notify(
+                f"Top {len(selected)} sind schon analysiert — Ranking ist aktuell.",
+                timeout=6,
+            )
+            return
+        candidates = [(p.insurer, p.product) for p in missing]
+
+        def _go(confirmed: bool | None) -> None:
+            if confirmed and self._claim_pipeline():
+                self._run_magic_scan(candidates, len(dropped), len(selected))
+
+        self.push_screen(
+            MagicScanScreen(candidates, len(dropped), len(selected), ANALYZE_MODEL),
+            _go,
+        )
+
+    @work(thread=True, group="pipeline")
+    def _run_magic_scan(self, candidates: list[tuple[str, str]], n_dropped: int,
+                        n_selected: int) -> None:
+        """Run the market-scan funnel off the UI thread. Shares _pipeline_running with
+            _run_pipeline (set here, cleared in finally) so the action-layer guard
+            refuses a second start rather than racing this one's subprocesses."""
+        self._pipeline_running = True
+        try:
+            self._run_magic_scan_steps(candidates, n_dropped, n_selected)
+        finally:
+            self._pipeline_running = False
+
+    def _run_magic_scan_steps(self, candidates: list[tuple[str, str]], n_dropped: int,
+                              n_selected: int) -> None:
+        import subprocess
+
+        # Write the candidate list where harvest_docs --select-file reads it: repo
+        # tmp/ (gitignored), so ONE Playwright session harvests all of them. Guarded
+        # like the subprocess steps below — a write failure (tmp/ is a file, read-only
+        # FS, disk full) must surface a notify, not escape the worker thread silently.
+        sel_dir = REPO_ROOT / "tmp"
+        sel_path = sel_dir / "magic-scan-select.json"
+        try:
+            sel_dir.mkdir(exist_ok=True)
+            sel_path.write_text(
+                json.dumps([{"insurer": i, "product": p} for i, p in candidates],
+                           ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            self.call_from_thread(
+                self.notify, f"Scan-Vorbereitung fehlgeschlagen: {exc}",
+                severity="error", timeout=8,
+            )
+            return
+        self.call_from_thread(
+            self.notify,
+            f"Markt-Scan: {len(candidates)} Kandidat(en) harvesten + analysieren …",
+            timeout=5,
+        )
+        if n_dropped:
+            self.call_from_thread(
+                self.notify,
+                f"{n_dropped} weitere mit gleichem Vorab-Score außerhalb Top-"
+                f"{n_selected} — pool_k erhöhen für mehr.",
+                severity="information",
+                timeout=7,
+            )
+        local_model = _providers.parse_spec(ANALYZE_MODEL)[0] != "claude"
+        # The harvest pulls K panels in one headless pass; extract then analyzes all K
+        # pending records. Both scale with K, so give them generous ceilings (a local
+        # cold model is slowest) — this is a long, user-initiated batch.
+        steps = [
+            ("Harvest+Download",
+             ["uv", "run", "scripts/harvest_docs.py",
+              "--select-file", str(sel_path), "--download", "--jobs", "6"], 1800),
+            ("Ingest", ["uv", "run", "scripts/ingest.py"], 600),
+            ("Extract",
+             ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL],
+             3600 if local_model else 2400),
+        ]
+        for name, cmd, step_timeout in steps:
+            try:
+                proc = subprocess.run(
+                    cmd, cwd=str(REPO_ROOT), capture_output=True, text=True,
+                    timeout=step_timeout,
+                )
+            except (subprocess.TimeoutExpired, OSError) as exc:
+                self.call_from_thread(
+                    self.notify, f"{name} fehlgeschlagen: {exc}",
+                    severity="error", timeout=8,
+                )
+                return
+            if proc.returncode != 0:
+                detail = (proc.stderr or proc.stdout or "").strip().splitlines()
+                tail = detail[-1] if detail else f"exit {proc.returncode}"
+                self.call_from_thread(
+                    self.notify, f"{name} fehlgeschlagen: {tail}",
+                    severity="error", timeout=10,
+                )
+                return
+            self.call_from_thread(self.notify, f"{name} ✓", timeout=2)
+        self.call_from_thread(self._after_magic_scan, len(candidates))
+
+    def _after_magic_scan(self, n: int) -> None:
+        """Reload from disk so the freshly analyzed candidates enter the ranking, then
+            jump to the Magic tab so the user sees the updated top pick."""
+        self._reload_all()
+        try:
+            self.query_one("#tabs", TabbedContent).active = "magic"
+        except NoMatches:
+            pass
+        self.notify(
+            f"Markt-Scan fertig: {n} Tarif(e) analysiert — Ranking aktualisiert.",
+            timeout=8,
+        )
 
     @work(thread=True, group="prewarm")
     def _prewarm_analyze_model(self) -> None:

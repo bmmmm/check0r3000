@@ -109,6 +109,50 @@ def _collapse_by_product(ordered: list[dict]) -> list[dict]:
     return sorted(collapsed.values(), key=lambda r: r["position"])
 
 
+def _load_select_file(path: str) -> list[dict]:
+    """Read a --select-file batch list: a JSON array of {insurer, product} objects (the
+    Magic deep-scan funnel's candidate list). Errors are fatal + actionable so a bad
+    file never silently harvests nothing."""
+    p = Path(path)
+    if not p.is_file():
+        sys.exit(f"--select-file: {path} not found")
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        sys.exit(f"--select-file: {path} is not valid JSON ({exc})")
+    if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
+        sys.exit(f"--select-file: {path} must be a JSON list of "
+                 '{"insurer": ..., "product": ...} objects')
+    return data
+
+
+def _resolve_select_pairs(rows: list[dict], pairs: list[dict]) -> list[dict]:
+    """Match an explicit [{insurer, product}] selection against the fresh page by EXACT
+    (insurer, product), lowest position per pair. EVERY requested pair that finds no row
+    is logged (no silent drop) — the funnel must see which candidates the page didn't
+    carry under that name."""
+    by_key: dict[tuple[str, str], dict] = {}
+    for r in rows:
+        key = ((r.get("insurer", "") or "").casefold(), (r.get("product", "") or "").casefold())
+        cur = by_key.get(key)
+        if cur is None or r["position"] < cur["position"]:  # lowest position wins
+            by_key[key] = r
+    picked: dict[int, dict] = {}
+    for pr in pairs:
+        ins = (pr.get("insurer", "") or "").strip().casefold()
+        prod = (pr.get("product", "") or "").strip().casefold()
+        if not ins or not prod:
+            print(f"  ! select entry missing insurer/product: {pr!r}", file=sys.stderr)
+            continue
+        hit = by_key.get((ins, prod))
+        if hit is None:
+            print(f"  ! select {pr.get('insurer')!r} / {pr.get('product')!r}: "
+                  "no matching row on the fresh page (name drift?)", file=sys.stderr)
+            continue
+        picked[hit["position"]] = hit
+    return [picked[p] for p in sorted(picked)]
+
+
 def resolve_rows(rows: list[dict], args) -> list[dict]:
     """Map the requested selectors onto the FRESH page rows, then collapse same-product
     duplicates. Selectors compose: --insurer narrows --match/--positions; given alone,
@@ -125,6 +169,10 @@ def resolve_rows(rows: list[dict], args) -> list[dict]:
     rows = [r for r in rows if r.get("position")]
     if args.all:
         return _collapse_by_product(sorted(rows, key=lambda r: r["position"]))
+
+    select_pairs = getattr(args, "select_pairs", None)
+    if select_pairs is not None:
+        return _collapse_by_product(_resolve_select_pairs(rows, select_pairs))
 
     ins = args.insurer.casefold() if args.insurer else None
 
@@ -407,14 +455,23 @@ def main() -> int:
     ap.add_argument("--insurer", help="restrict to rows whose insurer contains this")
     ap.add_argument("--positions", help="comma-list of raw fresh-page result positions")
     ap.add_argument("--all", action="store_true", help="every tariff (SLOW: 214 panels)")
+    ap.add_argument("--select-file", metavar="JSON",
+                    help="batch-select from a JSON list of {insurer, product} in ONE "
+                         "Playwright session (used by the Magic deep-scan funnel)")
     ap.add_argument("--download", action="store_true",
                     help="after merging, fetch the PDFs into data/raw/ via fetch_docs.py")
     ap.add_argument("--jobs", type=int, default=6, metavar="N",
                     help="parallel downloads when --download (default: 6)")
     args = ap.parse_args()
 
-    if not (args.match or args.insurer or args.positions or args.all):
-        ap.error("give a selection: --match, --insurer, --positions, or --all")
+    if not (args.match or args.insurer or args.positions or args.all or args.select_file):
+        ap.error("give a selection: --match, --insurer, --positions, --all, or --select-file")
+    # --select-file takes precedence in resolve_rows, so reject silent-override combos.
+    if args.select_file and (args.match or args.insurer or args.positions or args.all):
+        ap.error("--select-file cannot be combined with --match/--insurer/--positions/--all")
+
+    # Parse the batch file up front so a malformed list fails before the headless load.
+    args.select_pairs = _load_select_file(args.select_file) if args.select_file else None
 
     today = datetime.date.today().isoformat()
     manifest = load_manifest()

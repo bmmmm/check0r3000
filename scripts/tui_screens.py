@@ -111,6 +111,67 @@ class ConfirmFetchScreen(ModalScreen[bool]):
     def action_cancel(self) -> None:
         self.dismiss(False)
 
+class MagicScanScreen(ModalScreen[bool]):
+    """Deliberate gate before the Magic deep-scan: it harvests (headless browser),
+        downloads and analyzes the top-prescored candidates still missing a record — a
+        long, paid, market-wide operation, so it lists exactly what it will analyze and
+        announces any equally-scored tariffs the pool_k cap left out (no silent cap).
+        Returns True on confirm, False on cancel."""
+
+    BINDINGS = [
+        Binding("enter", "confirm", "Scan"),
+        Binding("y", "confirm", "Yes"),
+        Binding("escape", "cancel", "Cancel"),
+        Binding("n", "cancel", "No"),
+    ]
+
+    def __init__(self, candidates: list[tuple[str, str]], n_dropped: int,
+                 n_selected: int, model: str) -> None:
+        super().__init__()
+        self._candidates = candidates
+        self._n_dropped = n_dropped
+        self._n_selected = n_selected
+        self._model = model
+
+    def compose(self) -> ComposeResult:
+        n = len(self._candidates)
+        lines = [
+            "[bold]✨ Magic Markt-Scan[/bold]",
+            "",
+            f"Top {self._n_selected} der Vorab-Bewertung — davon [bold]{n}[/bold] noch "
+            "ohne Analyse. Diese werden",
+            "live geharvestet ([dim]headless Browser[/dim]), geladen und analysiert  "
+            f"[dim](Modell: {self._model})[/dim]:",
+        ]
+        shown = self._candidates[:15]
+        for ins, prod in shown:
+            lines.append(f"  • [cyan]{_esc(ins)}[/cyan] — {_esc(prod)}")
+        if n > len(shown):
+            lines.append(f"  [dim]… und {n - len(shown)} weitere[/dim]")
+        if self._n_dropped:
+            lines += [
+                "",
+                f"[yellow]⚠ {self._n_dropped} weitere(r) Tarif(e) mit gleichem "
+                f"Vorab-Score liegen außerhalb des Top-{self._n_selected}-Pools[/yellow]",
+                "[dim]  pool_k in config/magic-weights.json erhöhen, um sie "
+                "mitzunehmen.[/dim]",
+            ]
+        lines += [
+            "",
+            "[dim]Ein Headless-Browser-Lauf + ein Modell-Call je Stufe; "
+            "Drittanbieter-Copyright — nur Eigengebrauch.[/dim]",
+            "",
+            "[bold]\\[↵/y][/bold] Scan starten     [bold]\\[Esc/n][/bold] Abbrechen",
+        ]
+        yield Container(Static("\n".join(lines)), id="confirm-box")
+
+    def action_confirm(self) -> None:
+        self.dismiss(True)
+
+    def action_cancel(self) -> None:
+        self.dismiss(False)
+
+
 class DeleteDataScreen(ModalScreen[str | None]):
     """Pick how much of a tariff's local data to delete. Returns the chosen scope
         ('records' | 'purge' | 'purge_unfav') or None on cancel."""
@@ -653,6 +714,7 @@ class HelpScreen(ModalScreen[None]):
         ("Navigation", [
             ("y / x / v / l / B", "Favoriten / Markt / Vergleich / Verlauf / Benchmark"),
             ("M", "Magic Find — markt-weites Qualitäts-Ranking (Preis zählt nicht)"),
+            ("F", "Markt-Scan — Top-Kandidaten live harvesten + analysieren, dann ranken"),
             ("Tab / ⇧Tab", "nächster / voriger Tab (zyklisch)"),
             ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
             ("d", "Detail-Band unter der Tabelle ein/aus"),

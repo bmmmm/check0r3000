@@ -300,12 +300,60 @@ async def t_magic_tab(app, pilot) -> None:
     assert "Magic-Score" in text, f"magic detail not rendered: {text[:80]!r}"
 
 
+async def t_magic_scan_modal(app, pilot) -> None:
+    """[F] runs the deep-scan funnel's candidate selection and, when top-pool_k
+    products are still un-analyzed, opens the MagicScanScreen confirm — a long, paid,
+    market-wide op that must NEVER auto-fire. Escape cancels it and starts no pipeline.
+    Playwright/LLM are not exercised here (sandbox blocks them); this pins the wiring
+    up to the confirm gate and the candidate-selection branch."""
+    import magic as _magic
+    from tui_screens import MagicScanScreen
+
+    weights = _magic.load_weights()
+    pre = _magic.prescore(app._snapshot.rows)
+    selected, _dropped = _magic.select_candidates(pre, weights.pool_k)
+    missing = [p for p in selected if not p.has_detail]
+
+    base = len(app.screen_stack)
+    await pilot.press("F")
+    if missing:
+        assert await _wait_until(pilot, lambda: len(app.screen_stack) > base), (
+            "[F] did not open the scan confirm despite un-analyzed candidates")
+        assert isinstance(app.screen, MagicScanScreen), (
+            f"[F] opened {type(app.screen).__name__}, want MagicScanScreen")
+        await pilot.press("escape")
+        assert await _wait_until(pilot, lambda: len(app.screen_stack) == base), (
+            "scan confirm did not close on escape")
+        assert app._pipeline_running is False, "cancel must not start the pipeline"
+    else:
+        # Everything in the top pool is already analyzed -> notify only, no modal.
+        assert await _wait_until(pilot, lambda: True) and len(app.screen_stack) == base, (
+            "[F] opened a modal even though no candidates are missing")
+        assert app._pipeline_running is False
+
+
+async def t_pipeline_single_flight(app, pilot) -> None:
+    """The analyze slot is single-flight: a second claim while one is held is refused,
+    so two confirm callbacks (stacked confirm modals — App bindings keep firing under a
+    ModalScreen) can never launch two racing pipelines. Pins the atomic-claim fix."""
+    assert app._pipeline_running is False, "slot not free at start"
+    assert app._claim_pipeline() is True, "first claim should succeed"
+    assert app._pipeline_running is True, "claim did not set the flag"
+    assert app._claim_pipeline() is False, "second claim must be refused while held"
+    assert app._pipeline_busy() is True, "_pipeline_busy disagrees the slot is taken"
+    app._pipeline_running = False   # release (no worker was actually started here)
+    assert app._claim_pipeline() is True, "claim should succeed again after release"
+    app._pipeline_running = False
+
+
 CASES = [
     ("boot_and_tables", t_boot_and_tables),
+    ("pipeline_single_flight", t_pipeline_single_flight),
     ("tab_shortcuts", t_tab_shortcuts),
     ("tab_cycle", t_tab_cycle),
     ("benchmark_tab", t_benchmark_tab),
     ("magic_tab", t_magic_tab),
+    ("magic_scan_modal", t_magic_scan_modal),
     ("table_less_tab_guards", t_table_less_tab_guards),
     ("cross_tab_roundtrip", t_cross_tab_roundtrip),
     ("cross_tab_held_absent", t_cross_tab_held_absent),

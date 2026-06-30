@@ -386,6 +386,26 @@ def prescore(rows: list[tui_data.SnapshotRow]) -> list[PreScore]:
     return out
 
 
+def select_candidates(
+    pre: list[PreScore], k: int
+) -> tuple[list[PreScore], list[PreScore]]:
+    """Pick the top-K prescored products for the deep-scan, plus the products dropped
+    at the K boundary that *tie* the cutoff score.
+
+    `pre` must already be best-first (prescore() returns it so). The dropped-ties list
+    lets the caller surface "N more share the cutoff score but didn't fit pool_k" — the
+    CLAUDE.md "no silent caps" rule: a hard top-K must announce what it cut at a tie, so
+    the user can raise pool_k instead of silently missing an equally-good tariff. A
+    non-positive or oversized k means "take everything" (no cut, no ties dropped).
+    """
+    if k <= 0 or k >= len(pre):
+        return list(pre), []
+    selected = pre[:k]
+    cutoff = selected[-1].score
+    dropped_ties = [p for p in pre[k:] if abs(p.score - cutoff) < 1e-9]
+    return selected, dropped_ties
+
+
 # ---------------------------------------------------------------------------
 # Self-test (Textual-free; mirrors tui_data.run_selftest)
 # ---------------------------------------------------------------------------
@@ -515,7 +535,28 @@ def _selftest() -> int:
     check(len(pre) == 2, f"prescore should dedup to 2 products, got {len(pre)}")
     check(pre[0].insurer == "Alpha", f"prescore top should be Alpha, got {pre[0].insurer}")
 
-    # 11. Real-data smoke: rank loads and scores every record without raising.
+    # 11. Candidate selection: top-K + boundary ties announced (no silent cap).
+    tie_rows = [
+        _mk_row("A", "p1", "1,0", bew=4.1, pos=1),  # all four tie on note+bew -> same score
+        _mk_row("B", "p2", "1,0", bew=4.1, pos=2),
+        _mk_row("C", "p3", "1,0", bew=4.1, pos=3),
+        _mk_row("D", "p4", "2,0", bew=4.1, pos=4),  # lower note -> strictly below the tie
+    ]
+    tie_pre = prescore(tie_rows)
+    sel, dropped = select_candidates(tie_pre, 2)
+    check(len(sel) == 2, f"select_candidates k=2 should pick 2, got {len(sel)}")
+    check(len(dropped) == 1,
+          f"one product ties the cutoff past the cap, got {len(dropped)} dropped")
+    check(dropped[0].product == "p3",
+          f"the dropped tie should be the 3rd-by-position p3, got {dropped[0].product}")
+    sel_all, dropped_all = select_candidates(tie_pre, 99)
+    check(len(sel_all) == 4 and not dropped_all,
+          "k >= len should take all with no dropped ties")
+    sel_lower, dropped_lower = select_candidates(tie_pre, 3)
+    check(len(sel_lower) == 3 and not dropped_lower,
+          "cutoff above a strictly-lower next item drops no ties")
+
+    # 12. Real-data smoke: rank loads and scores every record without raising.
     real_rows: list[tui_data.SnapshotRow] = []
     snap_dir = REPO_ROOT / "data" / "snapshots"
     latest = tui_data._find_latest_snapshot(snap_dir)
