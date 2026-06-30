@@ -321,8 +321,13 @@ async def harvest(url: str, args, existing_by_hash: dict, existing_by_stem: dict
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
         page = await browser.new_page(user_agent=UA)
-        await page.goto(url, wait_until="networkidle", timeout=60_000)
-        await page.wait_for_selector(READY_SELECTOR, timeout=15_000)
+        # wait_until="domcontentloaded", NOT "networkidle": CHECK24 keeps a steady
+        # stream of tracking/ad/websocket traffic, so the network never goes idle and
+        # networkidle deadlocks until its timeout fires (the real [F]/[H] failure mode).
+        # The result list is SSR'd, so READY_SELECTOR below is the actual readiness
+        # signal — wait on the DOM content instead of on the network falling quiet.
+        await page.goto(url, wait_until="domcontentloaded", timeout=60_000)
+        await page.wait_for_selector(READY_SELECTOR, timeout=30_000)
         try:
             await page.wait_for_selector(HYDRATION_SELECTOR, timeout=10_000)
         except PwTimeout:
