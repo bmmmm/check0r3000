@@ -23,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from textual.widgets import DataTable, Static, TabbedContent  # noqa: E402
+from textual.widgets import DataTable, Label, Static, TabbedContent  # noqa: E402
 
 from tui_app import CheckApp  # noqa: E402
 
@@ -346,9 +346,29 @@ async def t_pipeline_single_flight(app, pilot) -> None:
     app._pipeline_running = False
 
 
+async def t_pipeline_status_line(app, pilot) -> None:
+    """The live pipeline status line renders progress markup into #status-bar
+    (bottom, above the Footer) and is restored to the idle hint on reload — so a
+    failed stage stays visible until the next reload while success clears it. The
+    [N/M] stage counter must render literally, not crash the markup parser."""
+    app._set_pipeline_status(
+        "[yellow]⏳ [1/3] Harvest+Download[/yellow] [dim]scraping …[/dim]"
+    )
+    await pilot.pause()
+    bar = app.query_one("#status-bar", Label)
+    txt = str(bar.render())
+    assert "Harvest+Download" in txt, f"status line did not render stage: {txt!r}"
+    assert "[1/3]" in txt, f"stage counter not literal: {txt!r}"
+    app._reload_all()   # success path restores the idle hint
+    await pilot.pause()
+    txt2 = str(app.query_one("#status-bar", Label).render())
+    assert "Reload" in txt2, f"status line not restored after reload: {txt2!r}"
+
+
 CASES = [
     ("boot_and_tables", t_boot_and_tables),
     ("pipeline_single_flight", t_pipeline_single_flight),
+    ("pipeline_status_line", t_pipeline_status_line),
     ("tab_shortcuts", t_tab_shortcuts),
     ("tab_cycle", t_tab_cycle),
     ("benchmark_tab", t_benchmark_tab),

@@ -9,9 +9,12 @@ test."""
 from __future__ import annotations
 
 import json
+import threading
+import time
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 # .resolve() so the repo root is found even when the launcher is reached through
 # a symlink (e.g. ~/.local/bin/check0r3000 -> scripts/tui.py); tui_data.py itself
@@ -572,6 +575,165 @@ def load_feature_diff(
 
 
 # ---------------------------------------------------------------------------
+# Subprocess streaming (live pipeline progress)
+# ---------------------------------------------------------------------------
+@dataclass
+class StreamResult:
+    """Outcome of stream_subprocess. ok iff the child spawned, finished within the
+        timeout, and exited 0. tail holds the last few non-empty output lines."""
+
+    returncode: int | None
+    timed_out: bool
+    tail: list[str]
+    spawn_error: str | None = None
+
+    @property
+    def ok(self) -> bool:
+        return (
+            self.spawn_error is None
+            and not self.timed_out
+            and self.returncode == 0
+        )
+
+    @property
+    def reason(self) -> str:
+        """A short failure reason (empty string when ok)."""
+        if self.spawn_error is not None:
+            return self.spawn_error
+        if self.timed_out:
+            return "timeout"
+        if self.returncode not in (0, None):
+            return self.tail[-1] if self.tail else f"exit {self.returncode}"
+        return ""
+
+
+def stream_subprocess(
+    cmd: list[str],
+    cwd: Path,
+    timeout: int,
+    log_path: Path | None = None,
+    on_line: Callable[[str], None] | None = None,
+    *,
+    tail_n: int = 8,
+    throttle_s: float = 0.2,
+) -> StreamResult:
+    """Run cmd, streaming merged stdout+stderr line by line. Appends the full
+        output to log_path (if given) and reports the latest non-empty line to
+        on_line (throttled to throttle_s) for a live status display.
+
+        A threading.Timer enforces timeout even when the child produces no output:
+        a plain `for line in proc.stdout` loop blocks on readline() and would never
+        notice a silent hang. Never raises for a child failure — a spawn error is
+        captured in StreamResult.spawn_error so the caller can report it."""
+    import subprocess
+
+    try:
+        proc = subprocess.Popen(
+            cmd, cwd=str(cwd),
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, bufsize=1,
+        )
+    except OSError as exc:
+        return StreamResult(returncode=None, timed_out=False, tail=[],
+                            spawn_error=str(exc))
+
+    tail: deque[str] = deque(maxlen=tail_n)
+    timed_out = threading.Event()
+    timer = threading.Timer(timeout, lambda: (timed_out.set(), proc.kill()))
+    timer.start()
+    last_push = 0.0
+    logf = None
+    try:
+        if log_path is not None:
+            try:
+                logf = open(log_path, "a", encoding="utf-8")
+                logf.write(f"\n===== {' '.join(cmd)} =====\n")
+            except OSError:
+                logf = None
+        assert proc.stdout is not None
+        for raw in proc.stdout:
+            if logf is not None:
+                logf.write(raw)
+            s = raw.strip()
+            if not s:
+                continue
+            tail.append(s)
+            if on_line is not None:
+                now = time.monotonic()
+                if now - last_push > throttle_s:
+                    last_push = now
+                    on_line(s)
+        proc.wait()
+    finally:
+        timer.cancel()
+        if proc.stdout:
+            proc.stdout.close()
+        if logf is not None:
+            logf.close()
+
+    return StreamResult(
+        returncode=proc.returncode,
+        timed_out=timed_out.is_set(),
+        tail=list(tail),
+    )
+
+
+def _selftest_stream() -> list[str]:
+    """Exercise stream_subprocess offline (no Textual, no network). Returns a list
+        of failure strings — empty means pass."""
+    import subprocess  # noqa: F401  (sys.executable drives the child below)
+    import sys
+    import tempfile
+
+    fails: list[str] = []
+    py = sys.executable
+    tmp = Path(tempfile.mkdtemp(prefix="check0r-stream-"))
+
+    # 1. success: two stdout lines, exit 0 — log + on_line + tail populated.
+    seen: list[str] = []
+    log1 = tmp / "ok.log"
+    res = stream_subprocess(
+        [py, "-c", "print('line one'); print('line two')"],
+        REPO_ROOT, 30, log1, on_line=seen.append, throttle_s=0.0,
+    )
+    if not res.ok:
+        fails.append(f"stream ok: expected ok, got {res!r}")
+    if res.tail[-1:] != ["line two"]:
+        fails.append(f"stream ok: tail tail wrong: {res.tail}")
+    if not seen:
+        fails.append("stream ok: on_line never fired")
+    body = log1.read_text(encoding="utf-8")
+    if "line one" not in body or "line two" not in body:
+        fails.append("stream ok: log missing streamed lines")
+
+    # 2. failure: non-zero exit, reason carries the last output line.
+    res = stream_subprocess(
+        [py, "-c", "print('boom'); raise SystemExit(3)"], REPO_ROOT, 30,
+    )
+    if res.ok or res.returncode != 3:
+        fails.append(f"stream fail: expected exit 3, got {res!r}")
+    if res.reason != "boom":
+        fails.append(f"stream fail: reason wrong: {res.reason!r}")
+
+    # 3. timeout: silent child (no output) must still be killed by the Timer.
+    res = stream_subprocess(
+        [py, "-c", "import time; time.sleep(30)"], REPO_ROOT, 1,
+    )
+    if not res.timed_out or res.ok or res.reason != "timeout":
+        fails.append(f"stream timeout: expected timeout, got {res!r}")
+
+    # 4. spawn error: a missing binary is captured, not raised.
+    res = stream_subprocess(["check0r-no-such-binary-xyz"], REPO_ROOT, 5)
+    if res.ok or res.spawn_error is None:
+        fails.append(f"stream spawn: expected spawn_error, got {res!r}")
+
+    for p in (tmp / "ok.log",):
+        p.unlink(missing_ok=True)
+    tmp.rmdir()
+    return fails
+
+
+# ---------------------------------------------------------------------------
 # Non-interactive selftest
 # ---------------------------------------------------------------------------
 def run_selftest(snapshot_path: Path | None) -> int:
@@ -657,6 +819,16 @@ def run_selftest(snapshot_path: Path | None) -> int:
             # unmatched favorite means the LIST is stale (or the snapshot drifted),
             # not that the loader is broken — warn, do not fail the loader selftest.
             print(f"  => {unmatched} favorite(s) unmatched — refresh favorites.json or the snapshot")
+
+    # 6. Subprocess streaming core (drives the live pipeline status line).
+    stream_fails = _selftest_stream()
+    if stream_fails:
+        print(f"[stream]   stream_subprocess: {len(stream_fails)} FAILURE(S)")
+        for msg in stream_fails:
+            print(f"  ✗ {msg}")
+        print("=== selftest FAILED ===")
+        return 1
+    print("[stream]   stream_subprocess: ok (success/fail/timeout/spawn)")
 
     print("=== selftest PASSED ===")
     return 0

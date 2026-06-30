@@ -45,6 +45,7 @@ from tui_data import (  # noqa: E402
     match_favorite,
     reset_doc_cache,
     resolve_stem,
+    stream_subprocess,
 )
 from tui_format import (  # noqa: E402
     STATUS_LEGEND,
@@ -3483,6 +3484,69 @@ class CheckApp(App):
         )
 
     @work(thread=True, group="pipeline")
+    # --- Live pipeline status line (bottom, above the Footer) ---
+
+    def _set_pipeline_status(self, markup: str) -> None:
+        """Replace the persistent status line with live pipeline progress. Runs on
+            the UI thread (callers use call_from_thread). Unlike a toast this stays
+            put, so a failed stage + its log tail remain readable until the next
+            reload — which is the whole point: see what broke without scrollback."""
+        try:
+            self.query_one("#status-bar", Label).update(markup)
+        except NoMatches:
+            pass
+
+    def _stream_step(
+        self, name: str, cmd: list[str], timeout: int, log_path: Path,
+        *, idx: int, total: int,
+    ) -> tuple[bool, str]:
+        """Run one pipeline subprocess via tui_data.stream_subprocess, mirroring its
+            progress into the persistent status line and the full output into
+            log_path. Returns (ok, reason).
+
+            On failure (non-zero exit, timeout, or spawn error) the status line keeps
+            the failing stage + its last output line visible — a toast would vanish —
+            and points at the log file for the full trace."""
+        prefix = f"[{idx}/{total}] {_esc(name)}"
+        log_rel = f"tmp/{log_path.name}"
+        self.call_from_thread(
+            self._set_pipeline_status,
+            f"[yellow]⏳ {prefix}[/yellow] [dim]startet …[/dim]",
+        )
+        res = stream_subprocess(
+            cmd, REPO_ROOT, timeout, log_path,
+            on_line=lambda s: self.call_from_thread(
+                self._set_pipeline_status,
+                f"[yellow]⏳ {prefix}[/yellow] [dim]{_esc(s[:110])}[/dim]",
+            ),
+        )
+        if res.ok:
+            self.call_from_thread(
+                self._set_pipeline_status,
+                f"[green]✓ {prefix}[/green] [dim]fertig[/dim]",
+            )
+            return True, ""
+        if res.spawn_error is not None:
+            self.call_from_thread(
+                self._set_pipeline_status,
+                f"[red]✗ {prefix}[/red] [dim]{_esc(res.spawn_error)}[/dim]",
+            )
+            return False, res.spawn_error
+        if res.timed_out:
+            reason = f"Timeout nach {timeout}s"
+            self.call_from_thread(
+                self._set_pipeline_status,
+                f"[red]✗ {prefix} — {reason}[/red] [dim]Log: {log_rel}[/dim]",
+            )
+            return False, reason
+        reason = res.reason or f"exit {res.returncode}"
+        self.call_from_thread(
+            self._set_pipeline_status,
+            f"[red]✗ {prefix} fehlgeschlagen (exit {res.returncode})[/red] "
+            f"[dim]{_esc(reason[:90])} · Log: {log_rel}[/dim]",
+        )
+        return False, reason
+
     def _run_magic_scan(self, candidates: list[tuple[str, str]], n_dropped: int,
                         n_selected: int) -> None:
         """Run the market-scan funnel off the UI thread. Shares _pipeline_running with
@@ -3496,8 +3560,6 @@ class CheckApp(App):
 
     def _run_magic_scan_steps(self, candidates: list[tuple[str, str]], n_dropped: int,
                               n_selected: int) -> None:
-        import subprocess
-
         # Write the candidate list where harvest_docs --select-file reads it: repo
         # tmp/ (gitignored), so ONE Playwright session harvests all of them. Guarded
         # like the subprocess steps below — a write failure (tmp/ is a file, read-only
@@ -3543,27 +3605,20 @@ class CheckApp(App):
              ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL],
              3600 if local_model else 2400),
         ]
-        for name, cmd, step_timeout in steps:
-            try:
-                proc = subprocess.run(
-                    cmd, cwd=str(REPO_ROOT), capture_output=True, text=True,
-                    timeout=step_timeout,
-                )
-            except (subprocess.TimeoutExpired, OSError) as exc:
-                self.call_from_thread(
-                    self.notify, f"{name} fehlgeschlagen: {exc}",
-                    severity="error", timeout=8,
-                )
+        # One combined log per scan run; truncate so a previous run's output can't be
+        # mistaken for this one's. _stream_step appends each step under a header.
+        log_path = sel_dir / "magic-scan.log"
+        try:
+            log_path.write_text("", encoding="utf-8")
+        except OSError:
+            pass
+        total = len(steps)
+        for idx, (name, cmd, step_timeout) in enumerate(steps, 1):
+            ok, _reason = self._stream_step(
+                name, cmd, step_timeout, log_path, idx=idx, total=total,
+            )
+            if not ok:
                 return
-            if proc.returncode != 0:
-                detail = (proc.stderr or proc.stdout or "").strip().splitlines()
-                tail = detail[-1] if detail else f"exit {proc.returncode}"
-                self.call_from_thread(
-                    self.notify, f"{name} fehlgeschlagen: {tail}",
-                    severity="error", timeout=10,
-                )
-                return
-            self.call_from_thread(self.notify, f"{name} ✓", timeout=2)
         self.call_from_thread(self._after_magic_scan, len(candidates))
 
     def _after_magic_scan(self, n: int) -> None:
@@ -3631,8 +3686,6 @@ class CheckApp(App):
 
     def _run_pipeline_steps(self, entry: dict, row: SnapshotRow, *,
                             skip_download: bool, harvest: bool) -> None:
-        import subprocess
-
         stem = entry.get("stem", "")
         label = stem or f"{row.insurer} {row.product}"
         # Download straight into the canonical data/raw/<stem>/ layout (--into-raw),
@@ -3666,35 +3719,20 @@ class CheckApp(App):
         self.call_from_thread(
             self.notify, f"Pipeline gestartet: {_esc(label)} …", timeout=4
         )
-        for name, cmd in steps:
+        log_path = REPO_ROOT / "tmp" / "pipeline.log"
+        try:
+            log_path.parent.mkdir(exist_ok=True)
+            log_path.write_text("", encoding="utf-8")
+        except OSError:
+            pass
+        total = len(steps)
+        for idx, (name, cmd) in enumerate(steps, 1):
             step_timeout = 1200 if (name == "Extract" and local_model) else 600
-            try:
-                proc = subprocess.run(
-                    cmd,
-                    cwd=str(REPO_ROOT),
-                    capture_output=True,
-                    text=True,
-                    timeout=step_timeout,
-                )
-            except (subprocess.TimeoutExpired, OSError) as exc:
-                self.call_from_thread(
-                    self.notify,
-                    f"{name} fehlgeschlagen: {exc}",
-                    severity="error",
-                    timeout=8,
-                )
+            ok, _reason = self._stream_step(
+                name, cmd, step_timeout, log_path, idx=idx, total=total,
+            )
+            if not ok:
                 return
-            if proc.returncode != 0:
-                detail = (proc.stderr or proc.stdout or "").strip().splitlines()
-                tail = detail[-1] if detail else f"exit {proc.returncode}"
-                self.call_from_thread(
-                    self.notify,
-                    f"{name} fehlgeschlagen: {tail}",
-                    severity="error",
-                    timeout=10,
-                )
-                return
-            self.call_from_thread(self.notify, f"{name} ✓", timeout=2)
         self.call_from_thread(self._after_pipeline, row)
 
     def _after_pipeline(self, row: SnapshotRow) -> None:
