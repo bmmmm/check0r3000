@@ -56,6 +56,12 @@
     "vertragslaufzeit": "1 oder 3 Jahre, mit automatischer jährlicher Verlängerung"
   },
   "leistungen": [
+    "JuraCheck® mit JuraTel® Beratung",
+    "Mediation bis 6.000 € jährlich",
+    "Testamenterstellung Beratung",
+    "Webcheck Privatpersonen",
+    "Vertrags- und Arbeitszeugnisprüfung",
+    "Beratung Urheberrechtsverstöße Internet",
     "Telefonische und schriftliche Rechtsberatung",
     "Anwaltsgebühren und Gerichtskosten",
     "ARAG JuraTel (telefonische Rechtsberatung auch im Ausland)",
@@ -68,6 +74,10 @@
     "Strafkaution als zinsenloses Darlehen"
   ],
   "ausschluesse": [
+    "Baufinanzierung",
+    "Patent- und Markenrecht",
+    "Spiel- oder Wettverträge",
+    "Geplante/ausgeübte Selbstständigkeit",
     "Krieg, feindliche Handlungen, Streik, Erdbeben",
     "Nuklear- und genetische Schäden",
     "Bergbauschäden",
@@ -89,10 +99,10 @@
     "Vorversicherungs-Garantie beim Wechsel"
   ],
   "beitrag": null,
-  "insurer": "ARAG SE",
-  "tariff": "Aktiv-Rechtsschutz",
+  "insurer": "arag",
+  "tariff": "premium-familienrecht-2026",
   "stem": "arag__premium-familienrecht-2026",
   "_history_date": "2026-06-30",
-  "_content_sha256": "1e0f818902d8e4ce907a0008c39f1f15184bb41d8cab968aa0cdbef05756eee9",
-  "_supersedes": null
+  "_content_sha256": "6e2b9f3651cbe1d846dde2a11f493046a186ede7c778b31f4200fad61454db2a",
+  "_supersedes": "2026-06-30"
 }

@@ -1,42 +1,42 @@
 {
   "insurer": "AUXILIA Rechtsschutz-Versicherungs-AG",
   "tariff": "JURPRIVAT",
-  "stand": "01.2026",
+  "stand": "01/2026",
   "modules": {
     "privat": {
       "included": true,
       "level": null,
-      "note": "Umfangreich mit Schadenersatz, Vertrags- und Sachenrecht, Familie/Erbrecht, Internet-Rechtsschutz"
+      "note": "Umfasst Schadenersatz, Vertrags- und Sachenrecht, Erbrecht, Familien- und Lebenspartnerschaftsrecht, sowie weitere Leistungsarten"
     },
     "beruf": {
       "included": true,
       "level": null,
-      "note": "Arbeits-Rechtsschutz für Arbeitnehmer und Beamte"
+      "note": "Arbeits-Rechtsschutz für Arbeitnehmer und öffentlich-rechtliche Dienstverhältnisse"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": "Versicherungsschutz für Fahrzeuge, Fahrer, Insassen, Fußgänger"
+      "note": "Für Eigentümer, Halter, Fahrer; PKWs, Krafträder, Mofas, E-Scooter, Wohnmobile, Anhänger"
     },
     "wohnen_immobilien": {
       "included": true,
       "level": null,
-      "note": "Rechtsschutz für selbst bewohnte Wohneinheiten"
+      "note": "Rechtsschutz für selbst bewohnte Wohneinheiten, Garagen, Grundstücke"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "Vertrags-, Beratungs-, Schadenersatz- und Straf-Rechtsschutz"
+      "note": "Vertragsrecht, Urheberrecht, Rufschädigung, Identitätsmissbrauch, strafrechtliche Verteidigung"
     },
     "steuer": {
       "included": true,
       "level": null,
-      "note": "Steuer- und Abgabenrecht in Einspruchs- und Gerichtsverfahren"
+      "note": "Steuer-Rechtsschutz in vorgeschalteten Verfahren und vor Gerichten"
     },
     "sozialgericht": {
       "included": true,
       "level": null,
-      "note": "Sozial-Rechtsschutz in Widerspruchs- und Sozialgerichtsverfahren"
+      "note": "Sozial-Rechtsschutz in Widerspruchsverfahren und vor Sozialgerichten"
     },
     "verwaltungsrecht": {
       "included": true,
@@ -45,20 +45,66 @@
     }
   },
   "coverage": {
-    "versicherungssumme": "unbegrenzt",
-    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "versicherungssumme": "unbegrenzt, soweit nicht im Einzelfall bezifferte Versicherungssummen bzw. Höchstbeträge vereinbart sind",
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein)",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "Disziplinar- und Standes-Rechtsschutz",
       "Schadenersatz-Rechtsschutz",
-      "Spezial-Straf-Rechtsschutz",
-      "Ordnungswidrigkeiten-Rechtsschutz",
-      "Verkehrsrechtliche Leistungsarten"
+      "Disziplinar- und Standes-Rechtsschutz",
+      "Verkehrsbereich",
+      "Spezial-Straf-Rechtsschutz"
     ],
-    "geltungsbereich": "Europa, Anliegerstaaten des Mittelmeeres, Kanarische Inseln, Azoren, Madeira; weltweit bei Urlaubsreisen, Dienst- und Geschäftsreisen",
-    "vertragslaufzeit": "1 Jahr, danach stillschweigende Verlängerung um jeweils 1 Jahr; Kündigung mit 3 Monaten Frist möglich"
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; weltweit bei Urlaubsreisen, Dienst-/Geschäftsreisen und Work & Travel",
+    "vertragslaufzeit": "1 Jahr oder 3 Jahre, danach automatische Jahresverlängerung"
   },
   "leistungen": [
+    "Rechtsanwaltskosten gemäß RVG",
+    "Gerichts- und Gerichtsvollzieherkosten",
+    "Sachverständigen- und Zeugenvergütung",
+    "Gegner-/Prozesskosten wenn Zahlungspflicht besteht",
+    "Schiedsverfahrenskosten bis 1,5× Gebühren Gericht erster Instanz",
+    "Mediation außergerichtlich",
+    "Strafkaution als zinsloses Darlehen bis 1.000.000 EUR",
+    "Aufhebungsvertrags-Rechtsschutz bis 1.000 EUR",
+    "Erweiterter Beratungs-Rechtsschutz im Familien-/Erbrecht bis 1.500 EUR",
+    "Telefonische und Online-Rechtsberatung",
+    "Online-Reputationsschutz bei Rufschädigung",
+    "Cyber-Mobbing-Hilfe mit psychologischer Beratung",
+    "Vorsorge-Generatoren für Testament, Vollmachten, Verfügungen",
+    "Nebenkosten-Check für Mietwohnungen",
+    "Bußgeld-Check für Verkehrsverstöße",
+    "Fluggastentschädigung",
+    "BU-Antrags-Check für Berufsunfähigkeit",
+    "Sozialrechts-Hilfe",
+    "Schadenersatz-Rechtsschutz",
+    "Rechtsschutz im Vertrags- und Sachenrecht",
+    "Steuer-Rechtsschutz",
+    "Sozial-Rechtsschutz",
+    "Verwaltungs-Rechtsschutz",
+    "Disziplinar- und Standes-Rechtsschutz",
+    "Straf-Rechtsschutz",
+    "Ordnungswidrigkeiten-Rechtsschutz",
+    "Rechtsschutz für Opfer von Gewaltstraftaten",
+    "Rechtsschutz im Familien-, Lebenspartnerschafts- und Erbrecht",
+    "Rechtsschutz in Betreuungsverfahren",
+    "Altersvorsorge- und Sparer-Rechtsschutz",
+    "Rechtsschutz für Vorsorgeverfügungen",
+    "Internet-Rechtsschutz (Verträge, Urheberrecht, Rufschädigung, Identitätsmissbrauch, Strafverteidigung)",
+    "Arbeits-Rechtsschutz",
+    "Erweiterter Arbeits-Rechtsschutz bei Aufhebungsvereinbarungen",
+    "Gebäude-, Wohnungs- und Grundstücks-Rechtsschutz",
+    "Spezial-Straf-Rechtsschutz (weltweiter Schutz)",
+    "Zeugenbeistand im Strafverfahren",
+    "Beistand im Verwaltungsrecht",
+    "Telefonische Rechtsberatung durch Rechtsanwälte",
+    "Online-Beratung und Online-BeratungXL",
+    "Übernahme Rechtsanwaltsgebühren nach Gebührenverordnung",
+    "Mediations-Rechtsschutz",
+    "Spezial-Straf-Rechtsschutz weltweit",
+    "Strafkaution bis 1.000.000 EUR als zinsloses Darlehen",
+    "Online-Reputations-Schutz",
+    "Cyber-Mobbing-Hilfe",
+    "Nebenkosten-Check",
     "Rechtsanwaltsgebühren nach Gesetz",
     "Gerichts- und Gerichtsvollzieherosten",
     "Zeugen- und Sachverständigenentschädigungen",
@@ -72,22 +118,67 @@
     "Vorsorge-Generatoren und Vorlagen-Portal"
   ],
   "ausschluesse": [
+    "Bauvorhaben und Immobiliengeschäfte (Erwerb/Veräußerung nicht selbst bewohnter Gebäude)",
+    "Finanzierung von Bauvorhaben und Immobiliengeschäften",
+    "Kapitalanlagen (Aktien, Zertifikate, Optionen, Fonds, Beteiligungen)",
+    "Kartell- und Wettbewerbsrecht",
+    "Patent-, Marken- und Designrecht",
+    "Erbrecht (außer durch spezialisierte Leistungsart)",
+    "Verfahren vor Verfassungsgerichten",
+    "Insolvenzverfahren (außer Forderungsanmeldung)",
+    "Enteignungs-/Planfeststellungsverfahren",
+    "Studienplatz-Vergabe (außer 1 Verfahren pro Laufzeit)",
+    "Vorsätzliche Herbeiführung des Rechtsschutzfalls",
+    "Rassistische, extremistische oder pornografische Angebote (vom Versicherten)",
+    "Abwehr von Schadensersatz-/Unterlassungsansprüchen",
+    "Bauvorhaben und Immobiliengeschäfte (Erwerb, Veräußerung, Planung, Errichtung, Finanzierung)",
+    "Kartell- und sonstiges Wettbewerbsrecht",
+    "Streitigkeiten um Aktien, Zertifikate, Optionen, Fonds und sonstige Kapitalanlagen",
+    "Patent-, Marken-, Muster-, Designrecht",
+    "Versicherungsrecht",
+    "Erbrecht ohne entsprechende Leistungsart",
+    "Geldanlagen und Finanzprodukte",
+    "Verfassungsgerichtliche Verfahren",
+    "Insolvenzverfahren",
+    "Enteignungs- und Planfeststellungsverfahren",
+    "Umweltrecht",
+    "Verfahren betreffend Vergabe von Studienplätzen (außer 1 Verfahren pro Laufzeit)",
+    "Vorsätzlich herbeigeführte Rechtsschutzfälle",
+    "Streitigkeiten untereinander zwischen mitversicherten Personen",
+    "Cyberangriffe auf kritische Infrastrukturen",
+    "Bauvorhaben, Immobiliengeschäfte und Finanzierung",
+    "Streitigkeiten zwischen Familienmitgliedern",
+    "Patent- und Markenrecht",
+    "Streitigkeiten gegen AUXILIA oder deren Schadensabwickler",
+    "Insolvenzverfahren über Vermögen des Versicherungsnehmers",
+    "Bestimmte Kapitalanlagen",
     "Bauvorhaben und Immobiliengeschäfte",
     "Finanzierung von Immobilien und Bauvorhaben",
     "Kapitalanlagen, Wertpapiere, Fonds",
-    "Kartell- und Wettbewerbsrecht",
     "Verfassungsgerichtsverfahren",
     "Verfahren vor dem Europäischen Gerichtshof",
     "Insolvenzverfahren über Vermögen des Versicherten",
     "Enteignungs-, Planfeststellungs- und Flurbereinigungsverfahren",
-    "Streitigkeiten unter mitversicherten Personen",
-    "Vorsätzliche Herbeiführung des Rechtsschutzfalls"
+    "Streitigkeiten unter mitversicherten Personen"
   ],
   "besonderheiten": [
-    "Familientarif: bis zu 5 Generationen versichert (Kinder, Enkel, Eltern, Großeltern)",
+    "Sechs wichtige Rechtsschutzbereiche in einem Vertrag kombiniert",
+    "Familientarif mit bis zu 5 Generationen (Kinder, Enkel, Eltern, Großeltern)",
+    "Mitversicherte volljährige Kinder auch als Fahrer fremder Kfz versichert",
+    "Eltern/Großeltern auch nach Wechsel in stationäre Pflegeeinrichtung versichert",
     "Unbegrenzte Versicherungssumme",
-    "Weltweiter Versicherungsschutz bei Urlaubsreisen und Dienstreisen",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen, Work & Travel, Schüleraustausch bis 1 Jahr",
     "Umfassender Spezial-Straf-Rechtsschutz weltweit für privaten und beruflichen Bereich",
+    "Vorsorge-Rechtsschutz für neue versicherbare Risiken ohne Wartezeit",
+    "Gründungs-/Niederlassungsklausel für selbständige Tätigkeit",
+    "Internet-Rechtsschutz im privaten Bereich",
+    "Keine Selbstbeteiligung bei fallabschließender Erstberatung",
+    "Keine Selbstbeteiligung bei Leistungen mit Höchstbetrag",
+    "Premium Service mit qualifizierter Betreuung statt Call-Center",
+    "Rechts-Wegweiser als digitaler Navigator",
+    "MediationXL auch bei ausgeschlossenen Rechtsangelegenheiten",
+    "Familientarif: bis zu 5 Generationen versichert (Kinder, Enkel, Eltern, Großeltern)",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen und Dienstreisen",
     "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
     "Internet-Rechtsschutz mit Cyber-Mobbing-Hilfe und Online-Reputationsschutz",
     "Serviceleistungen ohne Selbstbeteiligung",
@@ -96,9 +187,6 @@
     "Erweiterter Beratungs-Rechtsschutz im Familienrecht bis 1.500 EUR"
   ],
   "beitrag": null,
-  "_input_hash": "3e4e06ad938901242d569b7455d7e4b52eb99c558ef833f3a1e3ad8f9c5b919b",
-  "_model": "haiku",
-  "_filter": "avb-filter",
   "sources": [
     {
       "doctype": "avb",
@@ -116,5 +204,11 @@
       "doctype": "weitere_unterlagen",
       "content_sha256": "e65599b12b50e5a7e3782976499cda527c650c2aa419d288793dceb72c140a05"
     }
-  ]
+  ],
+  "_input_hash": "7db72a125caea4a3dc5508236a06bf507452da6384a2c60fbd0fb85ec645fafa",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "_repeat": 3,
+  "_repeat_ok": 3,
+  "_reconciled": true
 }

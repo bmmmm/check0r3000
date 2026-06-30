@@ -1,6 +1,4 @@
 {
-  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
-  "tariff": "Privat-Rechtsschutz",
   "stand": null,
   "modules": {
     "privat": {
@@ -133,28 +131,10 @@
     "Versicherungsschutz für Versichererwechsel unter bestimmten Voraussetzungen"
   ],
   "beitrag": null,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "3118d44478e9fcd88954833803209ea1146ceda12a1e2a14494b827a443c85ab"
-    },
-    {
-      "doctype": "avb_besondere",
-      "content_sha256": "b868ee1710a21fa6182191858abf1df4859eb02abab565aca11206d98fbd669d"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "b2675262682671af0018a5f7b555fb9ed7e70e7d5fa654f82a1a5621bd54ef98"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "1ba1c7b204aa30a086ec71c96b80ec668c2e73582f146f278e4d6f832cc472d2"
-    }
-  ],
-  "_input_hash": "992fd5a2e69b0b2d2c6daf4a5c491bbd81ae38e57186dbc5deee42f0a869a738",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "_repeat": 3,
-  "_repeat_ok": 3,
-  "_reconciled": true
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stem": "bavariadirekt__rundum-schutz-oerag",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "26f54e42d3f50846057fb476361d82be95aa72f186d71b6f07352f5895128c86",
+  "_supersedes": "2026-06-30"
 }

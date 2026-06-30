@@ -1,26 +1,26 @@
 {
   "insurer": "ARAG SE",
-  "tariff": "Aktiv-Rechtsschutz Premium",
+  "tariff": "Aktiv-Rechtsschutz für Privatpersonen Premium",
   "stand": "02.2022",
   "modules": {
     "privat": {
       "included": true,
-      "level": "Premium",
+      "level": null,
       "note": null
     },
     "beruf": {
       "included": true,
-      "level": "Premium",
+      "level": null,
       "note": "Arbeits-Rechtsschutz mit 3 Monaten Wartezeit"
     },
     "verkehr": {
       "included": true,
-      "level": "Premium",
+      "level": null,
       "note": "Verkehrs-Rechtsschutz mit erweiterten Leistungen"
     },
     "wohnen_immobilien": {
       "included": true,
-      "level": "Premium",
+      "level": null,
       "note": "Wohnungs- und Grundstücks-Rechtsschutz"
     },
     "internet_web": {
@@ -45,19 +45,54 @@
     }
   },
   "coverage": {
-    "versicherungssumme": "unbegrenzt für Europa; 350.000 EUR weltweit",
-    "selbstbeteiligung": "wählbar, höhe im Versicherungsschein",
+    "versicherungssumme": "unbegrenzt für europäischen Bereich; Ehe-/Unterhaltssachen: 30.000 EUR je Fall",
+    "selbstbeteiligung": "Wählbar; Verzicht bei Erstberatung in Komfort/Premium-Varianten",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "Verkehr: keine Wartezeit",
-      "Ehesachen: 3 Jahre Wartezeit",
-      "Unterhaltssachen: 1 Jahr Wartezeit",
-      "Erbrecht: 1 Jahr Wartezeit"
+      "Verkehrs-Rechtsschutz: keine",
+      "Ehe-Rechtsschutz: 3 Jahre",
+      "Unterhalts-Rechtsschutz: 1 Jahr",
+      "Bauherren-Rechtsschutz: 6 Monate",
+      "Erb-Rechtsschutz: 1 Jahr"
     ],
-    "geltungsbereich": "Europa, Anliegerstaaten des Mittelmeers, Kanarische Inseln, Madeira, Azoren; weltweit bis zu einem Jahr temporär",
-    "vertragslaufzeit": "1 oder 3 Jahre"
+    "geltungsbereich": "Europa, Mittelmeeranrainer-Staaten, Kanarische Inseln, Madeira, Azoren; weltweit bis zu 1 Jahr Aufenthalt",
+    "vertragslaufzeit": "1 oder 3 Jahre mit stiller Verlängerung um je 1 Jahr"
   },
   "leistungen": [
+    "Telefonische Rechtsberatung (ARAG JuraTel) in Deutschland und Ausland",
+    "Mobiler Anwalt mit Hausbesuch",
+    "Mediation bis 3.000 EUR je Fall, 6.000 EUR je Jahr",
+    "ARAG Dokumenten-Center",
+    "Anwaltsempfehlung",
+    "Außergerichtliche Anwaltstätigkeiten",
+    "Kostenerstattung für Sachverständige",
+    "Kaution bis vereinbarte Höhe als zinsloses Darlehen",
+    "Beratungs-Rechtsschutz Elterngeld, Rentenversicherung, Patientenverfügung",
+    "Erb-Rechtsschutz bis 10.000 EUR je Vertragslaufzeit",
+    "Bauherren-Rechtsschutz bis 10.000 EUR je Vertragslaufzeit",
+    "Onlinerechtsberatung",
+    "Vertrags- und Arbeitszeugnischeck",
+    "Webcheck für Homepage bis 100 EUR",
+    "Telefonische psychologische Soforthilfe bei Notfällen",
+    "Telefonische Rechtsberatung",
+    "Mobiler Anwalt",
+    "Mediation",
+    "Dokumenten-Center",
+    "Außergerichtliche Tätigkeiten",
+    "Schadenersatz-Rechtsschutz",
+    "Arbeits-Rechtsschutz",
+    "Wohnungs- und Grundstücks-Rechtsschutz",
+    "Vertrags- und Sachenrecht",
+    "Steuer-Rechtsschutz",
+    "Sozial-Rechtsschutz",
+    "Verwaltungs-Rechtsschutz",
+    "Straf-Rechtsschutz",
+    "Ordnungswidrigkeiten-Rechtsschutz",
+    "Opfer-Rechtsschutz",
+    "Beratungs-Rechtsschutz Familie/Erbrecht",
+    "Erb-Rechtsschutz",
+    "Bauherren-Rechtsschutz",
+    "Park-/Halteverstöße-Rechtsschutz",
     "Anwaltskosten nach gesetzlicher Gebühr",
     "Gerichtskosten und Gerichtsvollzieher",
     "Sachverständigenkosten",
@@ -65,7 +100,6 @@
     "Mediation bis 6.000 EUR pro Kalenderjahr",
     "ARAG JuraTel® telefonische Beratung",
     "Mobiler Anwalt (Besuch zu Hause)",
-    "ARAG Dokumenten-Center",
     "Psychologische Soforthilfe nach Verkehrsunfall",
     "Erweiterte Beratungs-Leistungen in Familien-, Lebenspartnerschafts- und Erbrecht",
     "Beratungs-Rechtsschutz für Kapitalanlagen (bis 20.000 EUR)",
@@ -75,9 +109,22 @@
     "Musterfeststellungsklage (mit Selbstbeteiligungsverzicht)"
   ],
   "ausschluesse": [
+    "Krieg, feindliche Handlungen, Streik, innere Unruhen",
+    "Nuklearschäden und genetische Schäden",
+    "Bergbauschäden",
+    "Vorsätzlich herbeigeführte Versicherungsfälle",
+    "Familienrechtsstreitigkeiten mit eigenem Haushalt (außer Ehe-/Unterhalt)",
+    "Streitigkeiten über Eigentum/Verbindlichkeiten anderer Personen",
+    "Patent- und Markenrechte (mit beschränkten Ausnahmen)",
+    "Spiel- und Wettverträge",
+    "Fälle ohne Erfolgsaussicht oder mutwillig",
+    "Baufinanzierung und Immobilienfinanzierung",
+    "Kartell- und Wettbewerbsrecht",
+    "Krieg, feindliche Handlungen, Streik, Erdbeben",
+    "Patent-/Markenrecht",
+    "Spiel-/Wettverträge und Gewinnzusagen",
     "Baufinanzierung",
     "Patent- und Markenrecht",
-    "Spiel- und Wettverträge",
     "Familien- und Ehesachen (erst ab 3 Jahre Wartezeit)",
     "Streitigkeiten aus der Finanzierung von Grundstücken/Gebäuden",
     "Kartellrecht",
@@ -85,19 +132,28 @@
     "Streitigkeiten mit dem eigenen Versicherungsträger (in manchen Fällen)"
   ],
   "besonderheiten": [
+    "Kompakt/Komfort/Premium Leistungsvarianten",
+    "Modularer Aufbau mit optionalen Zusatzbausteinen",
+    "web@ktiv Internet-Schutz optional zubuchbar",
+    "Fahrzeug-Schutzbrief optional als Zusatz",
+    "Leistungsupdate-Garantie für zukünftige Verbesserungen ohne Mehrbeitrag",
+    "Vorsorge-Rechtsschutz für neue Risiken ohne Wartezeit",
+    "Spezielle Staffelung für Rentner/Pensionäre",
+    "Bündelrabatte bei mehreren ARAG Verträgen",
+    "Familienabsicherung durch Mitversicherung",
     "3 Leistungsvarianten: Basis, Komfort, Premium",
     "Update-Garantie für beitragsneutrale Leistungserweiterungen",
     "Vorversicherungs-Garantie beim Versichererwechsel",
     "Verzicht auf Abzug der Selbstbeteiligung bei Erstberatung",
     "Rechtsschutz in Ehesachen bis 30.000 EUR",
-    "Erweiterte Leistungen für Rechtsmittel und Verfahren",
-    "Vorsorge-Rechtsschutz für neue Risiken ohne Wartezeit"
+    "Erweiterte Leistungen für Rechtsmittel und Verfahren"
   ],
-  "beitrag": {
-    "monatlich_eur": null,
-    "jaehrlich_eur": null,
-    "quelle": null
-  },
+  "beitrag": null,
+  "_input_hash": "6321e63546219b2fba692f71edf6a1508b3865d6c603f81230f2731438ef44b6",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "_repeat": 3,
+  "_repeat_ok": 2,
   "sources": [
     {
       "doctype": "avb",
@@ -112,7 +168,5 @@
       "content_sha256": "a62ef039a3018a065d24eb06d1a9593b0e5cdb0e6fd31b7aa1c455d935364ecd"
     }
   ],
-  "_input_hash": "487cf98a5def63ea2f840800bb7935f9ab344a89ed25f652de74204112194434",
-  "_model": "haiku",
-  "_filter": "avb-filter"
+  "_reconciled": true
 }

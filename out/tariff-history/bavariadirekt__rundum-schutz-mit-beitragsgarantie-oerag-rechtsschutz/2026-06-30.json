@@ -3,50 +3,87 @@
   "modules": {
     "privat": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Schadenersatz, Wohnungs-/Grundstücks-, Vertrags-/Sachenrecht, Steuer-, Sozial-, Verwaltungs-, Disziplinar-, Straf-, Ordnungswidrigkeiten-, erweiterte Familienrecht-Beratung, Opfer-, Daten-, Cyber-Rechtsschutz"
     },
     "beruf": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Arbeits-Rechtsschutz für nichtselbständige Tätigkeiten; 6-Monate-Wartezeit"
     },
     "verkehr": {
-      "included": false,
-      "level": null
+      "included": true,
+      "level": null,
+      "note": "Keine Wartezeit; Schadenersatz, Vertrags-/Sachenrecht, Steuer, Sozial, Verwaltungs-, Straf-, Ordnungswidrigkeiten-, Opfer-Rechtsschutz"
     },
     "wohnen_immobilien": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Wohnungs-/Grundstücks-Rechtsschutz für selbstgenutzte Immobilien in Deutschland; Steuer-Rechtsschutz für Wohneinheiten; 3-Monate-Wartezeit"
     },
     "internet_web": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Internet-Rechtsschutz, Cyber-Rechtsschutz mit Abmahnung, Schadenersatz-/Unterlassungsansprüche, max. 1.000 EUR für Urheberrechtsverstöße"
     },
     "steuer": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Steuer-Rechtsschutz vor Finanz- und Verwaltungsgerichten, Einspruchs-/Widerspruchsverfahren"
     },
     "sozialgericht": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Sozial-Rechtsschutz vor Sozialgerichten und Widerspruchsverfahren"
     },
     "verwaltungsrecht": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz in Verkehrs- und sonstigen Angelegenheiten vor Verwaltungsgerichten und -behörden; 3-Monate-Wartezeit (außer Verkehr)"
     }
   },
   "coverage": {
     "versicherungssumme": "unbegrenzt",
-    "selbstbeteiligung": "vereinbart im Versicherungsschein",
-    "wartezeit_monate": 3,
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein); kann um 150 EUR reduziert werden bei Beauftragung empfohlener Anwaltskanzlei",
+    "wartezeit_monate": 0,
     "wartezeit_ausnahmen": [
-      "Verkehrs-Rechtsschutz",
-      "Arbeits-Rechtsschutz (6 Monate)"
+      "Arbeits-Rechtsschutz: 6 Monate",
+      "Wohnungs-/Grundstücks-Rechtsschutz: 3 Monate",
+      "Vertrags-/Sachenrecht: 3 Monate",
+      "Verwaltungs-Rechtsschutz (nicht-Verkehr): 3 Monate",
+      "Studienplatz-Vergabeverfahren: 12 Monate"
     ],
-    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; weltweit bei temporären Aufenthalten max. 2 Jahre",
-    "vertragslaufzeit": "im Versicherungsschein festgelegt; jährliche automatische Verlängerung; täglich kündbar"
+    "geltungsbereich": "Europa, Anliegerstaaten des Mittelmeers, Kanarische Inseln, Azoren, Madeira; weltweit temporär während max. 2-jähriger Auslandsaufenthalte bis 500.000 EUR",
+    "vertragslaufzeit": "mindestens 1 Jahr mit automatischer Jahresverlängerung; tägliches Kündigungsrecht des Versicherten"
   },
   "leistungen": [
+    "Rechtsanwaltskosten nach RVG",
+    "Gerichtskosten und Gerichtsvollzieher",
+    "Sachverständigengebühren",
+    "Gegnerische Rechtsanwaltskosten",
+    "Übersetzungskosten",
+    "Mediation (außergerichtliche Konfliktbeilegung)",
+    "Schiedsgerichts- und Schlichtungsgebühren",
+    "Strafkaution als zinslos Darlehen bis vereinbarte Höhe",
     "Telefonische Erstberatung",
+    "RadMobilSchutz (Fahrrad-Haftung)",
+    "CarSharingSchutz (Selbstbehalt-Versicherung)",
+    "Online-Services: Vorsorgeverfügungen, Testament-Assistent, Live-Chat-Rechtsberatung",
+    "Anwaltliche Vertretung vor Gericht",
+    "Telefonische Rechtsberatung",
+    "Außergerichtliche Konfliktbeilegung (Mediation)",
+    "Schiedsverfahren und Schlichtung",
+    "Strafkaution als zinslose Darlehen",
+    "Übersetzungsservice",
+    "Dolmetscherservice",
+    "Mediation und außergerichtliche Konfliktbeilegung",
+    "Anwaltskosten nach RVG",
+    "Gerichtskosten und Gerichtsgebühren",
+    "Gegnerische Anwaltskosten (soweit zu tragen)",
+    "Strafkaution als zinsloses Darlehen",
+    "Beratungs-Rechtsschutz im Familienrecht",
+    "RadMobilSchutz und CarSharingSchutz",
+    "Schieds- und Schlichtungsverfahren",
     "Mediation",
     "Rechtsanwaltskosten",
     "Gerichtskosten",
@@ -58,10 +95,35 @@
     "Dolmetscher im Ausland"
   ],
   "ausschluesse": [
-    "Baufinanzierung",
+    "Erwerb/Veräußerung von Bauland oder zu bebauenden Grundstücken",
+    "Finanzierung von Bauvorhaben",
     "Patent- und Markenrecht",
-    "Kapitalanlagen",
+    "Erwerb/Veräußerung/Verwaltung/Finanzierung von Kapitalanlagen",
+    "Streitigkeiten aus Darlehen, Spiel-/Wettverträgen, Gewinnzusagen",
+    "Krieg, Aufruhr, Streik, Aussperrung",
+    "Parkplatz-Verwarnungen ohne Führerschein-Punkte",
+    "Handelsvertreterrecht (mit Ausnahmen)",
+    "Streitigkeiten zwischen Versicherungsnehmern desselben Vertrags",
+    "Vorsätzlich begangene Straftaten der versicherten Person",
+    "Ansprüche aus übertragenen oder übergegangenen Rechten nach Versicherungsfall-Eintritt",
+    "Grundstückserwerb/-verkauf (Bebauung, Finanzierung)",
+    "Kapitalanlage-Streitigkeiten",
+    "Darlehens-, Spiel- und Wettverträge",
+    "Kriegshandlungen und innere Unruhen",
+    "Ordnungswidrigkeiten wegen Halt-/Parkverstoß",
+    "Streitigkeiten mit weiteren Versicherungsnehmern desselben Vertrags",
+    "Vorsätzlich begangene Straftaten",
+    "Finanzierungsverträge für ausgeschlossene Vorhaben",
+    "Kauf, Verkauf, Finanzierung bebaubarer Grundstücke",
+    "Patent-, Marken-, Urheberrecht",
+    "Erwerb/Veräußerung von Kapitalanlagen",
     "Darlehen, Spiel- und Wettverträge",
+    "Krieg, bewaffnete Konflikte, Streik, Aussperrung",
+    "Streitigkeiten mit vorsätzlich begangenen Straftaten",
+    "Halt- und Parkverstoße (außer mit Punkteintrag)",
+    "Wohnungs- und Grundstücks-Rechtsschutz (separate Produkte)",
+    "Baufinanzierung",
+    "Kapitalanlagen",
     "Krieg, innere Unruhen, Streik",
     "Enteignungs- und Planfeststellungsverfahren",
     "Halt- und Parkverstoße (außer Punktesystem)",
@@ -70,6 +132,13 @@
     "Anspruchsübertragung nach Schadeneintritt"
   ],
   "besonderheiten": [
+    "Tägliches Kündigungsrecht (Zusatzvereinbarung)",
+    "Mediation ohne Selbstbeteiligung bei bestimmten Lösungen",
+    "Erweiterte Familienrecht-Beratung ohne Selbstbeteiligung (bis 1.000 EUR)",
+    "Telefonische Erstberatung ohne Selbstbeteiligung",
+    "Leistungsgarantie bei Versichererwechsel unter Bedingungen",
+    "Beratungs-Rechtsschutz ohne Selbstbeteiligung",
+    "RadMobilSchutz und CarSharingSchutz als Standardleistungen",
     "Tägliches Kündigungsrecht des Versicherungsnehmers",
     "Mediation mit Kostenübernahme",
     "Cyber-Rechtsschutz für private Internetnutzung",
@@ -82,6 +151,6 @@
   "tariff": "Privat-Rechtsschutz",
   "stem": "bavariadirekt__rundum-schutz-mit-beitragsgarantie-oerag-rechtsschutz",
   "_history_date": "2026-06-30",
-  "_content_sha256": "fdab9492b3403dc44025882e022597e9276e4e082ab114d03569031b2c0d5896",
-  "_supersedes": null
+  "_content_sha256": "8415351de595e0ef6ca9db96f0b778e930302f467a90853244a73c4445df3de0",
+  "_supersedes": "2026-06-30"
 }

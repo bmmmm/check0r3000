@@ -4,81 +4,134 @@
     "privat": {
       "included": true,
       "level": null,
-      "note": "Schadenersatz, Vertrags-/Sachenrecht, Internet-Reputationsschutz, Identitätsmissbrauch"
+      "note": "Schadenersatz, Vertrags- und Sachenrecht, Steuer-, Sozial-, Verwaltungs-, Disziplinar-, Straf-, Ordnungswidrigkeiten-, Beratungs-, Opfer-, Antidiskriminierungs-Rechtsschutz"
     },
     "beruf": {
       "included": true,
       "level": null,
-      "note": "Arbeitnehmer, Streitigkeiten mit Arbeitgeber, 6 Monate Wartezeit"
+      "note": "Arbeits-Rechtsschutz für Arbeitnehmer; Manager-Rechtsschutz optional"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": "Motorfahrzeuge zu Lande/Wasser/Luft, Schadenersatz, Strafrecht, Ordnungswidrigkeiten"
+      "note": "Fahrzeug-Eigentümer/-Halter/-Fahrer/-Leasingnehmer; Verkehrsteilnehmer; Schadenersatz, Vertragsrecht, Straf- und Ordnungswidrigkeitenrecht"
     },
     "wohnen_immobilien": {
       "included": true,
       "level": null,
-      "note": "Vermietung und Mietverhältnisse, Nachbarrechtsstreitigkeiten, Nebenkostenabrechnung"
+      "note": "Miet- und Pachtverhältnisse, Nachbarschaftsstreitigkeiten, Verwaltungsgebühren, Erschließungsabgaben"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "Reputationsschutz, Identitätsmissbrauch, Urheberrecht online, Cyber-Mobbing"
+      "note": "Reputations-Rechtsschutz, Identitätsmissbrauch, Cyber-Strafrecht; Beratung Urheberrechtsverstöße optional"
     },
     "steuer": {
       "included": true,
       "level": null,
-      "note": "Vor deutschen Finanz- und Verwaltungsgerichten, Einspruchsverfahren"
+      "note": "Straf-Rechtsschutz vor deutschen Finanz- und Verwaltungsgerichten ab gerichtlichem Verfahren oder vorgeschaltetem Einspruchsverfahren"
     },
     "sozialgericht": {
       "included": true,
       "level": null,
-      "note": "Vor Sozialgerichten, Widerspruchsverfahren vor Sozialbehörden"
+      "note": "Straf-Rechtsschutz vor deutschen Sozialgerichten ab gerichtlichem Verfahren oder Widerspruchsverfahren"
     },
     "verwaltungsrecht": {
       "included": true,
       "level": null,
-      "note": "Verkehrsrecht und private Verwaltungsangelegenheiten vor Gerichten/Behörden"
+      "note": "Verkehrsrechtliche und private Verwaltungsangelegenheiten; Behörden und Verwaltungsgerichte"
     }
   },
   "coverage": {
-    "versicherungssumme": "1.000.000 EUR (Inland), weltweit 200.000-1.200.000 EUR je Variante",
-    "selbstbeteiligung": "variable, vereinbart (Höhe im Versicherungsschein); Reduktion um 150 EUR pro 3 schadenfrei Jahre, Erhöhung um 150 EUR pro Schadenmeldung",
+    "versicherungssumme": "1.000.000 EUR (L) bis unbegrenzt (XL/XXL)",
+    "selbstbeteiligung": "variabel; vereinbarte Höhe im Versicherungsschein mit dynamischer Anpassung",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
       "Schadenersatz-Rechtsschutz",
       "Disziplinar- und Standes-Rechtsschutz",
-      "Straf-Rechtsschutz",
-      "Ordnungswidrigkeiten-Rechtsschutz",
-      "Opfer-Rechtsschutz",
       "Beratungs-Rechtsschutz",
+      "Opfer-Rechtsschutz",
       "Telefonische Rechtsberatung",
-      "Verkehrs-Rechtsschutz",
-      "Neukunde, falls vorherige Versicherung für gleiches Risiko ohne Lücke bestand"
+      "Verkehrs-Rechtsschutz"
     ],
-    "geltungsbereich": "Europa einschließlich Anliegerstaaten des Mittelmeers, Kanarische Inseln, Madeira, Azoren; weltweit temporär bis 24 Monate bei bestimmten Aufenthaltstypen",
-    "vertragslaufzeit": "1 Jahr, automatische jährliche Verlängerung, Kündigung jederzeit möglich"
+    "geltungsbereich": "Europa + Anliegerstaaten Mittelmeer + Kanarische Inseln + Madeira + Azoren; weltweit bis 24 Monate Aufenthalt (max. 400.000 EUR)",
+    "vertragslaufzeit": "vereinbart (mindestens 1 Jahr); automatische jährliche Verlängerung"
   },
   "leistungen": [
-    "Kostenübernahme für Rechtsanwälte bis Versicherungssumme",
+    "Kostenübernahme Rechtsanwalt nach gesetzlichen Gebühren",
+    "Gerichtskosten und Gerichtsvollzieher",
+    "Mediation bis 3.000 EUR je Fall",
+    "Sachverständigengebühren",
+    "Kosten des Prozessgegners bei Erstattungspflicht",
+    "Schieds- und Schlichtungsverfahren",
+    "Strafkaution als zinsfreies Darlehen",
+    "Telefonische Rechtsberatung ohne Einschränkungen",
+    "Freie Rechtsanwaltswahl",
+    "Rechtsschutz-Service-Telefon",
+    "Serviceleistungen: Vorsorgeverfügungen, Musterverträge, Suche/Löschung rufschädigender Inhalte, psychologische Soforthilfe",
+    "Kostenübernahme für Rechtsanwälte (gerichtlich und außergerichtlich)",
+    "Gerichts- und Gerichtsvollzieher-Kosten",
+    "Prozessgegner-Kostenerstattung",
     "Mediation bis 3.000 EUR",
     "Telefonische Rechtsberatung ohne Ausschlüsse",
+    "Schiedsverfahren",
+    "Strafkautionsdarlehen (zinslos)",
+    "Beratung zu Vorsorgeverfügungen und Vollmachten",
+    "Musterverträge",
+    "Suche und Löschung rufschädigender Inhalte im Internet",
+    "Kostenübernahme Rechtsanwalt",
+    "Telefonische Rechtsberatung kostenfrei",
+    "Strafkaution als zinslos Darlehen",
+    "Kostenübernahme Gericht und Sachverständige",
+    "Beratung Familienrecht/Erbrecht (bis 250-500 EUR)",
+    "Beratung Immobilienbau (bis 250-500 EUR/Jahr)",
+    "Internet-Rechtsschutz mit Weltdeckung",
+    "Reputations-Rechtsschutz",
+    "Identitätsmissbrauch-Schutz",
+    "Suche rufschädigender Inhalte",
+    "Löschung rufschädigender Inhalte",
+    "Cyber-Strafrechtsschutz (optional zubuchbar)",
+    "Psychologische Soforthilfe (Cyber-Mobbing, Unfall, Kündigung)",
+    "Musterverträge privat",
+    "Vorsorgeverfügungen",
+    "Pflegeberatung (XXL)",
+    "Kostenübernahme für Rechtsanwälte bis Versicherungssumme",
     "Kosten für Gericht und Gerichtsvollzieher",
     "Sachverständigenkosten (gerichtlich bestellte)",
     "Gegnerische Anwalts- und Gerichtskosten bei Verkehrung",
-    "Schieds- und Schlichtungsverfahren",
     "Strafkautionsdarlehen (200.000-800.000 EUR je Variante)",
-    "Freie Rechtsanwaltswahl",
-    "Rechtsschutz-Service-Telefon",
     "Beratung in Familie-/Erbrecht bis 500 EUR/Fall",
     "Immobilien-Beratung bis 500 EUR/Jahr",
     "Urheberrechtsberatung online bis 500-1.000 EUR/Jahr",
     "Suche und Löschung rufschädigender Inhalte (XL/XXL)",
-    "Psychologische Soforthilfe bei Cyber-Mobbing (XL/XXL)",
-    "Pflegeberatung (XXL)"
+    "Psychologische Soforthilfe bei Cyber-Mobbing (XL/XXL)"
   ],
   "ausschluesse": [
+    "Krieg, feindliche Handlungen, Aufruhr, Streik, Aussperrung, Erdbeben",
+    "Nuklearschäden, genetische Schäden",
+    "Bergbauschäden",
+    "Baufinanzierung",
+    "Erwerb/Veräußerung von Immobilien außerhalb Geltungsbereich",
+    "Patent- und Markenrecht",
+    "Streitigkeiten zwischen Mitversicherten untereinander",
+    "Streitigkeiten mit dem Versicherer",
+    "Spiel- und Wettverträge",
+    "Vorsätzlich begangene Straftaten des Versicherten",
+    "Krieg, feindliche Handlungen, Aufruhr, Streik, Erdbeben",
+    "Nuklearschäden",
+    "Immobilienfinanzierung",
+    "Grundstückserwerb außerhalb Geltungsbereich",
+    "Streitigkeiten zwischen Mitversicherten",
+    "Versicherungsfall vor Versicherungsbeginn oder während Wartezeit (mit Ausnahmen)",
+    "Vorsätzlich begangene Straftaten",
+    "Arglistig verletzte Anzeigepflicht",
+    "Streitigkeiten zwischen Versicherten desselben Vertrags",
+    "Krieg, Aufruhr, Streik, Naturkatastrophen",
+    "Nuklearschäden und genetische Schäden",
+    "Finanzierung Immobilienerwerb/-veräußerung",
+    "Ansprüche aus Bürgschaften und Schuldübernahmeverträgen",
+    "Ansprüche gegen Versicherer selbst",
+    "alleinige Verletzung Verkehrsvorschrift als Fahrer",
     "Streitigkeiten zwischen Versicherungsnehmern und Mitversicherten desselben Vertrages",
     "Rechtsschutz gegen Versicherer oder Schadenabwickler",
     "Spiel- und Wettverträge, Gewinnzusagen",
@@ -91,6 +144,14 @@
     "Streitigkeiten, deren erste Ursache vor Versicherungsbeginn oder während Wartezeit eingetreten ist"
   ],
   "besonderheiten": [
+    "Variable Selbstbeteiligung: Reduktion um 150 EUR pro 3 schadensfreie Jahre; Erhöhung um 150 EUR pro Schadenmeldung mit Deckungszusage",
+    "Update-Garantie: zukünftige Leistungsverbesserungen gelten automatisch (XXL + teilweise XL)",
+    "Erweiterter Straf-Rechtsschutz optional zubuchbar (400.000 EUR Versicherungssumme)",
+    "Manager-Rechtsschutz für gesetzliche Vertreter juristischer Personen optional (bis Streitwert 30.000 EUR)",
+    "Nachmeldefrist von 3 Jahren nach Versicherungsende",
+    "Keine Selbstbeteiligung für Erstberatung, Mediation, telefonische Beratung, Serviceleistungen, Beratungs-Rechtsschutz",
+    "Arbeitgeber-Aufhebungsvertrag-Beratung bis 1.000 EUR ohne Versicherungsfall",
+    "Vertragscheck Miet-/Arbeitsvertrag einmal jährlich (XL/XXL)",
     "Drei Varianten (L, XL, XXL) mit gestaffelten Leistungen und unterschiedlichen Versicherungssummen",
     "Variable Selbstbeteiligung mit Bonus-System für Schadensfreiheit",
     "Automatische Update-Garantie für Leistungsverbesserungen (XL/XXL)",
@@ -105,6 +166,6 @@
   "tariff": "Rechtsschutzversicherung",
   "stem": "adam-riese__xl",
   "_history_date": "2026-06-30",
-  "_content_sha256": "826c403dd921c6f959363f73b60212b5628c1d1359d3a4e75775283ff4864c22",
-  "_supersedes": null
+  "_content_sha256": "c6dce0bd604a4f49d338e99739899df0fce98226ac54024f940df43e3e37201b",
+  "_supersedes": "2026-06-30"
 }

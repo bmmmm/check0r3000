@@ -1,7 +1,7 @@
 {
   "insurer": "AUXILIA Rechtsschutz-Versicherungs-AG",
   "tariff": "Privat-, Berufs- und Verkehrs-Rechtsschutz",
-  "stand": "01/2026",
+  "stand": "01.2026",
   "modules": {
     "privat": {
       "included": true,
@@ -11,32 +11,32 @@
     "beruf": {
       "included": true,
       "level": null,
-      "note": "Arbeits-Rechtsschutz aus Arbeitsverhältnissen sowie öffentlich-rechtlichen Dienstverhältnissen"
+      "note": "Arbeits-Rechtsschutz aus Arbeitsverhältnissen und öffentlich-rechtlichen Dienstverhältnissen"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": "Versicherungsschutz als Eigentümer, Halter, Fahrer oder Insasse von Motorfahrzeugen"
+      "note": "Versicherungsschutz für Eigentümer, Halter, Fahrer von Motorfahrzeugen"
     },
     "wohnen_immobilien": {
-      "included": false,
+      "included": true,
       "level": null,
-      "note": "Kann über separate Produkte versichert werden"
+      "note": "Rechtsschutz für selbst bewohnte Wohneinheiten, Garagen, Grundstücke"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "Internet-Rechtsschutz einschließlich Vertrag, Urheberrecht, Rufschädigung, Strafrecht"
+      "note": "Internet-Rechtsschutz für Verträge, Urheberrechtsverstöße, Rufschädigung, Identitätsmissbrauch"
     },
     "steuer": {
       "included": true,
       "level": null,
-      "note": "Steuer-Rechtsschutz in Einspruchs- und Widerspruchsverfahren sowie vor Gerichten"
+      "note": "Steuer-Rechtsschutz in steuer- und abgaberechtlichen Verfahren"
     },
     "sozialgericht": {
       "included": true,
       "level": null,
-      "note": "Sozial-Rechtsschutz in Widerspruchsverfahren und vor Sozialgerichten"
+      "note": "Sozial-Rechtsschutz in sozialrechtlichen Verfahren"
     },
     "verwaltungsrecht": {
       "included": true,
@@ -58,14 +58,45 @@
     "vertragslaufzeit": "zunächst 1 Jahr, danach automatische Verlängerung um jeweils weitere Jahre bei Nichtkündigung"
   },
   "leistungen": [
+    "Schadenersatz-Rechtsschutz",
+    "Rechtsschutz im Vertrags- und Sachenrecht",
+    "Steuer-Rechtsschutz",
+    "Sozial-Rechtsschutz",
+    "Verwaltungs-Rechtsschutz",
+    "Disziplinar- und Standes-Rechtsschutz",
+    "Straf-Rechtsschutz",
+    "Ordnungswidrigkeiten-Rechtsschutz",
+    "Rechtsschutz im Familien-, Lebenspartnerschafts- und Erbrecht",
+    "Rechtsschutz in Betreuungsverfahren",
+    "Altersvorsorge- und Sparer-Rechtsschutz",
+    "Rechtsschutz für Vorsorgeverfügungen",
+    "Internet-Rechtsschutz",
+    "Arbeits-Rechtsschutz",
+    "Erweiterter Arbeits-Rechtsschutz bei Aufhebungsvereinbarungen",
+    "Telefonische Rechtsberatung kostenlos",
+    "Mediation",
+    "Online-Beratung",
+    "Bußgeld-Check",
     "Gesetzliche Gebühren des Rechtsanwalts",
     "Kosten für Gerichte und Gerichtsvollzieher",
     "Entschädigung für Zeugen und Sachverständige",
+    "Kosten des Schiedsverfahrens bis zur 1,5-fachen Gerichtsgebühr",
+    "Kosten des Prozessgegners bei Verurteilung",
+    "Mediation und außergerichtliche Konfliktlösung",
+    "Telefonische und Online-Rechtsberatung",
+    "Cyber-Mobbing-Hilfe und Online-Reputationsschutz",
+    "Bußgeld-Check und Sozialrechts-Hilfe",
+    "Fluggastentschädigung",
+    "Vorsorge-Generatoren für Testamente und Vollmachten",
+    "Telefonische Rechtsberatung",
+    "Online-Beratung und Online-BeratungXL",
+    "Mediation und MediationXL",
+    "Cyber-Mobbing-Hilfe",
+    "Online-Reputations-Schutz",
+    "Vorsorge-Generatoren",
     "Kosten des Prozessgegners (wenn Verpflichtung besteht)",
     "Kosten von Schieds- oder Schlichtungsverfahren bis 1,5-fache Gebühren",
     "Telefonische Rechtsberatung durch unabhängige Rechtsanwälte",
-    "Online-Beratung und Online-BeratungXL",
-    "Mediation und MediationXL",
     "Job-Services (Aufhebungsvereinbarungen, Arbeitsverträge, Zeugnisse)",
     "Bußgeld-Check bei Verkehrsverstößen",
     "Online-Reputations-Schutz (Cyber-Mobbing-Hilfe)",
@@ -73,27 +104,55 @@
     "Vorsorge-Generatoren (Testamente, Vollmachten, Verfügungen)",
     "Vorlagen-Portal mit über 100 Musterverträgen"
   ],
-  "ausschlüsse": [
-    "Bauvorhaben und Immobiliengeschäfte (Erwerb/Veräußerung von Grundstücken, Gebäuden)",
-    "Finanzierung von Bauvorhaben und Immobiliengeschäften",
-    "Aktien, Zertifikate, Optionen, Beteiligungen, Kapitalanlagen",
+  "ausschluesse": [
+    "Bauvorhaben und Immobiliengeschäfte (Erwerb, Veräußerung, Planung, Errichtung von Gebäuden)",
+    "Finanzierung von Bauvorhaben",
+    "Aktien, Zertifikate, Optionen, Swaps, Beteiligungen an Fonds",
+    "Fondsgebundene oder fremdfinanzierte Lebens- oder Rentenversicherungsverträge",
+    "Krieg, Staatsbankrott, Streik",
+    "Cyberangriffe auf kritische Infrastrukturen",
+    "Nukleare und genetische Schäden",
     "Kartell- und Wettbewerbsrecht",
-    "Familienrecht ohne entsprechende Deckung",
-    "Vorsätzliche und rechtswidrige Herbeiführung des Rechtsschutzfalls",
-    "Krieg, Streik, Cyberangriffe auf kritische Infrastrukturen",
     "Verfahren vor Verfassungsgerichten",
-    "Insolvenzverfahren (mit Ausnahme Forderungsanmeldung)",
-    "Streitigkeiten zwischen Mitversicherten untereinander",
-    "Abwehr von Schadenersatz- und Unterlassungsansprüchen (außer bei Vertragsverletzung)"
+    "Insolvenzverfahren über das Vermögen des Versicherten",
+    "Umweltrecht in bestimmten Bereichen",
+    "Streitigkeiten zwischen mitversicherten Personen",
+    "Erwerb oder Veräußerung von Baugrundstücken und nicht selbst bewohnten Gebäuden",
+    "Planung und Errichtung von Gebäuden",
+    "Finanzierung von Immobilien",
+    "Streitigkeiten um Aktien, Zertifikate, Kapitalanlagen",
+    "Kartell- und sonstiges Wettbewerbsrecht",
+    "Streitigkeiten zwischen mitversicherten Familienangehörigen",
+    "Insolvenzverfahren",
+    "Umweltrecht",
+    "Streitigkeiten aus dem Rechtsschutzversicherungsvertrag gegen AUXILIA",
+    "Bauvorhaben und Immobiliengeschäfte",
+    "Timesharing und Teilnutzungsrechte",
+    "Fusionen und Beteiligungen von Unternehmen",
+    "Insolvenzverfahren über Vermögen des Versicherungsnehmers",
+    "Enteignungs- und Planfeststellungsverfahren",
+    "Umweltrecht Streitigkeiten",
+    "Streitigkeiten zwischen Familienangehörigen",
+    "Rassistischen, extremistischen oder pornografischen Angeboten"
   ],
   "besonderheiten": [
+    "Vier wichtige Rechtsschutzbereiche in einem Vertrag",
+    "Bis zu 5 Generationen versichert (Kinder, Enkelkinder, Eltern, Großeltern)",
+    "Mitversicherte volljährige Kinder als Fahrer fremder Kfz",
+    "Eltern und Großeltern auch nach Wechsel in stationäre Pflegeeinrichtung versichert",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen",
+    "Aufhebungsvertrags-Rechtsschutz bis 1.000 EUR",
+    "Internet-Rechtsschutz im privaten Bereich",
+    "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
+    "Nutzung neuer Mobilitätskonzepte (Car-Sharing, E-Scooter)",
+    "Studienplatzklage: Kostenschutz für 1 Verfahren",
+    "Keine Selbstbeteiligung bei fallabschließender Erstberatung",
     "Vier wichtige Rechtsschutzbereiche in einem günstigen Vertrag zusammengefasst",
     "Bis zu 5 Generationen versichert: Kinder, Enkelkinder, Eltern und Großeltern",
     "Volljährige Kinder als Fahrer fremder Kfz und Eigentümer/Halter eigener Kfz mitversichert",
     "Unbegrenzte Versicherungssumme (soweit nicht begrenzt)",
     "Weltweiter Versicherungsschutz bei Urlaubsreisen und Dienst-/Geschäftsreisen",
     "Internet-Rechtsschutz im privaten Bereich enthalten",
-    "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
     "Aufhebungsvertrags-Rechtsschutz als Arbeitnehmer bis 1.000 EUR",
     "Nutzung neuer Mobilitätskonzepte wie Car-Sharing und E-Scooter versichert",
     "Steuer-, Sozial- und Verwaltungs-Rechtsschutz auch für vorgeschaltete Verfahren",
@@ -102,6 +161,11 @@
     "PremiumService mit qualifiziertem Service ohne Call-Center"
   ],
   "beitrag": null,
+  "_input_hash": "e2d3427c740f41b1954baa205eeaf3c780afb62381a73911d499c6fc61b828a7",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "_repeat": 3,
+  "_repeat_ok": 3,
   "sources": [
     {
       "doctype": "avb",
@@ -120,7 +184,5 @@
       "content_sha256": "2ec5bc846198ee4d2791556a1b3dcec88190c5c3fc90af55401076abce385cf0"
     }
   ],
-  "_input_hash": "144fb0a56ccbc1f1cd96a3f1865f9807e3949341f8553b1a20efd5e5a62c8fba",
-  "_model": "haiku",
-  "_filter": "avb-filter"
+  "_reconciled": true
 }

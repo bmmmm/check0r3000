@@ -1,65 +1,105 @@
 {
-  "stand": null,
+  "stand": "01.2026",
   "modules": {
     "privat": {
       "included": true,
       "level": null,
-      "note": null
+      "note": "Umfasst private Rechtsangelegenheiten und ehrenamtliche Tätigkeiten"
     },
     "beruf": {
       "included": true,
       "level": null,
-      "note": null
+      "note": "Arbeits-Rechtsschutz für Arbeitnehmer und öffentlich-rechtliche Dienstverhältnisse"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": null
+      "note": "Versicherungsschutz für Eigentümer, Halter, Fahrer und Insassen von Motorfahrzeugen"
     },
     "wohnen_immobilien": {
       "included": true,
       "level": null,
-      "note": "selbst bewohnte Einheiten"
+      "note": "Rechtsschutz für selbst bewohnte Wohneinheiten in Deutschland"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": null
+      "note": "Vertrags-Rechtsschutz, Beratung bei Urheberrechtsverstößen, Schadenersatz bei Rufschädigung"
     },
     "steuer": {
       "included": true,
       "level": null,
-      "note": null
+      "note": "Steuer- und Abgabenrechtliche Verfahren vor deutschen Behörden und Gerichten"
     },
     "sozialgericht": {
       "included": true,
       "level": null,
-      "note": null
+      "note": "Sozialrechtliche Verfahren im vorgeschalteten Widerspruchsverfahren und vor Sozialgerichten"
     },
     "verwaltungsrecht": {
       "included": true,
       "level": null,
-      "note": null
+      "note": "Verwaltungsrechtliche Verfahren vor deutschen Verwaltungsbehörden und -gerichten"
     }
   },
   "coverage": {
-    "versicherungssumme": "unbegrenzt",
-    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein)",
+    "versicherungssumme": "unbegrenzt, soweit nicht im Einzelfall bezifferte Versicherungssummen bzw. Höchstbeträge vereinbart sind",
+    "selbstbeteiligung": "vereinbarte Selbstbeteiligung (Höhe im Versicherungsschein)",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
       "Schadenersatz-Rechtsschutz",
-      "Vertrags- und Sachenrecht",
       "Disziplinar- und Standes-Rechtsschutz",
-      "Straf-Rechtsschutz",
+      "Internet-Rechtsschutz (Schadenersatz-Teil)",
+      "Verkehrsbereich",
       "Ordnungswidrigkeiten-Rechtsschutz",
-      "Familien-, Lebenspartnerschafts- und Erbrecht",
-      "Internet-Rechtsschutz",
       "Spezial-Straf-Rechtsschutz"
     ],
-    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanaren, Azoren, Madeira; weltweit bei Urlaubsreisen und Dienstreisen",
-    "vertragslaufzeit": "1 Jahr, danach automatische jährliche Verlängerung"
+    "geltungsbereich": "Europa, Anliegerstaaten des Mittelmeeres, Kanarische Inseln, Azoren, Madeira; weltweit bei Urlaubsreisen, Dienst-/Geschäftsreisen und Work-&-Travel-Aufenthalten",
+    "vertragslaufzeit": "1 Jahr, danach automatische Jahresverlängerung bei Nichtbewerbigung mit dreimonatiger Kündigungsfrist"
   },
   "leistungen": [
+    "Telefonische Rechtsberatung durch unabhängige Rechtsanwälte",
+    "Übernahme gesetzlicher Gebühren des Rechtsanwalts",
+    "Kosten für Gerichte und Gerichtsvollzieher",
+    "Entschädigung für Zeugen und Sachverständige",
+    "Mediation (außergerichtliche Konfliktlösung)",
+    "Schadenersatz-Rechtsschutz",
+    "Arbeits-Rechtsschutz",
+    "Aufhebungsvertrag-Rechtsschutz bis 1.000 EUR",
+    "Internet-Rechtsschutz",
+    "Spezial-Straf-Rechtsschutz weltweit",
+    "Online-Beratung und Online-Vertrags-Check",
+    "Cyber-Mobbing-Hilfe und Web-Beweissicherung",
+    "Vorsorge-Generatoren für Testament und Vollmachten",
+    "Fluggastentschädigung",
+    "Bußgeld-Check",
+    "Gebühren Rechtsanwalt nach RVG",
+    "Gerichts- und Vollstreckungskosten",
+    "Entschädigung Zeugen und Sachverständige",
+    "Kosten Gegner bei Verurteilung",
+    "Kosten Schiedsverfahren bis 1,5x Gerichtgebühren",
+    "Telefonische Rechtsberatung",
+    "Mediation außergerichtlich",
+    "Online-Beratung",
+    "Strafkaution als zinsloses Darlehen bis 1.000.000 EUR",
+    "Beratung Internet-Reputationsschutz",
+    "Cyber-Mobbing-Hilfe",
+    "Vorsorge-Generatoren",
+    "Vertrags-Check",
+    "Sozialrechts-Hilfe",
+    "Job-Services (Aufhebungsvertrag, Arbeitsvertrag, Zeugnis)",
+    "Online-Beratung und Online-BeratungXL",
+    "Mediation und MediationXL",
+    "Internet-Rechtsschutz für Verträge, Abmahnungen, Rufschädigung",
+    "Erweiterter Beratungs-Rechtsschutz im Familien- und Erbrecht bis 1.500 EUR",
+    "Umfassender Spezial-Straf-Rechtsschutz weltweit",
+    "Versicherungsschutz für erneuerbare Energien bis 20.000 EUR",
+    "Bußgeld-Check und Sozialrechts-Hilfe",
+    "Nebenkosten-Check für Mieter",
+    "Vorsorge-Generatoren für Vollmachten und Verfügungen",
+    "Dolmetscher für Gebärdensprache mitversichert",
+    "Job-Services für Arbeitsverträge und Zeugnisse",
+    "Studienplatzklage für 1 Verfahren pro Vertragslaufzeit",
     "Rechtsanwaltskosten",
     "Gerichtskosten",
     "Gerichtsvollzieherkosten",
@@ -68,16 +108,36 @@
     "Schiedsverfahrenskosten",
     "Kostentragung des Gegners",
     "Strafkaution als Darlehen bis 1.000.000 EUR",
-    "Telefonische Rechtsberatung",
-    "Online-Beratung",
     "Mediation"
   ],
   "ausschluesse": [
-    "Bauvorhaben und Immobiliengeschäfte",
-    "Finanzierung von Bauvorhaben",
-    "Aktien, Zertifikate, Investmentfonds",
+    "Baufinanzierung und Immobiliengeschäfte",
+    "Erwerb/Veräußerung von nicht selbst bewohnten Gebäuden",
+    "Finanzierung von zu errichtenden oder umzubauenden Gebäuden",
+    "Patent- und Markenrecht",
+    "Aktien, Zertifikate und sonstige Kapitalanlagen",
+    "Streitigkeiten zwischen mitversicherten Familienmitgliedern",
+    "Vorsätzliche Herbeiführung des Rechtsschutzfalls",
+    "Verfahren vor Verfassungsgerichten",
+    "Insolvenzverfahren",
+    "Kartell- und Wettbewerbsrecht (überwiegend)",
+    "Umweltrecht (ausgenommen Verkehrsrecht)",
+    "Baugesetzbuch-Verfahren",
+    "Streitigkeiten gegen AUXILIA selbst",
     "Kartell- und Wettbewerbsrecht",
+    "Insolvenzverfahren (außer Forderungsanmeldung)",
+    "Umweltrecht (Ausnahme: Verkehrsrecht)",
+    "Streitigkeiten zwischen mitversicherten Personen",
     "Vorsätzlich herbeigeführte Rechtsschutzfälle",
+    "Streitigkeiten mit AUXILIA oder Schadensabwickler",
+    "Kapitalanlagen (mit Ausnahmen)",
+    "Bauvorhaben und Immobiliengeschäfte (Kauf/Verkauf von Baugrundstücken, Errichtung)",
+    "Finanzierung von Bauvorhaben",
+    "Streitigkeiten mit der AUXILIA oder Schadenabwicklungsunternehmen",
+    "Verkehrsrechtliche Straftaten im Spezial-Straf-Rechtsschutz",
+    "Streitigkeiten untereinander von mitversicherten Familienmitgliedern (mit Ausnahmen)",
+    "Bauvorhaben und Immobiliengeschäfte",
+    "Aktien, Zertifikate, Investmentfonds",
     "Streitigkeiten zwischen Mitversicherten",
     "Verfassungsgerichtsverfahren",
     "Insolvenzverfahren (mit Ausnahmen)",
@@ -85,11 +145,21 @@
     "Vergabe von Studienplätzen (1 Verfahren pro Laufzeit)"
   ],
   "besonderheiten": [
+    "Familientarif: bis zu 5 Generationen versichert (Kinder, Enkelkinder, Eltern, Großeltern)",
+    "Unbegrenzte Versicherungssumme",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen und Work-&-Travel",
+    "Keine Selbstbeteiligung bei Erstberatung durch AUXILIA-vermittelten Anwalt",
+    "Vorsorge-Rechtsschutz ohne Wartezeit für neue Risiken",
+    "Umfassender Spezial-Straf-Rechtsschutz weltweit",
+    "Steuer-, Sozial- und Verwaltungs-Rechtsschutz auch im vorgeschalteten Verwaltungsverfahren",
+    "Erstberatung bei Unterhaltsfragen bis 1.500 EUR",
+    "Studienplatzklage: 1 Verfahren pro Vertragslaufzeit kostenfrei",
+    "Mitversicherung von Dolmetschern für Gebärdensprache",
+    "Versicherungsschutz für erneuerbare Energien bis 20.000 EUR",
     "Weltweiter Schutz bei Urlaubsreisen",
     "Kostenfreie Serviceleistungen ohne Selbstbeteiligung",
     "Update-Garantie für Leistungsverbesserungen",
     "Familientarif bis zu 5 Generationen",
-    "Unbegrenzte Versicherungssumme",
     "PremiumService mit persönlicher Unterstützung",
     "MediationXL auch bei Risikoausschlüssen",
     "Beratungs-Rechtsschutz Familien-/Erbrecht bis 1.500 EUR"
@@ -99,6 +169,6 @@
   "tariff": "JURPRIVAT",
   "stem": "ks-auxilia__jurprivat",
   "_history_date": "2026-06-30",
-  "_content_sha256": "805a0a60f78b06dbdff71ee1dd2320fc5800de3f7a597b5f5ecbe57dbab3b22c",
-  "_supersedes": null
+  "_content_sha256": "110bfbc8196073b724d291d580cd31323a5eb1acd365997852968066cc03bbdc",
+  "_supersedes": "2026-06-30"
 }

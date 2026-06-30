@@ -3,38 +3,43 @@
   "modules": {
     "privat": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": null
     },
     "beruf": {
       "included": true,
       "level": null,
-      "note": "nur Minijobs"
+      "note": "Abhängig vom Tarifbaustein: eingeschlossen in Rundum-Schutz, Rundum-Schutz PLUS; ausgeschlossen in reinem Privat-Rechtsschutz §22"
     },
     "verkehr": {
-      "included": false,
-      "level": null
+      "included": true,
+      "level": null,
+      "note": "Abdeckung für Fahrzeughalter, -fahrer, Mieter, Carsharing-Nutzer"
     },
     "wohnen_immobilien": {
-      "included": false,
-      "level": null
+      "included": true,
+      "level": null,
+      "note": "Selbstgenutzte Wohneinheiten, Garagen, Gärten, unbebaute Grundstücke"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "über Vertrags- und Sachenrecht"
+      "note": "Cyber-Rechtsschutz (§2o): Vertragsrecht im Internet, Abmahnung Urheberrecht, Persönlichkeitsverletzung, Cybermobbing"
     },
     "steuer": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Steuer- und Abgabenangelegenheiten vor Finanz- und Verwaltungsgerichten"
     },
     "sozialgericht": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Sozialgerichtsbarkeit und Widerspruchsverfahren"
     },
     "verwaltungsrecht": {
       "included": true,
       "level": null,
-      "note": "nur nicht-verkehrsrechtlich"
+      "note": "Verkehrsrechtliche und sonstige Verwaltungsangelegenheiten"
     }
   },
   "coverage": {
@@ -42,41 +47,95 @@
     "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "Schadenersatz-Rechtsschutz",
-      "Steuer-Rechtsschutz",
-      "Sozial-Rechtsschutz",
-      "Straf-Rechtsschutz",
-      "Ordnungswidrigkeiten-Rechtsschutz"
+      "Verkehrs-Rechtsschutz (0 Monate)",
+      "Telefonische Erstberatung (keine Wartezeit)",
+      "Beratungs-Rechtsschutz Familienrecht (keine Wartezeit für Beratung)"
     ],
-    "geltungsbereich": "Deutschland; EU, Mittelmeeranrainer, Kanaren, Azoren, Madeira; weltweit temporär bis 500.000 EUR",
-    "vertragslaufzeit": "flexibel, mindestens 1 Jahr mit jährlicher Verlängerung"
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; bei Auslandsaufenthalten bis 2 Jahren weltweit bis 500.000 EUR",
+    "vertragslaufzeit": "Mindestens 1 Jahr, danach jährliche stillschweigende Verlängerung"
   },
   "leistungen": [
-    "Rechtanwaltsgebühren nach RVG",
+    "Telefonische Erstberatung durch Rechtsanwalt",
+    "Rechtsanwaltskosten nach RVG",
+    "Gerichtskosten und Gebühren",
+    "Kosten Sachverständiger",
+    "Gegnerische Rechtsanwaltskosten (wenn fällig)",
+    "Übersetzungskosten im Ausland",
+    "Kautionsdarlehen zinslos bis vereinbarte Höhe",
+    "Mediation außergerichtlich",
+    "Schiedsverfahren und Schlichtungskosten",
+    "Dolmetscher im Ausland",
+    "Service via www.meinrecht.de (Vorsorgeverfügungen, Testament-Assistent, Online-Rechtsberatung)",
+    "Telefonische Rechtsberatung",
+    "Mediation",
+    "Anwaltskosten nach RVG",
     "Gerichtskosten",
+    "Sachverständigenkosten",
+    "Gegnerische Anwaltskosten",
+    "Übersetzungskosten",
+    "Kautionsdarlehen",
+    "RadMobilSchutz",
+    "CarSharingSchutz",
+    "telefonische Erstberatung",
+    "Rechtsanwalt",
+    "Sachverständige",
+    "Schiedsverfahren",
+    "Schlichtungsverfahren",
+    "Online-Rechtsberatung",
+    "Vorsorgeverfügungen-Assistent",
+    "Testament-Assistent",
+    "Rechtanwaltsgebühren nach RVG",
     "Sachverständigengebühren",
     "gegnerische Anwaltskosten wenn fällig",
     "Mediationskosten",
     "Schiedsverfahren und Schlichtungsgebühren",
-    "telefonische Erstberatung",
-    "zinslose Kautionsdarlehen",
-    "Übersetzungskosten"
+    "zinslose Kautionsdarlehen"
   ],
   "ausschluesse": [
-    "Grundstückskauf/-verkauf zur Bebauung",
+    "Erwerb/Veräußerung Grundstück zum Bebau",
     "Patent- und Markenrecht",
+    "Kapitalanlage-Streitigkeiten",
+    "Darlehen-, Spiel-, Wettverträge",
+    "Kriegsereignisse, Aufruhr, Streik, Aussperrung",
+    "Gebäudefinanzierung",
+    "Parkverstoße (außer Punktesystem)",
+    "Verkehrsverbote bei Umweltvorschriften",
+    "Streitigkeiten zwischen Versicherten desselben Vertrags",
+    "Anspruchsüberträge nach Eintritt des Rechtsschutzfalls",
+    "Abwehr von Haftpflichtansprüchen (bei Ärzten)",
+    "Enteignungs-, Planfeststellungs-, Flurbereinigungsangelegenheiten (außer spezielle Tarife)",
+    "Kauf, Verkauf, Finanzierung bebauten Grundstücks",
+    "Gebäudeplanung und -errichtung",
+    "Auslands-Immobilien",
+    "Krieg, Aufruhr, Streik, Aussperrung",
+    "Enteignungs- und Planfeststellungsverfahren",
+    "Parkverstoße ohne FAER-Punkte",
+    "Kapitalanlagen",
+    "Darlehen-, Spiel- und Wettverträge",
+    "Grundstückskauf/Verkauf zu Neubau",
+    "Kapitalanlage-Erwerb und Finanzierung",
+    "Darlehen, Spiel-, Wett- und Gewinnverträge",
+    "Bauliche Veränderungen (genehmigungspflichtig)",
+    "Enteignungs-, Planfeststellungs- und Flurbereinigungsangelegenheiten",
+    "Ordnungswidrigkeiten wegen Halt-/Parkverstoß",
+    "Handelsvertreterrecht",
+    "Grundstückskauf/-verkauf zur Bebauung",
     "Erwerb und Veräußerung von Kapitalanlagen",
     "Darlehen und Wettverträge",
-    "Krieg, Aufruhr, Streik, Aussperrung",
     "Parkverstoße Ordnungswidrigkeiten",
     "Streitigkeiten mit anderen Versicherungsnehmern desselben Vertrags"
   ],
   "besonderheiten": [
+    "Tägliches Kündigungsrecht (abweichend von Standard 3 Monate Kündigungsfrist)",
+    "RadMobilSchutz und CarSharingSchutz enthalten",
+    "Mediation kostenfrei über Versicherer",
+    "Online-Services kostenfrei (Vorsorgeverfügungen, Testamente, Chat-Beratung)",
+    "Leistungsgarantie bei Versichererwechsel",
+    "Mehrere Tarifvarianten: Rundum-Schutz (§21), Rundum-Schutz PLUS (§21a), reiner Privat-Rechtsschutz (§22)",
     "täglich kündbar",
     "unbegrenzte Versicherungssumme",
     "Mediation von ÖRAG vermittelt",
     "Online-Rechtsberatung über meinrecht.de",
-    "RadMobilSchutz und CarSharingSchutz enthalten",
     "Leistungsgarantie bei Tarifwechsel"
   ],
   "beitrag": null,
@@ -84,6 +143,6 @@
   "tariff": "Privat-Rechtsschutz",
   "stem": "s-direkt__rundum-schutz-mit-beitragsgarantie-oerag-rechtsschutz",
   "_history_date": "2026-06-30",
-  "_content_sha256": "ad23ea8e8c53f58dd9bf443286420a65a22c5342ce25299a97676477fc09b34f",
-  "_supersedes": null
+  "_content_sha256": "78ff65bc7c2f6246bc7ddc2f98e2b7aa001882568f627f2cee2116d4720ea887",
+  "_supersedes": "2026-06-30"
 }

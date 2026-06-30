@@ -1,5 +1,5 @@
 {
-  "stand": "01/2026",
+  "stand": "01.2026",
   "modules": {
     "privat": {
       "included": true,
@@ -9,32 +9,32 @@
     "beruf": {
       "included": true,
       "level": null,
-      "note": "Arbeits-Rechtsschutz aus Arbeitsverhältnissen sowie öffentlich-rechtlichen Dienstverhältnissen"
+      "note": "Arbeits-Rechtsschutz aus Arbeitsverhältnissen und öffentlich-rechtlichen Dienstverhältnissen"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": "Versicherungsschutz als Eigentümer, Halter, Fahrer oder Insasse von Motorfahrzeugen"
+      "note": "Versicherungsschutz für Eigentümer, Halter, Fahrer von Motorfahrzeugen"
     },
     "wohnen_immobilien": {
-      "included": false,
+      "included": true,
       "level": null,
-      "note": "Kann über separate Produkte versichert werden"
+      "note": "Rechtsschutz für selbst bewohnte Wohneinheiten, Garagen, Grundstücke"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "Internet-Rechtsschutz einschließlich Vertrag, Urheberrecht, Rufschädigung, Strafrecht"
+      "note": "Internet-Rechtsschutz für Verträge, Urheberrechtsverstöße, Rufschädigung, Identitätsmissbrauch"
     },
     "steuer": {
       "included": true,
       "level": null,
-      "note": "Steuer-Rechtsschutz in Einspruchs- und Widerspruchsverfahren sowie vor Gerichten"
+      "note": "Steuer-Rechtsschutz in steuer- und abgaberechtlichen Verfahren"
     },
     "sozialgericht": {
       "included": true,
       "level": null,
-      "note": "Sozial-Rechtsschutz in Widerspruchsverfahren und vor Sozialgerichten"
+      "note": "Sozial-Rechtsschutz in sozialrechtlichen Verfahren"
     },
     "verwaltungsrecht": {
       "included": true,
@@ -56,14 +56,45 @@
     "vertragslaufzeit": "zunächst 1 Jahr, danach automatische Verlängerung um jeweils weitere Jahre bei Nichtkündigung"
   },
   "leistungen": [
+    "Schadenersatz-Rechtsschutz",
+    "Rechtsschutz im Vertrags- und Sachenrecht",
+    "Steuer-Rechtsschutz",
+    "Sozial-Rechtsschutz",
+    "Verwaltungs-Rechtsschutz",
+    "Disziplinar- und Standes-Rechtsschutz",
+    "Straf-Rechtsschutz",
+    "Ordnungswidrigkeiten-Rechtsschutz",
+    "Rechtsschutz im Familien-, Lebenspartnerschafts- und Erbrecht",
+    "Rechtsschutz in Betreuungsverfahren",
+    "Altersvorsorge- und Sparer-Rechtsschutz",
+    "Rechtsschutz für Vorsorgeverfügungen",
+    "Internet-Rechtsschutz",
+    "Arbeits-Rechtsschutz",
+    "Erweiterter Arbeits-Rechtsschutz bei Aufhebungsvereinbarungen",
+    "Telefonische Rechtsberatung kostenlos",
+    "Mediation",
+    "Online-Beratung",
+    "Bußgeld-Check",
     "Gesetzliche Gebühren des Rechtsanwalts",
     "Kosten für Gerichte und Gerichtsvollzieher",
     "Entschädigung für Zeugen und Sachverständige",
+    "Kosten des Schiedsverfahrens bis zur 1,5-fachen Gerichtsgebühr",
+    "Kosten des Prozessgegners bei Verurteilung",
+    "Mediation und außergerichtliche Konfliktlösung",
+    "Telefonische und Online-Rechtsberatung",
+    "Cyber-Mobbing-Hilfe und Online-Reputationsschutz",
+    "Bußgeld-Check und Sozialrechts-Hilfe",
+    "Fluggastentschädigung",
+    "Vorsorge-Generatoren für Testamente und Vollmachten",
+    "Telefonische Rechtsberatung",
+    "Online-Beratung und Online-BeratungXL",
+    "Mediation und MediationXL",
+    "Cyber-Mobbing-Hilfe",
+    "Online-Reputations-Schutz",
+    "Vorsorge-Generatoren",
     "Kosten des Prozessgegners (wenn Verpflichtung besteht)",
     "Kosten von Schieds- oder Schlichtungsverfahren bis 1,5-fache Gebühren",
     "Telefonische Rechtsberatung durch unabhängige Rechtsanwälte",
-    "Online-Beratung und Online-BeratungXL",
-    "Mediation und MediationXL",
     "Job-Services (Aufhebungsvereinbarungen, Arbeitsverträge, Zeugnisse)",
     "Bußgeld-Check bei Verkehrsverstößen",
     "Online-Reputations-Schutz (Cyber-Mobbing-Hilfe)",
@@ -71,14 +102,55 @@
     "Vorsorge-Generatoren (Testamente, Vollmachten, Verfügungen)",
     "Vorlagen-Portal mit über 100 Musterverträgen"
   ],
+  "ausschluesse": [
+    "Bauvorhaben und Immobiliengeschäfte (Erwerb, Veräußerung, Planung, Errichtung von Gebäuden)",
+    "Finanzierung von Bauvorhaben",
+    "Aktien, Zertifikate, Optionen, Swaps, Beteiligungen an Fonds",
+    "Fondsgebundene oder fremdfinanzierte Lebens- oder Rentenversicherungsverträge",
+    "Krieg, Staatsbankrott, Streik",
+    "Cyberangriffe auf kritische Infrastrukturen",
+    "Nukleare und genetische Schäden",
+    "Kartell- und Wettbewerbsrecht",
+    "Verfahren vor Verfassungsgerichten",
+    "Insolvenzverfahren über das Vermögen des Versicherten",
+    "Umweltrecht in bestimmten Bereichen",
+    "Streitigkeiten zwischen mitversicherten Personen",
+    "Erwerb oder Veräußerung von Baugrundstücken und nicht selbst bewohnten Gebäuden",
+    "Planung und Errichtung von Gebäuden",
+    "Finanzierung von Immobilien",
+    "Streitigkeiten um Aktien, Zertifikate, Kapitalanlagen",
+    "Kartell- und sonstiges Wettbewerbsrecht",
+    "Streitigkeiten zwischen mitversicherten Familienangehörigen",
+    "Insolvenzverfahren",
+    "Umweltrecht",
+    "Streitigkeiten aus dem Rechtsschutzversicherungsvertrag gegen AUXILIA",
+    "Bauvorhaben und Immobiliengeschäfte",
+    "Timesharing und Teilnutzungsrechte",
+    "Fusionen und Beteiligungen von Unternehmen",
+    "Insolvenzverfahren über Vermögen des Versicherungsnehmers",
+    "Enteignungs- und Planfeststellungsverfahren",
+    "Umweltrecht Streitigkeiten",
+    "Streitigkeiten zwischen Familienangehörigen",
+    "Rassistischen, extremistischen oder pornografischen Angeboten"
+  ],
   "besonderheiten": [
+    "Vier wichtige Rechtsschutzbereiche in einem Vertrag",
+    "Bis zu 5 Generationen versichert (Kinder, Enkelkinder, Eltern, Großeltern)",
+    "Mitversicherte volljährige Kinder als Fahrer fremder Kfz",
+    "Eltern und Großeltern auch nach Wechsel in stationäre Pflegeeinrichtung versichert",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen",
+    "Aufhebungsvertrags-Rechtsschutz bis 1.000 EUR",
+    "Internet-Rechtsschutz im privaten Bereich",
+    "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
+    "Nutzung neuer Mobilitätskonzepte (Car-Sharing, E-Scooter)",
+    "Studienplatzklage: Kostenschutz für 1 Verfahren",
+    "Keine Selbstbeteiligung bei fallabschließender Erstberatung",
     "Vier wichtige Rechtsschutzbereiche in einem günstigen Vertrag zusammengefasst",
     "Bis zu 5 Generationen versichert: Kinder, Enkelkinder, Eltern und Großeltern",
     "Volljährige Kinder als Fahrer fremder Kfz und Eigentümer/Halter eigener Kfz mitversichert",
     "Unbegrenzte Versicherungssumme (soweit nicht begrenzt)",
     "Weltweiter Versicherungsschutz bei Urlaubsreisen und Dienst-/Geschäftsreisen",
     "Internet-Rechtsschutz im privaten Bereich enthalten",
-    "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
     "Aufhebungsvertrags-Rechtsschutz als Arbeitnehmer bis 1.000 EUR",
     "Nutzung neuer Mobilitätskonzepte wie Car-Sharing und E-Scooter versichert",
     "Steuer-, Sozial- und Verwaltungs-Rechtsschutz auch für vorgeschaltete Verfahren",
@@ -91,6 +163,6 @@
   "tariff": "Privat-, Berufs- und Verkehrs-Rechtsschutz",
   "stem": "ks-auxilia__rechtsschutz-strafrecht",
   "_history_date": "2026-06-30",
-  "_content_sha256": "2e78d61055adc61676508686f654c5ad3c174e046a22d6262f618e01ecf3b15f",
-  "_supersedes": null
+  "_content_sha256": "d550f70082edf1fc7e68ff958ffa04d9291def9eb7ead91125274cc880e63a65",
+  "_supersedes": "2026-06-30"
 }

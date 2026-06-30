@@ -5,12 +5,13 @@
   "modules": {
     "privat": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Schadenersatz, Vertrags- und Sachenrecht, Disziplinar, Straf, Ordnungswidrigkeiten, Familie/Erbrecht, Betreuung, Opfer-Rechtsschutz"
     },
     "beruf": {
       "included": true,
       "level": null,
-      "note": "nur Minijobs"
+      "note": "Arbeits-Rechtsschutz nur für geringfügig entlohnte Beschäftigung (Minijobs)"
     },
     "verkehr": {
       "included": false,
@@ -18,7 +19,8 @@
     },
     "wohnen_immobilien": {
       "included": false,
-      "level": null
+      "level": null,
+      "note": "Ausgeschlossen gemäß § 22 Abs. 5"
     },
     "internet_web": {
       "included": false,
@@ -26,54 +28,102 @@
     },
     "steuer": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "ohne Steuer-Rechtsschutz nach § 24 Abs. 2, § 29 Abs. 2"
     },
     "sozialgericht": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Sozial-Rechtsschutz"
     },
     "verwaltungsrecht": {
       "included": true,
       "level": null,
-      "note": "nicht-verkehrsrechtliche Angelegenheiten"
+      "note": "Verwaltungs-Rechtsschutz in nicht verkehrsrechtlichen Angelegenheiten"
     }
   },
   "coverage": {
     "versicherungssumme": "unbegrenzt",
-    "selbstbeteiligung": null,
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "Arbeits-Rechtsschutz: 6 Monate"
+      "Arbeits-Rechtsschutz: 6 Monate",
+      "Telefonische Erstberatung: keine"
     ],
-    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; weltweit temporär bis 500.000 EUR",
-    "vertragslaufzeit": "ab 1 Jahr, automatische jährliche Verlängerung"
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; weltweit temporär bei Auslandsaufenthalt bis zu 2 Jahren (max. 500.000 EUR)",
+    "vertragslaufzeit": "mindestens 1 Jahr mit automatischer Verlängerung um je ein weiteres Jahr; tägliches Kündigungsrecht des Versicherungsnehmers"
   },
   "leistungen": [
-    "telefonische Erstberatung",
-    "Mediation",
-    "Rechtsanwaltskosten",
+    "Telefonische Rechtsberatung",
+    "Mediation (außergerichtliche Konfliktbeilegung)",
+    "Rechtsanwaltsgebühren",
     "Gerichtskosten",
     "Sachverständigenkosten",
+    "Gegnerische Rechtsanwaltskosten",
+    "Schiedsverfahren und Schlichtung bis Gerichtskostenmaßstab",
+    "Übersetzungskosten",
+    "Kautionsdarlehen (zinslos)",
+    "Telefonische Erstberatung",
+    "Mediation",
+    "Strafkaution als zinsloses Darlehen",
+    "Rechtsanwaltskosten",
+    "Sachverständigengutachten",
+    "RadMobilSchutz und CarSharingSchutz",
+    "Rechtsanwaltskosten (gesetzliche Gebühren)",
+    "Gerichtskosten und Gerichtsvollzieherkosten",
+    "Zeugen- und Sachverständigenentschädigungen",
+    "Gegnerische Rechtsanwaltskosten (wenn zu tragen)",
+    "Kautionsdarlehen (zinslos bis vereinbarte Höhe)",
+    "Mediation und außergerichtliche Konfliktbeilegung",
+    "Schiedsverfahren und Schlichtung",
+    "RadMobilSchutz",
+    "CarSharingSchutz",
+    "telefonische Erstberatung",
     "gegnerische Anwaltskosten (wenn verpflichtet)",
     "Kautionsdarlehen zinslos"
   ],
   "ausschluesse": [
-    "Grundstück zur Bebauung (Kauf/Verkauf/Finanzierung)",
+    "Gewerbliche, freiberufliche oder selbständige Tätigkeiten",
+    "Wohnungs- und Grundstücks-Rechtsschutz",
+    "Verkehrs-Rechtsschutz",
+    "Finanzierung von Grundstückserwerb oder -errichtung",
+    "Patent- und Markenrecht",
+    "Kapitalanlagen-Streitigkeiten",
+    "Darlehen-, Spiel-, Wettverträge",
+    "Krieg, Aufruhr, Streik, Aussperrung",
+    "Enteignungs- und Planfeststellungsangelegenheiten",
+    "Streitigkeiten zwischen Versicherungsnehmern des gleichen Vertrages",
+    "Kauf, Verkauf, Finanzierung bebauungspflichtiger Grundstücke",
     "Patent- und Markenrechte",
+    "Erwerb, Veräußerung, Verwaltung von Kapitalanlagen",
+    "Darlehen, Spiel- und Wettverträge, Gewinnzusagen",
+    "Krieg, feindseelige Handlungen, Aufruhr, innere Unruhen, Streik",
+    "Kauffinanzierung, Erwerb oder Veräußerung bebauter Grundstücke",
+    "Erwerb, Veräußerung, Verwaltung und Finanzierung von Kapitalanlagen",
+    "Darlehen, Spiel- oder Wettverträge, Gewinnzusagen",
+    "Streitigkeiten zwischen Versicherungsnehmern desselben Vertrags",
+    "Vorsätzlich begangene Straftaten",
+    "Halte- und Parkverstoße (mit Ausnahmen)",
+    "Strafverfahren als Angeklagter (nur Nebenklage)",
+    "Angelegenheiten außerhalb des Geltungsbereiches",
+    "Grundstück zur Bebauung (Kauf/Verkauf/Finanzierung)",
     "Kapitalanlagen",
     "Darlehen, Spiel- und Wettverträge",
     "Streitigkeiten zwischen Versicherungsnehmern"
   ],
   "besonderheiten": [
+    "Tägliches Kündigungsrecht statt der üblichen 3-Monatsfrist",
+    "Versicherungssumme unbegrenzt",
+    "Wartezeit Arbeits-Rechtsschutz: 6 Monate (statt Standard 3 Monate)",
+    "Mediation ohne Selbstbeteiligung",
+    "Telefonische Erstberatung ohne Wartezeit",
+    "Mini-Job-Arbeits-Rechtsschutz enthalten",
     "tägliches Kündigungsrecht",
     "RadMobilSchutz enthalten",
     "CarSharingSchutz enthalten",
     "6-Monats-Wartezeit für Arbeits-Rechtsschutz"
   ],
   "beitrag": null,
-  "_input_hash": "18145a5f39b5db380450c37e7eaa2606c6b12667782751154cbafe07d65dae65",
-  "_model": "haiku",
-  "_filter": "avb-filter",
   "sources": [
     {
       "doctype": "avb",
@@ -91,5 +141,11 @@
       "doctype": "weitere_unterlagen",
       "content_sha256": "1ba1c7b204aa30a086ec71c96b80ec668c2e73582f146f278e4d6f832cc472d2"
     }
-  ]
+  ],
+  "_input_hash": "992fd5a2e69b0b2d2c6daf4a5c491bbd81ae38e57186dbc5deee42f0a869a738",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "_repeat": 3,
+  "_repeat_ok": 3,
+  "_reconciled": true
 }

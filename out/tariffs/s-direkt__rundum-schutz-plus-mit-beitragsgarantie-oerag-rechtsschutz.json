@@ -6,73 +6,135 @@
     "privat": {
       "included": true,
       "level": null,
-      "note": "Schadenersatz, Vertrags-/Sachenrecht, Cyber-Rechtsschutz, erweiterte Familienrechtsberatung"
+      "note": "Schadenersatz, Vertragsrecht, Disziplinar-/Standes-Rechtsschutz, Straf-Rechtsschutz, Ordnungswidrigkeiten"
     },
     "beruf": {
       "included": true,
       "level": null,
-      "note": "nur Arbeits-Rechtsschutz für geringfügig entlohnte Beschäftigung"
+      "note": "Arbeits-Rechtsschutz für Minijobs und Arbeitnehmer"
     },
     "verkehr": {
-      "included": false,
+      "included": true,
       "level": null,
-      "note": "Haupt-Verkehrs-Rechtsschutz nicht enthalten; RadMobilSchutz für Fahrräder/E-Bikes vorhanden"
+      "note": "Verkehrs-Rechtsschutz als Eigentümer, Halter, Fahrer, Insasse"
     },
     "wohnen_immobilien": {
-      "included": false,
-      "level": null
+      "included": true,
+      "level": null,
+      "note": "Wohnungs- und Grundstücks-Rechtsschutz für selbstgenutzte Immobilien in Deutschland"
     },
     "internet_web": {
       "included": true,
       "level": null,
-      "note": "Cyber-Rechtsschutz, Internet-Vertragsrecht"
+      "note": "Internet-Rechtsschutz, Cyber-Rechtsschutz (Cybermobbing, Urheberrecht bis 1000 EUR)"
     },
     "steuer": {
       "included": true,
       "level": null,
-      "note": "ohne Steuer-Rechtsschutz für Grundstücke"
+      "note": "Steuer-Rechtsschutz vor Finanz- und Verwaltungsgerichten"
     },
     "sozialgericht": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Sozial-Rechtsschutz vor Sozialgerichten und Widerspruchsverfahren"
     },
     "verwaltungsrecht": {
       "included": true,
       "level": null,
-      "note": "in sonstigen Angelegenheiten, nicht in Verkehrssachen"
+      "note": "Verwaltungs-Rechtsschutz in Verkehrs- und sonstigen Angelegenheiten"
     }
   },
   "coverage": {
     "versicherungssumme": "unbegrenzt",
     "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
     "wartezeit_monate": 3,
-    "wartezeit_ausnahmen": [],
-    "geltungsbereich": "Europa, Mittelmeeranliegerstaaten, Kanarische Inseln, Azoren, Madeira; weltweit temporär bei Auslandsaufenthalt (max. 500.000 EUR)",
-    "vertragslaufzeit": "mindestens 1 Jahr, automatische Verlängerung um je 1 Jahr"
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz",
+      "Telefonische Erstberatung"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; weltweit während Auslandsaufenthalt bis 2 Jahre (max. 500.000 EUR)",
+    "vertragslaufzeit": "mindestens 1 Jahr mit automatischer Jahresverlängerung"
   },
   "leistungen": [
+    "Rechtsanwaltskosten (gesetzliche Gebühren nach RVG)",
+    "Gerichtskosten",
+    "Kosten für Sachverständige",
+    "Gegnerische Rechtsanwaltskosten (soweit zu zahlen)",
+    "Mediationskosten (außergerichtliche Konfliktbeilegung)",
+    "Schiedsverfahren- und Schlichtungskosten",
+    "Telefonische Erstberatung (beliebig oft)",
+    "Kaution als zinsloses Darlehen",
+    "Übersetzungskosten (Ausland)",
+    "Dolmetscherkosten (Ausland)",
+    "Beratungs-Rechtsschutz im Familienrecht (ohne Selbstbeteiligung)",
+    "Rechtsanwaltskosten",
+    "Sachverständigenkosten",
+    "gegnerische Rechtsanwaltskosten",
+    "Übersetzungskosten",
+    "Kautionsdarlehen",
+    "außergerichtliche Konfliktbeilegung (Mediation)",
+    "telefonische Erstberatung",
+    "Rechtsanwaltskosten gemäß RVG",
+    "Gerichtskosten und Gerichtsvollziehergebühren",
+    "Kosten für Sachverständige und Zeugen",
+    "Gegnerische Rechtsanwaltskosten wenn Übernahmepflicht",
+    "Telefonische Erstberatung ohne Selbstbeteiligung",
+    "Mediation und außergerichtliche Konfliktbeilegung",
+    "Kautionsdarlehen (zinslos) bis vereinbarte Höhe",
+    "Strafkaution",
+    "Dolmetscher- und Übersetzungskosten",
+    "Schieds- und Schlichtungsverfahrensgebühren",
     "Telefonische Erstberatung",
     "Mediation",
-    "Rechtsanwaltskosten",
-    "Gerichtskosten",
-    "Sachverständigenkosten",
     "Gegnerische Anwaltskosten",
-    "Übersetzungskosten",
     "Kautionsdarlehen (Strafkaution)",
     "Schiedsverfahren",
     "RadMobilSchutz",
     "CarSharingSchutz"
   ],
   "ausschluesse": [
+    "Kauf, Verkauf, Finanzierung von Grundstücken, die bebaut werden sollen",
+    "Patent- und Markenrecht",
+    "Kapitalanlagen (Erwerb, Veräußerung, Verwaltung, Finanzierung)",
+    "Darlehen, Spiel- und Wettverträge, Gewinnzusagen",
+    "Krieg, feindliche Handlungen, Aufruhr, innere Unruhen, Streik, Aussperrung",
+    "Enteignungs-, Planfeststellungs-, Flurbereinigungsangelegenheiten",
+    "Ordnungswidrigkeiten wegen Halt- oder Parkverstoß (mit Ausnahmen)",
+    "Cross-Compliance-Verstöße (Landwirtschaft)",
+    "Streitigkeiten zwischen Versicherungsnehmern desselben Vertrags oder mit Mitversicherten",
+    "Ansprüche, die nach Eintritt des Rechtsschutzfalls übergegangen sind",
+    "Vorsätzlich begangene Straftaten",
+    "Fälle mit offensichtlich mangelnden Erfolgsaussichten oder offensichtlicher Mutwilligkeit",
+    "Erwerb/Veräußerung von Bauland",
+    "Planung und Errichtung von Gebäuden",
+    "bauliche Veränderungen",
+    "Immobilien im Ausland",
+    "Finanzierung dieser Immobilienvorgänge",
+    "Enteignungs- und Planfeststellungsangelegenheiten",
+    "Kapitalanlagen",
+    "Darlehen und Spielverträge",
+    "Parkverstoßverfahren",
+    "Baufinanzierung und Liegenschaftserwerb zum Bebauung",
+    "Kapitalanlagenrecht",
+    "Darlehen, Spiel- und Wettverträge",
+    "Asylrecht und Ausländerrecht",
+    "Enteignungs-, Planfeststellungs- und Flurbereinigungs­angelegenheiten",
+    "Halt- und Parkverstoße (Ausnahmen für Fahreignungsregister-Einträge)",
+    "Streitigkeiten zwischen Versicherungsnehmern desselben Vertrags",
+    "Ansprüche aus vorsätzlich begangenen Straftaten des Versicherten",
     "Erwerb/Verkauf/Finanzierung bebauteter Grundstücke",
     "Patent- und Markenrechte",
-    "Kapitalanlagen",
-    "Darlehen, Spiel- und Wettverträge",
     "Krieg, feindliche Handlungen, Aufruhr",
-    "Vorsätzlich begangene Straftaten",
     "Mehrfach-Versicherungsfälle (Versicherer kann nach 2+ Fällen in 12 Monaten kündigen)"
   ],
   "besonderheiten": [
+    "Tägliches Kündigungsrecht des Versicherungsnehmers (Abweichung von ARB § 8)",
+    "Leistungsgarantie bei Versichererwechsel (§ 4a ARB)",
+    "Mediation als Alternative zur Gerichtsbarkeit ohne Selbstbeteiligung",
+    "Telefonische Erstberatung kostenfrei",
+    "RadMobilSchutz und CarSharingSchutz als Zusatzleistungen",
+    "Online-Services (Vorsorgeverfügungen, Testament-Assistent, Online-Rechtsberatung)",
+    "Reduktion Selbstbeteiligung um 150 EUR bei empfohlener Anwaltskanzlei",
     "Tägliches Kündigungsrecht",
     "Leistungsgarantie bei Versichererwechsel",
     "Online-Vorsorgedokumente (Patientenverfügung, Vorsorgevollmacht)",
@@ -81,9 +143,11 @@
     "Kostenlose Rechtsanwalts-Empfehlungsvermittlung (Klausel 93)"
   ],
   "beitrag": null,
-  "_input_hash": "64599edc3a37edf2e51f0428371aeb31b3821c6b750d6d8cc623a31eaaa2d902",
+  "_input_hash": "5daf9b1dea5f57eb262b1022048be41d954915e555778e26cb92b356c8eebb96",
   "_model": "haiku",
   "_filter": "avb-filter",
+  "_repeat": 3,
+  "_repeat_ok": 3,
   "sources": [
     {
       "doctype": "avb",
@@ -101,5 +165,6 @@
       "doctype": "weitere_unterlagen",
       "content_sha256": "42ad7f48c70fe51a267c0a7fc8944cea37441fa968acba5eb24d8dae0853c2c1"
     }
-  ]
+  ],
+  "_reconciled": true
 }

@@ -1,6 +1,4 @@
 {
-  "insurer": "DMB Rechtsschutz-Versicherung AG",
-  "tariff": "Klaro",
   "stand": "2026",
   "modules": {
     "privat": {
@@ -160,24 +158,10 @@
     "Versicherungsschutz Solaranlagen und Windenergieanlagen"
   ],
   "beitrag": null,
-  "_input_hash": "6759c474516f79c3b0c6213b6790719cd5642097d4b33bd4e0d0d9b3f104ad38",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "_repeat": 3,
-  "_repeat_ok": 3,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "15b95faf9e8b489e31de296df24058fbd57b3861d1916a9b59dfa937faedddc3"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "72ad9b8fb9a5523d8bf7de58e233e160a4dc73ff00c303c56ff76a06380ad238"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "8e4b51e98fa41fb8e3a42e93748a1217a330db5c2fa79015531c3c6457687fd3"
-    }
-  ],
-  "_reconciled": true
+  "insurer": "DMB Rechtsschutz-Versicherung AG",
+  "tariff": "Klaro",
+  "stem": "dmb__klaro",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "768d0a5fb32e0c85d8dcc9d04afb153a5f60c48c2c0993203d7996daf7202aee",
+  "_supersedes": "2026-06-30"
 }

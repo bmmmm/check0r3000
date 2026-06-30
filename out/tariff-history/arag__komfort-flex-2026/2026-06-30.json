@@ -1,69 +1,102 @@
 {
-  "stand": "02.2022",
+  "stand": "02.2026",
   "modules": {
     "privat": {
       "included": true,
-      "level": "Premium",
-      "note": "Umfasst Schadenersatz, Arbeits-, Wohnungs-/Grundstücks-, Vertrags-/Sachenrecht, diverse Beratungsleistungen"
+      "level": null,
+      "note": "Schadenersatz, Vertragsrecht, Kapitalanlagen, Datenschutzrecht"
     },
     "beruf": {
       "included": true,
-      "level": "Premium",
-      "note": "Arbeits-Rechtsschutz enthalten, 3 Monate Wartezeit"
+      "level": null,
+      "note": "Arbeitsrecht mit 3 Monaten Wartezeit"
     },
     "verkehr": {
       "included": true,
-      "level": "Premium",
-      "note": "Schadenersatz, Verwaltungs-, Straf-, Ordnungswidrigkeiten-Rechtsschutz"
+      "level": null,
+      "note": "Aktiv-Rechtsschutz Verkehr mit erweiterten Leistungen"
     },
     "wohnen_immobilien": {
       "included": true,
-      "level": "Premium",
-      "note": "Wohnungs-/Grundstücks-Rechtsschutz, Bauherren-Schutz, Photovoltaikanlagen"
+      "level": null,
+      "note": "Wohnungs- und Grundstücksrecht, Mietkaution bis 300.000€"
     },
     "internet_web": {
       "included": false,
       "level": null,
-      "note": "Nur über Sonderbedingung web@ktiv verfügbar"
+      "note": "Optional als web@ktiv Zusatz"
     },
     "steuer": {
       "included": true,
-      "level": "Premium",
-      "note": "Steuer-Rechtsschutz vor Gerichten"
+      "level": null,
+      "note": "Steuerrecht vor deutschen Behörden"
     },
     "sozialgericht": {
       "included": true,
-      "level": "Premium",
-      "note": "Sozial-Rechtsschutz, keine allgemeine Wartezeit"
+      "level": null,
+      "note": "Sozialrecht vor Sozialgerichten"
     },
     "verwaltungsrecht": {
       "included": true,
-      "level": "Premium",
-      "note": "Allgemeiner Verwaltungs-Rechtsschutz"
+      "level": null,
+      "note": "Verwaltungsrecht in Verkehrs- und Nichtverkehrssachen"
     }
   },
   "coverage": {
-    "versicherungssumme": "unbegrenzt (Europa); 350.000 EUR (weltweit für max. 12 Monate)",
-    "selbstbeteiligung": "Nach Vereinbarung; Verzicht bei Erledigung durch Erstberatung gemäß § 34 RVG",
+    "versicherungssumme": "unbegrenzt (Europa), bis 350.000 EUR (weltweit), 300.000 EUR Kaution Europa",
+    "selbstbeteiligung": "0 EUR (bei Abschluss mit Rechtsanwaltserstberatung wegfallen)",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "Verkehrs-Rechtsschutz (keine Wartezeit)",
-      "Immobilien-Rechtsschutz (3 Monate für bereits vermietete)",
-      "Straf-Rechtsschutz (keine Wartezeit)",
-      "Mediation (keine Wartezeit)"
+      "Verkehrsrecht",
+      "Privates Vertragsrecht (Internet)",
+      "Mediation ohne Wartezeit",
+      "Schadenersatz-Rechtsschutz nach 3 Monaten"
     ],
-    "geltungsbereich": "Europa; Mittelmeeranrainer; Kanarische Inseln; Madeira; Azoren; weltweit bei bis zu 12 Monaten Auslandsaufenthalt",
-    "vertragslaufzeit": "1 oder 3 Jahre; automatische Verlängerung um jeweils 1 Jahr"
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanaren, Madeira, Azoren; weltweit für bis zu 1 Jahr Aufenthalt",
+    "vertragslaufzeit": "1 oder 3 Jahre mit automatischer Jahresverlängerung"
   },
   "leistungen": [
+    "ARAG JuraTel® Telefonische Rechtsberatung",
+    "Mobiler Anwalt (Hausbesuche)",
+    "Mediation bis 6.000 EUR/Jahr",
+    "Außergerichtliche Tätigkeit des Anwalts",
+    "Anwaltsempfehlung",
+    "Dokumenten-Center",
+    "Telefonische psychologische Soforthilfe",
+    "Prüfung von Verträgen und Arbeitszeugnissen",
+    "Webcheck",
+    "Onlinerechtsberatung",
+    "Erstberatungs-Rechtsschutz im Familienrecht",
+    "Beratungs-Rechtsschutz zur Patientenverfügung",
+    "Bauherren-Rechtsschutz (Komfort+)",
+    "Erb-Rechtsschutz",
+    "Beratungs-Rechtsschutz Urheberrecht",
+    "Musterfeststellungsklage",
+    "Vorversicherungsgarantie",
+    "Telefonische Rechtsberatung (ARAG JuraTel)",
+    "Mobile Anwaltsbesuche",
+    "Mediation",
+    "Außergerichtliche Rechtsberatung",
+    "Kostenerstattung für Sachverständige",
+    "Strafkaution (als Darlehen)",
+    "Übernahme von Gerichtskosten",
+    "Gesetzliche Gebühren des Rechtsanwalts",
+    "Gerichtskosten und Gerichtsvollziehergebühren",
+    "Entschädigung für Zeugen und Sachverständige",
+    "Kosten des Prozessgegners (wenn geschuldet)",
+    "Außergerichtliche Sachverständigenkosten",
+    "Mediationskosten bis 6.000 EUR/Jahr",
+    "ARAG JuraTel® Rechtsberatung",
+    "Mobiler Anwalt",
+    "ARAG Dokumenten-Center",
+    "Online-Forderungsmanagement",
+    "Psychologische Soforthilfe",
+    "Dolmetscher im Ausland",
     "Telefonische Rechtsberatung (ARAG JuraTel®)",
     "Mobiler Anwalt (Hausbesuch)",
     "Mediation mit Sachverständigengutachten",
-    "ARAG Dokumenten-Center",
-    "Anwaltsempfehlung",
     "Prüfung von Verträgen und Arbeitszeugnissen (100€ pro Prüfung, max. 1.000€ p.a.)",
     "Webcheck für private Homepage (100€ p.a.)",
-    "Onlinerechtsberatung",
     "Beratung zu Testament/Digitalem Nachlass/Bestattungsverfügung (500€)",
     "Erweiterter Beratungs-Rechtsschutz Familien-/Erbrecht (500€)",
     "Erb-Rechtsschutz (10.000€ pro Vertragslaufzeit)",
@@ -71,31 +104,48 @@
     "Entschädigungen bei Musterfeststellungsklage"
   ],
   "ausschluesse": [
+    "Krieg, feindliche Handlungen, Aufruhr",
+    "Nuklearschäden, genetische Schäden",
+    "Bergbauschäden",
+    "Streitigkeiten aus Baufinanzierung",
+    "Patent-, Marken-, Designrecht",
+    "Spiel- und Wettverträge",
+    "Angelegenheiten vor nicht-deutschen Gerichten (Ausnahmen: 1 Jahr Auslandsaufenthalt, Internetverträge)",
+    "Vorsätzlich herbeigeführte Versicherungsfälle",
+    "Angelegenheiten mit mangelnden Erfolgsaussichten (Ablehnung möglich)",
     "Baufinanzierung",
     "Patent- und Markenrecht",
-    "Spiel- und Wettverträge",
+    "Gewinnzusagen",
+    "Streitigkeiten mit Vorvertraglichkeit (3-Jahres-Ausnahme)",
+    "Vorsätzlich herbeigeführte Rechtsstreitigkeiten",
+    "Krieg, Aufruhr, Streik, Erdbeben",
+    "Nuklearschäden",
+    "Baudarlehensfinanzierung",
+    "Patent- und Markenrechtsstreitigkeiten",
+    "Schäden durch vorsätzliches Handeln",
+    "Versicherungsmissbrauch",
     "Vermögensanlagegeschäfte",
     "Streitigkeiten vor Beginn des Versicherungsschutzes",
-    "Vorsätzlich herbeigeführte Versicherungsfälle",
     "Ehesachen (3 Jahre Wartezeit)"
   ],
   "besonderheiten": [
+    "Mehrere Leistungsstufen (Basis/Komfort/Premium)",
+    "Verzicht auf Selbstbeteiligung bei Erstberatung",
+    "Kostenlose Mediation ohne Wartezeit",
+    "Leistungsupdate-Garantie für Verbesserungen ohne Mehrbeitrag",
     "Vorsorge-Rechtsschutz für neue Risiken",
+    "Umfangreiche Aktiv-Services (JuraTel, mobiler Anwalt, Online-Beratung)",
     "Leistungsupdate-Garantie (künftige Verbesserungen ohne Mehrbeitrag)",
     "Differenzdeckung zu anderen Rechtsschutzversicherern möglich",
     "Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren Versicherung",
     "Umfangreiche Internet-Zusatzversicherungen (web@ktiv) optional",
     "Fahrzeug-Schutzbrief und Top-Schutzbrief als Annexe verfügbar"
   ],
-  "beitrag": {
-    "monatlich_eur": null,
-    "jaehrlich_eur": null,
-    "quelle": "Nicht in den vorliegenden Unterlagen angegeben; wird im Versicherungsantrag mitgeteilt"
-  },
+  "beitrag": null,
   "insurer": "ARAG SE",
-  "tariff": "Aktiv-Rechtsschutz Premium (für Privatpersonen)",
+  "tariff": "Aktiv-Rechtsschutz für Privatpersonen Komfort",
   "stem": "arag__komfort-flex-2026",
   "_history_date": "2026-06-30",
-  "_content_sha256": "631fc4216fb042cc47d864ca3ec0fe43bd4f95df7afa0bec3fd0ad078cce2f15",
-  "_supersedes": null
+  "_content_sha256": "a05ea517dcebf0c63e446008644154072101c77485d601b220b588c1cff9f549",
+  "_supersedes": "2026-06-30"
 }

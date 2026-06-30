@@ -1,66 +1,128 @@
 {
   "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
   "tariff": "Rechtsschutz-Versicherung",
-  "stand": "08.2025",
+  "stand": "26.08.2025",
   "modules": {
     "privat": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Privat-Rechtsschutz, wahlweise Basis, Komfort oder Premium"
     },
     "beruf": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Berufs-Rechtsschutz für nicht-selbstständige Tätigkeiten"
     },
     "verkehr": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Verkehrs-Rechtsschutz für Privat- und Firmenfahrzeuge"
     },
     "wohnen_immobilien": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Immobilien-Rechtsschutz für Eigentümer, Mieter, Vermieter"
     },
     "internet_web": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Internet-Rechtsschutz, Urheberrecht, Reputationsschutz"
     },
     "steuer": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Steuer-Rechtsschutz in Einspruchs- und Klageverfahren"
     },
     "sozialgericht": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Sozial-Rechtsschutz in Widerspruchs- und Klageverfahren"
     },
     "verwaltungsrecht": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz, Verkehrsverwaltung, Studienplatzklage"
     }
   },
   "coverage": {
     "versicherungssumme": "unbegrenzt",
-    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein; Flex-SB-Varianten möglich",
     "wartezeit_monate": 3,
     "wartezeit_ausnahmen": [
-      "keine Wartezeit: Service-Leistungen, Mediation, Online-Beratung",
-      "6 Monate: Arbeits-, Wohnungs-, Vertragsrecht",
-      "12 Monate: Eherecht",
-      "36 Monate: Studienplatzklagen"
+      "Arbeits-Rechtsschutz 6 Monate",
+      "Vertrags- und Sachenrecht 6 Monate",
+      "Familienrecht 12 Monate",
+      "Studienplatzklagen 36 Monate"
     ],
-    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Madeira, Azoren; weltweit mit Kosten-limits bis 250.000-500.000 EUR",
-    "vertragslaufzeit": "1, 2, 3, 4 oder 5 Jahre"
+    "geltungsbereich": "geografisches Europa mit Anliegerstaaten des Mittelmeers, kanarische Inseln, Madeira, Azoren; weltweiter temporärer Schutz bis 1 Jahr Auslandsaufenthalt",
+    "vertragslaufzeit": "1, 2, 3, 4 oder 5 Jahre; automatische Verlängerung um jeweils 1 Jahr"
   },
   "leistungen": [
+    "Telefonische Rechtsberatung",
+    "Mediation und außergerichtliche Konfliktbeilegung",
+    "Übernahme von Rechtsanwaltskosten",
+    "Übernahme von Gerichts- und Gebührenkosten",
+    "Strafkaution bis zur vereinbarten Höhe als zinsloses Darlehen",
+    "Spezialisierte Interessenvertretung",
+    "Bonus-Konfliktbeilegung ohne Wartezeit bei 3-Jahres-Schadenfreiheit",
+    "Kostenschätzung vor Beauftragung von Rechtsanwalt",
+    "Online-Rechtsberatung",
+    "Vertrags-Downloads und Vorlagen",
+    "Kostenübernahme Rechtsanwalt (nach RVG)",
+    "Gerichtskosten und Gerichtsvollzieher",
+    "Schadenersatz-Rechtsschutz",
+    "Arbeits-Rechtsschutz",
+    "Miet- und Grundstücks-Rechtsschutz",
+    "Straf-Rechtsschutz",
+    "Beistandsleistung",
+    "Forderungsmanagement",
+    "Internet-Rechtsschutz (Urheberrecht, Reputation, Cybermobbing)",
+    "Digitaler Nachlass",
+    "Online-Schutz-Radar",
+    "Vertrags-Download und Online-Beratung",
+    "Kaution als zinsloses Darlehen (bis 1 Mio. EUR)",
+    "Soforthilfe am Telefon",
+    "Außergerichtliche Konfliktbeilegung/Mediation",
+    "Spezialisierte Interessenvertretung durch Rechtsanwälte",
+    "Kosten für Gerichte und Gerichtsgebühren",
+    "Kosten für Prozessgegner bei Verpflichtung",
+    "Sachverständigenkosten",
+    "Strafkaution als zinsloses Darlehen",
+    "Online-Schutz-Radar für Internet-Risiken",
+    "Webseiten-Prüfung",
+    "Vertrags-Download und -prüfung",
+    "Bonus-Konfliktbeilegung/-Rechtsberatung",
     "Anwaltskosten",
     "Gerichts- und Gerichtsvollzieherkosten",
     "Zeugen- und Sachverständigenentschädigung",
     "Gegner-Kostenübernahme",
-    "Telefonische Rechtsberatung",
-    "Mediation und außergerichtliche Konfliktbeilegung",
-    "Online-Rechtsberatung",
-    "Anwaltsempfehlung",
-    "Strafkaution als zinsloses Darlehen"
+    "Anwaltsempfehlung"
   ],
   "ausschluesse": [
+    "Baufinanzierung und Baurisiken",
+    "Kapitalanlagen-Geschäfte",
+    "Kartellrecht",
+    "Patent-, Marken- und Urheberrecht (mit Ausnahmen)",
+    "Spielverträge und Wettverträge",
+    "Streitigkeiten mit Ehegatten und Familienangehörigen (mit Ausnahmen)",
+    "Vorsätzlich verursachte Rechtsstreitigkeiten",
+    "Haft- oder Parkverstoßverfahren mit Kostenfolge",
+    "Streitigkeiten zwischen Versicherungsnehmern desselben Vertrags",
+    "Streitigkeiten um Kauf, Verkauf, Finanzierung von Baugrundstücken",
+    "Kapitalanlage-Streitigkeiten (mit Ausnahmen bis 100.000 EUR)",
+    "Darlehensvergabe-Streitigkeiten (mit Ausnahmen bis 100.000 EUR)",
+    "Kartell- und Wettbewerbsrecht",
+    "Patent-, Marken-, Urheberrecht (außer Internet)",
+    "Haftverschuldung Versicherten (vorsätzlich und rechtswidrig)",
+    "Häufige Halt-/Parkverstoße mit Kostenfolge",
+    "Streitigkeiten zwischen Versicherten desselben Vertrags",
+    "Gewerbliche Tätigkeiten (nur bei Privat-RS als gelegentlich erlaubt)",
+    "Erwerb, Veräußerung oder Finanzierung von Grundstücken mit Bauplänen",
+    "Kapitalanlagegeräte und -streitigkeiten",
+    "Patentrecht und gewerbliche Schutzrechte",
+    "Darlehensstreitigkeiten und Spiel-/Wettverträge",
+    "Streitigkeiten zwischen Versicherten untereinander",
+    "Angelegenheiten ohne Rechtsstreit",
     "Kapitalanlagegeschäfte",
     "Darlehensvergabe",
     "Spiel- und Wettverträge",
@@ -70,6 +132,14 @@
     "Handelsvertreterrecht"
   ],
   "besonderheiten": [
+    "Flexible Selbstbeteiligung (Flex-SB) mit Halbierung bei Vor-Beauftragung des Anwalts",
+    "Umfassender Modulkatalog mit Basis-, Komfort- und Premium-Varianten",
+    "Keine Selbstbeteiligung für Mediation, Forderungsmanagement, Service-Leistungen",
+    "Weltweiter Versicherungsschutz für Auslandsaufenthalte bis 1 Jahr",
+    "Prämienfreie Nachhaftung bis 3 Jahre nach Vertragsende unter bestimmten Bedingungen",
+    "Kostenübernahme bis 400.000 EUR im Ausland, bis 500.000 EUR mit Plus-Baustein",
+    "Vorsorge-Versicherung für neue Risiken ohne erneute Wartezeit",
+    "Zahlungspause bei Arbeitslosigkeit oder Erwerbsunfähigkeit",
     "Flexible Selbstbeteiligung (Flex-SB) verfügbar",
     "Strafkaution bis 1 Mio. EUR",
     "Zusatz-Bausteine und Plus-Module",
@@ -78,9 +148,6 @@
     "Zahlungspause bei Arbeitslosigkeit möglich"
   ],
   "beitrag": null,
-  "_input_hash": "061a8d9bfe5af94873e3d732a656bbb61038eb6f6cafaf81239fa2ccc676f78b",
-  "_model": "haiku",
-  "_filter": "avb-filter",
   "sources": [
     {
       "doctype": "avb",
@@ -94,5 +161,11 @@
       "doctype": "weitere_unterlagen",
       "content_sha256": "ff54d5234ca4059c95120ab9d28b508c2324a3fc11e44cbd4efe7b63f7a97193"
     }
-  ]
+  ],
+  "_input_hash": "ced7f128486a19b2ea7ef99dd3677079499245f497113261c71eb3c243d1add8",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "_repeat": 3,
+  "_repeat_ok": 3,
+  "_reconciled": true
 }
