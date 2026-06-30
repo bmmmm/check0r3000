@@ -27,6 +27,7 @@ import tui_data
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 WEIGHTS_PATH = REPO_ROOT / "config" / "magic-weights.json"
+NEEDS_PATH = REPO_ROOT / "config" / "needs-weights.json"
 
 # The eight canonical Bausteine. A fixed denominator (not len(record.modules)) so a
 # record that drops a key still scores against the full market breadth, and an extra
@@ -108,6 +109,37 @@ def load_weights(path: Path | None = None) -> MagicWeights:
         if k in data and isinstance(data[k], (int, float)) and not isinstance(data[k], bool):
             kwargs[k] = data[k]
     return replace(w, **kwargs)
+
+
+def load_needs(path: Path | None = None) -> dict[str, float]:
+    """Load the personal Bedarf weighting from config/needs-weights.json.
+
+    Returns one weight per canonical Baustein; a missing file, unreadable JSON or a
+    missing/invalid key falls back to the neutral 1.0 (so a partial file is valid and an
+    all-neutral file ranks identically to the objective view). Negative weights are
+    clamped to 0 at use-site (_module_stats); here we just reject non-numbers."""
+    base = {k: 1.0 for k in _MODULE_KEYS}
+    p = path or NEEDS_PATH
+    if not p.is_file():
+        return base
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return base
+    if not isinstance(data, dict):
+        return base
+    for k in _MODULE_KEYS:
+        v = data.get(k)
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            base[k] = float(v)
+    return base
+
+
+def needs_are_neutral(needs: dict[str, float], eps: float = 1e-9) -> bool:
+    """True when every Baustein weight is equal (so the Bedarf view == objective view).
+    Lets the UI tell the user 'edit needs-weights.json to make this do something'."""
+    vals = [max(0.0, needs.get(k, 1.0)) for k in _MODULE_KEYS]
+    return max(vals) - min(vals) < eps
 
 
 # ---------------------------------------------------------------------------
@@ -200,18 +232,34 @@ def _norm_bewertung(v: float | None) -> float:
     return _clamp((v - 3.5) / (4.5 - 3.5))
 
 
-def _module_stats(rec: tui_data.DetailRecord) -> tuple[int, float, float]:
-    """(included_count, breadth[0,1], tier[0,1]) over the eight canonical Bausteine."""
+def _module_stats(
+    rec: tui_data.DetailRecord, needs: dict[str, float] | None = None
+) -> tuple[int, float, float]:
+    """(included_count, breadth[0,1], tier[0,1]) over the eight canonical Bausteine.
+
+    With `needs` (the personal Bedarf weighting, one weight per Baustein) the breadth
+    becomes a need-weighted match ratio — sum of weights for included Bausteine over the
+    sum of all weights — so a tariff scores on how well it covers what the user actually
+    cares about, not raw count. Neutral weights (all equal) reproduce the objective
+    breadth exactly. tier stays objective (it is no longer scored anyway). `needs=None`
+    is the objective default."""
     included = 0
     tier_sum = 0
+    inc_keys: list[str] = []
     for key in _MODULE_KEYS:
         mod = rec.modules.get(key)
         if isinstance(mod, dict) and mod.get("included"):
             included += 1
+            inc_keys.append(key)
             rank = _LEVEL_RANK.get(str(mod.get("level") or "").strip().casefold())
             if rank is not None:
                 tier_sum += rank
-    breadth = included / len(_MODULE_KEYS)
+    if needs:
+        total_w = sum(max(0.0, needs.get(k, 1.0)) for k in _MODULE_KEYS)
+        got_w = sum(max(0.0, needs.get(k, 1.0)) for k in inc_keys)
+        breadth = (got_w / total_w) if total_w > 0 else 0.0
+    else:
+        breadth = included / len(_MODULE_KEYS)
     tier = tier_sum / (_MAX_TIER * len(_MODULE_KEYS))
     return included, breadth, tier
 
@@ -282,10 +330,12 @@ def score_one(
     monatlich_eur: float | None,
     weights: MagicWeights,
     tax: dict | None = None,
+    needs: dict[str, float] | None = None,
 ) -> MagicScore:
-    """Compute the full MagicScore for one analyzed tariff."""
+    """Compute the full MagicScore for one analyzed tariff. `needs` (optional) switches
+    module_breadth to the personal Bedarf weighting; None = objective default."""
     tax = tax or ctax.load_taxonomy()
-    n_mods, breadth, tier = _module_stats(rec)
+    n_mods, breadth, tier = _module_stats(rec, needs)
     n_cats, leistung_cov = _leistung_coverage(rec, tax)
 
     dims = {
@@ -359,13 +409,15 @@ def rank(
     details_by_stem: dict[str, tui_data.DetailRecord],
     weights: MagicWeights | None = None,
     tax: dict | None = None,
+    needs: dict[str, float] | None = None,
 ) -> list[MagicScore]:
     """Rank every analyzed tariff by combined quality, best first.
 
     Joins detail records to snapshot rows by stem (for note/bewertung/price). A detail
     with no snapshot row still ranks — its note/bewertung are simply absent (neutralized
     in scoring). Ties break by lower price (the only place price ever enters), then stem
-    for a stable order.
+    for a stable order. `needs` (optional) re-weights module_breadth to the personal
+    Bedarf view; None = objective default.
     """
     weights = weights or load_weights()
     tax = tax or ctax.load_taxonomy()
@@ -377,7 +429,7 @@ def rank(
         note = parse_note(row.tarifnote) if row else None
         bew = row.bewertung if row else None
         price = row.monatlich_eur if row else None
-        scores.append(score_one(stem, rec, note, bew, price, weights, tax))
+        scores.append(score_one(stem, rec, note, bew, price, weights, tax, needs))
 
     _flag_low_confidence(scores)
 
@@ -630,7 +682,27 @@ def _selftest() -> int:
     zero = score_one("x__z", rich, 1.0, 4.1, 0.0, w, tax)
     check(zero.quality_per_eur() is None, "quality_per_eur is None at price 0")
 
-    # 15. Real-data smoke: rank loads and scores every record without raising.
+    # 15. Need-weighting: neutral == objective, skewed shifts module_breadth.
+    neutral = {k: 1.0 for k in _MODULE_KEYS}
+    check(needs_are_neutral(neutral), "all-equal needs should read as neutral")
+    skewed = {k: 0.0 for k in _MODULE_KEYS}
+    skewed["privat"] = 1.0  # only privat matters
+    check(not needs_are_neutral(skewed), "skewed needs should not read as neutral")
+    rec_priv = _mk_detail("X", "p", n_modules=0)
+    rec_priv.modules["privat"] = {"included": True, "level": None}
+    rec_priv.modules["verkehr"] = {"included": True, "level": None}
+    _, br_obj, _ = _module_stats(rec_priv)            # 2/8 objective
+    check(_approx(br_obj, 2 / 8), f"objective breadth should be 2/8, got {br_obj}")
+    _, br_need, _ = _module_stats(rec_priv, skewed)   # only privat weighted, privat covered
+    check(_approx(br_need, 1.0),
+          f"need-weighted breadth (only privat matters, privat covered) should be 1.0, "
+          f"got {br_need}")
+    _, br_neutral, _ = _module_stats(rec_priv, neutral)
+    check(_approx(br_neutral, br_obj), "neutral needs must reproduce objective breadth")
+    nd = load_needs()
+    check(set(nd.keys()) == set(_MODULE_KEYS), "load_needs returns all 8 Baustein keys")
+
+    # 16. Real-data smoke: rank loads and scores every record without raising.
     real_rows: list[tui_data.SnapshotRow] = []
     snap_dir = REPO_ROOT / "data" / "snapshots"
     latest = tui_data._find_latest_snapshot(snap_dir)

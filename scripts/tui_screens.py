@@ -714,6 +714,7 @@ class HelpScreen(ModalScreen[None]):
         ("Navigation", [
             ("y / x / v / l / B", "Favoriten / Markt / Vergleich / Verlauf / Benchmark"),
             ("M", "Magic Find — markt-weites Qualitäts-Ranking (Preis zählt nicht)"),
+            ("P", "Bedarf-Modus an/aus — Module nach deiner Gewichtung (needs-weights.json)"),
             ("F", "Markt-Scan — Top-Kandidaten live harvesten + analysieren, dann ranken"),
             ("Tab / ⇧Tab", "nächster / voriger Tab (zyklisch)"),
             ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),

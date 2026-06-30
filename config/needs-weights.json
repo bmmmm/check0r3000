@@ -1,0 +1,11 @@
+{
+  "_comment": "Personal need-weighting for the Magic Find 'Bedarf' toggle ([P] in the Magic tab). Each of the eight canonical Bausteine gets a relevance weight: higher = more important to you, 1.0 = neutral, 0 = don't care. These ONLY re-weight the module_breadth dimension (how well a tariff's included Bausteine match what YOU need) — every other scoring dimension and the objective default ranking are untouched. A missing key keeps the neutral 1.0, so a partial file is valid. This placeholder is all-neutral (1.0): until you edit it, the Bedarf toggle ranks identically to the objective view. Tracked, no PII (these are generic legal-area preferences, not personal data). Loaded by scripts/magic.py (load_needs).",
+  "privat": 1.0,
+  "beruf": 1.0,
+  "verkehr": 1.0,
+  "wohnen_immobilien": 1.0,
+  "internet_web": 1.0,
+  "steuer": 1.0,
+  "sozialgericht": 1.0,
+  "verwaltungsrecht": 1.0
+}

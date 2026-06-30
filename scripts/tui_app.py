@@ -287,6 +287,7 @@ class CheckApp(App):
         Binding("G", "analyze_local", "Analyze local", show=False),
         Binding("H", "harvest", "Harvest+Analyze", show=False),
         Binding("M", "switch_tab('magic')", "Magic Find", show=False),
+        Binding("P", "toggle_needs", "Bedarf", show=False),
         Binding("F", "magic_scan", "Markt-Scan", show=False),
         Binding("a", "add_to_compare", "Zum Vergleich", show=False),
         Binding("c", "manage_compare", "Vergleich verwalten", show=False),
@@ -352,6 +353,9 @@ class CheckApp(App):
         self._magic_ident_to_rk: dict[str, str] = {}
         self._magic_snaprow_by_stem: dict[str, SnapshotRow] = {}
         self._magic_score_by_stem: dict[str, magic.MagicScore] = {}
+        # Magic Find Bedarf toggle ([P]): off = objective market quality, on = re-weight
+        # module_breadth by the personal needs in config/needs-weights.json.
+        self._magic_needs_mode: bool = False
         self._active_row: SnapshotRow | None = None
         self._active_fav: dict | None = None
         # Vergleich tab view state: compact by default (clean ✓/✗/~/— matrix);
@@ -1889,16 +1893,30 @@ class CheckApp(App):
             return
 
         self._magic_weights = magic.load_weights()
+        needs = magic.load_needs() if self._magic_needs_mode else None
         reps = magic._representative_rows(self._snapshot.rows)
         self._magic_snaprow_by_stem = reps
         scores = magic.rank(self._snapshot.rows, self._details_by_stem,
-                            self._magic_weights)
+                            self._magic_weights, needs=needs)
 
+        if self._magic_needs_mode:
+            if needs is not None and magic.needs_are_neutral(needs):
+                mode_note = (
+                    "[bold yellow]🎯 Bedarf-Modus[/bold yellow] "
+                    "[dim](neutral — config/needs-weights.json anpassen, damit es wirkt)"
+                    "[/dim]"
+                )
+            else:
+                mode_note = (
+                    "[bold yellow]🎯 Bedarf-Modus[/bold yellow] "
+                    "[dim]— Module nach deiner Gewichtung[/dim]"
+                )
+        else:
+            mode_note = "[bold]✨ Magic Find[/bold] — objektive Marktqualität"
         header.update(
-            "[bold]✨ Magic Find[/bold] — beste Qualität: Note + Leistungen + Module, "
-            "[bold]Preis zählt nicht[/bold].  "
+            f"{mode_note}, [bold]Preis zählt nicht[/bold].  "
             f"[dim]{len(scores)} analysierte Tarife gerankt · ↑↓ wählen · "
-            "\\[d] Score-Beitrag je Dimension[/dim]"
+            "\\[P] Bedarf an/aus · \\[d] Score-Beitrag je Dimension[/dim]"
         )
 
         for i, s in enumerate(scores):
@@ -3449,6 +3467,34 @@ class CheckApp(App):
         self.push_screen(ConfirmFetchScreen(pseudo, ANALYZE_MODEL, harvest=True), _go)
 
     # --- Magic deep-scan funnel ([F]) ---
+
+    def action_toggle_needs(self) -> None:
+        """Toggle the Magic-Find Bedarf view: objective market quality <-> personal
+            need-weighted module_breadth (config/needs-weights.json). Only meaningful on
+            the Magic tab; re-ranks in place and reselects the top row."""
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            return
+        if active != "magic":
+            self.notify("Bedarf-Modus gilt nur im Magic-Find-Tab \\[M].",
+                        severity="warning")
+            return
+        self._magic_needs_mode = not self._magic_needs_mode
+        self._populate_magic()
+        self._refresh_magic_detail()
+        if self._magic_needs_mode:
+            needs = magic.load_needs()
+            if magic.needs_are_neutral(needs):
+                self.notify(
+                    "Bedarf-Modus an — aber Gewichte sind neutral. "
+                    "config/needs-weights.json anpassen, damit sich das Ranking ändert.",
+                    timeout=7,
+                )
+            else:
+                self.notify("Bedarf-Modus an — Module nach deiner Gewichtung.")
+        else:
+            self.notify("Bedarf-Modus aus — objektive Marktqualität.")
 
     def action_magic_scan(self) -> None:
         """Deep-scan funnel: prescore the whole market, then harvest + analyze the

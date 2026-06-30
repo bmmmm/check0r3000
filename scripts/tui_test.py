@@ -300,6 +300,37 @@ async def t_magic_tab(app, pilot) -> None:
     assert "Magic-Score" in text, f"magic detail not rendered: {text[:80]!r}"
 
 
+async def t_magic_needs_toggle(app, pilot) -> None:
+    """[P] toggles the Bedarf view on the Magic tab: re-ranks in place (no row loss,
+    still score-descending), the header reflects the mode, and with the shipped neutral
+    needs-weights.json the re-rank is identical to the objective view (neutral ==
+    objective). A second [P] returns to the objective view."""
+    await pilot.press("M")
+    await pilot.pause()
+    table = _table(app, "#magic-table")
+    assert app._magic_needs_mode is False, "needs mode should start off"
+    objective = [(rk, s.total) for rk, s in app._magic_rows.items()]
+
+    await pilot.press("P")
+    await pilot.pause()
+    assert app._magic_needs_mode is True, "[P] did not enable needs mode"
+    assert table.row_count == len(app._magic_rows) > 0, "row loss after needs toggle"
+    totals = [s.total for s in app._magic_rows.values()]
+    assert totals == sorted(totals, reverse=True), "needs-mode rows not score-descending"
+
+    header = app.query_one("#magic-header")
+    hr = header.render()
+    htext = hr.plain if hasattr(hr, "plain") else str(hr)
+    assert "Bedarf" in htext, f"header missing Bedarf marker: {htext[:80]!r}"
+
+    neutral_now = [(rk, s.total) for rk, s in app._magic_rows.items()]
+    assert neutral_now == objective, "neutral needs must reproduce the objective ranking"
+
+    await pilot.press("P")
+    await pilot.pause()
+    assert app._magic_needs_mode is False, "[P] did not disable needs mode"
+
+
 async def t_magic_scan_modal(app, pilot) -> None:
     """[F] runs the deep-scan funnel's candidate selection and, when top-pool_k
     products are still un-analyzed, opens the MagicScanScreen confirm — a long, paid,
@@ -373,6 +404,7 @@ CASES = [
     ("tab_cycle", t_tab_cycle),
     ("benchmark_tab", t_benchmark_tab),
     ("magic_tab", t_magic_tab),
+    ("magic_needs_toggle", t_magic_needs_toggle),
     ("magic_scan_modal", t_magic_scan_modal),
     ("table_less_tab_guards", t_table_less_tab_guards),
     ("cross_tab_roundtrip", t_cross_tab_roundtrip),
