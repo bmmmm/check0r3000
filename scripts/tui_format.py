@@ -75,6 +75,31 @@ def _bewertung_cell(row: SnapshotRow, lo: float | None = None,
     return f"[{color}]{val}★[/{color}]{cnt}"
 
 
+# Magic-Find quality-score colour anchors (muted red = low → vivid green = high).
+# The score is an absolute [0,1] quality fraction, so a fixed scale is intended here:
+# the bar should read "how good overall", not "best-in-this-batch".
+_MAGIC_LOW = (0xD0, 0x4A, 0x4A)
+_MAGIC_HIGH = (0x3A, 0xE6, 0x6B)
+
+
+def magic_score_color(frac: float) -> str:
+    """Colour for a Magic quality fraction [0,1]: red (low) → green (high)."""
+    return _lerp_hex(_MAGIC_LOW, _MAGIC_HIGH, frac)
+
+
+def magic_bar(frac: float, width: int = 8) -> str:
+    """A colour-graded mini bar (filled █ / empty ░) for a [0,1] fraction."""
+    frac = 0.0 if frac < 0.0 else 1.0 if frac > 1.0 else frac
+    filled = round(frac * width)
+    color = magic_score_color(frac)
+    return f"[{color}]{'█' * filled}{'░' * (width - filled)}[/{color}]"
+
+
+def magic_score_cell(total: float, width: int = 8) -> str:
+    """Score number + colour-graded mini bar for the Magic Find table/detail."""
+    return f"{total:.3f} {magic_bar(total, width)}"
+
+
 # ---------------------------------------------------------------------------
 # Coverage-comparison (Vergleich tab) rendering helpers — pure, no Textual.
 # Cells are padded on PLAIN text then optionally wrapped in one colour tag, so

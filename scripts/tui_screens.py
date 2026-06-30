@@ -652,6 +652,7 @@ class HelpScreen(ModalScreen[None]):
     GROUPS = [
         ("Navigation", [
             ("y / x / v / l / B", "Favoriten / Markt / Vergleich / Verlauf / Benchmark"),
+            ("M", "Magic Find — markt-weites Qualitäts-Ranking (Preis zählt nicht)"),
             ("Tab / ⇧Tab", "nächster / voriger Tab (zyklisch)"),
             ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
             ("d", "Detail-Band unter der Tabelle ein/aus"),

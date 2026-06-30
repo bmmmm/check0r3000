@@ -208,6 +208,40 @@ DataTable > .datatable--odd-row {
     color: $text;
 }
 
+/* ── Magic Find tab ─────────────────────────────────────────────────────── */
+
+#magic-header {
+    padding: 0 1;
+    color: $text-muted;
+}
+
+#magic-layout {
+    height: 1fr;
+    margin-top: 1;
+    layout: vertical;
+}
+
+#magic-table {
+    width: 1fr;
+    height: 1fr;
+    border: tall $accent-darken-2;
+    scrollbar-color: $accent-darken-2;
+    scrollbar-background: $surface-darken-1;
+}
+
+#magic-detail {
+    width: 1fr;
+    height: 50%;
+    border: tall $accent-darken-2;
+    padding: 1 2;
+    background: $surface-darken-1;
+    margin-top: 1;
+}
+
+#magic-detail-content {
+    color: $text;
+}
+
 /* ── Confirm modal (download + analyze) ─────────────────────────────────── */
 
 /* DeleteDataScreen reuses #confirm-box but is a distinct ModalScreen subclass,

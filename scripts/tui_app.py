@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import coverage_taxonomy as ctax  # noqa: E402
 import _providers  # noqa: E402
 import scorecard  # noqa: E402  — shared benchmark scoring (eval.py + Benchmark tab)
+import magic  # noqa: E402  — Magic Find quality-scoring core (rank / prescore)
 
 from tui_data import (  # noqa: E402
     ChangeInfo,
@@ -49,6 +50,8 @@ from tui_format import (  # noqa: E402
     STATUS_LEGEND,
     VERGLEICH_LABEL_W,
     benchmark_markup,
+    magic_bar,
+    magic_score_cell,
     _bewertung_cell,
     _bewertung_color,
     _col_label,
@@ -153,6 +156,17 @@ MODULE_LABELS = {
     "steuer": "Steuer",
     "sozialgericht": "Sozialgericht",
     "verwaltungsrecht": "Verwaltungsrecht",
+}
+
+# German labels for the Magic-Find score dimensions (presentation only; the keys
+# and their order are owned by magic.MagicScore.dims).
+MAGIC_DIM_LABELS = {
+    "note": "Tarifnote",
+    "leistung_cov": "Leistungs-Breite",
+    "module_breadth": "Modul-Breite",
+    "coverage_gen": "Deckungs-Großzügigkeit",
+    "module_tier": "Modul-Stufe",
+    "bewertung": "Kundenbewertung",
 }
 
 # -----------------------------------------------------------------------
@@ -270,6 +284,7 @@ class CheckApp(App):
         # Context / power keys — documented in [?], hidden from the footer.
         Binding("G", "analyze_local", "Analyze local", show=False),
         Binding("H", "harvest", "Harvest+Analyze", show=False),
+        Binding("M", "switch_tab('magic')", "Magic Find", show=False),
         Binding("a", "add_to_compare", "Zum Vergleich", show=False),
         Binding("c", "manage_compare", "Vergleich verwalten", show=False),
         Binding("w", "toggle_compare_wording", "Wording", show=False),
@@ -327,6 +342,13 @@ class CheckApp(App):
         # don't raise DuplicateKey; the ident index drives cross-tab re-selection.
         self._verlauf_rows: dict[str, dict] = {}
         self._verlauf_ident_to_rk: dict[str, str] = {}
+        # Magic Find: per-row score (row-key -> MagicScore, insertion order = rank),
+        # the ident index for cross-tab re-selection, the representative snapshot row
+        # per stem (for the detail band) and a stem -> score lookup for rendering.
+        self._magic_rows: dict[str, magic.MagicScore] = {}
+        self._magic_ident_to_rk: dict[str, str] = {}
+        self._magic_snaprow_by_stem: dict[str, SnapshotRow] = {}
+        self._magic_score_by_stem: dict[str, magic.MagicScore] = {}
         self._active_row: SnapshotRow | None = None
         self._active_fav: dict | None = None
         # Vergleich tab view state: compact by default (clean ✓/✗/~/— matrix);
@@ -353,6 +375,7 @@ class CheckApp(App):
         self._populate_market_table()
         self._populate_verlauf()
         self._populate_benchmark()
+        self._populate_magic()
         self._update_header()
         self._prewarm_analyze_model()
 
@@ -437,6 +460,15 @@ class CheckApp(App):
             with TabPane("Benchmark [B]", id="bench"):
                 with ScrollableContainer(id="bench-panel"):
                     yield Static("Benchmark wird geladen…", id="bench-content")
+            with TabPane("✨ Magic Find [M]", id="magic"):
+                yield Label("", id="magic-header")
+                with Vertical(id="magic-layout"):
+                    yield DataTable(id="magic-table", cursor_type="row", zebra_stripes=True)
+                    with ScrollableContainer(id="magic-detail", classes="detail-band"):
+                        yield Static(
+                            "Magic-Find-Zeile wählen für den Score-Beitrag je Dimension.",
+                            id="magic-detail-content",
+                        )
         yield Label("", id="status-bar")
         yield Footer()
 
@@ -1826,6 +1858,127 @@ class CheckApp(App):
 
         return base + "\n\n" + "\n".join(lines)
 
+    # --- Magic Find tab ---
+
+    def _populate_magic(self) -> None:
+        """Rank every analyzed tariff by combined quality (magic.rank) and fill the
+            Magic-Find table, best first. Read-only over out/tariffs — PRICE IS SHOWN
+            BUT NEVER SCORED. The deep-scan funnel (Phase 4) extends this with prescore
+            candidates; here it ranks only what is already analyzed."""
+        try:
+            table: DataTable = self.query_one("#magic-table", DataTable)
+            header: Label = self.query_one("#magic-header", Label)
+        except NoMatches:
+            return
+
+        table.clear(columns=True)
+        table.add_columns(
+            "#", "Versicherer", "Tarif", "Score", "Note", "Bew.",
+            "Mod", "Leist.", "Deckung", "€/mo",
+        )
+        self._magic_rows = {}
+        self._magic_ident_to_rk = {}
+        self._magic_snaprow_by_stem = {}
+        self._magic_score_by_stem = {}
+
+        if not self._snapshot:
+            header.update("[dim italic]Kein Snapshot geladen.[/dim italic]")
+            return
+
+        self._magic_weights = magic.load_weights()
+        reps = magic._representative_rows(self._snapshot.rows)
+        self._magic_snaprow_by_stem = reps
+        scores = magic.rank(self._snapshot.rows, self._details_by_stem,
+                            self._magic_weights)
+
+        header.update(
+            "[bold]✨ Magic Find[/bold] — beste Qualität: Note + Leistungen + Module, "
+            "[bold]Preis zählt nicht[/bold].  "
+            f"[dim]{len(scores)} analysierte Tarife gerankt · ↑↓ wählen · "
+            "\\[d] Score-Beitrag je Dimension[/dim]"
+        )
+
+        for i, s in enumerate(scores):
+            rank_no = i + 1
+            marker = "[bright_green]▶[/bright_green]" if rank_no == 1 else str(rank_no)
+            row_key = f"{s.stem}#{i}"
+            self._magic_rows[row_key] = s
+            self._magic_score_by_stem[s.stem] = s
+            snaprow = reps.get(s.stem)
+
+            if snaprow and snaprow.tarifnote:
+                nc = _tarifnote_color(snaprow.tarifnote)
+                note_col = f"[{nc}]{snaprow.tarifnote}[/{nc}]"
+            elif s.note is not None:
+                note_col = f"{s.note:.1f}".replace(".", ",")
+            else:
+                note_col = "—"
+            bew_cell = (
+                _bewertung_cell(snaprow, *self._bew_lohi())
+                if snaprow is not None else "[dim]—[/dim]"
+            )
+            price = f"{s.monatlich_eur:.0f}" if s.monatlich_eur is not None else "—"
+            deckung = f"{s.dims.get('coverage_gen', 0.0) * 100:.0f}%"
+
+            table.add_row(
+                marker,
+                _esc(s.insurer),
+                _esc(s.product),
+                magic_score_cell(s.total),
+                note_col,
+                bew_cell,
+                f"{s.n_modules}/8",
+                f"{s.n_leistung_cats}/24",
+                deckung,
+                price,
+                key=row_key,
+            )
+            # Map both the stem and the representative row's bare key to this row, so a
+            # tariff held in another tab can re-select here (best-effort; the SB band
+            # may differ). First occurrence wins.
+            self._magic_ident_to_rk.setdefault(s.stem, row_key)
+            if snaprow and snaprow.key:
+                self._magic_ident_to_rk.setdefault(snaprow.key, row_key)
+
+    def _render_magic_detail(self, score: magic.MagicScore,
+                             row: "SnapshotRow | None") -> str:
+        """Score breakdown (per-dimension contribution) + the standard tariff detail."""
+        weights = magic.load_weights().dim_weights()
+        lines = [
+            f"[bold]{_esc(score.insurer)}[/bold] — [italic]{_esc(score.product)}[/italic]",
+            f"[bold underline]Magic-Score[/bold underline]  "
+            f"{magic_score_cell(score.total, 16)}   "
+            "[dim](Qualität; Preis fließt NICHT ein)[/dim]",
+            "",
+            "[bold underline]Score-Beitrag je Dimension[/bold underline]",
+        ]
+        for dim, raw in score.dims.items():
+            label = MAGIC_DIM_LABELS.get(dim, dim)
+            w = weights.get(dim, 0.0)
+            contrib = score.contrib.get(dim, 0.0)
+            lines.append(
+                f"  {label:<24} {magic_bar(raw, 10)} {raw * 100:4.0f}%   "
+                f"[dim]×{w:.2f} = {contrib:.3f}[/dim]"
+            )
+        lines.append("")
+        if row is not None:
+            lines.append(self._render_market_detail(row))
+        else:
+            lines.append(
+                "[dim italic]Kein passender Snapshot-Tarif — nur der Score (Detail "
+                "nicht verfügbar).[/dim italic]"
+            )
+        return "\n".join(lines)
+
+    def _refresh_magic_detail(self) -> None:
+        """Re-render the Magic band live — only when it is currently shown."""
+        try:
+            band = self.query_one("#magic-detail")
+        except NoMatches:
+            return
+        if band.display:
+            self._render_active_into(("#magic-detail", "#magic-detail-content"))
+
     # --- Event handlers ---
 
     def _move_cursor_safe(self, table_id: str, rk: str) -> None:
@@ -1857,6 +2010,7 @@ class CheckApp(App):
             "favorites": ("#fav-table", self._fav_ident_to_rk, self._fav_rows),
             "market": ("#market-table", self._market_ident_to_rk, self._market_rows),
             "verlauf": ("#verlauf-table", self._verlauf_ident_to_rk, self._verlauf_rows),
+            "magic": ("#magic-table", self._magic_ident_to_rk, self._magic_rows),
         }
         spec = targets.get(active)
         if spec is None:
@@ -1904,6 +2058,13 @@ class CheckApp(App):
                 )
                 self._active_fav = None
                 self._held_ident = ident
+        elif active == "magic":
+            score = self._magic_rows.get(rk)
+            if score is not None:
+                row = self._magic_snaprow_by_stem.get(score.stem)
+                self._active_row = row  # may be None (detail-only stem)
+                self._active_fav = None
+                self._held_ident = (row.key if (row and row.key) else None) or score.stem
 
     @on(DataTable.RowHighlighted, "#market-table")
     def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -2016,6 +2177,40 @@ class CheckApp(App):
             if url:
                 self._open_external([url])
 
+    @on(DataTable.RowHighlighted, "#magic-table")
+    def on_magic_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Track the highlighted Magic row as the active tariff (via its
+            representative snapshot row) and refresh the score-breakdown band."""
+        key = str(event.row_key.value) if event.row_key.value is not None else None
+        if key is None:
+            return
+        score = self._magic_rows.get(key)
+        if score is None:
+            return
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            active = None
+        if active == "magic":
+            row = self._magic_snaprow_by_stem.get(score.stem)
+            self._active_row = row
+            self._active_fav = None
+            self._held_ident = (row.key if (row and row.key) else None) or score.stem
+            if self._detail_visible:
+                self._show_detail()
+            else:
+                self._refresh_magic_detail()
+
+    @on(DataTable.RowSelected, "#magic-table")
+    def on_magic_selected(self, event: DataTable.RowSelected) -> None:
+        self.on_magic_highlighted(event)
+        self._detail_visible = True
+        self._show_detail(focus=True)
+        if self._active_row and self._active_row.position:
+            url = self._build_offer_url(self._active_row.position)
+            if url:
+                self._open_external([url])
+
     @on(DataTable.HeaderSelected, "#market-table")
     def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
         col_map = {0: "position", 2: "insurer", 4: "note", 6: "price"}
@@ -2087,7 +2282,7 @@ class CheckApp(App):
 
     # Tab order for cycling; "diff" (Vergleich) and "bench" have no table but are
     # still stops.
-    _TAB_ORDER = ["favorites", "market", "diff", "verlauf", "bench"]
+    _TAB_ORDER = ["favorites", "market", "diff", "verlauf", "bench", "magic"]
 
     def action_cycle_tab(self, delta: int) -> None:
         """Cycle the active tab forward (Tab) / backward (Shift+Tab). While a modal
@@ -2131,7 +2326,7 @@ class CheckApp(App):
         except NoMatches:
             return None
         tid = {"favorites": "#fav-table", "market": "#market-table",
-               "verlauf": "#verlauf-table"}.get(active)
+               "verlauf": "#verlauf-table", "magic": "#magic-table"}.get(active)
         if not tid:
             return None
         try:
@@ -2164,7 +2359,7 @@ class CheckApp(App):
             return
         target = {"favorites": "#fav-table", "market": "#market-table",
                   "diff": "#diff-panel", "verlauf": "#verlauf-table",
-                  "bench": "#bench-panel"}.get(active)
+                  "bench": "#bench-panel", "magic": "#magic-table"}.get(active)
         if not target:
             return
         try:
@@ -2175,7 +2370,7 @@ class CheckApp(App):
         # active selection to wherever the cursor actually is (held-absent included)
         # so tab-specific actions ([u]/[R]/[N]/[D]) never target the previous tab's
         # row. Center afterwards, once the pane's layout has settled.
-        if active in ("favorites", "market", "verlauf"):
+        if active in ("favorites", "market", "verlauf", "magic"):
             self._select_held(active)
             self._adopt_cursor_row(active)
             self.call_after_refresh(self._center_cursor_in, target)
@@ -2189,6 +2384,7 @@ class CheckApp(App):
         self._populate_market_table()
         self._populate_verlauf()
         self._populate_benchmark()
+        self._populate_magic()
         self._update_header()
         # clear() reset every cursor to row 0; move it back onto the held tariff in
         # the active tab and reconcile the active state, so a follow-up [u]/[R]/[D]
@@ -2197,12 +2393,13 @@ class CheckApp(App):
             active = self.query_one("#tabs", TabbedContent).active
         except NoMatches:
             active = None
-        if active in ("favorites", "market", "verlauf"):
+        if active in ("favorites", "market", "verlauf", "magic"):
             self._select_held(active)
             self._adopt_cursor_row(active)
         self._refresh_market_detail()
         self._refresh_fav_detail()
         self._refresh_verlauf_detail()
+        self._refresh_magic_detail()
         self._update_status_bar()
 
     def action_refresh_data(self) -> None:
@@ -2472,7 +2669,7 @@ class CheckApp(App):
         never fire on that stale, now-invisible row — [D] rmtrees it, [g]/[H] pay for it."""
         try:
             return self.query_one("#tabs", TabbedContent).active in (
-                "favorites", "market", "verlauf")
+                "favorites", "market", "verlauf", "magic")
         except NoMatches:
             return False
 
@@ -2985,6 +3182,8 @@ class CheckApp(App):
             return "#detail-panel", "#detail-content"
         if active == "verlauf":
             return "#verlauf-detail", "#verlauf-detail-content"
+        if active == "magic":
+            return "#magic-detail", "#magic-detail-content"
         return None
 
     def _render_active_into(self, ids: tuple[str, str]) -> None:
@@ -3014,6 +3213,16 @@ class CheckApp(App):
                 content.update("[dim]Verlauf-Zeile wählen (Pfeile / Enter).[/dim]")
             else:
                 content.update(self._render_verlauf_detail(row))
+        elif band_id == "#magic-detail":
+            row = self._active_row
+            score = (
+                self._magic_score_by_stem.get(row.stem)
+                if (row is not None and row.stem) else None
+            )
+            if score is None:
+                content.update("[dim]Magic-Find-Zeile wählen (Pfeile / Klick).[/dim]")
+            else:
+                content.update(self._render_magic_detail(score, row))
         else:  # market band
             row = self._active_row
             if row is None:

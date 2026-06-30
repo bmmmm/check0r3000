@@ -93,13 +93,13 @@ async def t_tab_shortcuts(app, pilot) -> None:
 async def t_tab_cycle(app, pilot) -> None:
     """Tab cycles forward through _TAB_ORDER and wraps; Shift+Tab goes back."""
     assert _active_tab(app) == "favorites"
-    for want in ("market", "diff", "verlauf", "bench", "favorites"):
+    for want in ("market", "diff", "verlauf", "bench", "magic", "favorites"):
         await pilot.press("tab")
         await pilot.pause()
         assert _active_tab(app) == want, f"tab -> {_active_tab(app)!r}, want {want!r}"
     await pilot.press("shift+tab")
     await pilot.pause()
-    assert _active_tab(app) == "bench", f"shift+tab -> {_active_tab(app)!r}"
+    assert _active_tab(app) == "magic", f"shift+tab -> {_active_tab(app)!r}"
 
 
 async def t_cross_tab_roundtrip(app, pilot) -> None:
@@ -275,11 +275,37 @@ async def t_benchmark_tab(app, pilot) -> None:
         f"bench content neither scorecard nor empty state: {text[:80]!r}")
 
 
+async def t_magic_tab(app, pilot) -> None:
+    """[M] switches to the Magic Find tab; the table is populated and ranked by score
+    descending; highlighting a row renders the score-breakdown band without a
+    MarkupError, and the row count matches the in-memory score map (no row loss)."""
+    await pilot.press("M")
+    await pilot.pause()
+    assert _active_tab(app) == "magic", f"[M] -> {_active_tab(app)!r}"
+    table = _table(app, "#magic-table")
+    assert table.row_count == len(app._magic_rows), (
+        f"magic rows {table.row_count} != map {len(app._magic_rows)}")
+    assert table.row_count > 0, "magic table empty — no analyzed tariffs?"
+    totals = [s.total for s in app._magic_rows.values()]
+    assert totals == sorted(totals, reverse=True), "magic rows not score-descending"
+    table.move_cursor(row=0)
+    await pilot.pause()
+    assert app._active_row is not None, "magic top row has no representative snapshot row"
+    app._detail_visible = True
+    app._show_detail()
+    await pilot.pause()
+    content = app.query_one("#magic-detail-content", Static)
+    rendered = content.render()
+    text = rendered.plain if hasattr(rendered, "plain") else str(rendered)
+    assert "Magic-Score" in text, f"magic detail not rendered: {text[:80]!r}"
+
+
 CASES = [
     ("boot_and_tables", t_boot_and_tables),
     ("tab_shortcuts", t_tab_shortcuts),
     ("tab_cycle", t_tab_cycle),
     ("benchmark_tab", t_benchmark_tab),
+    ("magic_tab", t_magic_tab),
     ("table_less_tab_guards", t_table_less_tab_guards),
     ("cross_tab_roundtrip", t_cross_tab_roundtrip),
     ("cross_tab_held_absent", t_cross_tab_held_absent),
