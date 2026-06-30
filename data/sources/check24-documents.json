@@ -285,6 +285,520 @@
           "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/0af294cc754df393c4c3b23f704bc35c/Weitere_Unterlagen_ERGO_Versicherung_AG_Best.pdf"
         }
       ]
+    },
+    {
+      "stem": "bavariadirekt__rundum-schutz-mit-beitragsgarantie-oerag-rechtsschutz",
+      "insurer": "BavariaDirekt",
+      "tariff": "Rundum-Schutz mit Beitragsgarantie (ÖRAG Rechtsschutz)",
+      "position": 4,
+      "hash": "69523586c61afdd22745d53978ee328e",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/69523586c61afdd22745d53978ee328e/Allgemeine_Versicherungsbedingungen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/69523586c61afdd22745d53978ee328e/Produktinformationsblatt_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/69523586c61afdd22745d53978ee328e/Besondere_Versicherungsbedingungen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/69523586c61afdd22745d53978ee328e/Weitere_Unterlagen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "ks-auxilia__jurprivat",
+      "insurer": "KS/Auxilia",
+      "tariff": "JURPRIVAT",
+      "position": 5,
+      "hash": "76379ec4a850534c45c8e3b2cc0ab2bb",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Auxilia_JURPRIVAT",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/76379ec4a850534c45c8e3b2cc0ab2bb/Allgemeine_Versicherungsbedingungen_Auxilia_JURPRIVAT.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Auxilia_JURPRIVAT",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/76379ec4a850534c45c8e3b2cc0ab2bb/Produktinformationsblatt_Auxilia_JURPRIVAT.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_Auxilia_JURPRIVAT",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/76379ec4a850534c45c8e3b2cc0ab2bb/Besondere_Versicherungsbedingungen_Auxilia_JURPRIVAT.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Auxilia_JURPRIVAT",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/76379ec4a850534c45c8e3b2cc0ab2bb/Weitere_Unterlagen_Auxilia_JURPRIVAT.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "s-direkt__rundum-schutz-oerag-rechtsschutz",
+      "insurer": "S-Direkt",
+      "tariff": "Rundum-Schutz (ÖRAG Rechtsschutz)",
+      "position": 7,
+      "hash": "1cb0ebab6676d27ab303b08cee16ad7b",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/1cb0ebab6676d27ab303b08cee16ad7b/Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/1cb0ebab6676d27ab303b08cee16ad7b/Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/1cb0ebab6676d27ab303b08cee16ad7b/Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/1cb0ebab6676d27ab303b08cee16ad7b/Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_(%C3%96RAG_Rechtsschutz).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "roland__top-rechtsschutz-komfort",
+      "insurer": "ROLAND",
+      "tariff": "Top-Rechtsschutz Komfort",
+      "position": 12,
+      "hash": "e1f52f21c86af93f1e0ecd687b90957b",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/e1f52f21c86af93f1e0ecd687b90957b/Allgemeine_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/e1f52f21c86af93f1e0ecd687b90957b/Produktinformationsblatt_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/e1f52f21c86af93f1e0ecd687b90957b/Besondere_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/e1f52f21c86af93f1e0ecd687b90957b/Weitere_Unterlagen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Komfort.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "roland__top-rechtsschutz-premium-strafrechtplus",
+      "insurer": "ROLAND",
+      "tariff": "Top-Rechtsschutz Premium + StrafrechtPlus",
+      "position": 14,
+      "hash": "daa6727e5e6c87c65a56a2c72394c7f0",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium_+_StrafrechtPlus",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/daa6727e5e6c87c65a56a2c72394c7f0/Allgemeine_Versicherungsbedingungen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium_+_StrafrechtPlus.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium_+_StrafrechtPlus",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/daa6727e5e6c87c65a56a2c72394c7f0/Produktinformationsblatt_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium_+_StrafrechtPlus.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium_+_StrafrechtPlus",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/daa6727e5e6c87c65a56a2c72394c7f0/Weitere_Unterlagen_ROLAND_Rechtsschutz-Versicherungs-AG_Top-Rechtsschutz_Premium_+_StrafrechtPlus.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "s-direkt__rundum-schutz-mit-beitragsgarantie-oerag-rechtsschutz",
+      "insurer": "S-Direkt",
+      "tariff": "Rundum-Schutz mit Beitragsgarantie (ÖRAG Rechtsschutz)",
+      "position": 16,
+      "hash": "53394946c68142b9842e6f0cb6e8edc1",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/53394946c68142b9842e6f0cb6e8edc1/Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/53394946c68142b9842e6f0cb6e8edc1/Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/53394946c68142b9842e6f0cb6e8edc1/Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/53394946c68142b9842e6f0cb6e8edc1/Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "ks-auxilia__rechtsschutz-strafrecht",
+      "insurer": "KS/Auxilia",
+      "tariff": "Rechtsschutz + Strafrecht",
+      "position": 27,
+      "hash": "f314f1b86cb4f747f7b246c7cef15004",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Auxilia_Rechtsschutz_+_Strafrecht",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/f314f1b86cb4f747f7b246c7cef15004/Allgemeine_Versicherungsbedingungen_Auxilia_Rechtsschutz_+_Strafrecht.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Auxilia_Rechtsschutz_+_Strafrecht",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/f314f1b86cb4f747f7b246c7cef15004/Produktinformationsblatt_Auxilia_Rechtsschutz_+_Strafrecht.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_Auxilia_Rechtsschutz_+_Strafrecht",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/f314f1b86cb4f747f7b246c7cef15004/Besondere_Versicherungsbedingungen_Auxilia_Rechtsschutz_+_Strafrecht.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Auxilia_Rechtsschutz_+_Strafrecht",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/f314f1b86cb4f747f7b246c7cef15004/Weitere_Unterlagen_Auxilia_Rechtsschutz_+_Strafrecht.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "arag__komfort-flex-2026",
+      "insurer": "ARAG",
+      "tariff": "Komfort Flex (2026)",
+      "position": 32,
+      "hash": "ef7c981a115a4a01d63ad0ac499c2adb",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ARAG_SE_Komfort_Flex_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/ef7c981a115a4a01d63ad0ac499c2adb/Allgemeine_Versicherungsbedingungen_ARAG_SE_Komfort_Flex_(2026).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ARAG_SE_Komfort_Flex_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/ef7c981a115a4a01d63ad0ac499c2adb/Produktinformationsblatt_ARAG_SE_Komfort_Flex_(2026).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ARAG_SE_Komfort_Flex_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/ef7c981a115a4a01d63ad0ac499c2adb/Weitere_Unterlagen_ARAG_SE_Komfort_Flex_(2026).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "s-direkt__rundum-schutz-plus-mit-beitragsgarantie-oerag-rechtsschutz",
+      "insurer": "S-Direkt",
+      "tariff": "Rundum-Schutz - PLUS mit Beitragsgarantie (ÖRAG Rechtsschutz)",
+      "position": 52,
+      "hash": "bf2b34d928c3092bdf4850bf9101af48",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/bf2b34d928c3092bdf4850bf9101af48/Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/bf2b34d928c3092bdf4850bf9101af48/Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/bf2b34d928c3092bdf4850bf9101af48/Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/bf2b34d928c3092bdf4850bf9101af48/Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_(%C3%96RAG_Rechtsschutz).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "arag__komfort-2026",
+      "insurer": "ARAG",
+      "tariff": "Komfort (2026)",
+      "position": 60,
+      "hash": "e6f0d4a71facab0579674bb0d7e27900",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/e6f0d4a71facab0579674bb0d7e27900/Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/e6f0d4a71facab0579674bb0d7e27900/Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/e6f0d4a71facab0579674bb0d7e27900/Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/e6f0d4a71facab0579674bb0d7e27900/Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "arag__premium-flex-familienrecht-2026",
+      "insurer": "ARAG",
+      "tariff": "Premium Flex + Familienrecht (2026)",
+      "position": 82,
+      "hash": "cb6d21af147e0ad5e082b3eb7d8c73d1",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ARAG_SE_Komfort_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/cb6d21af147e0ad5e082b3eb7d8c73d1/Allgemeine_Versicherungsbedingungen_ARAG_SE_Komfort_(2026).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ARAG_SE_Komfort_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/cb6d21af147e0ad5e082b3eb7d8c73d1/Produktinformationsblatt_ARAG_SE_Komfort_(2026).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ARAG_SE_Komfort_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/cb6d21af147e0ad5e082b3eb7d8c73d1/Weitere_Unterlagen_ARAG_SE_Komfort_(2026).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "bavariadirekt__rundum-schutz-plus-oerag-rechtsschutz",
+      "insurer": "BavariaDirekt",
+      "tariff": "Rundum-Schutz - PLUS (ÖRAG Rechtsschutz)",
+      "position": 87,
+      "hash": "d23f54f625ac6dee993fc7d51d62a817",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/d23f54f625ac6dee993fc7d51d62a817/Allgemeine_Versicherungsbedingungen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/d23f54f625ac6dee993fc7d51d62a817/Produktinformationsblatt_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/d23f54f625ac6dee993fc7d51d62a817/Besondere_Versicherungsbedingungen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/d23f54f625ac6dee993fc7d51d62a817/Weitere_Unterlagen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_(%C3%96RAG_Rechtsschutz).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "adam-riese__xl",
+      "insurer": "Adam Riese",
+      "tariff": "XL",
+      "position": 92,
+      "hash": "b0b8531c99ec5a6ef89ad686c0d5a993",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Adam_Riese_GmbH_XL",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/b0b8531c99ec5a6ef89ad686c0d5a993/Allgemeine_Versicherungsbedingungen_Adam_Riese_GmbH_XL.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Adam_Riese_GmbH_XL",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/b0b8531c99ec5a6ef89ad686c0d5a993/Produktinformationsblatt_Adam_Riese_GmbH_XL.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Adam_Riese_GmbH_XL",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/b0b8531c99ec5a6ef89ad686c0d5a993/Weitere_Unterlagen_Adam_Riese_GmbH_XL.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "arag__premium-familienrecht-2026",
+      "insurer": "ARAG",
+      "tariff": "Premium + Familienrecht (2026)",
+      "position": 96,
+      "hash": "c13e846333fecefb4b64475452fcf0fa",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ARAG_SE_Premium_+_Familienrecht_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/c13e846333fecefb4b64475452fcf0fa/Allgemeine_Versicherungsbedingungen_ARAG_SE_Premium_+_Familienrecht_(2026).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ARAG_SE_Premium_+_Familienrecht_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/c13e846333fecefb4b64475452fcf0fa/Produktinformationsblatt_ARAG_SE_Premium_+_Familienrecht_(2026).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ARAG_SE_Premium_+_Familienrecht_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/c13e846333fecefb4b64475452fcf0fa/Weitere_Unterlagen_ARAG_SE_Premium_+_Familienrecht_(2026).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "ks-auxilia__jurprivat-flex",
+      "insurer": "KS/Auxilia",
+      "tariff": "JURPRIVAT Flex",
+      "position": 98,
+      "hash": "ee2d6fd2f83adb01c05018e17353b893",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_Auxilia_JURPRIVAT_Flex",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/ee2d6fd2f83adb01c05018e17353b893/Allgemeine_Versicherungsbedingungen_Auxilia_JURPRIVAT_Flex.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_Auxilia_JURPRIVAT_Flex",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/ee2d6fd2f83adb01c05018e17353b893/Produktinformationsblatt_Auxilia_JURPRIVAT_Flex.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_Auxilia_JURPRIVAT_Flex",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/ee2d6fd2f83adb01c05018e17353b893/Besondere_Versicherungsbedingungen_Auxilia_JURPRIVAT_Flex.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_Auxilia_JURPRIVAT_Flex",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/ee2d6fd2f83adb01c05018e17353b893/Weitere_Unterlagen_Auxilia_JURPRIVAT_Flex.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "bavariadirekt__rundum-schutz-plus-mit-beitragsgarantie-oerag-rechtsschutz",
+      "insurer": "BavariaDirekt",
+      "tariff": "Rundum-Schutz - PLUS mit Beitragsgarantie (ÖRAG Rechtsschutz)",
+      "position": 103,
+      "hash": "5b6209229efe3cb06b95df355b55ad2a",
+      "harvested": "2026-06-30",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/5b6209229efe3cb06b95df355b55ad2a/Allgemeine_Versicherungsbedingungen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/5b6209229efe3cb06b95df355b55ad2a/Produktinformationsblatt_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "tariff_terms_extra",
+          "file": "Besondere_Versicherungsbedingungen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/5b6209229efe3cb06b95df355b55ad2a/Besondere_Versicherungsbedingungen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ÖRAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/5b6209229efe3cb06b95df355b55ad2a/Weitere_Unterlagen_%C3%96RAG_Rechtsschutzversicherungs-AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
+        }
+      ]
     }
   ]
 }
