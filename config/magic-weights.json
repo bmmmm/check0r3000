@@ -1,0 +1,10 @@
+{
+  "_comment": "Magic Find quality-scoring weights + deep-scan pool size. Loaded by scripts/magic.py (load_weights): any subset overrides the code defaults, unknown keys (like this one) are ignored, a missing key keeps its default. Each dimension score is normalized to [0,1] before weighting; the defaults sum to 1.0 so the total is a clean quality fraction. Price/beitrag is NEVER part of the score (display + final tiebreak only). Tracked, no PII.",
+  "note": 0.35,
+  "leistung_cov": 0.20,
+  "module_breadth": 0.13,
+  "coverage_gen": 0.12,
+  "module_tier": 0.10,
+  "bewertung": 0.10,
+  "pool_k": 25
+}

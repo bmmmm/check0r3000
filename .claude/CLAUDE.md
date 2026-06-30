@@ -39,6 +39,12 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
 - `extract.py` ruft nach dem Schreiben automatisch `feature_history.archive_version()` auf.
 - `PROMPT_VERSION` in `extract.py` erhöhen wenn das Schema sich ändert (invalidiert Cache).
 - `pipeline.sh` läuft immer `regression.py` am Ende (nicht-fatal, aber laut).
+- **Magic Find scored Beitrag/Preis NIE** — `magic.py` ist read-only über `out/tariffs/`;
+  Preis ist nur Anzeige + letzter Tiebreaker bei Score-Gleichstand. Gewichte + `pool_k`
+  aus `config/magic-weights.json` (getrackt, kein PII; jede Teilmenge übersteuert die
+  Code-Defaults in `MagicWeights`). `leistung_cov` zählt distinkte `coverage_taxonomy`-
+  Kategorien, nicht rohe leistungen — Tarife mit Benefits außerhalb der Taxonomie werden
+  dadurch untergewichtet (bekannte Grenze, kein Extraction-Bug).
 
 ## TUI-Architektur (4 Module)
 
@@ -60,12 +66,14 @@ Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_a
 | `[g]` | Fetch + Analyse (fetch_docs → ingest → extract) |
 | `[G]` | Nur Analyse wenn PDFs schon lokal |
 | `[H]` | Live-Harvest via Playwright + Analyse (für Tarife ohne Manifest) |
+| `[F]` | Markt-Scan (Deep-Scan): Top-K vorab-bewertete fehlende Tarife harvesten+analysieren, dann neu ranken |
 | `[a]` | Tarif in Vergleich aufnehmen / entfernen (Market-Tab) |
 | `[u]` | Favorit an/aus |
 | `[l]` | Verlauf-Tab (Snapshot-Diff + Feature-Diff) |
 | `[x]` | Markt-Tab (Tarifliste) |
 | `[v]` | Vergleich-Tab (Coverage-Matrix) |
 | `[B]` | Benchmark-Tab (Modell-Scorecard aus `benchmarks/results.json`) |
+| `[M]` | Magic-Find-Tab (markt-weites Qualitäts-Ranking; Preis fließt NIE in den Score) |
 | `[d]` | Detail-Band ein/aus |
 | `Tab` / `⇧Tab` | Nächster / voriger Tab (zyklisch) |
 | `[?]` | Alle Shortcuts |
