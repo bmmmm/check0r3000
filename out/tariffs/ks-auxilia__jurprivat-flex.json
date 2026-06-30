@@ -1,0 +1,120 @@
+{
+  "insurer": "AUXILIA Rechtsschutz-Versicherungs-AG",
+  "tariff": "JURPRIVAT",
+  "stand": "01.2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Umfangreich mit Schadenersatz, Vertrags- und Sachenrecht, Familie/Erbrecht, Internet-Rechtsschutz"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz für Arbeitnehmer und Beamte"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Versicherungsschutz für Fahrzeuge, Fahrer, Insassen, Fußgänger"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Rechtsschutz für selbst bewohnte Wohneinheiten"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Vertrags-, Beratungs-, Schadenersatz- und Straf-Rechtsschutz"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer- und Abgabenrecht in Einspruchs- und Gerichtsverfahren"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz in Widerspruchs- und Sozialgerichtsverfahren"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz vor Behörden und Verwaltungsgerichten"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Disziplinar- und Standes-Rechtsschutz",
+      "Schadenersatz-Rechtsschutz",
+      "Spezial-Straf-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz",
+      "Verkehrsrechtliche Leistungsarten"
+    ],
+    "geltungsbereich": "Europa, Anliegerstaaten des Mittelmeeres, Kanarische Inseln, Azoren, Madeira; weltweit bei Urlaubsreisen, Dienst- und Geschäftsreisen",
+    "vertragslaufzeit": "1 Jahr, danach stillschweigende Verlängerung um jeweils 1 Jahr; Kündigung mit 3 Monaten Frist möglich"
+  },
+  "leistungen": [
+    "Rechtsanwaltsgebühren nach Gesetz",
+    "Gerichts- und Gerichtsvollzieherosten",
+    "Zeugen- und Sachverständigenentschädigungen",
+    "Kosten Schieds- und Schlichtungsverfahren",
+    "Telefonische Rechtsberatung",
+    "Online-Beratung und Online-Beratung XL",
+    "Mediation und Mediation XL",
+    "Strafkaution bis 1.000.000 EUR (als zinsloses Darlehen)",
+    "Dolmetscherkosten für Gebärdensprache",
+    "Übersetzungskosten im Ausland",
+    "Vorsorge-Generatoren und Vorlagen-Portal"
+  ],
+  "ausschluesse": [
+    "Bauvorhaben und Immobiliengeschäfte",
+    "Finanzierung von Immobilien und Bauvorhaben",
+    "Kapitalanlagen, Wertpapiere, Fonds",
+    "Kartell- und Wettbewerbsrecht",
+    "Verfassungsgerichtsverfahren",
+    "Verfahren vor dem Europäischen Gerichtshof",
+    "Insolvenzverfahren über Vermögen des Versicherten",
+    "Enteignungs-, Planfeststellungs- und Flurbereinigungsverfahren",
+    "Streitigkeiten unter mitversicherten Personen",
+    "Vorsätzliche Herbeiführung des Rechtsschutzfalls"
+  ],
+  "besonderheiten": [
+    "Familientarif: bis zu 5 Generationen versichert (Kinder, Enkel, Eltern, Großeltern)",
+    "Unbegrenzte Versicherungssumme",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen und Dienstreisen",
+    "Umfassender Spezial-Straf-Rechtsschutz weltweit für privaten und beruflichen Bereich",
+    "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
+    "Internet-Rechtsschutz mit Cyber-Mobbing-Hilfe und Online-Reputationsschutz",
+    "Serviceleistungen ohne Selbstbeteiligung",
+    "PremiumService mit persönlicher Betreuung",
+    "Steuer-, Sozial- und Verwaltungs-Rechtsschutz auch für vorgeschaltete Verfahren",
+    "Erweiterter Beratungs-Rechtsschutz im Familienrecht bis 1.500 EUR"
+  ],
+  "beitrag": null,
+  "_input_hash": "3e4e06ad938901242d569b7455d7e4b52eb99c558ef833f3a1e3ad8f9c5b919b",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "9b94203265fe14e6c6c5213eca39279d51f49d3516284cdc6e4dfffcfe9313cc"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "11dc27e3f03b95c09c2f5aab608f1121515171686803f8a0680af1a4de0457cc"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "7c2de47dacd9481f545055dd2c37ad80a80c8d8ab7540228d760d77bd57ea1a9"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "e65599b12b50e5a7e3782976499cda527c650c2aa419d288793dceb72c140a05"
+    }
+  ]
+}

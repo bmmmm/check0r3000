@@ -1,0 +1,96 @@
+{
+  "stand": "01/2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Versicherungsschutz für den privaten Lebensbereich und ehrenamtliche Tätigkeiten"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz aus Arbeitsverhältnissen sowie öffentlich-rechtlichen Dienstverhältnissen"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Versicherungsschutz als Eigentümer, Halter, Fahrer oder Insasse von Motorfahrzeugen"
+    },
+    "wohnen_immobilien": {
+      "included": false,
+      "level": null,
+      "note": "Kann über separate Produkte versichert werden"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Internet-Rechtsschutz einschließlich Vertrag, Urheberrecht, Rufschädigung, Strafrecht"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz in Einspruchs- und Widerspruchsverfahren sowie vor Gerichten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz in Widerspruchsverfahren und vor Sozialgerichten"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz vor Behörden und Verwaltungsgerichten"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt, soweit nicht im Einzelfall bezifferte Versicherungssummen bzw. Höchstbeträge vereinbart sind",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein festgelegt",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz",
+      "Spezial-Straf-Rechtsschutz",
+      "Schadenersatz-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz"
+    ],
+    "geltungsbereich": "Europa plus Anliegerstaaten des Mittelmeeres, Kanarische Inseln, Azoren, Madeira; begrenzte weltweite Deckung bei Urlaubsreisen, Dienst-/Geschäftsreisen, Work & Travel",
+    "vertragslaufzeit": "zunächst 1 Jahr, danach automatische Verlängerung um jeweils weitere Jahre bei Nichtkündigung"
+  },
+  "leistungen": [
+    "Gesetzliche Gebühren des Rechtsanwalts",
+    "Kosten für Gerichte und Gerichtsvollzieher",
+    "Entschädigung für Zeugen und Sachverständige",
+    "Kosten des Prozessgegners (wenn Verpflichtung besteht)",
+    "Kosten von Schieds- oder Schlichtungsverfahren bis 1,5-fache Gebühren",
+    "Telefonische Rechtsberatung durch unabhängige Rechtsanwälte",
+    "Online-Beratung und Online-BeratungXL",
+    "Mediation und MediationXL",
+    "Job-Services (Aufhebungsvereinbarungen, Arbeitsverträge, Zeugnisse)",
+    "Bußgeld-Check bei Verkehrsverstößen",
+    "Online-Reputations-Schutz (Cyber-Mobbing-Hilfe)",
+    "Web-Beweissicherung",
+    "Vorsorge-Generatoren (Testamente, Vollmachten, Verfügungen)",
+    "Vorlagen-Portal mit über 100 Musterverträgen"
+  ],
+  "besonderheiten": [
+    "Vier wichtige Rechtsschutzbereiche in einem günstigen Vertrag zusammengefasst",
+    "Bis zu 5 Generationen versichert: Kinder, Enkelkinder, Eltern und Großeltern",
+    "Volljährige Kinder als Fahrer fremder Kfz und Eigentümer/Halter eigener Kfz mitversichert",
+    "Unbegrenzte Versicherungssumme (soweit nicht begrenzt)",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen und Dienst-/Geschäftsreisen",
+    "Internet-Rechtsschutz im privaten Bereich enthalten",
+    "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
+    "Aufhebungsvertrags-Rechtsschutz als Arbeitnehmer bis 1.000 EUR",
+    "Nutzung neuer Mobilitätskonzepte wie Car-Sharing und E-Scooter versichert",
+    "Steuer-, Sozial- und Verwaltungs-Rechtsschutz auch für vorgeschaltete Verfahren",
+    "Keine Selbstbeteiligung bei fallabschließender Erstberatung durch vermittelten Anwalt",
+    "Keine Selbstbeteiligung bei Leistungen mit Höchstbetrag (Sublimit)",
+    "PremiumService mit qualifiziertem Service ohne Call-Center"
+  ],
+  "beitrag": null,
+  "insurer": "AUXILIA Rechtsschutz-Versicherungs-AG",
+  "tariff": "Privat-, Berufs- und Verkehrs-Rechtsschutz",
+  "stem": "ks-auxilia__rechtsschutz-strafrecht",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "2e78d61055adc61676508686f654c5ad3c174e046a22d6262f618e01ecf3b15f",
+  "_supersedes": null
+}

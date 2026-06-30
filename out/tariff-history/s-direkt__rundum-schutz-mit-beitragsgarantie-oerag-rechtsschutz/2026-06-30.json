@@ -1,0 +1,89 @@
+{
+  "stand": "16.07.2024",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "nur Minijobs"
+    },
+    "verkehr": {
+      "included": false,
+      "level": null
+    },
+    "wohnen_immobilien": {
+      "included": false,
+      "level": null
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "über Vertrags- und Sachenrecht"
+    },
+    "steuer": {
+      "included": true,
+      "level": null
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "nur nicht-verkehrsrechtlich"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Schadenersatz-Rechtsschutz",
+      "Steuer-Rechtsschutz",
+      "Sozial-Rechtsschutz",
+      "Straf-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz"
+    ],
+    "geltungsbereich": "Deutschland; EU, Mittelmeeranrainer, Kanaren, Azoren, Madeira; weltweit temporär bis 500.000 EUR",
+    "vertragslaufzeit": "flexibel, mindestens 1 Jahr mit jährlicher Verlängerung"
+  },
+  "leistungen": [
+    "Rechtanwaltsgebühren nach RVG",
+    "Gerichtskosten",
+    "Sachverständigengebühren",
+    "gegnerische Anwaltskosten wenn fällig",
+    "Mediationskosten",
+    "Schiedsverfahren und Schlichtungsgebühren",
+    "telefonische Erstberatung",
+    "zinslose Kautionsdarlehen",
+    "Übersetzungskosten"
+  ],
+  "ausschluesse": [
+    "Grundstückskauf/-verkauf zur Bebauung",
+    "Patent- und Markenrecht",
+    "Erwerb und Veräußerung von Kapitalanlagen",
+    "Darlehen und Wettverträge",
+    "Krieg, Aufruhr, Streik, Aussperrung",
+    "Parkverstoße Ordnungswidrigkeiten",
+    "Streitigkeiten mit anderen Versicherungsnehmern desselben Vertrags"
+  ],
+  "besonderheiten": [
+    "täglich kündbar",
+    "unbegrenzte Versicherungssumme",
+    "Mediation von ÖRAG vermittelt",
+    "Online-Rechtsberatung über meinrecht.de",
+    "RadMobilSchutz und CarSharingSchutz enthalten",
+    "Leistungsgarantie bei Tarifwechsel"
+  ],
+  "beitrag": null,
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stem": "s-direkt__rundum-schutz-mit-beitragsgarantie-oerag-rechtsschutz",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "ad23ea8e8c53f58dd9bf443286420a65a22c5342ce25299a97676477fc09b34f",
+  "_supersedes": null
+}

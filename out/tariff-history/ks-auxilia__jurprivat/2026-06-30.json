@@ -1,0 +1,104 @@
+{
+  "stand": null,
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "selbst bewohnte Einheiten"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein)",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Schadenersatz-Rechtsschutz",
+      "Vertrags- und Sachenrecht",
+      "Disziplinar- und Standes-Rechtsschutz",
+      "Straf-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz",
+      "Familien-, Lebenspartnerschafts- und Erbrecht",
+      "Internet-Rechtsschutz",
+      "Spezial-Straf-Rechtsschutz"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanaren, Azoren, Madeira; weltweit bei Urlaubsreisen und Dienstreisen",
+    "vertragslaufzeit": "1 Jahr, danach automatische jährliche Verlängerung"
+  },
+  "leistungen": [
+    "Rechtsanwaltskosten",
+    "Gerichtskosten",
+    "Gerichtsvollzieherkosten",
+    "Zeugenkostenerstattung",
+    "Sachverständigenkosten",
+    "Schiedsverfahrenskosten",
+    "Kostentragung des Gegners",
+    "Strafkaution als Darlehen bis 1.000.000 EUR",
+    "Telefonische Rechtsberatung",
+    "Online-Beratung",
+    "Mediation"
+  ],
+  "ausschluesse": [
+    "Bauvorhaben und Immobiliengeschäfte",
+    "Finanzierung von Bauvorhaben",
+    "Aktien, Zertifikate, Investmentfonds",
+    "Kartell- und Wettbewerbsrecht",
+    "Vorsätzlich herbeigeführte Rechtsschutzfälle",
+    "Streitigkeiten zwischen Mitversicherten",
+    "Verfassungsgerichtsverfahren",
+    "Insolvenzverfahren (mit Ausnahmen)",
+    "Umweltrecht (Ausnahme: Verkehr)",
+    "Vergabe von Studienplätzen (1 Verfahren pro Laufzeit)"
+  ],
+  "besonderheiten": [
+    "Weltweiter Schutz bei Urlaubsreisen",
+    "Kostenfreie Serviceleistungen ohne Selbstbeteiligung",
+    "Update-Garantie für Leistungsverbesserungen",
+    "Familientarif bis zu 5 Generationen",
+    "Unbegrenzte Versicherungssumme",
+    "PremiumService mit persönlicher Unterstützung",
+    "MediationXL auch bei Risikoausschlüssen",
+    "Beratungs-Rechtsschutz Familien-/Erbrecht bis 1.500 EUR"
+  ],
+  "beitrag": null,
+  "insurer": "AUXILIA Rechtsschutz-Versicherungs-AG",
+  "tariff": "JURPRIVAT",
+  "stem": "ks-auxilia__jurprivat",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "805a0a60f78b06dbdff71ee1dd2320fc5800de3f7a597b5f5ecbe57dbab3b22c",
+  "_supersedes": null
+}

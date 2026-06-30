@@ -1,0 +1,115 @@
+{
+  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
+  "tariff": "Rechtsschutz-Versicherung",
+  "stand": "2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Privat-Rechtsschutz (Baustein P)"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Berufs-Rechtsschutz (Baustein B)"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrs-Rechtsschutz für Privatkunden (Baustein Vp)"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Immobilien-Rechtsschutz (Baustein Ip)"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Internet-Rechtsschutz (A 3.17)"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz (A 3.5)"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz (A 3.6)"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz (A 3.7)"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "wählbar; Flex-SB mit Reduktion bei Anwaltskontakt oder feste Selbstbeteiligung je Fall",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz",
+      "Schadenersatz-Rechtsschutz aus Mietrecht",
+      "Disziplinar- und Standes-Rechtsschutz",
+      "Straf-Rechtsschutz"
+    ],
+    "geltungsbereich": "Europa + Mittelmeeranrainer + Kanarische Inseln + Madeira + Azoren; weltweit begrenzt",
+    "vertragslaufzeit": "1, 2, 3, 4 oder 5 Jahre"
+  },
+  "leistungen": [
+    "Telefonische Rechtsberatung",
+    "Rechtsanwaltkosten",
+    "Gerichtskosten und Gerichtsvollziehergebühren",
+    "Sachverständigengebühren",
+    "Außergerichtliche Konfliktlösung / Mediation",
+    "Strafkaution als zinsloses Darlehen",
+    "Online-Rechtsberatung und Service-Portal",
+    "Vertrags-Downloads und Dokumentprüfung",
+    "Online-Schutz-Radar für Identitätsmissbrauch",
+    "Webseiten-Prüfung (Impressum, Datenschutz, Cookies)"
+  ],
+  "ausschluesse": [
+    "Kauffinanzierung und Baufinanzierung von Grundstücken",
+    "Kapitalanlagegeschäfte und Direktinvestments",
+    "Darlehensvergabe und Garantien",
+    "Kartell- und Wettbewerbsrecht",
+    "Spiel- und Wettverträge",
+    "Versicherungsverträge",
+    "Handelsvertreterrecht",
+    "Streitigkeiten zwischen Versicherten desselben Vertrags",
+    "Vorsätzlich verursachte Rechtsstreitigkeiten"
+  ],
+  "besonderheiten": [
+    "Flexible Selbstbeteiligung (Flex-SB) mit Halbierungsmöglichkeit",
+    "Baustein-System: modular kombinierbar",
+    "Bonus-Rechtsberatung und Bonus-Konfliktbeilegung nach 3 Jahren Schadensfreiheit",
+    "Keine Selbstbeteiligung für außergerichtliche Services und Mediationen",
+    "Weltweit-Schutz unter Bedingungen (bis 400.000 EUR, mit Aufenthalt bis 1 Jahr)",
+    "Plus-Bausteine für erweiterte Leistungen",
+    "Reputationsschutz und Online-Schutz-Services",
+    "Strafkaution-Limit je nach Paket (250.000-1.000.000 EUR)"
+  ],
+  "beitrag": null,
+  "_input_hash": "2421f76021894d71cdc2d46f4c6f66ac311b86b6826a0dcc8a703cdc4809830e",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "cdf6c776341c6e20ad1055baeb5ede5abae97d14587b61e0d8727adf8d3ab0b3"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "571eb91075528a76d968db0576ae640a5e05cf63200b7a26151b91c45f8aebc4"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "db9e5d24a2bd8d9bd42823cfa4a69c83bb7a613a610c1090c3ca4a5ec547d4a6"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "ff54d5234ca4059c95120ab9d28b508c2324a3fc11e44cbd4efe7b63f7a97193"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "stand": "01.2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Umfangreich mit Schadenersatz, Vertrags- und Sachenrecht, Familie/Erbrecht, Internet-Rechtsschutz"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz für Arbeitnehmer und Beamte"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Versicherungsschutz für Fahrzeuge, Fahrer, Insassen, Fußgänger"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Rechtsschutz für selbst bewohnte Wohneinheiten"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Vertrags-, Beratungs-, Schadenersatz- und Straf-Rechtsschutz"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer- und Abgabenrecht in Einspruchs- und Gerichtsverfahren"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz in Widerspruchs- und Sozialgerichtsverfahren"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz vor Behörden und Verwaltungsgerichten"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Disziplinar- und Standes-Rechtsschutz",
+      "Schadenersatz-Rechtsschutz",
+      "Spezial-Straf-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz",
+      "Verkehrsrechtliche Leistungsarten"
+    ],
+    "geltungsbereich": "Europa, Anliegerstaaten des Mittelmeeres, Kanarische Inseln, Azoren, Madeira; weltweit bei Urlaubsreisen, Dienst- und Geschäftsreisen",
+    "vertragslaufzeit": "1 Jahr, danach stillschweigende Verlängerung um jeweils 1 Jahr; Kündigung mit 3 Monaten Frist möglich"
+  },
+  "leistungen": [
+    "Rechtsanwaltsgebühren nach Gesetz",
+    "Gerichts- und Gerichtsvollzieherosten",
+    "Zeugen- und Sachverständigenentschädigungen",
+    "Kosten Schieds- und Schlichtungsverfahren",
+    "Telefonische Rechtsberatung",
+    "Online-Beratung und Online-Beratung XL",
+    "Mediation und Mediation XL",
+    "Strafkaution bis 1.000.000 EUR (als zinsloses Darlehen)",
+    "Dolmetscherkosten für Gebärdensprache",
+    "Übersetzungskosten im Ausland",
+    "Vorsorge-Generatoren und Vorlagen-Portal"
+  ],
+  "ausschluesse": [
+    "Bauvorhaben und Immobiliengeschäfte",
+    "Finanzierung von Immobilien und Bauvorhaben",
+    "Kapitalanlagen, Wertpapiere, Fonds",
+    "Kartell- und Wettbewerbsrecht",
+    "Verfassungsgerichtsverfahren",
+    "Verfahren vor dem Europäischen Gerichtshof",
+    "Insolvenzverfahren über Vermögen des Versicherten",
+    "Enteignungs-, Planfeststellungs- und Flurbereinigungsverfahren",
+    "Streitigkeiten unter mitversicherten Personen",
+    "Vorsätzliche Herbeiführung des Rechtsschutzfalls"
+  ],
+  "besonderheiten": [
+    "Familientarif: bis zu 5 Generationen versichert (Kinder, Enkel, Eltern, Großeltern)",
+    "Unbegrenzte Versicherungssumme",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen und Dienstreisen",
+    "Umfassender Spezial-Straf-Rechtsschutz weltweit für privaten und beruflichen Bereich",
+    "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
+    "Internet-Rechtsschutz mit Cyber-Mobbing-Hilfe und Online-Reputationsschutz",
+    "Serviceleistungen ohne Selbstbeteiligung",
+    "PremiumService mit persönlicher Betreuung",
+    "Steuer-, Sozial- und Verwaltungs-Rechtsschutz auch für vorgeschaltete Verfahren",
+    "Erweiterter Beratungs-Rechtsschutz im Familienrecht bis 1.500 EUR"
+  ],
+  "beitrag": null,
+  "insurer": "AUXILIA Rechtsschutz-Versicherungs-AG",
+  "tariff": "JURPRIVAT",
+  "stem": "ks-auxilia__jurprivat-flex",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "78ad51dc055fdc9d66d0605bb4973b85845001711768c4883bbd55ed04586cc6",
+  "_supersedes": null
+}

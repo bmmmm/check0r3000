@@ -1,0 +1,126 @@
+{
+  "insurer": "AUXILIA Rechtsschutz-Versicherungs-AG",
+  "tariff": "Privat-, Berufs- und Verkehrs-Rechtsschutz",
+  "stand": "01/2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Versicherungsschutz für den privaten Lebensbereich und ehrenamtliche Tätigkeiten"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz aus Arbeitsverhältnissen sowie öffentlich-rechtlichen Dienstverhältnissen"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Versicherungsschutz als Eigentümer, Halter, Fahrer oder Insasse von Motorfahrzeugen"
+    },
+    "wohnen_immobilien": {
+      "included": false,
+      "level": null,
+      "note": "Kann über separate Produkte versichert werden"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Internet-Rechtsschutz einschließlich Vertrag, Urheberrecht, Rufschädigung, Strafrecht"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz in Einspruchs- und Widerspruchsverfahren sowie vor Gerichten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz in Widerspruchsverfahren und vor Sozialgerichten"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz vor Behörden und Verwaltungsgerichten"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt, soweit nicht im Einzelfall bezifferte Versicherungssummen bzw. Höchstbeträge vereinbart sind",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein festgelegt",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz",
+      "Spezial-Straf-Rechtsschutz",
+      "Schadenersatz-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz"
+    ],
+    "geltungsbereich": "Europa plus Anliegerstaaten des Mittelmeeres, Kanarische Inseln, Azoren, Madeira; begrenzte weltweite Deckung bei Urlaubsreisen, Dienst-/Geschäftsreisen, Work & Travel",
+    "vertragslaufzeit": "zunächst 1 Jahr, danach automatische Verlängerung um jeweils weitere Jahre bei Nichtkündigung"
+  },
+  "leistungen": [
+    "Gesetzliche Gebühren des Rechtsanwalts",
+    "Kosten für Gerichte und Gerichtsvollzieher",
+    "Entschädigung für Zeugen und Sachverständige",
+    "Kosten des Prozessgegners (wenn Verpflichtung besteht)",
+    "Kosten von Schieds- oder Schlichtungsverfahren bis 1,5-fache Gebühren",
+    "Telefonische Rechtsberatung durch unabhängige Rechtsanwälte",
+    "Online-Beratung und Online-BeratungXL",
+    "Mediation und MediationXL",
+    "Job-Services (Aufhebungsvereinbarungen, Arbeitsverträge, Zeugnisse)",
+    "Bußgeld-Check bei Verkehrsverstößen",
+    "Online-Reputations-Schutz (Cyber-Mobbing-Hilfe)",
+    "Web-Beweissicherung",
+    "Vorsorge-Generatoren (Testamente, Vollmachten, Verfügungen)",
+    "Vorlagen-Portal mit über 100 Musterverträgen"
+  ],
+  "ausschlüsse": [
+    "Bauvorhaben und Immobiliengeschäfte (Erwerb/Veräußerung von Grundstücken, Gebäuden)",
+    "Finanzierung von Bauvorhaben und Immobiliengeschäften",
+    "Aktien, Zertifikate, Optionen, Beteiligungen, Kapitalanlagen",
+    "Kartell- und Wettbewerbsrecht",
+    "Familienrecht ohne entsprechende Deckung",
+    "Vorsätzliche und rechtswidrige Herbeiführung des Rechtsschutzfalls",
+    "Krieg, Streik, Cyberangriffe auf kritische Infrastrukturen",
+    "Verfahren vor Verfassungsgerichten",
+    "Insolvenzverfahren (mit Ausnahme Forderungsanmeldung)",
+    "Streitigkeiten zwischen Mitversicherten untereinander",
+    "Abwehr von Schadenersatz- und Unterlassungsansprüchen (außer bei Vertragsverletzung)"
+  ],
+  "besonderheiten": [
+    "Vier wichtige Rechtsschutzbereiche in einem günstigen Vertrag zusammengefasst",
+    "Bis zu 5 Generationen versichert: Kinder, Enkelkinder, Eltern und Großeltern",
+    "Volljährige Kinder als Fahrer fremder Kfz und Eigentümer/Halter eigener Kfz mitversichert",
+    "Unbegrenzte Versicherungssumme (soweit nicht begrenzt)",
+    "Weltweiter Versicherungsschutz bei Urlaubsreisen und Dienst-/Geschäftsreisen",
+    "Internet-Rechtsschutz im privaten Bereich enthalten",
+    "Vorsorge-Rechtsschutz für neu hinzukommende versicherbare Risiken ohne Wartezeit",
+    "Aufhebungsvertrags-Rechtsschutz als Arbeitnehmer bis 1.000 EUR",
+    "Nutzung neuer Mobilitätskonzepte wie Car-Sharing und E-Scooter versichert",
+    "Steuer-, Sozial- und Verwaltungs-Rechtsschutz auch für vorgeschaltete Verfahren",
+    "Keine Selbstbeteiligung bei fallabschließender Erstberatung durch vermittelten Anwalt",
+    "Keine Selbstbeteiligung bei Leistungen mit Höchstbetrag (Sublimit)",
+    "PremiumService mit qualifiziertem Service ohne Call-Center"
+  ],
+  "beitrag": null,
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "9b94203265fe14e6c6c5213eca39279d51f49d3516284cdc6e4dfffcfe9313cc"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "eb4bd13ca85acec9c19c39bf33f66c34355089f645b125d85b5cc641c45556e1"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "7c2de47dacd9481f545055dd2c37ad80a80c8d8ab7540228d760d77bd57ea1a9"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "2ec5bc846198ee4d2791556a1b3dcec88190c5c3fc90af55401076abce385cf0"
+    }
+  ],
+  "_input_hash": "144fb0a56ccbc1f1cd96a3f1865f9807e3949341f8553b1a20efd5e5a62c8fba",
+  "_model": "haiku",
+  "_filter": "avb-filter"
+}

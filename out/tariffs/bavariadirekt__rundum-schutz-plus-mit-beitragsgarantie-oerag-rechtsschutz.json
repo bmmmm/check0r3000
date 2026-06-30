@@ -1,0 +1,122 @@
+{
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stand": null,
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Schadenersatz, Arbeits (Minijobs), Wohnungs-/Grundstücks-, Vertrags-, Steuer-, Sozial-, Verwaltungs-, Disziplinar-, Straf-, Ordnungswidrigkeiten-Rechtsschutz, erweiterte Beratung Familien-/Erbrecht, Opfer-, Cyber-Rechtsschutz"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz für nichtselbstständige Tätigkeiten; Minijobs in §22 oder vollständig in Rundum-Schutz §21/21a"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Optional, keine Wartezeit, Eigentümer/Halter/Mieter/Fahrer von Motorfahrzeugen"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Für selbstgenutzte Wohneinheiten, Garagen, Gärten und Grundstücke in Deutschland"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Cyber-Rechtsschutz: Cybermobbing, Urheberrechtsverstöße bis 1.000 EUR, Missbrauch Zahlungssysteme"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Vor Finanzämtern, Finanzgerichten, Verwaltungsgerichten; auch für selbstgenutzte Wohneinheiten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Vor deutschen Sozialgerichten und in Widerspruchsverfahren"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrsrechtlich (keine Wartezeit) und sonstige Angelegenheiten (3 Monate Wartezeit)"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "wählbar, genaue Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz: keine Wartezeit",
+      "Arbeits-Rechtsschutz: 6 Monate (abweichende Zusatzvereinbarung)",
+      "Sozialgericht (Vergabeverfahren): 12 Monate"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; weltweit temporär bis 500.000 EUR je Fall",
+    "vertragslaufzeit": "mindestens 1 Jahr, stillschweigende Verlängerung um jeweils 1 Jahr, tägliches Kündigungsrecht"
+  },
+  "leistungen": [
+    "Telefonische Erstberatung durch Rechtsanwalt",
+    "Mediation und außergerichtliche Konfliktbeilegung",
+    "Rechtsanwaltskosten nach RVG",
+    "Gerichtskosten, Gerichtsvollzieher, Sachverständige",
+    "Gegnerische Rechtsanwaltskosten (soweit geschuldet)",
+    "Übersetzungskosten und Dolmetscher im In- und Ausland",
+    "Strafkaution als zinslos Darlehen bis vereinbarte Höhe",
+    "Schieds- und Schlichtungsgebühren",
+    "Online-Rechtsberatung per Chat via meinrecht.de",
+    "Forderungsservice",
+    "Vorsorgeverfügungen (Patientenverfügung, Vollmacht, Betreuungsverfügung)",
+    "Testament-Assistent",
+    "RadMobilSchutz (Selbstbehalt bis 1.500 EUR, max. 2 Fälle/Jahr)",
+    "CarSharingSchutz (Selbstbehalt bis 1.500 EUR, max. 2 Fälle/Jahr)"
+  ],
+  "ausschluesse": [
+    "Erwerb, Veräußerung, Finanzierung zu bebauender Grundstücke",
+    "Patent-, Marken- und Urheberrecht (außer Cyber-Abmahnung)",
+    "Kapitalanlage-Streitigkeiten",
+    "Darlehen-, Spiel-, Wettverträge",
+    "Motorfahrzeug-Kaufverträge (mit Ausnahmen)",
+    "Streitigkeiten zwischen Versicherungsnehmern desselben Vertrags",
+    "Haftpflicht-Abwehr bei Arzthaftung",
+    "Handelsvertreterrecht (mit Ausnahmen je Baustein)",
+    "Halt- und Parkverstoße (außer mit Fahreignungsregister-Eintrag)",
+    "Krieg, feindliche Handlungen, Aufruhr, Streik",
+    "Vorsätzlich begangene Straftaten",
+    "Asylrechts- und Ausländerrechtsverfahren",
+    "Enteignungs-, Planfeststellungsverfahren",
+    "Erdbeben- und Bergbauschäden",
+    "Auslandsgrundstücke",
+    "Streitigkeiten mit Versicherer, Vermittler, Schadenabwickler"
+  ],
+  "besonderheiten": [
+    "RadMobilSchutz und CarSharingSchutz in allen Privat-Kombinationen enthalten",
+    "Leistungsgarantie bei Wechsel von anderer Rechtsschutzversicherung",
+    "Tägliches Kündigungsrecht (abweichend von 3-Monats-Regel)",
+    "Online-Services via meinrecht.de (Beratung, Vorsorge, Testament)",
+    "Nachaftung Straf-Rechtsschutz bis 3 Jahre nach Vertragsende unter Bedingungen"
+  ],
+  "beitrag": null,
+  "_input_hash": "18145a5f39b5db380450c37e7eaa2606c6b12667782751154cbafe07d65dae65",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "3118d44478e9fcd88954833803209ea1146ceda12a1e2a14494b827a443c85ab"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "b868ee1710a21fa6182191858abf1df4859eb02abab565aca11206d98fbd669d"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "b2675262682671af0018a5f7b555fb9ed7e70e7d5fa654f82a1a5621bd54ef98"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "1ba1c7b204aa30a086ec71c96b80ec668c2e73582f146f278e4d6f832cc472d2"
+    }
+  ]
+}

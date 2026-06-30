@@ -1,0 +1,105 @@
+{
+  "stand": "02.2022",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": "Premium",
+      "note": null
+    },
+    "beruf": {
+      "included": true,
+      "level": "Premium",
+      "note": "Arbeits-Rechtsschutz mit 3 Monaten Wartezeit"
+    },
+    "verkehr": {
+      "included": true,
+      "level": "Premium",
+      "note": "Verkehrs-Rechtsschutz mit erweiterten Leistungen"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": "Premium",
+      "note": "Wohnungs- und Grundstücks-Rechtsschutz"
+    },
+    "internet_web": {
+      "included": false,
+      "level": null,
+      "note": "Separat über web@ktiv versicherbar"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz vor Gerichten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz vor deutschen Sozialgerichten"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt für Europa; 350.000 EUR weltweit",
+    "selbstbeteiligung": "wählbar, höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehr: keine Wartezeit",
+      "Ehesachen: 3 Jahre Wartezeit",
+      "Unterhaltssachen: 1 Jahr Wartezeit",
+      "Erbrecht: 1 Jahr Wartezeit"
+    ],
+    "geltungsbereich": "Europa, Anliegerstaaten des Mittelmeers, Kanarische Inseln, Madeira, Azoren; weltweit bis zu einem Jahr temporär",
+    "vertragslaufzeit": "1 oder 3 Jahre"
+  },
+  "leistungen": [
+    "Anwaltskosten nach gesetzlicher Gebühr",
+    "Gerichtskosten und Gerichtsvollzieher",
+    "Sachverständigenkosten",
+    "Prozesskosten des Gegners",
+    "Mediation bis 6.000 EUR pro Kalenderjahr",
+    "ARAG JuraTel® telefonische Beratung",
+    "Mobiler Anwalt (Besuch zu Hause)",
+    "ARAG Dokumenten-Center",
+    "Psychologische Soforthilfe nach Verkehrsunfall",
+    "Erweiterte Beratungs-Leistungen in Familien-, Lebenspartnerschafts- und Erbrecht",
+    "Beratungs-Rechtsschutz für Kapitalanlagen (bis 20.000 EUR)",
+    "Erb-Rechtsschutz (bis 10.000 EUR je Vertragsdauer)",
+    "Bauherren-Rechtsschutz (bis 10.000 EUR je Vertragsdauer)",
+    "Datenschutzrechtliche Ansprüche (bis 500 EUR)",
+    "Musterfeststellungsklage (mit Selbstbeteiligungsverzicht)"
+  ],
+  "ausschluesse": [
+    "Baufinanzierung",
+    "Patent- und Markenrecht",
+    "Spiel- und Wettverträge",
+    "Familien- und Ehesachen (erst ab 3 Jahre Wartezeit)",
+    "Streitigkeiten aus der Finanzierung von Grundstücken/Gebäuden",
+    "Kartellrecht",
+    "Vorsätzliche Herbeiführung des Versicherungsfalls",
+    "Streitigkeiten mit dem eigenen Versicherungsträger (in manchen Fällen)"
+  ],
+  "besonderheiten": [
+    "3 Leistungsvarianten: Basis, Komfort, Premium",
+    "Update-Garantie für beitragsneutrale Leistungserweiterungen",
+    "Vorversicherungs-Garantie beim Versichererwechsel",
+    "Verzicht auf Abzug der Selbstbeteiligung bei Erstberatung",
+    "Rechtsschutz in Ehesachen bis 30.000 EUR",
+    "Erweiterte Leistungen für Rechtsmittel und Verfahren",
+    "Vorsorge-Rechtsschutz für neue Risiken ohne Wartezeit"
+  ],
+  "beitrag": {
+    "monatlich_eur": null,
+    "jaehrlich_eur": null,
+    "quelle": null
+  },
+  "insurer": "ARAG SE",
+  "tariff": "Aktiv-Rechtsschutz Premium",
+  "stem": "arag__premium-flex-familienrecht-2026",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "c35c5ff05c7fbf2913a7a24c0a3ccfaf3808fd587b50c065ee7cf18cf648deef",
+  "_supersedes": null
+}

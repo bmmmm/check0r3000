@@ -1,0 +1,72 @@
+{
+  "stand": "16.07.2024",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "beruf": {
+      "included": false
+    },
+    "verkehr": {
+      "included": false
+    },
+    "wohnen_immobilien": {
+      "included": false
+    },
+    "internet_web": {
+      "included": false
+    },
+    "steuer": {
+      "included": true,
+      "level": null
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; bei Auslandsaufenthalten bis 500.000 EUR",
+    "vertragslaufzeit": "1 Jahr; automatische jährliche Verlängerung"
+  },
+  "leistungen": [
+    "Rechtsanwaltskosten (gesetzliche Gebühren)",
+    "Gerichtskosten",
+    "Sachverständigenkosten",
+    "gegnerische Rechtsanwaltskosten",
+    "Mediation",
+    "Schiedsverfahren",
+    "Telefonische Erstberatung",
+    "Kautionsdarlehen",
+    "Übersetzungskosten"
+  ],
+  "ausschluesse": [
+    "Grundstückskauf/-verkauf/-finanzierung (wenn bebaut)",
+    "Patent- und Markenrecht",
+    "Kapitalanlagen",
+    "Darlehen, Spiel- und Wettverträge"
+  ],
+  "besonderheiten": [
+    "Tägliches Kündigungsrecht",
+    "RadMobilSchutz und CarSharingSchutz inkludiert",
+    "MEINRECHT Online-Services (Vorsorgeverfügungen, Testament-Assistent, Chat-Rechtsberatung)"
+  ],
+  "beitrag": null,
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stem": "s-direkt__rundum-schutz-oerag-rechtsschutz",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "ca2435074c6d82a6a72e2d578f7c9788f86a30c69dcfac336bd8351c24298e1f",
+  "_supersedes": null
+}

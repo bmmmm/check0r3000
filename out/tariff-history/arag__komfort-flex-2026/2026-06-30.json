@@ -1,0 +1,101 @@
+{
+  "stand": "02.2022",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": "Premium",
+      "note": "Umfasst Schadenersatz, Arbeits-, Wohnungs-/Grundstücks-, Vertrags-/Sachenrecht, diverse Beratungsleistungen"
+    },
+    "beruf": {
+      "included": true,
+      "level": "Premium",
+      "note": "Arbeits-Rechtsschutz enthalten, 3 Monate Wartezeit"
+    },
+    "verkehr": {
+      "included": true,
+      "level": "Premium",
+      "note": "Schadenersatz, Verwaltungs-, Straf-, Ordnungswidrigkeiten-Rechtsschutz"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": "Premium",
+      "note": "Wohnungs-/Grundstücks-Rechtsschutz, Bauherren-Schutz, Photovoltaikanlagen"
+    },
+    "internet_web": {
+      "included": false,
+      "level": null,
+      "note": "Nur über Sonderbedingung web@ktiv verfügbar"
+    },
+    "steuer": {
+      "included": true,
+      "level": "Premium",
+      "note": "Steuer-Rechtsschutz vor Gerichten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": "Premium",
+      "note": "Sozial-Rechtsschutz, keine allgemeine Wartezeit"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": "Premium",
+      "note": "Allgemeiner Verwaltungs-Rechtsschutz"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt (Europa); 350.000 EUR (weltweit für max. 12 Monate)",
+    "selbstbeteiligung": "Nach Vereinbarung; Verzicht bei Erledigung durch Erstberatung gemäß § 34 RVG",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz (keine Wartezeit)",
+      "Immobilien-Rechtsschutz (3 Monate für bereits vermietete)",
+      "Straf-Rechtsschutz (keine Wartezeit)",
+      "Mediation (keine Wartezeit)"
+    ],
+    "geltungsbereich": "Europa; Mittelmeeranrainer; Kanarische Inseln; Madeira; Azoren; weltweit bei bis zu 12 Monaten Auslandsaufenthalt",
+    "vertragslaufzeit": "1 oder 3 Jahre; automatische Verlängerung um jeweils 1 Jahr"
+  },
+  "leistungen": [
+    "Telefonische Rechtsberatung (ARAG JuraTel®)",
+    "Mobiler Anwalt (Hausbesuch)",
+    "Mediation mit Sachverständigengutachten",
+    "ARAG Dokumenten-Center",
+    "Anwaltsempfehlung",
+    "Prüfung von Verträgen und Arbeitszeugnissen (100€ pro Prüfung, max. 1.000€ p.a.)",
+    "Webcheck für private Homepage (100€ p.a.)",
+    "Onlinerechtsberatung",
+    "Beratung zu Testament/Digitalem Nachlass/Bestattungsverfügung (500€)",
+    "Erweiterter Beratungs-Rechtsschutz Familien-/Erbrecht (500€)",
+    "Erb-Rechtsschutz (10.000€ pro Vertragslaufzeit)",
+    "Bauherren-Rechtsschutz (10.000€ pro Vertragslaufzeit)",
+    "Entschädigungen bei Musterfeststellungsklage"
+  ],
+  "ausschluesse": [
+    "Baufinanzierung",
+    "Patent- und Markenrecht",
+    "Spiel- und Wettverträge",
+    "Vermögensanlagegeschäfte",
+    "Streitigkeiten vor Beginn des Versicherungsschutzes",
+    "Vorsätzlich herbeigeführte Versicherungsfälle",
+    "Ehesachen (3 Jahre Wartezeit)"
+  ],
+  "besonderheiten": [
+    "Vorsorge-Rechtsschutz für neue Risiken",
+    "Leistungsupdate-Garantie (künftige Verbesserungen ohne Mehrbeitrag)",
+    "Differenzdeckung zu anderen Rechtsschutzversicherern möglich",
+    "Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren Versicherung",
+    "Umfangreiche Internet-Zusatzversicherungen (web@ktiv) optional",
+    "Fahrzeug-Schutzbrief und Top-Schutzbrief als Annexe verfügbar"
+  ],
+  "beitrag": {
+    "monatlich_eur": null,
+    "jaehrlich_eur": null,
+    "quelle": "Nicht in den vorliegenden Unterlagen angegeben; wird im Versicherungsantrag mitgeteilt"
+  },
+  "insurer": "ARAG SE",
+  "tariff": "Aktiv-Rechtsschutz Premium (für Privatpersonen)",
+  "stem": "arag__komfort-flex-2026",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "631fc4216fb042cc47d864ca3ec0fe43bd4f95df7afa0bec3fd0ad078cce2f15",
+  "_supersedes": null
+}

@@ -1,0 +1,88 @@
+{
+  "stand": "16.07.2024",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Schadenersatz, Vertrags-/Sachenrecht, Cyber-Rechtsschutz, erweiterte Familienrechtsberatung"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "nur Arbeits-Rechtsschutz für geringfügig entlohnte Beschäftigung"
+    },
+    "verkehr": {
+      "included": false,
+      "level": null,
+      "note": "Haupt-Verkehrs-Rechtsschutz nicht enthalten; RadMobilSchutz für Fahrräder/E-Bikes vorhanden"
+    },
+    "wohnen_immobilien": {
+      "included": false,
+      "level": null
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Cyber-Rechtsschutz, Internet-Vertragsrecht"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "ohne Steuer-Rechtsschutz für Grundstücke"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "in sonstigen Angelegenheiten, nicht in Verkehrssachen"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Europa, Mittelmeeranliegerstaaten, Kanarische Inseln, Azoren, Madeira; weltweit temporär bei Auslandsaufenthalt (max. 500.000 EUR)",
+    "vertragslaufzeit": "mindestens 1 Jahr, automatische Verlängerung um je 1 Jahr"
+  },
+  "leistungen": [
+    "Telefonische Erstberatung",
+    "Mediation",
+    "Rechtsanwaltskosten",
+    "Gerichtskosten",
+    "Sachverständigenkosten",
+    "Gegnerische Anwaltskosten",
+    "Übersetzungskosten",
+    "Kautionsdarlehen (Strafkaution)",
+    "Schiedsverfahren",
+    "RadMobilSchutz",
+    "CarSharingSchutz"
+  ],
+  "ausschluesse": [
+    "Erwerb/Verkauf/Finanzierung bebauteter Grundstücke",
+    "Patent- und Markenrechte",
+    "Kapitalanlagen",
+    "Darlehen, Spiel- und Wettverträge",
+    "Krieg, feindliche Handlungen, Aufruhr",
+    "Vorsätzlich begangene Straftaten",
+    "Mehrfach-Versicherungsfälle (Versicherer kann nach 2+ Fällen in 12 Monaten kündigen)"
+  ],
+  "besonderheiten": [
+    "Tägliches Kündigungsrecht",
+    "Leistungsgarantie bei Versichererwechsel",
+    "Online-Vorsorgedokumente (Patientenverfügung, Vorsorgevollmacht)",
+    "Online-Testament-Assistent",
+    "Online-Rechtsberatung per Chat",
+    "Kostenlose Rechtsanwalts-Empfehlungsvermittlung (Klausel 93)"
+  ],
+  "beitrag": null,
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stem": "s-direkt__rundum-schutz-plus-mit-beitragsgarantie-oerag-rechtsschutz",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "31bb8658ce7bc9ce2f72599bc9f3de8ca3e6522565f5af91169eb212185a1b59",
+  "_supersedes": null
+}

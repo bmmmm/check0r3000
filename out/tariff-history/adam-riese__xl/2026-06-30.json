@@ -1,0 +1,110 @@
+{
+  "stand": "01.05.2023",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Schadenersatz, Vertrags-/Sachenrecht, Internet-Reputationsschutz, Identitätsmissbrauch"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeitnehmer, Streitigkeiten mit Arbeitgeber, 6 Monate Wartezeit"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Motorfahrzeuge zu Lande/Wasser/Luft, Schadenersatz, Strafrecht, Ordnungswidrigkeiten"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Vermietung und Mietverhältnisse, Nachbarrechtsstreitigkeiten, Nebenkostenabrechnung"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Reputationsschutz, Identitätsmissbrauch, Urheberrecht online, Cyber-Mobbing"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Vor deutschen Finanz- und Verwaltungsgerichten, Einspruchsverfahren"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Vor Sozialgerichten, Widerspruchsverfahren vor Sozialbehörden"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrsrecht und private Verwaltungsangelegenheiten vor Gerichten/Behörden"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "1.000.000 EUR (Inland), weltweit 200.000-1.200.000 EUR je Variante",
+    "selbstbeteiligung": "variable, vereinbart (Höhe im Versicherungsschein); Reduktion um 150 EUR pro 3 schadenfrei Jahre, Erhöhung um 150 EUR pro Schadenmeldung",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Schadenersatz-Rechtsschutz",
+      "Disziplinar- und Standes-Rechtsschutz",
+      "Straf-Rechtsschutz",
+      "Ordnungswidrigkeiten-Rechtsschutz",
+      "Opfer-Rechtsschutz",
+      "Beratungs-Rechtsschutz",
+      "Telefonische Rechtsberatung",
+      "Verkehrs-Rechtsschutz",
+      "Neukunde, falls vorherige Versicherung für gleiches Risiko ohne Lücke bestand"
+    ],
+    "geltungsbereich": "Europa einschließlich Anliegerstaaten des Mittelmeers, Kanarische Inseln, Madeira, Azoren; weltweit temporär bis 24 Monate bei bestimmten Aufenthaltstypen",
+    "vertragslaufzeit": "1 Jahr, automatische jährliche Verlängerung, Kündigung jederzeit möglich"
+  },
+  "leistungen": [
+    "Kostenübernahme für Rechtsanwälte bis Versicherungssumme",
+    "Mediation bis 3.000 EUR",
+    "Telefonische Rechtsberatung ohne Ausschlüsse",
+    "Kosten für Gericht und Gerichtsvollzieher",
+    "Sachverständigenkosten (gerichtlich bestellte)",
+    "Gegnerische Anwalts- und Gerichtskosten bei Verkehrung",
+    "Schieds- und Schlichtungsverfahren",
+    "Strafkautionsdarlehen (200.000-800.000 EUR je Variante)",
+    "Freie Rechtsanwaltswahl",
+    "Rechtsschutz-Service-Telefon",
+    "Beratung in Familie-/Erbrecht bis 500 EUR/Fall",
+    "Immobilien-Beratung bis 500 EUR/Jahr",
+    "Urheberrechtsberatung online bis 500-1.000 EUR/Jahr",
+    "Suche und Löschung rufschädigender Inhalte (XL/XXL)",
+    "Psychologische Soforthilfe bei Cyber-Mobbing (XL/XXL)",
+    "Pflegeberatung (XXL)"
+  ],
+  "ausschluesse": [
+    "Streitigkeiten zwischen Versicherungsnehmern und Mitversicherten desselben Vertrages",
+    "Rechtsschutz gegen Versicherer oder Schadenabwickler",
+    "Spiel- und Wettverträge, Gewinnzusagen",
+    "Patent- und Markenrecht (mit Einschränkungen)",
+    "Baufinanzierung (mit Ausnahmen)",
+    "Selbstständigentätigkeit (Privat-Form, außer Nebentätigkeit bis 22.000 EUR)",
+    "Motorfahrzeuge im Betriebsvermögen",
+    "Motorfahrzeuge zur gewerblichen Personenbeförderung",
+    "Vorsätzlich begangene Straftaten (mit Dokumentationspflicht)",
+    "Streitigkeiten, deren erste Ursache vor Versicherungsbeginn oder während Wartezeit eingetreten ist"
+  ],
+  "besonderheiten": [
+    "Drei Varianten (L, XL, XXL) mit gestaffelten Leistungen und unterschiedlichen Versicherungssummen",
+    "Variable Selbstbeteiligung mit Bonus-System für Schadensfreiheit",
+    "Automatische Update-Garantie für Leistungsverbesserungen (XL/XXL)",
+    "Neuwertdeckung für Motorfahrzeuge bis 150.000 EUR (Verkehr)",
+    "Erweiterter Straf-Rechtsschutz optional zubuchbar (Privat, Beruf, Ehrenamt)",
+    "Erweitertes Internet-Rechtsschutz in Privat-Baustein enthalten",
+    "Mitversicherung Ehepartner, volljährige/minderjährige Kinder und Eltern möglich",
+    "Telefonische Rechtsberatung auch in nicht versicherten Bereichen ohne Versicherungsfall"
+  ],
+  "beitrag": null,
+  "insurer": "Württembergische Versicherung AG",
+  "tariff": "Rechtsschutzversicherung",
+  "stem": "adam-riese__xl",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "826c403dd921c6f959363f73b60212b5628c1d1359d3a4e75775283ff4864c22",
+  "_supersedes": null
+}

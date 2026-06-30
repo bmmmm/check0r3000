@@ -1,0 +1,87 @@
+{
+  "stand": null,
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "beruf": {
+      "included": true,
+      "level": null
+    },
+    "verkehr": {
+      "included": false,
+      "level": null
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null
+    },
+    "internet_web": {
+      "included": true,
+      "level": null
+    },
+    "steuer": {
+      "included": true,
+      "level": null
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz",
+      "Arbeits-Rechtsschutz (6 Monate)"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; weltweit bei temporären Aufenthalten max. 2 Jahre",
+    "vertragslaufzeit": "im Versicherungsschein festgelegt; jährliche automatische Verlängerung; täglich kündbar"
+  },
+  "leistungen": [
+    "Telefonische Erstberatung",
+    "Mediation",
+    "Rechtsanwaltskosten",
+    "Gerichtskosten",
+    "Sachverständigenkosten",
+    "Gegnerische Anwaltskosten",
+    "Schiedsverfahren",
+    "Strafkaution als Darlehen",
+    "Übersetzungen im Ausland",
+    "Dolmetscher im Ausland"
+  ],
+  "ausschluesse": [
+    "Baufinanzierung",
+    "Patent- und Markenrecht",
+    "Kapitalanlagen",
+    "Darlehen, Spiel- und Wettverträge",
+    "Krieg, innere Unruhen, Streik",
+    "Enteignungs- und Planfeststellungsverfahren",
+    "Halt- und Parkverstoße (außer Punktesystem)",
+    "Streitigkeiten zw. Versicherungsnehmern",
+    "Streitigkeiten nicht-ehelicher Partner",
+    "Anspruchsübertragung nach Schadeneintritt"
+  ],
+  "besonderheiten": [
+    "Tägliches Kündigungsrecht des Versicherungsnehmers",
+    "Mediation mit Kostenübernahme",
+    "Cyber-Rechtsschutz für private Internetnutzung",
+    "RadMobilSchutz und CarSharingSchutz enthalten",
+    "Online-Rechtsberatung über meinrecht.de",
+    "Betreuungs-Rechtsschutz"
+  ],
+  "beitrag": null,
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stem": "bavariadirekt__rundum-schutz-mit-beitragsgarantie-oerag-rechtsschutz",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "fdab9492b3403dc44025882e022597e9276e4e082ab114d03569031b2c0d5896",
+  "_supersedes": null
+}

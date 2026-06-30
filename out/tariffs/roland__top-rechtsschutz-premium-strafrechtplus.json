@@ -1,0 +1,98 @@
+{
+  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
+  "tariff": "Rechtsschutz-Versicherung",
+  "stand": "08.2025",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "beruf": {
+      "included": true,
+      "level": null
+    },
+    "verkehr": {
+      "included": true,
+      "level": null
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null
+    },
+    "internet_web": {
+      "included": true,
+      "level": null
+    },
+    "steuer": {
+      "included": true,
+      "level": null
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "keine Wartezeit: Service-Leistungen, Mediation, Online-Beratung",
+      "6 Monate: Arbeits-, Wohnungs-, Vertragsrecht",
+      "12 Monate: Eherecht",
+      "36 Monate: Studienplatzklagen"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Madeira, Azoren; weltweit mit Kosten-limits bis 250.000-500.000 EUR",
+    "vertragslaufzeit": "1, 2, 3, 4 oder 5 Jahre"
+  },
+  "leistungen": [
+    "Anwaltskosten",
+    "Gerichts- und Gerichtsvollzieherkosten",
+    "Zeugen- und Sachverständigenentschädigung",
+    "Gegner-Kostenübernahme",
+    "Telefonische Rechtsberatung",
+    "Mediation und außergerichtliche Konfliktbeilegung",
+    "Online-Rechtsberatung",
+    "Anwaltsempfehlung",
+    "Strafkaution als zinsloses Darlehen"
+  ],
+  "ausschluesse": [
+    "Kapitalanlagegeschäfte",
+    "Darlehensvergabe",
+    "Spiel- und Wettverträge",
+    "Kartellrecht und Wettbewerbsrecht",
+    "Baufinanzierung",
+    "Patent-/Markenrecht",
+    "Handelsvertreterrecht"
+  ],
+  "besonderheiten": [
+    "Flexible Selbstbeteiligung (Flex-SB) verfügbar",
+    "Strafkaution bis 1 Mio. EUR",
+    "Zusatz-Bausteine und Plus-Module",
+    "StrafrechtPlus-Versicherung",
+    "Automatische Vertragsverlängerung",
+    "Zahlungspause bei Arbeitslosigkeit möglich"
+  ],
+  "beitrag": null,
+  "_input_hash": "061a8d9bfe5af94873e3d732a656bbb61038eb6f6cafaf81239fa2ccc676f78b",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "cdf6c776341c6e20ad1055baeb5ede5abae97d14587b61e0d8727adf8d3ab0b3"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "db9e5d24a2bd8d9bd42823cfa4a69c83bb7a613a610c1090c3ca4a5ec547d4a6"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "ff54d5234ca4059c95120ab9d28b508c2324a3fc11e44cbd4efe7b63f7a97193"
+    }
+  ]
+}

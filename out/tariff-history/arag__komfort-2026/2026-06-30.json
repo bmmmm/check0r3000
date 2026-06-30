@@ -1,0 +1,96 @@
+{
+  "stand": "16.07.2024",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Schadenersatz-, Vertrags- und Sachenrecht im privaten Bereich"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz für nichtselbstständige Tätigkeiten"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrs-Rechtsschutz ohne Wartezeit"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungs- und Grundstücks-Rechtsschutz für selbstgenutzte Objekte"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Cyber-Rechtsschutz im privaten Internetbereich"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz vor deutschen Finanz- und Verwaltungsgerichten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz vor Sozialgerichten"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz in Verkehrs- und sonstigen Angelegenheiten"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz",
+      "Telefonische Erstberatung"
+    ],
+    "geltungsbereich": "Europa + Mittelmeeranrainer; Kanarische Inseln, Azoren, Madeira; weltweit temporär unter bestimmten Voraussetzungen bis 500.000 EUR",
+    "vertragslaufzeit": "1 Jahr Mindestdauer, danach automatische jährliche Verlängerung mit 3-Monats-Kündigungsfrist"
+  },
+  "leistungen": [
+    "Telefonische Rechtsberatung",
+    "Außergerichtliche Mediation",
+    "Schiedsverfahren",
+    "Kautionsdarlehen",
+    "Rechtsanwaltskosten nach RVG",
+    "Gerichtskosten und Sachverständigenkosten",
+    "Übersetzungskosten",
+    "Dolmetscherkosten",
+    "RadMobilSchutz",
+    "CarSharingSchutz"
+  ],
+  "ausschluesse": [
+    "Erwerb/Veräußerung bebauungspflichtiger Grundstücke",
+    "Patent- und Markenrecht",
+    "Erwerb/Veräußerung von Kapitalanlagen",
+    "Darlehen-, Spiel- und Wettverträge",
+    "Krieg, innere Unruhen, Streik",
+    "Enteignungs- und Planfeststellungsangelegenheiten",
+    "Halt- und Parkverstoße ohne Fahreignungsregister-Eintrag",
+    "Handelsrecht und Maklerrecht bei bestimmten Ausnahmen"
+  ],
+  "besonderheiten": [
+    "Tägliches Kündigungsrecht (Sparkassen-Variante)",
+    "Automatische jährliche Verlängerung",
+    "Leistungsgarantie beim Versichererwechsel",
+    "RadMobilSchutz und CarSharingSchutz enthalten",
+    "Mitversicherung von Ehepartner und Kindern",
+    "Online-Rechtsberatung per Chat",
+    "Testament-Assistent und Vorsorgeverfügungen-Service",
+    "Forderungsservice-Vermittlung",
+    "Versicherungsombudsmann-Schlichtung verfügbar"
+  ],
+  "beitrag": null,
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stem": "arag__komfort-2026",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "42c2f0e76110097473eadf9df707f9cb6bdff42d35066755ac37a4ea3e95cff0",
+  "_supersedes": null
+}

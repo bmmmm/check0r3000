@@ -1,0 +1,78 @@
+{
+  "stand": null,
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "nur Minijobs"
+    },
+    "verkehr": {
+      "included": false,
+      "level": null
+    },
+    "wohnen_immobilien": {
+      "included": false,
+      "level": null
+    },
+    "internet_web": {
+      "included": false,
+      "level": null
+    },
+    "steuer": {
+      "included": true,
+      "level": null
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "nicht-verkehrsrechtliche Angelegenheiten"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Arbeits-Rechtsschutz: 6 Monate"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Azoren, Madeira; weltweit temporär bis 500.000 EUR",
+    "vertragslaufzeit": "ab 1 Jahr, automatische jährliche Verlängerung"
+  },
+  "leistungen": [
+    "telefonische Erstberatung",
+    "Mediation",
+    "Rechtsanwaltskosten",
+    "Gerichtskosten",
+    "Sachverständigenkosten",
+    "gegnerische Anwaltskosten (wenn verpflichtet)",
+    "Kautionsdarlehen zinslos"
+  ],
+  "ausschluesse": [
+    "Grundstück zur Bebauung (Kauf/Verkauf/Finanzierung)",
+    "Patent- und Markenrechte",
+    "Kapitalanlagen",
+    "Darlehen, Spiel- und Wettverträge",
+    "Streitigkeiten zwischen Versicherungsnehmern"
+  ],
+  "besonderheiten": [
+    "tägliches Kündigungsrecht",
+    "RadMobilSchutz enthalten",
+    "CarSharingSchutz enthalten",
+    "6-Monats-Wartezeit für Arbeits-Rechtsschutz"
+  ],
+  "beitrag": null,
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stem": "bavariadirekt__rundum-schutz-plus-oerag-rechtsschutz",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "34936204df6a9e1d79b5a429c99a5bd02e1c3da4de90cd8ecc78d75a6b8cc6ef",
+  "_supersedes": null
+}

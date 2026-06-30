@@ -1,0 +1,113 @@
+{
+  "insurer": "ÖRAG Rechtsschutzversicherungs-AG",
+  "tariff": "Privat-Rechtsschutz",
+  "stand": "16.07.2024",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Schadenersatz-, Vertrags- und Sachenrecht im privaten Bereich"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz für nichtselbstständige Tätigkeiten"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrs-Rechtsschutz ohne Wartezeit"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungs- und Grundstücks-Rechtsschutz für selbstgenutzte Objekte"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "Cyber-Rechtsschutz im privaten Internetbereich"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz vor deutschen Finanz- und Verwaltungsgerichten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz vor Sozialgerichten"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verwaltungs-Rechtsschutz in Verkehrs- und sonstigen Angelegenheiten"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Verkehrs-Rechtsschutz",
+      "Telefonische Erstberatung"
+    ],
+    "geltungsbereich": "Europa + Mittelmeeranrainer; Kanarische Inseln, Azoren, Madeira; weltweit temporär unter bestimmten Voraussetzungen bis 500.000 EUR",
+    "vertragslaufzeit": "1 Jahr Mindestdauer, danach automatische jährliche Verlängerung mit 3-Monats-Kündigungsfrist"
+  },
+  "leistungen": [
+    "Telefonische Rechtsberatung",
+    "Außergerichtliche Mediation",
+    "Schiedsverfahren",
+    "Kautionsdarlehen",
+    "Rechtsanwaltskosten nach RVG",
+    "Gerichtskosten und Sachverständigenkosten",
+    "Übersetzungskosten",
+    "Dolmetscherkosten",
+    "RadMobilSchutz",
+    "CarSharingSchutz"
+  ],
+  "ausschluesse": [
+    "Erwerb/Veräußerung bebauungspflichtiger Grundstücke",
+    "Patent- und Markenrecht",
+    "Erwerb/Veräußerung von Kapitalanlagen",
+    "Darlehen-, Spiel- und Wettverträge",
+    "Krieg, innere Unruhen, Streik",
+    "Enteignungs- und Planfeststellungsangelegenheiten",
+    "Halt- und Parkverstoße ohne Fahreignungsregister-Eintrag",
+    "Handelsrecht und Maklerrecht bei bestimmten Ausnahmen"
+  ],
+  "besonderheiten": [
+    "Tägliches Kündigungsrecht (Sparkassen-Variante)",
+    "Automatische jährliche Verlängerung",
+    "Leistungsgarantie beim Versichererwechsel",
+    "RadMobilSchutz und CarSharingSchutz enthalten",
+    "Mitversicherung von Ehepartner und Kindern",
+    "Online-Rechtsberatung per Chat",
+    "Testament-Assistent und Vorsorgeverfügungen-Service",
+    "Forderungsservice-Vermittlung",
+    "Versicherungsombudsmann-Schlichtung verfügbar"
+  ],
+  "beitrag": null,
+  "_input_hash": "64599edc3a37edf2e51f0428371aeb31b3821c6b750d6d8cc623a31eaaa2d902",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "11d5719fb62abd22fed3ac91de277d6b2c9e0b17927b9d5335fd8040141e3091"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "7e0219500b8375a22fa0dbfdf91e41d7c4624c3432c949207ad467ec71064e0a"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "b2675262682671af0018a5f7b555fb9ed7e70e7d5fa654f82a1a5621bd54ef98"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "42ad7f48c70fe51a267c0a7fc8944cea37441fa968acba5eb24d8dae0853c2c1"
+    }
+  ]
+}

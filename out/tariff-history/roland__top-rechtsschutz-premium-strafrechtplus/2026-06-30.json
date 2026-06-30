@@ -1,0 +1,85 @@
+{
+  "stand": "08.2025",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "beruf": {
+      "included": true,
+      "level": null
+    },
+    "verkehr": {
+      "included": true,
+      "level": null
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null
+    },
+    "internet_web": {
+      "included": true,
+      "level": null
+    },
+    "steuer": {
+      "included": true,
+      "level": null
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "keine Wartezeit: Service-Leistungen, Mediation, Online-Beratung",
+      "6 Monate: Arbeits-, Wohnungs-, Vertragsrecht",
+      "12 Monate: Eherecht",
+      "36 Monate: Studienplatzklagen"
+    ],
+    "geltungsbereich": "Europa, Mittelmeeranrainer, Kanarische Inseln, Madeira, Azoren; weltweit mit Kosten-limits bis 250.000-500.000 EUR",
+    "vertragslaufzeit": "1, 2, 3, 4 oder 5 Jahre"
+  },
+  "leistungen": [
+    "Anwaltskosten",
+    "Gerichts- und Gerichtsvollzieherkosten",
+    "Zeugen- und Sachverständigenentschädigung",
+    "Gegner-Kostenübernahme",
+    "Telefonische Rechtsberatung",
+    "Mediation und außergerichtliche Konfliktbeilegung",
+    "Online-Rechtsberatung",
+    "Anwaltsempfehlung",
+    "Strafkaution als zinsloses Darlehen"
+  ],
+  "ausschluesse": [
+    "Kapitalanlagegeschäfte",
+    "Darlehensvergabe",
+    "Spiel- und Wettverträge",
+    "Kartellrecht und Wettbewerbsrecht",
+    "Baufinanzierung",
+    "Patent-/Markenrecht",
+    "Handelsvertreterrecht"
+  ],
+  "besonderheiten": [
+    "Flexible Selbstbeteiligung (Flex-SB) verfügbar",
+    "Strafkaution bis 1 Mio. EUR",
+    "Zusatz-Bausteine und Plus-Module",
+    "StrafrechtPlus-Versicherung",
+    "Automatische Vertragsverlängerung",
+    "Zahlungspause bei Arbeitslosigkeit möglich"
+  ],
+  "beitrag": null,
+  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
+  "tariff": "Rechtsschutz-Versicherung",
+  "stem": "roland__top-rechtsschutz-premium-strafrechtplus",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "06ace584d71a113664d85f411515084ba4d8fbaf52dd7dcab838a312295855e6",
+  "_supersedes": null
+}
