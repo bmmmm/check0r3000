@@ -197,6 +197,52 @@ Voraussetzungen: [`uv`](https://docs.astral.sh/uv/) und die `claude`-CLI auf dem
    ```
 3. Ergebnis: `out/vergleich.md` und `out/index.html`.
 
+## Wo ein LLM zum Einsatz kommt — und wo bewusst nicht
+
+Das ganze Tool ruft ein Modell an genau **drei** Stellen auf, alle über
+`_providers.run()` → `claude -p … --output-format json` (bzw. den konfigurierten
+OpenAI-kompatiblen Endpoint):
+
+| Stelle | Aufgabe | Unverzichtbar? |
+|---|---|---|
+| `extract.py` | PDF-Klartext → strukturiertes Fakten-JSON | **Ja — der Daseinszweck** |
+| `eval.py` | Benchmark: Modelle gegen `golden.json` messen | Nein (Qualitätssicherung) |
+| `render.py` | `synthesize_pros_cons`: Vor-/Nachteile-Prosa für `vergleich.md` | Nein (Nice-to-have) |
+
+Alles andere ist **bewusst modellfrei** und deterministisch: Scraping (DOM-Parsing),
+das Magic-Find-Ranking (reine Arithmetik über die Records), Snapshots, Feature-Diffs,
+`reconcile.py`, der Harvest und der `--filter`-Schritt. Das Modell wird nur dort
+eingesetzt, wo es das einzige Werkzeug ist, das funktioniert.
+
+**Warum nur bei `extract`:** Die AVB sind unstrukturierter juristischer Fließtext, je
+Versicherer anders formatiert — keine API, kein einheitliches Layout. Derselbe Fakt
+steht mal als Paragraph (`§30(4): Verkehrs-Rechtsschutz ist Kernbereich`), mal als
+Tabelle, mal als Aufzählung. Ein Regex/Parser müsste pro Versicherer neu geschrieben
+werden und bräche bei jeder Umformulierung. Das Modell **normalisiert diese Vielfalt
+auf ein festes Schema** — genau die Aufgabe, bei der ein LLM einem Regelwerk überlegen
+ist.
+
+```
+REIN  ── ~200 000 Zeichen Jura-Deutsch (advocard-AVB) ───────────────────────
+  IHR RECHTSSCHUTZ IM DETAIL. … §§ Geltungsbereich, Bausteine, Wartezeiten …
+
+RAUS  ── ein schema-valider, versicherer-übergreifend vergleichbarer Record ──
+  modules:    privat ✓, beruf ✓, verkehr ✓, wohnen ✓  (level: null — nicht genannt)
+  coverage:   versicherungssumme "unbegrenzt", selbstbeteiligung "150/300 EUR wählbar"
+  leistungen: 28 Einträge — "Anwaltsgebühren", "Mediationskosten bis 180 EUR/Std", …
+```
+
+Der `INSTRUCTION`-Prompt zwingt dabei auf **Fakten statt Raten** (`NEVER guess a
+number`; `level` nur, wenn das Dokument die Stufe nennt). Weil ein Modell trotzdem
+halluziniert, fängt die Pipeline drumherum das ab: `golden.json`-Invarianten
+(`regression.py`), `--repeat N` mit Union über mehrere Läufe und `reconcile.py`
+(Merge gegen HEAD, nie Regression).
+
+`extract` ist zudem **gecacht** (`_input_hash` aus Prompt-Version + Modell + Filter +
+Dokument-Hashes): einmal pro PDF-Version, danach kostenlos. `eval` und die
+`render`-Prosa sind optional — die Coverage-Matrix im Vergleich-Tab ist deterministisch,
+nur die „Vor-/Nachteile"-Sektion ruft ein Modell. Ohne `extract` gäbe es gar keine Daten.
+
 ## Modelle: Cloud & lokal
 
 Jede Stufe, die ein Modell nutzt (`extract`, `render`, `eval`), nimmt einen
