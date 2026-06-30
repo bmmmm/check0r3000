@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# check0r-scan — CWD-independent wrapper around scripts/harvest_docs.py.
+#
+# Purpose: give the Playwright harvest a single, bare command name that can be
+# anchored in Claude Code's `sandbox.excludedCommands`. Excluding this name runs
+# the whole invocation (and its headless-Chromium child) OUTSIDE the Seatbelt
+# sandbox. That is REQUIRED here: the sandbox kills the browser process on launch
+# (TargetClosedError) — and unlike a plain network call, this is NOT fixable via
+# settings.json allowedDomains. Harvest is the ONLY pipeline step that must leave
+# the sandbox; fetch_docs/ingest/extract run fine in-sandbox once
+# `rechtsschutz.check24.de` is on allowedDomains (extract reaches api.anthropic.com,
+# already allowed). See memory: omlx-local-benchmark-status (same pattern, loopback).
+#
+# It runs the repo's pinned .venv interpreter directly (no `uv`): uv's cache is
+# sandbox-blocked, and a plain interpreter behaves identically in/out of the sandbox.
+#
+# NOTE: harvest_docs.py has no dry-run — it always rewrites the tracked manifest
+# data/sources/check24-documents.json. When testing, restore it afterwards with
+#   git -C "$repo_root" checkout data/sources/check24-documents.json
+#
+# Install (one-time): symlink onto PATH so it is callable as a bare name —
+#   ln -sf "$PWD/scripts/check0r-scan" ~/.local/bin/check0r-scan
+# Then, in ~/.claude/settings.json, add the GLOB "check0r-scan *" to
+# sandbox.excludedCommands (a bare "check0r-scan" matches ONLY a zero-arg command;
+# a glob entry unsandboxes the whole shell line, so never chain after it) and
+# "Bash(check0r-scan *)" to permissions.allow, then restart the session. A settings
+# normalizer may revert the glob to bare — re-apply live if harvest re-sandboxes.
+set -euo pipefail
+
+# Resolve this script's real path, following symlinks (it is symlinked into
+# ~/.local/bin). Portable — no GNU `readlink -f` dependency.
+src="${BASH_SOURCE[0]}"
+while [ -h "$src" ]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  case "$src" in /*) ;; *) src="$dir/$src" ;; esac   # relative symlink -> absolute
+done
+script_dir="$(cd -P "$(dirname "$src")" && pwd)"
+repo_root="$(cd -P "$script_dir/.." && pwd)"
+
+py="$repo_root/.venv/bin/python"
+if [ ! -x "$py" ]; then
+  echo "check0r-scan: missing venv interpreter at $py" >&2
+  echo "check0r-scan: create it with 'uv sync' in $repo_root" >&2
+  exit 1
+fi
+
+# harvest_docs.py reads/writes data/ relative to the repo root.
+cd "$repo_root"
+exec "$py" scripts/harvest_docs.py "$@"
