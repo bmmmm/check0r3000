@@ -45,6 +45,18 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
   Code-Defaults in `MagicWeights`). `leistung_cov` zählt distinkte `coverage_taxonomy`-
   Kategorien, nicht rohe leistungen — Tarife mit Benefits außerhalb der Taxonomie werden
   dadurch untergewichtet (bekannte Grenze, kein Extraction-Bug).
+- **5 gewertete Dimensionen** (Default-Gewichte, Summe 1.0): `note` 0.35, `leistung_cov`
+  0.22, `module_breadth` 0.20, `coverage_gen` 0.18, `bewertung` 0.05. `module_tier` ist
+  **nicht mehr gewertet** (nur ~3/26 Records tragen ein Level — gepinntes `level:null`
+  gegen haiku-Halluzination; eine Tier-Gewichtung belohnte Extraktions-Vollständigkeit,
+  nicht Qualität) → bleibt als `MagicScore.module_tier_raw` reine Detail-Anzeige.
+- **Bedarf-Toggle `[P]`** — `config/needs-weights.json` (getrackt, kein PII, neutral-1.0-
+  Placeholder) gewichtet **nur** `module_breadth` nach persönlichem Bedarf. Neutrale
+  Gewichte = identisch zum objektiven Ranking. `needs=None` (Default) = objektiv.
+- **Konfidenz-Flag** — `leistung_low_confidence` (in `rank()` gesetzt) markiert Records,
+  deren distinkte-Leistungs-Zahl weit unter dem Markt-Median liegt (Recall-Lücke, kein
+  armer Tarif); rein Anzeige (⚠), der Score bleibt unangetastet. `quality_per_eur()` =
+  reine Preis-Leistungs-Anzeige (Spalte „P/L"), nie ein Score-Input.
 
 ## TUI-Architektur (4 Module)
 
@@ -74,6 +86,7 @@ Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_a
 | `[v]` | Vergleich-Tab (Coverage-Matrix) |
 | `[B]` | Benchmark-Tab (Modell-Scorecard aus `benchmarks/results.json`) |
 | `[M]` | Magic-Find-Tab (markt-weites Qualitäts-Ranking; Preis fließt NIE in den Score) |
+| `[P]` | Bedarf-Modus an/aus (Module nach `config/needs-weights.json` gewichten) |
 | `[d]` | Detail-Band ein/aus |
 | `Tab` / `⇧Tab` | Nächster / voriger Tab (zyklisch) |
 | `[?]` | Alle Shortcuts |

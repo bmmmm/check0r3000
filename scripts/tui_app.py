@@ -167,7 +167,6 @@ MAGIC_DIM_LABELS = {
     "leistung_cov": "Leistungs-Breite",
     "module_breadth": "Modul-Breite",
     "coverage_gen": "Deckungs-Großzügigkeit",
-    "module_tier": "Modul-Stufe",
     "bewertung": "Kundenbewertung",
 }
 
@@ -1881,7 +1880,7 @@ class CheckApp(App):
         table.clear(columns=True)
         table.add_columns(
             "#", "Versicherer", "Tarif", "Score", "Note", "Bew.",
-            "Mod", "Leist.", "Deckung", "€/mo",
+            "Mod", "Leist.", "Deckung", "€/mo", "P/L",
         )
         self._magic_rows = {}
         self._magic_ident_to_rk = {}
@@ -1899,6 +1898,13 @@ class CheckApp(App):
         scores = magic.rank(self._snapshot.rows, self._details_by_stem,
                             self._magic_weights, needs=needs)
 
+        # Coverage marker: how much of the distinct market we actually rank vs only
+        # pre-score. Best price-efficiency in the field anchors the P/L column (display
+        # only — quality_per_eur NEVER enters the score).
+        n_market = len(magic.prescore(self._snapshot.rows))
+        max_qpe = max((s.quality_per_eur() or 0.0 for s in scores), default=0.0)
+        n_low_conf = sum(1 for s in scores if s.leistung_low_confidence)
+
         if self._magic_needs_mode:
             if needs is not None and magic.needs_are_neutral(needs):
                 mode_note = (
@@ -1913,10 +1919,16 @@ class CheckApp(App):
                 )
         else:
             mode_note = "[bold]✨ Magic Find[/bold] — objektive Marktqualität"
+        cov_note = (
+            f"[dim]{len(scores)}/{n_market} Markt-Produkte analysiert"
+            + (f" · [yellow]{n_low_conf} mit dünner Extraktion ⚠[/yellow]"
+               if n_low_conf else "")
+            + " · \\[F] mehr scannen[/dim]"
+        )
         header.update(
-            f"{mode_note}, [bold]Preis zählt nicht[/bold].  "
-            f"[dim]{len(scores)} analysierte Tarife gerankt · ↑↓ wählen · "
-            "\\[P] Bedarf an/aus · \\[d] Score-Beitrag je Dimension[/dim]"
+            f"{mode_note}, [bold]Preis zählt nicht[/bold].  {cov_note}\n"
+            f"[dim]↑↓ wählen · \\[P] Bedarf an/aus · \\[d] Score-Beitrag je Dimension · "
+            "P/L = Preis-Leistung (nur Anzeige)[/dim]"
         )
 
         for i, s in enumerate(scores):
@@ -1940,6 +1952,15 @@ class CheckApp(App):
             )
             price = f"{s.monatlich_eur:.0f}" if s.monatlich_eur is not None else "—"
             deckung = f"{s.dims.get('coverage_gen', 0.0) * 100:.0f}%"
+            leist_cell = f"{s.n_leistung_cats}/24"
+            if s.leistung_low_confidence:
+                leist_cell = f"[yellow]{leist_cell} ⚠[/yellow]"
+            qpe = s.quality_per_eur()
+            if qpe is None or max_qpe <= 0:
+                pl_cell = "[dim]—[/dim]"
+            else:
+                frac = qpe / max_qpe
+                pl_cell = f"{frac * 100:3.0f}% {magic_bar(frac, 6)}"
 
             table.add_row(
                 marker,
@@ -1949,9 +1970,10 @@ class CheckApp(App):
                 note_col,
                 bew_cell,
                 f"{s.n_modules}/8",
-                f"{s.n_leistung_cats}/24",
+                leist_cell,
                 deckung,
                 price,
+                pl_cell,
                 key=row_key,
             )
             # Map both the stem and the representative row's bare key to this row, so a
@@ -1981,6 +2003,30 @@ class CheckApp(App):
                 f"  {label:<24} {magic_bar(raw, 10)} {raw * 100:4.0f}%   "
                 f"[dim]×{w:.2f} = {contrib:.3f}[/dim]"
             )
+
+        # Info-only signals — explicitly NOT part of the weighted score above.
+        lines.append("")
+        lines.append("[bold underline]Zusatz-Info (nicht gewertet)[/bold underline]")
+        lines.append(
+            f"  {'Modul-Stufe':<24} {magic_bar(score.module_tier_raw, 10)} "
+            f"{score.module_tier_raw * 100:4.0f}%   "
+            "[dim](Basis/Komfort/Premium — meist nicht extrahiert, daher nicht gewertet)"
+            "[/dim]"
+        )
+        if score.monatlich_eur and score.quality_per_eur() is not None:
+            lines.append(
+                f"  {'Preis-Leistung':<24} [dim]{score.total:.3f} Qualität / "
+                f"{score.monatlich_eur:.0f}€/Monat — reiner Anzeigewert, kein "
+                "Score-Faktor[/dim]"
+            )
+        if score.leistung_low_confidence:
+            lines.append(
+                f"  [yellow]⚠ Leistungs-Extraktion dünn[/yellow] [dim]— nur "
+                f"{score.n_leistung_cats} Kategorien erkannt; der Leistungs-Score ist "
+                "evtl. zu niedrig (Recall-Lücke, kein armer Tarif). \\[F] / neu "
+                "extrahieren hilft.[/dim]"
+            )
+
         lines.append("")
         if row is not None:
             lines.append(self._render_market_detail(row))

@@ -288,6 +288,8 @@ async def t_magic_tab(app, pilot) -> None:
     assert table.row_count > 0, "magic table empty — no analyzed tariffs?"
     totals = [s.total for s in app._magic_rows.values()]
     assert totals == sorted(totals, reverse=True), "magic rows not score-descending"
+    assert len(table.columns) == 11, (
+        f"magic table should have 11 columns incl. P/L, got {len(table.columns)}")
     table.move_cursor(row=0)
     await pilot.pause()
     assert app._active_row is not None, "magic top row has no representative snapshot row"
@@ -298,6 +300,9 @@ async def t_magic_tab(app, pilot) -> None:
     rendered = content.render()
     text = rendered.plain if hasattr(rendered, "plain") else str(rendered)
     assert "Magic-Score" in text, f"magic detail not rendered: {text[:80]!r}"
+    # info-only section is present and clearly separated from the scored dimensions
+    assert "nicht gewertet" in text, f"magic detail missing info-only section: {text[:120]!r}"
+    assert "Preis-Leistung" in text, f"magic detail missing P/L info: {text[:120]!r}"
 
 
 async def t_magic_needs_toggle(app, pilot) -> None:
