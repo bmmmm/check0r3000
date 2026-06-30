@@ -260,9 +260,17 @@ def main() -> int:
     for d in manifest["documents"]:
         tariffs.setdefault((d["insurer"], d["tariff"]), []).append(d)
 
-    # --repeat only changes the cache signature when >1, so the default path keeps
-    # producing the exact same hashes (no mass cache invalidation of existing records).
+    # --repeat is part of the cache signature (a repeat=N record is keyed differently
+    # from repeat=1). That means a plain repeat=1 run would otherwise see every
+    # repeat>=2 record as a cache MISS and clobber it with a lower-recall re-extract
+    # (this bit a deep-scan run after a reconcile). The cache check below guards against
+    # that: a stored record at an equal-or-higher repeat over the same inputs is kept.
     repeat_tag = f"|repeat={args.repeat}" if args.repeat > 1 else ""
+
+    def _sig_for(docs_, repeat_):
+        tag = f"|repeat={repeat_}" if repeat_ > 1 else ""
+        return (PROMPT_VERSION + f"|model={args.model}|filter={filter_tag}{tag}|"
+                + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs_))
 
     rc = 0
     seen_stems: set[str] = set()
@@ -272,9 +280,7 @@ def main() -> int:
         if only is not None and stem not in only:
             continue
         docs = sorted(docs, key=lambda d: d["doctype"])
-        sig = (PROMPT_VERSION + f"|model={args.model}|filter={filter_tag}{repeat_tag}|"
-               + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs))
-        input_hash = hashlib.sha256(sig.encode()).hexdigest()
+        input_hash = hashlib.sha256(_sig_for(docs, args.repeat).encode()).hexdigest()
         out_path = OUT / f"{stem}.json"
 
         if out_path.exists() and not args.force:
@@ -283,6 +289,18 @@ def main() -> int:
                 if prev.get("_input_hash") == input_hash:
                     print(f"  cached    {insurer} / {tariff}")
                     continue
+                # Keep a stored record extracted at an equal-or-higher repeat over the
+                # same inputs — it is strictly better; a lower-repeat run must not clobber
+                # it. Reconstruct what its hash would have been at its own repeat to be
+                # sure the inputs (docs/model/filter/prompt) actually match.
+                prev_repeat = prev.get("_repeat") or 1
+                if prev_repeat >= args.repeat:
+                    prev_hash = hashlib.sha256(
+                        _sig_for(docs, prev_repeat).encode()).hexdigest()
+                    if prev.get("_input_hash") == prev_hash:
+                        print(f"  cached    {insurer} / {tariff}  "
+                              f"(kept repeat={prev_repeat} >= {args.repeat})")
+                        continue
             except Exception:
                 pass
 
