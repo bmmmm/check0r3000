@@ -18,6 +18,7 @@ categories). No Textual import — importable under a plain interpreter and runn
 from __future__ import annotations
 
 import json
+import statistics
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
@@ -53,15 +54,21 @@ class MagicWeights:
     from config/magic-weights.json. Every dimension is normalized to [0,1] before
     weighting, so the weights need not sum to 1 — but the defaults do, which keeps the
     total a clean [0,1] quality fraction. The user-confirmed balance: Tarifnote leads,
-    Leistungs-coverage is the second pillar, customer rating only nudges.
+    Leistungs-coverage and Baustein-breadth are the second pillars, customer rating only
+    nudges.
+
+    `module_tier` was removed from the weighted score: in the real corpus only ~3/26
+    records carry a per-module level (we deliberately pin level:null to stop haiku
+    hallucinating tiers from the tariff name), so a tier weight rewarded extraction
+    completeness, not quality. The tier ratio is still computed and surfaced as a
+    detail-band info value (MagicScore.module_tier_raw), just not scored.
     """
 
     note: float = 0.35           # expert Tarifnote (the real market discriminator)
-    leistung_cov: float = 0.20   # breadth of distinct benefit categories covered
-    module_breadth: float = 0.13 # how many of the 8 Bausteine are included
-    coverage_gen: float = 0.12   # generosity: sum insured / wait time / scope
-    module_tier: float = 0.10    # Basis/Komfort/Premium tier of included modules
-    bewertung: float = 0.10      # CHECK24 customer rating (light touch)
+    leistung_cov: float = 0.22   # breadth of distinct benefit categories covered
+    module_breadth: float = 0.20 # how many of the 8 Bausteine are included
+    coverage_gen: float = 0.18   # generosity: sum insured / wait time / scope
+    bewertung: float = 0.05      # CHECK24 customer rating (light nudge — clusters 3.8–4.2)
 
     # Candidate-pool size for the deep-scan funnel: how many top-prescored tariffs to
     # auto-harvest+analyze. Not a scoring weight; carried here so one config file holds
@@ -69,13 +76,12 @@ class MagicWeights:
     pool_k: int = 25
 
     def dim_weights(self) -> dict[str, float]:
-        """Just the six scoring weights, keyed by dimension name (drops pool_k)."""
+        """Just the five scoring weights, keyed by dimension name (drops pool_k)."""
         return {
             "note": self.note,
             "leistung_cov": self.leistung_cov,
             "module_breadth": self.module_breadth,
             "coverage_gen": self.coverage_gen,
-            "module_tier": self.module_tier,
             "bewertung": self.bewertung,
         }
 
@@ -124,6 +130,15 @@ class MagicScore:
     monatlich_eur: float | None = None    # representative price — display/tiebreak only
     n_modules: int = 0                    # included Bausteine (for the table)
     n_leistung_cats: int = 0              # distinct benefit categories covered
+    module_tier_raw: float = 0.0          # tier ratio [0,1] — info only, NOT scored
+    leistung_low_confidence: bool = False # benefit-recall looks thin (see rank())
+
+    def quality_per_eur(self) -> float | None:
+        """Quality units per euro/month — display-only efficiency, never a score input.
+        None when no representative price is known or the price is non-positive."""
+        if self.monatlich_eur is None or self.monatlich_eur <= 0:
+            return None
+        return self.total / self.monatlich_eur
 
 
 @dataclass
@@ -278,7 +293,6 @@ def score_one(
         "leistung_cov": leistung_cov,
         "module_breadth": breadth,
         "coverage_gen": _coverage_generosity(rec),
-        "module_tier": tier,
         "bewertung": _norm_bewertung(bewertung),
     }
     w = weights.dim_weights()
@@ -296,6 +310,7 @@ def score_one(
         monatlich_eur=monatlich_eur,
         n_modules=n_mods,
         n_leistung_cats=n_cats,
+        module_tier_raw=tier,
     )
 
 
@@ -319,6 +334,24 @@ def _representative_rows(rows: list[tui_data.SnapshotRow]) -> dict[str, tui_data
             ),
         )
     return out
+
+
+def _flag_low_confidence(scores: list[MagicScore]) -> None:
+    """Mark records whose distinct-benefit count looks like an extraction recall miss,
+    not a genuinely thin tariff.
+
+    `leistung_cov` rides on free-text extraction recall — cheap models omit benefits
+    run-to-run — so a record far below the market's typical breadth gets a confidence
+    flag, and the tab can warn instead of presenting a falsely precise score. The score
+    itself is left untouched (we don't guess the missing benefits); only the display is
+    qualified. Threshold = max(absolute floor 3, 40% of the median count). Fewer than two
+    records flags nothing — there's no market to compare against. Mutates in place."""
+    cats = [s.n_leistung_cats for s in scores]
+    if len(cats) < 2:
+        return
+    floor = max(3.0, statistics.median(cats) * 0.4)
+    for s in scores:
+        s.leistung_low_confidence = s.n_leistung_cats < floor
 
 
 def rank(
@@ -345,6 +378,8 @@ def rank(
         bew = row.bewertung if row else None
         price = row.monatlich_eur if row else None
         scores.append(score_one(stem, rec, note, bew, price, weights, tax))
+
+    _flag_low_confidence(scores)
 
     scores.sort(
         key=lambda s: (
@@ -556,7 +591,46 @@ def _selftest() -> int:
     check(len(sel_lower) == 3 and not dropped_lower,
           "cutoff above a strictly-lower next item drops no ties")
 
-    # 12. Real-data smoke: rank loads and scores every record without raising.
+    # 12. module_tier is no longer a scored dimension — info only.
+    check("module_tier" not in ranked[0].dims,
+          "module_tier must not appear in scored dims")
+    check("module_tier" not in ranked[0].contrib,
+          "module_tier must not contribute to the total")
+    tiered_score = score_one("x__t", tiered, 1.0, 4.0, 50.0, w, tax)
+    check(_approx(tiered_score.module_tier_raw, 1.0),
+          f"all-Premium tier should surface as module_tier_raw=1.0, "
+          f"got {tiered_score.module_tier_raw}")
+    check("module_tier" not in tiered_score.contrib,
+          "module_tier_raw must not leak into contrib")
+
+    # 13. Low-confidence flag: thin benefit recall is flagged, broad is not.
+    lc_rows = [
+        _mk_row("R", "rich", "1,0", bew=4.1, price=50.0, pos=1, stem="r__rich"),
+        _mk_row("P", "poor", "1,0", bew=4.1, price=50.0, pos=2, stem="p__poor"),
+    ]
+    rich = _mk_detail("R", "rich", n_modules=8, leistungen=[
+        "telefonische Rechtsberatung", "Mediation", "Strafkaution als Darlehen",
+        "Mobiler Anwalt (Hausbesuch)", "freie Anwaltswahl", "Ehe- und Familienrecht"])
+    poor = _mk_detail("P", "poor", n_modules=8, leistungen=[])
+    lc = rank(lc_rows, {"r__rich": rich, "p__poor": poor}, w, tax)
+    by_stem = {s.stem: s for s in lc}
+    check(by_stem["p__poor"].leistung_low_confidence,
+          "an empty-benefit record should be flagged low-confidence")
+    check(not by_stem["r__rich"].leistung_low_confidence,
+          f"a broad record ({by_stem['r__rich'].n_leistung_cats} cats) should not be "
+          f"flagged low-confidence")
+
+    # 14. quality_per_eur: display-only efficiency; None when price absent / zero.
+    qpe = by_stem["r__rich"]
+    check(qpe.quality_per_eur() is not None
+          and _approx(qpe.quality_per_eur(), qpe.total / 50.0),
+          "quality_per_eur should be total/price")
+    free = score_one("x__f", rich, 1.0, 4.1, None, w, tax)
+    check(free.quality_per_eur() is None, "quality_per_eur is None without a price")
+    zero = score_one("x__z", rich, 1.0, 4.1, 0.0, w, tax)
+    check(zero.quality_per_eur() is None, "quality_per_eur is None at price 0")
+
+    # 15. Real-data smoke: rank loads and scores every record without raising.
     real_rows: list[tui_data.SnapshotRow] = []
     snap_dir = REPO_ROOT / "data" / "snapshots"
     latest = tui_data._find_latest_snapshot(snap_dir)
