@@ -1,0 +1,574 @@
+"""check0r3000 — Magic Find scoring core.
+
+Textual-free leaf module: turns the market snapshot + analyzed detail records into a
+single quality score per tariff (higher = better) so the Magic Find tab can rank the
+whole market by *quality*, not by a single column.
+
+PRICE IS DELIBERATELY EXCLUDED from the score. The user's mandate is "rather more
+expensive with more features than cheap with fewer features" — so the monthly premium
+is shown and used only as a final tiebreaker when two tariffs score identically, never
+as a penalty.
+
+Leaf in the import DAG: depends only on tui_data (for the SnapshotRow/DetailRecord
+types) and coverage_taxonomy (to classify free-text leistungen into canonical
+categories). No Textual import — importable under a plain interpreter and runnable as
+`python3 magic.py --selftest`, mirroring tui_data.py / coverage_taxonomy.py.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field, replace
+from pathlib import Path
+
+import coverage_taxonomy as ctax
+import tui_data
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+WEIGHTS_PATH = REPO_ROOT / "config" / "magic-weights.json"
+
+# The eight canonical Bausteine. A fixed denominator (not len(record.modules)) so a
+# record that drops a key still scores against the full market breadth, and an extra
+# key can't inflate the ratio above the others'.
+_MODULE_KEYS = (
+    "privat", "beruf", "verkehr", "wohnen_immobilien",
+    "internet_web", "steuer", "sozialgericht", "verwaltungsrecht",
+)
+# Reuse the worst→best tier ranking that tui_format pins; kept local so magic.py has
+# no rendering dependency. Casefolded keys, matching _level_direction's lookup.
+_LEVEL_RANK = {"basis": 0, "komfort": 1, "premium": 2}
+_MAX_TIER = max(_LEVEL_RANK.values())  # 2 — best per-module tier
+
+
+# ---------------------------------------------------------------------------
+# Weights
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class MagicWeights:
+    """Per-dimension weights for the combined quality score.
+
+    Defaults live here (so the tool works with no config file); override any subset
+    from config/magic-weights.json. Every dimension is normalized to [0,1] before
+    weighting, so the weights need not sum to 1 — but the defaults do, which keeps the
+    total a clean [0,1] quality fraction. The user-confirmed balance: Tarifnote leads,
+    Leistungs-coverage is the second pillar, customer rating only nudges.
+    """
+
+    note: float = 0.35           # expert Tarifnote (the real market discriminator)
+    leistung_cov: float = 0.20   # breadth of distinct benefit categories covered
+    module_breadth: float = 0.13 # how many of the 8 Bausteine are included
+    coverage_gen: float = 0.12   # generosity: sum insured / wait time / scope
+    module_tier: float = 0.10    # Basis/Komfort/Premium tier of included modules
+    bewertung: float = 0.10      # CHECK24 customer rating (light touch)
+
+    # Candidate-pool size for the deep-scan funnel: how many top-prescored tariffs to
+    # auto-harvest+analyze. Not a scoring weight; carried here so one config file holds
+    # every Magic knob.
+    pool_k: int = 25
+
+    def dim_weights(self) -> dict[str, float]:
+        """Just the six scoring weights, keyed by dimension name (drops pool_k)."""
+        return {
+            "note": self.note,
+            "leistung_cov": self.leistung_cov,
+            "module_breadth": self.module_breadth,
+            "coverage_gen": self.coverage_gen,
+            "module_tier": self.module_tier,
+            "bewertung": self.bewertung,
+        }
+
+
+def load_weights(path: Path | None = None) -> MagicWeights:
+    """Load weights from config/magic-weights.json, falling back to code defaults.
+
+    Unknown keys are ignored and any missing key keeps its default, so a partial file
+    (override just `note`) is valid and a future field can't break an old config.
+    """
+    p = path or WEIGHTS_PATH
+    w = MagicWeights()
+    if not p.is_file():
+        return w
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return w
+    if not isinstance(data, dict):
+        return w
+    valid = w.dim_weights().keys()
+    kwargs = {}
+    for k in (*valid, "pool_k"):
+        if k in data and isinstance(data[k], (int, float)) and not isinstance(data[k], bool):
+            kwargs[k] = data[k]
+    return replace(w, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Scores
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class MagicScore:
+    """One ranked tariff: total quality + per-dimension breakdown for the detail band."""
+
+    stem: str
+    insurer: str
+    product: str
+    total: float                          # weighted quality fraction, [0,1]
+    dims: dict[str, float] = field(default_factory=dict)     # raw normalized per-dim
+    contrib: dict[str, float] = field(default_factory=dict)  # weighted, sums to total
+    note: float | None = None             # parsed Tarifnote (lower = better)
+    bewertung: float | None = None        # customer rating
+    monatlich_eur: float | None = None    # representative price — display/tiebreak only
+    n_modules: int = 0                    # included Bausteine (for the table)
+    n_leistung_cats: int = 0              # distinct benefit categories covered
+
+
+@dataclass
+class PreScore:
+    """Snapshot-only pre-score for the deep-scan funnel (computable for all 214)."""
+
+    insurer: str
+    product: str
+    stem: str | None
+    note: float | None
+    bewertung: float | None
+    score: float
+    has_detail: bool
+    position: int
+
+
+# ---------------------------------------------------------------------------
+# Normalization helpers (shared by prescore + rank)
+# ---------------------------------------------------------------------------
+
+
+def _clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    return lo if x < lo else hi if x > hi else x
+
+
+def parse_note(s: str | float | None) -> float | None:
+    """Parse a German Tarifnote ('1,0' / '2,3' / 1.0) to a float, or None.
+
+    The snapshot stores the note as the DOM string with a decimal comma; a malformed
+    or empty value yields None so the caller can neutralize that dimension rather than
+    crash."""
+    if s is None:
+        return None
+    if isinstance(s, (int, float)) and not isinstance(s, bool):
+        return float(s)
+    txt = str(s).strip().replace(",", ".")
+    if not txt:
+        return None
+    try:
+        return float(txt)
+    except ValueError:
+        return None
+
+
+def _norm_note(note: float | None) -> float:
+    """Tarifnote → [0,1], higher = better. 1,0 → 1.0, 2,5 → 0.0 (German school grades:
+    smaller is better, and below ~2,5 a Rechtsschutz tariff is effectively unranked)."""
+    if note is None:
+        return 0.0
+    return _clamp((2.5 - note) / (2.5 - 1.0))
+
+
+def _norm_bewertung(v: float | None) -> float:
+    """Customer rating → [0,1]. 3.5 → 0.0, 4.5 → 1.0. The real snapshot clusters
+    3.8–4.2, so this lands ~0.3–0.7 — a deliberately light touch (weight 0.10). A
+    missing rating is neutral (0.5), not a penalty."""
+    if v is None:
+        return 0.5
+    return _clamp((v - 3.5) / (4.5 - 3.5))
+
+
+def _module_stats(rec: tui_data.DetailRecord) -> tuple[int, float, float]:
+    """(included_count, breadth[0,1], tier[0,1]) over the eight canonical Bausteine."""
+    included = 0
+    tier_sum = 0
+    for key in _MODULE_KEYS:
+        mod = rec.modules.get(key)
+        if isinstance(mod, dict) and mod.get("included"):
+            included += 1
+            rank = _LEVEL_RANK.get(str(mod.get("level") or "").strip().casefold())
+            if rank is not None:
+                tier_sum += rank
+    breadth = included / len(_MODULE_KEYS)
+    tier = tier_sum / (_MAX_TIER * len(_MODULE_KEYS))
+    return included, breadth, tier
+
+
+def _leistung_coverage(rec: tui_data.DetailRecord, tax: dict) -> tuple[int, float]:
+    """(distinct_categories, coverage[0,1]). Counts DISTINCT canonical benefit
+    categories, not raw leistungen — a verbose AVB listing the same benefit five ways
+    must not outscore a terse one. Unmatched items (Sonstige) don't count."""
+    keys = set()
+    for item in rec.leistungen:
+        k = ctax.classify(item, "leistung", tax)
+        if k:
+            keys.add(k)
+    total_cats = len(ctax.ordered_keys("leistung", tax)) or 1
+    return len(keys), _clamp(len(keys) / total_cats)
+
+
+def _coverage_generosity(rec: tui_data.DetailRecord) -> float:
+    """Heuristic [0,1] over three coverage fields, averaged.
+
+    Each sub-score is deliberately coarse (the source is free text): sum insured
+    (unlimited beats a finite cap beats unknown), waiting time (none beats short beats
+    long), territorial scope (worldwide beats Europe beats unknown). Unknown maps to a
+    neutral 0.5 so a sparse record isn't punished as if it were a *bad* value."""
+    cov = rec.coverage if isinstance(rec.coverage, dict) else {}
+
+    vs = str(cov.get("versicherungssumme") or "").lower()
+    if not vs:
+        vs_score = 0.5
+    elif "unbegrenzt" in vs or "unlimit" in vs:
+        vs_score = 1.0
+    else:
+        vs_score = 0.5  # a finite cap is present and quantified
+
+    wt = cov.get("wartezeit_monate")
+    if isinstance(wt, bool) or not isinstance(wt, (int, float)):
+        wt_score = 0.5  # unknown / non-numeric
+    elif wt <= 0:
+        wt_score = 1.0
+    elif wt <= 3:
+        wt_score = 0.5
+    else:
+        wt_score = 0.0
+
+    geo = str(cov.get("geltungsbereich") or "").lower()
+    if not geo:
+        geo_score = 0.5
+    elif "weltweit" in geo or "world" in geo:
+        geo_score = 1.0
+    elif "europa" in geo or "europe" in geo:
+        geo_score = 0.6
+    else:
+        geo_score = 0.3
+
+    return (vs_score + wt_score + geo_score) / 3.0
+
+
+# ---------------------------------------------------------------------------
+# Scoring
+# ---------------------------------------------------------------------------
+
+
+def score_one(
+    stem: str,
+    rec: tui_data.DetailRecord,
+    note: float | None,
+    bewertung: float | None,
+    monatlich_eur: float | None,
+    weights: MagicWeights,
+    tax: dict | None = None,
+) -> MagicScore:
+    """Compute the full MagicScore for one analyzed tariff."""
+    tax = tax or ctax.load_taxonomy()
+    n_mods, breadth, tier = _module_stats(rec)
+    n_cats, leistung_cov = _leistung_coverage(rec, tax)
+
+    dims = {
+        "note": _norm_note(note),
+        "leistung_cov": leistung_cov,
+        "module_breadth": breadth,
+        "coverage_gen": _coverage_generosity(rec),
+        "module_tier": tier,
+        "bewertung": _norm_bewertung(bewertung),
+    }
+    w = weights.dim_weights()
+    contrib = {k: dims[k] * w[k] for k in dims}
+    total = sum(contrib.values())
+    return MagicScore(
+        stem=stem,
+        insurer=rec.insurer,
+        product=rec.tariff,
+        total=total,
+        dims=dims,
+        contrib=contrib,
+        note=note,
+        bewertung=bewertung,
+        monatlich_eur=monatlich_eur,
+        n_modules=n_mods,
+        n_leistung_cats=n_cats,
+    )
+
+
+def _representative_rows(rows: list[tui_data.SnapshotRow]) -> dict[str, tui_data.SnapshotRow]:
+    """One snapshot row per stem (a tariff appears once per SB band). Picks the
+    cheapest priced variant (tiebreak: lowest position) purely so the displayed
+    price/rating is the headline one — none of the scored dimensions vary by SB band."""
+    by_stem: dict[str, list[tui_data.SnapshotRow]] = {}
+    for r in rows:
+        if r.stem:
+            by_stem.setdefault(r.stem, []).append(r)
+    out: dict[str, tui_data.SnapshotRow] = {}
+    for stem, variants in by_stem.items():
+        priced = [r for r in variants if r.monatlich_eur is not None]
+        pool = priced or variants
+        out[stem] = min(
+            pool,
+            key=lambda r: (
+                r.monatlich_eur if r.monatlich_eur is not None else float("inf"),
+                r.position,
+            ),
+        )
+    return out
+
+
+def rank(
+    rows: list[tui_data.SnapshotRow],
+    details_by_stem: dict[str, tui_data.DetailRecord],
+    weights: MagicWeights | None = None,
+    tax: dict | None = None,
+) -> list[MagicScore]:
+    """Rank every analyzed tariff by combined quality, best first.
+
+    Joins detail records to snapshot rows by stem (for note/bewertung/price). A detail
+    with no snapshot row still ranks — its note/bewertung are simply absent (neutralized
+    in scoring). Ties break by lower price (the only place price ever enters), then stem
+    for a stable order.
+    """
+    weights = weights or load_weights()
+    tax = tax or ctax.load_taxonomy()
+    reps = _representative_rows(rows)
+
+    scores: list[MagicScore] = []
+    for stem, rec in details_by_stem.items():
+        row = reps.get(stem)
+        note = parse_note(row.tarifnote) if row else None
+        bew = row.bewertung if row else None
+        price = row.monatlich_eur if row else None
+        scores.append(score_one(stem, rec, note, bew, price, weights, tax))
+
+    scores.sort(
+        key=lambda s: (
+            -s.total,
+            s.monatlich_eur if s.monatlich_eur is not None else float("inf"),
+            s.stem,
+        )
+    )
+    return scores
+
+
+def prescore(rows: list[tui_data.SnapshotRow]) -> list[PreScore]:
+    """Snapshot-only pre-score over the whole market, best first.
+
+    Cheap (no detail records, no model): `0.7*note + 0.3*bewertung`, both normalized.
+    Drives the deep-scan funnel's candidate selection — pick the top-K, harvest+analyze
+    the ones still missing a detail record. Deduped to one entry per (insurer, product),
+    keeping the best-scoring variant.
+    """
+    best: dict[tuple[str, str], PreScore] = {}
+    for r in rows:
+        note = parse_note(r.tarifnote)
+        score = 0.7 * _norm_note(note) + 0.3 * _norm_bewertung(r.bewertung)
+        key = (r.insurer.strip(), r.product.strip())
+        cur = best.get(key)
+        if cur is None or score > cur.score:
+            best[key] = PreScore(
+                insurer=r.insurer,
+                product=r.product,
+                stem=r.stem,
+                note=note,
+                bewertung=r.bewertung,
+                score=score,
+                has_detail=r.has_detail,
+                position=r.position,
+            )
+    out = list(best.values())
+    out.sort(key=lambda p: (-p.score, p.position))
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Self-test (Textual-free; mirrors tui_data.run_selftest)
+# ---------------------------------------------------------------------------
+
+
+def _mk_row(insurer, product, note, bew=None, price=None, pos=0, stem=None):
+    return tui_data.SnapshotRow(
+        position=pos, insurer=insurer, product=product, tarifnote=note,
+        monatlich_eur=price, selbstbeteiligung="150", key=f"{insurer}-{pos}",
+        bewertung=bew, stem=stem or f"{insurer.lower()}__{product.lower()}",
+    )
+
+
+def _mk_detail(insurer, product, n_modules=8, levels=None, leistungen=None,
+               coverage=None):
+    mods = {}
+    for i, k in enumerate(_MODULE_KEYS):
+        inc = i < n_modules
+        lvl = (levels or {}).get(k)
+        mods[k] = {"included": inc, "level": lvl}
+    return tui_data.DetailRecord(
+        insurer=insurer, tariff=product, stand="2026",
+        modules=mods,
+        coverage=coverage or {},
+        leistungen=leistungen or [],
+        ausschluesse=[], besonderheiten=[], beitrag=None,
+    )
+
+
+def _approx(a: float, b: float, eps: float = 1e-6) -> bool:
+    return abs(a - b) <= eps
+
+
+def _selftest() -> int:
+    failures: list[str] = []
+
+    def check(cond: bool, msg: str):
+        if not cond:
+            failures.append(msg)
+
+    w = MagicWeights()
+
+    # 1. Default weights sum to 1.0 (clean [0,1] total).
+    check(_approx(sum(w.dim_weights().values()), 1.0),
+          f"default dim weights sum to {sum(w.dim_weights().values())}, expected 1.0")
+
+    # 2. Note normalization anchors.
+    check(_approx(_norm_note(1.0), 1.0), "note 1,0 should normalize to 1.0")
+    check(_approx(_norm_note(2.5), 0.0), "note 2,5 should normalize to 0.0")
+    check(_approx(_norm_note(1.75), 0.5), "note 1,75 should normalize to 0.5")
+    check(_norm_note(3.0) == 0.0, "note 3,0 should clamp to 0.0")
+    check(_norm_note(None) == 0.0, "missing note should be 0.0")
+
+    # 3. Bewertung normalization (incl. neutral default).
+    check(_approx(_norm_bewertung(4.5), 1.0), "bewertung 4.5 -> 1.0")
+    check(_approx(_norm_bewertung(3.5), 0.0), "bewertung 3.5 -> 0.0")
+    check(_approx(_norm_bewertung(None), 0.5), "missing bewertung -> neutral 0.5")
+
+    # 4. parse_note handles comma, float, junk.
+    check(_approx(parse_note("1,0"), 1.0), "parse_note('1,0') -> 1.0")
+    check(_approx(parse_note(2.3), 2.3), "parse_note(2.3) -> 2.3")
+    check(parse_note("") is None and parse_note("n/a") is None,
+          "parse_note of empty/junk -> None")
+
+    # 5. Module breadth + tier.
+    full = _mk_detail("X", "full", n_modules=8)
+    half = _mk_detail("X", "half", n_modules=4)
+    _, br_full, _ = _module_stats(full)
+    _, br_half, _ = _module_stats(half)
+    check(_approx(br_full, 1.0), f"8/8 modules breadth should be 1.0, got {br_full}")
+    check(_approx(br_half, 0.5), f"4/8 modules breadth should be 0.5, got {br_half}")
+    tiered = _mk_detail("X", "tiered", n_modules=8,
+                        levels={k: "Premium" for k in _MODULE_KEYS})
+    _, _, tier_full = _module_stats(tiered)
+    check(_approx(tier_full, 1.0), f"all-Premium tier should be 1.0, got {tier_full}")
+    _, _, tier_none = _module_stats(full)
+    check(_approx(tier_none, 0.0), f"level=None tier should be 0.0, got {tier_none}")
+
+    # 6. Coverage generosity anchors.
+    gen_best = _coverage_generosity(_mk_detail("X", "g", coverage={
+        "versicherungssumme": "unbegrenzt", "wartezeit_monate": 0,
+        "geltungsbereich": "weltweit"}))
+    check(_approx(gen_best, 1.0), f"best coverage generosity should be 1.0, got {gen_best}")
+    gen_unknown = _coverage_generosity(_mk_detail("X", "g", coverage={}))
+    check(_approx(gen_unknown, 0.5), f"empty coverage should be neutral 0.5, got {gen_unknown}")
+
+    # 7. Distinct-category coverage (dedup verbose listings).
+    tax = ctax.load_taxonomy()
+    verbose = _mk_detail("X", "v", leistungen=[
+        "telefonische Rechtsberatung",
+        "telefonische Rechtsberatung (ARAG JuraTel®)",
+        "telefonische Rechtsberatung (DMB-Hotline)",
+    ])
+    n_cats, cov = _leistung_coverage(verbose, tax)
+    check(n_cats == 1, f"three phrasings of one benefit should be 1 category, got {n_cats}")
+
+    # 8. End-to-end: a strictly-better tariff outranks a worse one.
+    rows = [
+        _mk_row("Alpha", "Top", "1,0", bew=4.2, price=40.0, pos=1),
+        _mk_row("Beta", "Weak", "2,4", bew=3.8, price=20.0, pos=2),
+    ]
+    good = _mk_detail("Alpha", "Top", n_modules=8, leistungen=[
+        "telefonische Rechtsberatung", "Mediation", "Strafkaution als Darlehen",
+        "Mobiler Anwalt (Hausbesuch)", "freie Anwaltswahl",
+    ], coverage={"versicherungssumme": "unbegrenzt", "wartezeit_monate": 0,
+                 "geltungsbereich": "weltweit"})
+    weak = _mk_detail("Beta", "Weak", n_modules=2, leistungen=[],
+                      coverage={"wartezeit_monate": 6, "geltungsbereich": "Deutschland"})
+    details = {"alpha__top": good, "beta__weak": weak}
+    ranked = rank(rows, details, w, tax)
+    check(len(ranked) == 2, f"expected 2 ranked, got {len(ranked)}")
+    check(ranked[0].stem == "alpha__top",
+          f"better tariff should rank first, got {ranked[0].stem}")
+    check(0.0 <= ranked[0].total <= 1.0, f"total out of [0,1]: {ranked[0].total}")
+    check(_approx(ranked[0].total, sum(ranked[0].contrib.values())),
+          "total must equal sum of contributions")
+
+    # 9. Price is NOT a scoring factor: same record, wildly different price -> same total.
+    rows_cheap = [_mk_row("Alpha", "Top", "1,0", bew=4.2, price=10.0)]
+    rows_dear = [_mk_row("Alpha", "Top", "1,0", bew=4.2, price=999.0)]
+    t_cheap = rank(rows_cheap, {"alpha__top": good}, w, tax)[0].total
+    t_dear = rank(rows_dear, {"alpha__top": good}, w, tax)[0].total
+    check(_approx(t_cheap, t_dear), "price must not change the quality total")
+
+    # 10. prescore: dedup per product, order by score.
+    pre = prescore(rows)
+    check(len(pre) == 2, f"prescore should dedup to 2 products, got {len(pre)}")
+    check(pre[0].insurer == "Alpha", f"prescore top should be Alpha, got {pre[0].insurer}")
+
+    # 11. Real-data smoke: rank loads and scores every record without raising.
+    real_rows: list[tui_data.SnapshotRow] = []
+    snap_dir = REPO_ROOT / "data" / "snapshots"
+    latest = tui_data._find_latest_snapshot(snap_dir)
+    if latest is not None:
+        snap = tui_data.load_snapshot(latest)
+        if snap is not None:
+            real_rows = snap.rows
+    real_details = dict(tui_data.load_all_details())
+    real_ranked = rank(real_rows, real_details, w, tax)
+    check(len(real_ranked) == len(real_details),
+          f"every detail should score: {len(real_ranked)} vs {len(real_details)}")
+    for s in real_ranked:
+        check(0.0 <= s.total <= 1.0, f"{s.stem} total out of range: {s.total}")
+
+    # ---- report ----
+    print(f"=== magic.py selftest ===")
+    print(f"checks run, {len(failures)} failure(s)")
+    for f in failures:
+        print(f"  FAIL: {f}")
+
+    if real_ranked:
+        print(f"\nTop {min(10, len(real_ranked))} by quality "
+              f"(of {len(real_ranked)} analyzed):")
+        for i, s in enumerate(real_ranked[:10], 1):
+            note = f"{s.note:.1f}" if s.note is not None else "—"
+            bew = f"{s.bewertung:.1f}" if s.bewertung is not None else "—"
+            price = f"{s.monatlich_eur:.0f}€" if s.monatlich_eur is not None else "—"
+            print(f"  {i:>2}. {s.total:.3f}  {s.stem:<48} "
+                  f"note {note}  bew {bew}  mod {s.n_modules}/8  "
+                  f"leist {s.n_leistung_cats}/24  {price}")
+
+    if real_rows:
+        pre_real = prescore(real_rows)
+        print(f"\nPre-score over {len(real_rows)} snapshot rows "
+              f"-> {len(pre_real)} distinct products; top 5:")
+        for i, p in enumerate(pre_real[:5], 1):
+            note = f"{p.note:.1f}" if p.note is not None else "—"
+            flag = "✓detail" if p.has_detail else "·missing"
+            print(f"  {i}. {p.score:.3f}  {p.insurer} / {p.product}  "
+                  f"note {note}  {flag}")
+
+    if failures:
+        print("\nMAGIC SELFTEST FAILED")
+        return 1
+    print("\nMAGIC SELFTEST OK")
+    return 0
+
+
+if __name__ == "__main__":
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Magic Find scoring core + self-test.")
+    ap.add_argument("--selftest", action="store_true",
+                    help="assert scoring invariants and rank the real records")
+    ap.parse_args()
+    raise SystemExit(_selftest())
