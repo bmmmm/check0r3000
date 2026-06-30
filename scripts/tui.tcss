@@ -525,6 +525,29 @@ CompareManagerScreen {
     background: $surface-darken-2;
 }
 
+#needs-box {
+    width: 64;
+    height: auto;
+    max-height: 90%;
+    padding: 1 2;
+    border: thick $primary;
+    background: $surface-darken-1;
+    color: $text;
+}
+
+#needs-head {
+    width: 1fr;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#needs-list {
+    width: 1fr;
+    height: auto;
+    border: round $surface-lighten-2;
+    background: $surface-darken-2;
+}
+
 /* ── Scrollbars ─────────────────────────────────────────────────────────── */
 
 ScrollableContainer {

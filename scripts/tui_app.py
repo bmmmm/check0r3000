@@ -100,6 +100,7 @@ from tui_screens import (  # noqa: E402
     DeleteDataScreen,
     HelpScreen,
     MagicScanScreen,
+    NeedsEditorScreen,
     NoteEditScreen,
     OpenSourceScreen,
     QueryEditScreen,
@@ -287,6 +288,7 @@ class CheckApp(App):
         Binding("H", "harvest", "Harvest+Analyze", show=False),
         Binding("M", "switch_tab('magic')", "Magic Find", show=False),
         Binding("P", "toggle_needs", "Bedarf", show=False),
+        Binding("W", "edit_needs", "Bedarf-Gewichte", show=False),
         Binding("F", "magic_scan", "Markt-Scan", show=False),
         Binding("a", "add_to_compare", "Zum Vergleich", show=False),
         Binding("c", "manage_compare", "Vergleich verwalten", show=False),
@@ -3541,6 +3543,39 @@ class CheckApp(App):
                 self.notify("Bedarf-Modus an — Module nach deiner Gewichtung.")
         else:
             self.notify("Bedarf-Modus aus — objektive Marktqualität.")
+
+    def action_edit_needs(self) -> None:
+        """Open the Bedarf-weights editor (config/needs-weights.json) in the TUI: set a
+            relevance level per Baustein. On save it persists, switches the Magic tab to
+            Bedarf mode if the weights are non-neutral, and re-ranks. Works from anywhere
+            but the result only shows on the Magic tab."""
+        keys_labels = list(MODULE_LABELS.items())
+        current = magic.load_needs()
+
+        def _apply(new_weights: dict | None) -> None:
+            if new_weights is None:
+                return  # cancelled
+            try:
+                magic.save_needs(new_weights)
+            except OSError as exc:
+                self.notify(f"Speichern fehlgeschlagen: {exc}",
+                            severity="error", timeout=8)
+                return
+            neutral = magic.needs_are_neutral(magic.load_needs())
+            # A non-neutral save is only visible in Bedarf mode — switch it on so the
+            # user sees the effect immediately; a neutral save leaves the mode as is.
+            if not neutral:
+                self._magic_needs_mode = True
+            self._populate_magic()
+            self._refresh_magic_detail()
+            self.notify(
+                "Bedarf-Gewichte gespeichert — neutral, Ranking unverändert."
+                if neutral else
+                "Bedarf-Gewichte gespeichert — Bedarf-Modus aktiv, Ranking neu.",
+                timeout=5,
+            )
+
+        self.push_screen(NeedsEditorScreen(keys_labels, current), _apply)
 
     def action_magic_scan(self) -> None:
         """Deep-scan funnel: prescore the whole market, then harvest + analyze the

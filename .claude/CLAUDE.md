@@ -53,6 +53,9 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
 - **Bedarf-Toggle `[P]`** — `config/needs-weights.json` (getrackt, kein PII, neutral-1.0-
   Placeholder) gewichtet **nur** `module_breadth` nach persönlichem Bedarf. Neutrale
   Gewichte = identisch zum objektiven Ranking. `needs=None` (Default) = objektiv.
+  **`[W]`** öffnet den `NeedsEditorScreen` (diskrete 0–3-Skala je Baustein,
+  `magic.save_needs` schreibt die JSON, behält `_comment`); ein non-neutraler Save
+  schaltet `[P]` automatisch an. Feinere Floats bleiben per Hand-Edit der JSON möglich.
 - **Konfidenz-Flag** — `leistung_low_confidence` (in `rank()` gesetzt) markiert Records,
   deren distinkte-Leistungs-Zahl weit unter dem Markt-Median liegt (Recall-Lücke, kein
   armer Tarif); rein Anzeige (⚠), der Score bleibt unangetastet. `quality_per_eur()` =
@@ -87,6 +90,7 @@ Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_a
 | `[B]` | Benchmark-Tab (Modell-Scorecard aus `benchmarks/results.json`) |
 | `[M]` | Magic-Find-Tab (markt-weites Qualitäts-Ranking; Preis fließt NIE in den Score) |
 | `[P]` | Bedarf-Modus an/aus (Module nach `config/needs-weights.json` gewichten) |
+| `[W]` | Bedarf-Gewichte bearbeiten (Editor: Relevanz je Baustein 0–3) |
 | `[d]` | Detail-Band ein/aus |
 | `Tab` / `⇧Tab` | Nächster / voriger Tab (zyklisch) |
 | `[?]` | Alle Shortcuts |

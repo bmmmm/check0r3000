@@ -700,6 +700,114 @@ class CompareManagerScreen(ModalScreen[list[str] | None]):
     def action_cancel(self) -> None:
         self.dismiss(None)
 
+
+class NeedsEditorScreen(ModalScreen["dict[str, float] | None"]):
+    """Edit the personal Bedarf weighting (config/needs-weights.json) in the TUI — one
+        relevance level per Baustein that re-weights the Magic-Find module_breadth
+        dimension. Discrete 0–3 scale (egal/normal/wichtig/kritisch); finer floats can
+        still be hand-edited in the JSON. Returns the new weights on save, None on
+        cancel."""
+
+    LEVELS = {0: "egal", 1: "normal", 2: "wichtig", 3: "kritisch"}
+    MAX_LEVEL = 3
+
+    BINDINGS = [
+        Binding("right", "bump(1)", "+"),
+        Binding("plus", "bump(1)", "+"),
+        Binding("equals_sign", "bump(1)", "+"),
+        Binding("left", "bump(-1)", "−"),
+        Binding("minus", "bump(-1)", "−"),
+        Binding("0", "set_level(0)", "0"),
+        Binding("1", "set_level(1)", "1"),
+        Binding("2", "set_level(2)", "2"),
+        Binding("3", "set_level(3)", "3"),
+        Binding("r", "reset", "Neutral"),
+        Binding("s", "save", "Speichern"),
+        Binding("escape", "cancel", "Abbrechen"),
+        Binding("q", "cancel", "Abbrechen"),
+    ]
+
+    def __init__(self, keys_labels: list[tuple[str, str]],
+                 current: dict[str, float]) -> None:
+        # keys_labels: (module_key, German label) in display order.
+        super().__init__()
+        self._kl = list(keys_labels)
+        self._w = {k: float(current.get(k, 1.0)) for k, _ in self._kl}
+
+    def compose(self) -> ComposeResult:
+        with Container(id="needs-box"):
+            yield Static("", id="needs-head")
+            yield OptionList(id="needs-list")
+
+    def on_mount(self) -> None:
+        self._refresh()
+
+    def _level(self, key: str) -> int:
+        return max(0, min(self.MAX_LEVEL, int(round(self._w.get(key, 1.0)))))
+
+    def _row_text(self, key: str, label: str) -> str:
+        lvl = self._level(key)
+        bar = ("[green]" + "●" * lvl + "[/green]"
+               + "[dim]" + "○" * (self.MAX_LEVEL - lvl) + "[/dim]")
+        padded = f"{label:<22}"
+        if lvl == 0:
+            padded = f"[dim]{padded}[/dim]"
+        return f"{padded} {bar}  [dim]{self.LEVELS[lvl]}[/dim]"
+
+    def _refresh(self) -> None:
+        try:
+            lst = self.query_one("#needs-list", OptionList)
+        except NoMatches:
+            return
+        keep = lst.highlighted
+        lst.clear_options()
+        for key, label in self._kl:
+            lst.add_option(Option(self._row_text(key, label), id=key))
+        neutral = len({self._level(k) for k, _ in self._kl}) == 1
+        self.query_one("#needs-head", Static).update(
+            "[bold]🎯 Bedarf-Gewichte[/bold]   "
+            + ("[dim](neutral — alle gleich)[/dim]" if neutral
+               else "[yellow](aktiv)[/yellow]")
+            + "\n[dim]↑↓ Baustein · ←/− /→/+ ändern · 0–3 direkt setzen · "
+            "\\[r] neutral · \\[s] speichern · \\[Esc] abbrechen[/dim]"
+        )
+        if self._kl:
+            # default to the first row so +/-/digit keys act immediately (no need to
+            # arrow-down first), and keep the cursor across refreshes.
+            lst.highlighted = (min(keep, len(self._kl) - 1)
+                               if keep is not None else 0)
+
+    def _highlighted_key(self) -> str | None:
+        lst = self.query_one("#needs-list", OptionList)
+        if lst.highlighted is None:
+            return None
+        return self._kl[lst.highlighted][0]
+
+    def action_bump(self, delta: int) -> None:
+        key = self._highlighted_key()
+        if key is None:
+            return
+        self._w[key] = float(max(0, min(self.MAX_LEVEL, self._level(key) + delta)))
+        self._refresh()
+
+    def action_set_level(self, level: int) -> None:
+        key = self._highlighted_key()
+        if key is None:
+            return
+        self._w[key] = float(max(0, min(self.MAX_LEVEL, level)))
+        self._refresh()
+
+    def action_reset(self) -> None:
+        self._w = {k: 1.0 for k, _ in self._kl}
+        self._refresh()
+
+    def action_save(self) -> None:
+        self.dismiss(dict(self._w))
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
+
+
 class HelpScreen(ModalScreen[None]):
     """Full keyboard reference, grouped. The footer shows only the essentials."""
 
@@ -715,6 +823,7 @@ class HelpScreen(ModalScreen[None]):
             ("y / x / v / l / B", "Favoriten / Markt / Vergleich / Verlauf / Benchmark"),
             ("M", "Magic Find — markt-weites Qualitäts-Ranking (Preis zählt nicht)"),
             ("P", "Bedarf-Modus an/aus — Module nach deiner Gewichtung (needs-weights.json)"),
+            ("W", "Bedarf-Gewichte bearbeiten — Relevanz je Baustein (0–3) setzen"),
             ("F", "Markt-Scan — Top-Kandidaten live harvesten + analysieren, dann ranken"),
             ("Tab / ⇧Tab", "nächster / voriger Tab (zyklisch)"),
             ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),

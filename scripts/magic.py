@@ -135,6 +135,27 @@ def load_needs(path: Path | None = None) -> dict[str, float]:
     return base
 
 
+def save_needs(weights: dict[str, float], path: Path | None = None) -> None:
+    """Persist the personal Bedarf weighting to config/needs-weights.json, preserving the
+    explanatory _comment and any unrelated keys already in the file. Only the eight
+    canonical Baustein keys are written/updated, as plain numbers."""
+    p = path or NEEDS_PATH
+    data: dict = {}
+    if p.is_file():
+        try:
+            existing = json.loads(p.read_text(encoding="utf-8"))
+            if isinstance(existing, dict):
+                data = existing
+        except (json.JSONDecodeError, OSError):
+            pass
+    for k in _MODULE_KEYS:
+        if k in weights:
+            v = weights[k]
+            # store ints cleanly (1 not 1.0) when the value is whole
+            data[k] = int(v) if float(v).is_integer() else float(v)
+    p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def needs_are_neutral(needs: dict[str, float], eps: float = 1e-9) -> bool:
     """True when every Baustein weight is equal (so the Bedarf view == objective view).
     Lets the UI tell the user 'edit needs-weights.json to make this do something'."""
@@ -701,6 +722,20 @@ def _selftest() -> int:
     check(_approx(br_neutral, br_obj), "neutral needs must reproduce objective breadth")
     nd = load_needs()
     check(set(nd.keys()) == set(_MODULE_KEYS), "load_needs returns all 8 Baustein keys")
+    # save_needs roundtrip (to a temp file; never touches the real config)
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td) / "needs.json"
+        want = {k: 1.0 for k in _MODULE_KEYS}
+        want["privat"] = 3.0
+        want["verkehr"] = 0.0
+        save_needs(want, tmp)
+        got = load_needs(tmp)
+        check(got == want, f"save/load_needs roundtrip mismatch: {got}")
+        # whole numbers persist as ints (1 not 1.0) but load back as floats
+        raw = json.loads(tmp.read_text(encoding="utf-8"))
+        check(raw["privat"] == 3 and isinstance(raw["privat"], int),
+              f"whole weights should persist as int, got {raw['privat']!r}")
 
     # 16. Real-data smoke: rank loads and scores every record without raising.
     real_rows: list[tui_data.SnapshotRow] = []

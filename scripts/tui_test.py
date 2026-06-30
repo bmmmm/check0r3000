@@ -336,6 +336,57 @@ async def t_magic_needs_toggle(app, pilot) -> None:
     assert app._magic_needs_mode is False, "[P] did not disable needs mode"
 
 
+async def t_needs_editor(app, pilot) -> None:
+    """[W] opens the Bedarf-weights editor; setting a non-neutral level and saving
+    persists to needs-weights.json, flips Magic into Bedarf mode and re-ranks without
+    error; reopening and escaping cancels. magic.NEEDS_PATH is patched to a temp file so
+    the real config is never touched."""
+    import json as _json
+    import shutil
+    import tempfile
+    from pathlib import Path as _Path
+
+    import magic as _magic
+    from tui_screens import NeedsEditorScreen
+
+    orig = _magic.NEEDS_PATH
+    tmpdir = tempfile.mkdtemp()
+    tmp = _Path(tmpdir) / "needs.json"
+    _magic.NEEDS_PATH = tmp
+    try:
+        await pilot.press("M")
+        await pilot.pause()
+        assert app._magic_needs_mode is False, "needs mode should start off"
+
+        base = len(app.screen_stack)
+        await pilot.press("W")
+        assert await _wait_until(pilot, lambda: len(app.screen_stack) > base), (
+            "[W] did not open the needs editor")
+        assert isinstance(app.screen, NeedsEditorScreen), (
+            f"[W] opened {type(app.screen).__name__}, want NeedsEditorScreen")
+
+        await pilot.press("3")   # set the first Baustein to level 3
+        await pilot.press("s")   # save
+        assert await _wait_until(pilot, lambda: len(app.screen_stack) == base), (
+            "editor did not close on save")
+        assert tmp.is_file(), "needs-weights.json was not written"
+        saved = _json.loads(tmp.read_text(encoding="utf-8"))
+        assert any(v == 3 for k, v in saved.items() if k != "_comment"), (
+            f"no level-3 weight persisted: {saved}")
+        assert app._magic_needs_mode is True, (
+            "a non-neutral save should switch Bedarf mode on")
+
+        await pilot.press("W")   # reopen, then cancel
+        assert await _wait_until(pilot, lambda: isinstance(app.screen, NeedsEditorScreen))
+        await pilot.press("escape")
+        assert await _wait_until(
+            pilot, lambda: not isinstance(app.screen, NeedsEditorScreen)), (
+            "escape did not cancel the editor")
+    finally:
+        _magic.NEEDS_PATH = orig
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 async def t_magic_scan_modal(app, pilot) -> None:
     """[F] runs the deep-scan funnel's candidate selection and, when top-pool_k
     products are still un-analyzed, opens the MagicScanScreen confirm — a long, paid,
@@ -410,6 +461,7 @@ CASES = [
     ("benchmark_tab", t_benchmark_tab),
     ("magic_tab", t_magic_tab),
     ("magic_needs_toggle", t_magic_needs_toggle),
+    ("needs_editor", t_needs_editor),
     ("magic_scan_modal", t_magic_scan_modal),
     ("table_less_tab_guards", t_table_less_tab_guards),
     ("cross_tab_roundtrip", t_cross_tab_roundtrip),
