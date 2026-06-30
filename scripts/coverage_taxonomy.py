@@ -132,6 +132,12 @@ _ALIGNMENT_CASES = [
     # Beratung Familien-/Erbrecht (hyphen vs space vs compound)
     ("Erstberatung Familien-/Erbrecht (bis 1.000 €)", "leistung", "beratung_familien_erbrecht"),
     ("erweiterter Familien-/Erbrecht-Beratungsschutz bis 1.500 EUR", "leistung", "beratung_familien_erbrecht"),
+    # ROLAND digital extras — online-safety + digital-estate variants that previously
+    # fell out of the taxonomy (undercounting leistung_cov). Map to the existing
+    # online-monitoring / Vorsorge categories.
+    ("Online-Schutz-Radar", "leistung", "identity_protection"),
+    ("Webseiten-Prüfung", "leistung", "identity_protection"),
+    ("Digital-Nachlass", "leistung", "vorsorge_testaments_assistent"),
     # --- exclusions ---
     ("Baufinanzierung / Kauf bebaubarer Grundstücke", "ausschluss", "ausschluss_baufinanzierung"),
     ("Baufinanzierung und Errichtung/Kauf bebaubarer Grundstücke", "ausschluss", "ausschluss_baufinanzierung"),
