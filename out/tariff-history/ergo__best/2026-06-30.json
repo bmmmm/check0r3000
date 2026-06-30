@@ -1,6 +1,4 @@
 {
-  "insurer": "ERGO Versicherung AG",
-  "tariff": "ERGO Rechtsschutz für Privatkunden",
   "stand": "10.2022",
   "modules": {
     "privat": {
@@ -134,27 +132,10 @@
     "Best: Umfangreichere Leistungen in Verwaltungs- und Sozialrecht"
   ],
   "beitrag": null,
-  "_input_hash": "2c59d2d60345eb7fbc971816c67055a00165076e34fee3a1bda7719b6d27e954",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "_repeat": 3,
-  "_repeat_ok": 3,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "8fad2f96908c84f6f205b353473e016739e3c61b9aa664ef09d1a84cb0629dbf"
-    },
-    {
-      "doctype": "avb_besondere",
-      "content_sha256": "062e74ab5143b05affb1b977128de82f6a965145e1d0009316ccdf28a96a53c7"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "d0e6819d170d470234e2525141c48f6fbc120acf6d54011afaddd37fec13e5b2"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "228d2893c2423c80ba3183eb77c24b31f0b8064c5adae35d0d1b31a5ccf893ea"
-    }
-  ]
+  "insurer": "ERGO Versicherung AG",
+  "tariff": "ERGO Rechtsschutz für Privatkunden",
+  "stem": "ergo__best",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "fbcb503e59c8b9de135cdb2c07e8d249d4cc705c1955e03cfeec27296495ad69",
+  "_supersedes": "2026-06-28"
 }

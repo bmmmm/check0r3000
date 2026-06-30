@@ -1,6 +1,4 @@
 {
-  "insurer": "ADVOCARD Rechtsschutzversicherung AG",
-  "tariff": "Rechtsschutzversicherung",
   "stand": "04.2024",
   "modules": {
     "privat": {
@@ -128,19 +126,10 @@
     "Kündigung möglich ab 3. Vertragsjahr zum Ende jedes Jahres"
   ],
   "beitrag": null,
-  "_input_hash": "ceb626b688a930e5ac8e7164df64ce71f3fad1bf6084681d0f7fac7fb0b88fba",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "_repeat": 3,
-  "_repeat_ok": 3,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "c096fe09af144332fa693f1520431bbb5e5aa544e995c211cf4a55130c05deb7"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "3f59b041e5545823b4e7d46aad1cc5118975fd7e604ce2dab5efbfb2155f8aec"
-    }
-  ]
+  "insurer": "ADVOCARD Rechtsschutzversicherung AG",
+  "tariff": "Rechtsschutzversicherung",
+  "stem": "advocard__360-privat-rechtsschutz",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "5ac9923fe1ace56917967dd5cac425108d7b102040a2622537853601847a3ccb",
+  "_supersedes": "2026-06-28"
 }

@@ -1,6 +1,4 @@
 {
-  "insurer": "Württembergische Versicherung AG",
-  "tariff": "Rechtsschutzversicherung",
   "stand": "01.05.2023",
   "modules": {
     "privat": {
@@ -149,23 +147,10 @@
     "Pflegeberatung mit Familienabsicherung (XXL)"
   ],
   "beitrag": null,
-  "_input_hash": "de2c619ef78979ca5d3ba3d0b84a509aa809fd2d98b04fcbcc225969dad31b76",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "_repeat": 3,
-  "_repeat_ok": 3,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "d048287c6a0e6d2d769b2a2e23e11ae4de70e9e7594a38a843cbda5c8ae6809d"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "48faf0e3f816e4f23901f7540145375d4f63e0f4086ae44c255098069c4c0944"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "fcd8ade07659a4a2173921c72a3fb2eb25c3ef4f30addafbf500b7b67a9cdd0b"
-    }
-  ]
+  "insurer": "Württembergische Versicherung AG",
+  "tariff": "Rechtsschutzversicherung",
+  "stem": "adam-riese__xxl",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "5367928499d210cef612750cd02fed90b1fb7128df39e458dc8d24085f255e75",
+  "_supersedes": "2026-06-28"
 }

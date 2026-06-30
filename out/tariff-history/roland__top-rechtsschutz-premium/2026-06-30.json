@@ -1,6 +1,4 @@
 {
-  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
-  "tariff": "Rechtsschutz-Versicherung",
   "stand": "08.2025",
   "modules": {
     "privat": {
@@ -127,23 +125,10 @@
     "Wirtschaftsmediation für Geschäftskunden"
   ],
   "beitrag": null,
-  "_input_hash": "ced7f128486a19b2ea7ef99dd3677079499245f497113261c71eb3c243d1add8",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "_repeat": 3,
-  "_repeat_ok": 3,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "cdf6c776341c6e20ad1055baeb5ede5abae97d14587b61e0d8727adf8d3ab0b3"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "db9e5d24a2bd8d9bd42823cfa4a69c83bb7a613a610c1090c3ca4a5ec547d4a6"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "ff54d5234ca4059c95120ab9d28b508c2324a3fc11e44cbd4efe7b63f7a97193"
-    }
-  ]
+  "insurer": "ROLAND Rechtsschutz-Versicherungs-AG",
+  "tariff": "Rechtsschutz-Versicherung",
+  "stem": "roland__top-rechtsschutz-premium",
+  "_history_date": "2026-06-30",
+  "_content_sha256": "79b290afcec48c7188e2c153b040527ca4b56eb07e528cfdf86092d5daafd2f4",
+  "_supersedes": "2026-06-28"
 }
