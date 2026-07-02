@@ -4,48 +4,52 @@
   "reference_stem": "arag__premium-2026",
   "favorites": [
     {
-      "stem": "roland__top-rechtsschutz-premium",
-      "insurer": "ROLAND",
-      "product": "Top-Rechtsschutz Premium",
-      "show_sb": "150 - 300 €",
-      "tag": "best value @ note 1,0",
-      "recommended": true
-    },
-    {
-      "stem": "adam-riese__xxl",
-      "insurer": "Adam Riese",
-      "product": "XXL",
-      "show_sb": "150 - 300 €",
-      "tag": "note 1,0, low SB"
-    },
-    {
-      "stem": "ergo__best",
-      "insurer": "ERGO",
-      "product": "Best",
-      "show_sb": "0 - 250 €",
-      "tag": "lowest SB (note 1,4)"
-    },
-    {
-      "stem": "advocard__360-privat-rechtsschutz",
-      "insurer": "Advocard",
-      "product": "360° Privat-Rechtsschutz",
-      "show_sb": "0 - 300 €",
-      "tag": "low SB, already ingested (note 1,5)"
-    },
-    {
-      "stem": "arag__premium-2026",
       "insurer": "ARAG",
       "product": "Premium (2026)",
+      "stem": "arag__premium-2026",
       "show_sb": "250 €",
-      "tag": "your current reference",
-      "reference": true
+      "tag": "in TUI hinzugefügt"
+    },
+    {
+      "insurer": "ROLAND",
+      "product": "Top-Rechtsschutz Premium + StrafrechtPlus",
+      "stem": "roland__top-rechtsschutz-premium-strafrechtplus",
+      "show_sb": "1.000 €",
+      "tag": "in TUI hinzugefügt"
+    },
+    {
+      "insurer": "Adam Riese",
+      "product": "XXL",
+      "stem": "adam-riese__xxl",
+      "show_sb": "350 - 500 €",
+      "tag": "in TUI hinzugefügt"
+    },
+    {
+      "insurer": "ARAG",
+      "product": "Premium + Familienrecht (2026)",
+      "stem": "arag__premium-familienrecht-2026",
+      "show_sb": "250 €",
+      "tag": "in TUI hinzugefügt"
+    },
+    {
+      "insurer": "ROLAND",
+      "product": "Top-Rechtsschutz Premium",
+      "stem": "roland__top-rechtsschutz-premium",
+      "show_sb": "1.000 €",
+      "tag": "in TUI hinzugefügt"
+    },
+    {
+      "insurer": "ARAG",
+      "product": "Premium Flex (2026)",
+      "stem": "arag__premium-flex-2026",
+      "show_sb": "200 - 350 €",
+      "tag": "in TUI hinzugefügt"
     }
   ],
   "compare_stems": [
-    "roland__top-rechtsschutz-premium",
-    "adam-riese__xxl",
-    "ergo__best",
     "advocard__360-privat-rechtsschutz",
-    "arag__premium-2026"
-  ]
+    "arag__premium-2026",
+    "roland__top-rechtsschutz-premium"
+  ],
+  "reference_sb": "250 €"
 }
