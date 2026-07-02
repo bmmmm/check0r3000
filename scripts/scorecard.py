@@ -1,4 +1,8 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
 """Scorecard scoring — the single source of truth for the benchmark quality points.
 
 Both the eval CLI (`eval.py --scorecard`) and the TUI Benchmark tab feed the same

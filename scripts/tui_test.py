@@ -1,4 +1,10 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "textual>=8.0",
+# ]
+# ///
 """Live Textual runtime test — drives the real CheckApp through Textual's
 `run_test()` Pilot and asserts the interaction invariants that the textual-free
 `tui_data.py --selftest` cannot reach: tab switching, the cross-tab active-state

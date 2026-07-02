@@ -1,4 +1,8 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
 """Reconcile re-extracted out/tariffs/*.json against HEAD so a re-extract can never
 *regress* a record. The --repeat union only merges leistungen/ausschluesse across the
 fresh runs; modules/coverage come from the single "most complete" fresh run, so a

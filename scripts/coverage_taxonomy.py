@@ -1,4 +1,8 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
 """Deterministic naming-normalization for the cross-tariff coverage comparison.
 
 The Vergleich (Diff) view must line up the SAME benefit or exclusion even when two

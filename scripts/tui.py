@@ -1,4 +1,13 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "jsonschema>=4",
+#     "playwright",
+#     "pypdf>=4",
+#     "textual>=8.0",
+# ]
+# ///
 """
 check0r3000 — Rechtsschutz-Vergleich
 Interactive TUI for browsing German legal-protection-insurance tariff comparisons.

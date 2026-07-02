@@ -1,4 +1,8 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
 """Snapshot the CHECK24 market scan and diff snapshots over time.
 
 The point: keep a dated record of the whole result list (price, Tarifnote,

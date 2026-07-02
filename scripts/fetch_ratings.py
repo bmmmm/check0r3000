@@ -1,4 +1,10 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "playwright",
+# ]
+# ///
 """Scrape the CHECK24 result page with Playwright headless Chrome.
 
 Waits for Vue.js to hydrate (`.efeedback-button__count` in DOM), then runs
