@@ -44,8 +44,12 @@ if uv run scripts/overlay.py; then :; else
 fi
 
 echo "==> render (matrix + pros/cons -> out/)"
+# Non-fatal: a render failure (e.g. an LLM error in the pros/cons synthesis) must
+# not stop the regression gate below — the extracted records are already on disk.
 # shellcheck disable=SC2086
-uv run scripts/render.py $MODEL_ARGS
+if uv run scripts/render.py $MODEL_ARGS; then :; else
+  echo "WARNING: render.py failed — out/vergleich.md / index.html may be stale." >&2
+fi
 
 echo "==> regression check (document-grounded golden invariants)"
 # Non-fatal: the output is already written; surface drift loudly but don't abort.
