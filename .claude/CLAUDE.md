@@ -26,6 +26,15 @@ benchmarks/       golden.json + Regression-Digest (getrackt)
 schema/           JSON-Schemas (tariff + offer)
 ```
 
+## Shared Leaf-Module (stdlib-only, nie neu erfinden)
+
+- `scripts/_modules.py` — einzige Quelle für Baustein-Keys/-Labels (aus dem Schema).
+- `scripts/_jsonio.py` — `atomic_write_json` (tmp+`os.replace`) + `load_json_or`; jeder
+  neue JSON-Writer/-Loader nutzt die. (Heißt `_jsonio`, weil `_io.py` das CPython-Builtin
+  schatten würde.)
+- `scripts/_manifest.py` — einziger Loader für `data/sources/check24-documents.json`
+  (fetch_docs/harvest_docs/intake); `create_if_missing=True` nur für harvest-Erstlauf.
+
 ## Der `stem` ist die einzige ID
 
 Jeder Tarif hat einen kanonischen `stem` = `<versicherer>__<tarif>` (aus
@@ -74,6 +83,11 @@ tui_app.py       App-Klasse, Bindings, alle Actions
 Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_app`.
 `tui_app.py` importiert alles. `tui.py` importiert nur `tui_app`.
 
+Per-Tab-Dispatch läuft über die `TAB_SPECS`-Tabelle in `tui_app.py` (TabSpec je Tab:
+Table-/Band-/Focus-IDs + Adopt-Handler) — ein neuer Tab ist EIN TabSpec-Eintrag, keine
+verstreuten if-Ketten. `_adopt_cursor_row` bleibt der einzige Writer des Active-State.
+URLs in `[link="…"]` immer durch `tui_format.link_url()` (percent-encoded `"`/`[`/`]`).
+
 ## Key shortcuts (TUI)
 
 | Key | Aktion |
@@ -100,7 +114,9 @@ Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_a
 - **Keine PDFs committen** — `data/raw/`, `data/extracted/`, `data/inbox/` gitignored.
   Nur `data/sources/check24-documents.json` (URLs, kein Inhalt) ist getrackt.
 - **Kein PII in getrackte Files** — `config/check24-profile.json` gitignored.
-  `config/favorites.json` enthält nur stem/tag/SB-Band, keine Preise.
+  `config/favorites.json` enthält nur stem/tag/SB-Band, keine Preise. `[N]`-Notizen
+  landen im gitignorten Sidecar `config/favorite-notes.json` (stem-keyed), nie in
+  favorites.json.
 - **Modell-Spec** immer als `[provider:]model[@endpoint]` (via `_providers.py`).
   API-Keys aus Umgebung (`OMLX_API_KEY`, `OPENAI_API_KEY`), nie im Code.
 - **`CHECK0R_ANALYZE_MODEL`** steuert das Modell für TUI-gestartete Analysen.
@@ -118,7 +134,8 @@ Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_a
 als Opus, Korrektheit vergleichbar. `--repeat N` (z.B. 3) extrahiert jeden Tarif N-mal und
 **unioniert `leistungen`/`ausschluesse`** über die Runs (alle anderen Felder vom
 vollständigsten Run) — dämpft die Omissions-Varianz billiger Modelle (Recall ~2–3×).
-`--only <stem>…` beschränkt auf eine Shortlist. **Vorsicht bei kuratierten Tarifen:**
+`--only <stem>…` beschränkt auf eine Shortlist. `--jobs N` (Default 1) parallelisiert
+über Tarife — 2–4 ist wegen Provider-Rate-Limits die sinnvolle Spanne. **Vorsicht bei kuratierten Tarifen:**
 Re-Extraktion überschreibt Hand-Patches (z.B. arags qualitative SB, golden-gepinnte
 `module.level: null` — haiku halluziniert sonst `level` aus dem Tarifnamen); nach
 `--repeat` auf gepinnte/kuratierte Stems immer gegen HEAD reconcilen + `regression.py`.
