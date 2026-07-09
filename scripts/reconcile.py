@@ -32,7 +32,9 @@ REPO_ROOT = Path(
 )
 OUT = REPO_ROOT / "out" / "tariffs"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
+import coverage_taxonomy  # noqa: E402
 import feature_history  # noqa: E402
+from _jsonio import atomic_write_json  # noqa: E402
 
 # Primary guard is the "_curated": true marker in the record itself (extract.py refuses
 # to re-extract a curated stem without --force); this hardcoded set is a second,
@@ -62,15 +64,22 @@ def n_cov(rec):
 
 
 def union(a, b):
-    """Order-preserving union: a's items first, then b-only items."""
-    seen = set()
-    out = []
+    """Order-preserving union: a's items first, then b-only items.
+
+    Dedups on coverage_taxonomy.normalize(), mirroring extract.merge_records()'s
+    semantics — otherwise a case/glyph variant of the same benefit (e.g.
+    "Mediation" vs "MEDIATION") that merge_records would have collapsed into one
+    entry gets double-counted here. Non-string items are dropped, same as
+    merge_records (leistungen/ausschluesse/besonderheiten are schema-typed as string
+    arrays; a non-string item is an extraction bug, not a distinct value)."""
+    seen: dict[str, str] = {}
     for it in list(a or []) + list(b or []):
-        key = json.dumps(it, sort_keys=True, ensure_ascii=False) if not isinstance(it, str) else it
-        if key not in seen:
-            seen.add(key)
-            out.append(it)
-    return out
+        if not isinstance(it, str):
+            continue
+        key = coverage_taxonomy.normalize(it)
+        if key and key not in seen:
+            seen[key] = it
+    return list(seen.values())
 
 
 def merge(head, fresh):
@@ -128,8 +137,7 @@ def main():
         total_changed += 1
         print(f"{stem}: {', '.join(changed)}")
         if apply:
-            f.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
-                         encoding="utf-8")
+            atomic_write_json(f, merged)
             if feature_history.archive_version(stem, merged):
                 print(f"    history archived")
     print(f"\n{'APPLIED' if apply else 'DRY-RUN'}: {total_changed} record(s) "

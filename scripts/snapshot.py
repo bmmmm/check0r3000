@@ -143,6 +143,14 @@ def build(args) -> int:
     return 0
 
 
+def _price_or_worst(t: dict) -> float:
+    """Price for the cheapest-entry comparison in _by_key: missing (None) sorts as
+    worst, but a real 0.00 price must sort as best — `or 1e9` would misrank a genuine
+    free tariff as missing, since 0.0 is falsy."""
+    price = t.get("monatlich_eur")
+    return price if price is not None else 1e9
+
+
 def _by_key(snap_path: Path) -> dict[str, dict]:
     data = json.loads(snap_path.read_text(encoding="utf-8"))
     # Keep the cheapest entry per key, so a duplicated key compares deterministically.
@@ -151,7 +159,7 @@ def _by_key(snap_path: Path) -> dict[str, dict]:
         # Normalise here too so a snapshot written before the key-normalisation fix
         # (NBSP still in its stored key) compares cleanly against a fresh one.
         k = _norm_key(t.get("key"))
-        if k not in out or (t.get("monatlich_eur") or 1e9) < (out[k].get("monatlich_eur") or 1e9):
+        if k not in out or _price_or_worst(t) < _price_or_worst(out[k]):
             out[k] = t
     return out
 

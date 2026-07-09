@@ -25,6 +25,11 @@ RESULTS_JSON = REPO_ROOT / "benchmarks" / "results.json"
 # Faithful 50 / Schema 20 / Hallucination-free 15 / Module coverage 15 = 100.
 WEIGHTS = {"faithful": 50, "schema": 20, "halluc": 15, "modules": 15}
 
+# Every row must carry these to be scored (see aggregate() in eval.py, which is the
+# only real producer). A hand-edited or stale results.json missing one crashes here
+# with an actionable message instead of a bare KeyError further down.
+REQUIRED_KEYS = ("runs", "ok", "schema_ok", "faithful", "modules_max", "unsupported_max")
+
 
 def score_row(r: dict, max_modules: int) -> dict:
     """Quality scorecard points for one aggregated row (0-100, correctness only).
@@ -32,6 +37,14 @@ def score_row(r: dict, max_modules: int) -> dict:
     credit is GATED on the schema-valid rate, so breadth over schema-invalid output
     earns nothing. Zero successful runs = DNF (total 0). Latency and cost stay OUT
     of the score by design — a slow free model must not out-point a faithful one."""
+    missing = [k for k in REQUIRED_KEYS if k not in r]
+    if missing:
+        ident = f"{r.get('tariff', '?')}/{r.get('model', '?')}/{r.get('input', '?')}"
+        raise KeyError(
+            f"benchmark row {ident!r} is missing required key(s) {missing} — "
+            "regenerate benchmarks/results.json via scripts/eval.py --save-summary, "
+            "or add the missing field(s) by hand."
+        )
     max_modules = max(1, max_modules)  # guard the denominator on direct calls
     runs = max(1, r["runs"])
     if r["ok"] == 0:
@@ -99,6 +112,13 @@ def _selftest() -> int:
     invalid = score_row({"runs": 3, "ok": 3, "schema_ok": 0, "faithful": 0,
                          "modules_max": 8, "unsupported_max": 0}, 8)
     assert invalid["modules"] == 0.0 and invalid["schema"] == 0.0, invalid
+    # A hand-edited/old row missing a required key raises an actionable error, not a
+    # bare KeyError.
+    try:
+        score_row({"tariff": "t/a", "model": "old", "runs": 3, "ok": 3}, 8)
+        raise AssertionError("score_row should have raised on a row missing keys")
+    except KeyError as exc:
+        assert "t/a/old" in str(exc) and "modules_max" in str(exc), exc
     print("scorecard selftest OK")
     return 0
 

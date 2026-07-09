@@ -24,6 +24,7 @@ from pathlib import Path
 
 import coverage_taxonomy as ctax
 import tui_data
+from _jsonio import atomic_write_json, load_json_or
 from _modules import MODULE_KEYS as _MODULE_KEYS
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -91,14 +92,8 @@ def load_weights(path: Path | None = None) -> MagicWeights:
     Unknown keys are ignored and any missing key keeps its default, so a partial file
     (override just `note`) is valid and a future field can't break an old config.
     """
-    p = path or WEIGHTS_PATH
     w = MagicWeights()
-    if not p.is_file():
-        return w
-    try:
-        data = json.loads(p.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return w
+    data = load_json_or(path or WEIGHTS_PATH, None)
     if not isinstance(data, dict):
         return w
     valid = w.dim_weights().keys()
@@ -117,13 +112,7 @@ def load_needs(path: Path | None = None) -> dict[str, float]:
     all-neutral file ranks identically to the objective view). Negative weights are
     clamped to 0 at use-site (_module_stats); here we just reject non-numbers."""
     base = {k: 1.0 for k in _MODULE_KEYS}
-    p = path or NEEDS_PATH
-    if not p.is_file():
-        return base
-    try:
-        data = json.loads(p.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return base
+    data = load_json_or(path or NEEDS_PATH, None)
     if not isinstance(data, dict):
         return base
     for k in _MODULE_KEYS:
@@ -138,20 +127,15 @@ def save_needs(weights: dict[str, float], path: Path | None = None) -> None:
     explanatory _comment and any unrelated keys already in the file. Only the eight
     canonical Baustein keys are written/updated, as plain numbers."""
     p = path or NEEDS_PATH
-    data: dict = {}
-    if p.is_file():
-        try:
-            existing = json.loads(p.read_text(encoding="utf-8"))
-            if isinstance(existing, dict):
-                data = existing
-        except (json.JSONDecodeError, OSError):
-            pass
+    data = load_json_or(p, {})
+    if not isinstance(data, dict):
+        data = {}
     for k in _MODULE_KEYS:
         if k in weights:
             v = weights[k]
             # store ints cleanly (1 not 1.0) when the value is whole
             data[k] = int(v) if float(v).is_integer() else float(v)
-    p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    atomic_write_json(p, data)
 
 
 def needs_are_neutral(needs: dict[str, float], eps: float = 1e-9) -> bool:

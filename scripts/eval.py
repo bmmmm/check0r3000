@@ -131,7 +131,10 @@ def score(record: dict, source_text: str, schema: dict) -> dict:
     # `sources` optional and ignored, so a missing/empty provenance is not a "fail".
     model_schema = dict(schema)
     model_schema["required"] = [r for r in schema.get("required", []) if r != "sources"]
-    model_record = {k: v for k, v in record.items() if k != "sources"}
+    # "model_spec" is our own provenance field (added at save time so --rescore can
+    # recover the original model spec), never the model's output — strip it here too,
+    # same as "sources", so a --rescore pass doesn't fail additionalProperties.
+    model_record = {k: v for k, v in record.items() if k not in ("sources", "model_spec")}
     validator = Draft202012Validator(model_schema)
     errs = sorted(validator.iter_errors(model_record), key=lambda e: list(e.path))
     schema_errors = [f"{'/'.join(map(str, e.path)) or '<root>'}: {e.message}" for e in errs[:5]]
@@ -202,8 +205,14 @@ def run_job(tariff_key: str, docs: list[dict], model: str, schema_text: str,
     # suffixing the model token only (rescore treats it as just a label).
     token = safe_name(model) + (f"__r{run_idx}" if n_repeat > 1 else "")
     rec_name = f"{tariff_key.replace(' / ', '~')}~{variant}~{filter_tag}~{token}.json"
+    # Carry the ORIGINAL model spec alongside the record so --rescore can recover it
+    # verbatim instead of reverse-engineering it from the safe_name()-mangled filename
+    # token (e.g. "ollama:x" -> "ollama_x"), which produced duplicate/renamed rows on
+    # re-aggregation. Kept out of `record` itself (score() strips it before schema
+    # validation) so scoring here is unaffected.
+    record_out = {**record, "model_spec": model}
     (EVAL_OUT / "records" / rec_name).write_text(
-        json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
+        json.dumps(record_out, indent=2, ensure_ascii=False), encoding="utf-8")
 
     return {**base, "status": "ok", **score(record, source_text, schema)}
 
@@ -294,7 +303,12 @@ def rescore(docs_by_tariff: dict, schema: dict) -> list[dict]:
         transform = extract.avb_transform if filter_tag != "none" else None
         fed = [d for d in docs_by_tariff[tariff_key] if d["doctype"] in fed_types]
         record = json.loads(f.read_text(encoding="utf-8"))
-        results.append({"tariff": tariff_key, "model": model, "status": "ok",
+        # Prefer the original model spec recorded at write time (run_job's
+        # "model_spec") over the filename-derived token — the latter is
+        # safe_name()-mangled and can collide/rename across re-aggregations. Records
+        # saved before "model_spec" existed fall back to the filename token.
+        model_label = record.get("model_spec") or model
+        results.append({"tariff": tariff_key, "model": model_label, "status": "ok",
                         "variant": variant, "filter": filter_tag, "run": run_idx,
                         **score(record, docs_text(fed, transform), schema)})
     return results
@@ -426,6 +440,17 @@ def save_summary(rows: list[dict], models: list[str], repeat: int) -> list[dict]
     print(f"\nDurable summary -> {(BENCH_OUT / 'results.md').relative_to(ROOT)}"
           f"  +  {(BENCH_OUT / 'results.json').name}")
     return rows
+
+
+def print_scorecard_safe(rows: list[dict]) -> None:
+    """print_scorecard(), but a row that scorecard.score_row() rejects (a hand-edited
+    or stale benchmarks/results.json missing a required key) surfaces an actionable
+    message instead of crashing the whole CLI run. The TUI Benchmark tab already
+    wraps this; the --scorecard CLI path didn't."""
+    try:
+        print_scorecard(rows)
+    except (KeyError, ValueError) as exc:
+        print(f"error: could not build the scorecard: {exc}", file=sys.stderr)
 
 
 def print_scorecard(rows: list[dict]) -> None:
@@ -567,7 +592,7 @@ def main() -> int:
                                   max((r["runs"] for r in rows), default=1))
             save_scorecard(merged)  # keep scorecard.md in lockstep with results.json
         if args.scorecard:
-            print_scorecard(rows)
+            print_scorecard_safe(rows)
         return 0
 
     # Build the fed-document subset (--docs); sources for grounding stay full.
@@ -618,7 +643,7 @@ def main() -> int:
         merged = save_summary(rows, models, repeat)
         save_scorecard(merged)  # keep scorecard.md in lockstep with results.json
     if args.scorecard:
-        print_scorecard(rows)
+        print_scorecard_safe(rows)
 
     EVAL_OUT.mkdir(parents=True, exist_ok=True)
     (EVAL_OUT / "results.json").write_text(
