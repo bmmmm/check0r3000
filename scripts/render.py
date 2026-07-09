@@ -26,17 +26,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _providers  # noqa: E402
+from _modules import MODULE_LABELS  # noqa: E402  — single source of truth for Baustein labels
 
 ROOT = Path(__file__).resolve().parent.parent
 TARIFFS = ROOT / "out" / "tariffs"
 ENRICHED = ROOT / "out" / "enriched"
 OUT = ROOT / "out"
-
-MODULE_LABELS = {
-    "privat": "Privat", "beruf": "Beruf", "verkehr": "Verkehr",
-    "wohnen_immobilien": "Wohnen/Immobilien", "internet_web": "Internet/Web",
-    "steuer": "Steuer", "sozialgericht": "Sozialgericht", "verwaltungsrecht": "Verwaltung",
-}
 
 
 def load_records(prefer_enriched: bool) -> list[dict]:

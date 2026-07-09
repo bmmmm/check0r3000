@@ -43,6 +43,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import extract  # noqa: E402  — reuse INSTRUCTION / build_payload / coerce_json / avb_transform
 import _providers  # noqa: E402
+from _modules import MODULE_KEYS as _MODULE_KEYS  # noqa: E402  — schema-derived Baustein keys
 from scorecard import scored_by_tariff as _scored_by_tariff  # noqa: E402  — shared scoring
 
 EXTRACTED = ROOT / "data" / "extracted"
@@ -70,8 +71,7 @@ REQUIRE_PRESENT = {
     ("coverage", "geltungsbereich"): ("europ", "weltweit", "welt", "international", "ww"),
     ("coverage", "vertragslaufzeit"): None,      # any non-null value
 }
-MODULE_KEYS = ["privat", "beruf", "verkehr", "wohnen_immobilien",
-               "internet_web", "steuer", "sozialgericht", "verwaltungsrecht"]
+MODULE_KEYS = list(_MODULE_KEYS)
 
 
 def docs_text(docs: list[dict], transform=None) -> str:

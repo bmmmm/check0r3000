@@ -245,10 +245,31 @@ def _tracked_keys() -> set[str]:
     return keys
 
 
+# Parsed + enriched snapshots, keyed by (resolved path, file mtime_ns): the Verlauf
+# tab re-loads the same two historical snapshots on every ,/./m keypress, and a market
+# filter keystroke re-loads the latest — all free once cached. The mtime key auto-
+# invalidates on a rewritten file. The enrichment (stem/has_detail/…) also depends on
+# external state (the doc manifest, out/tariffs, data/offers), so reset_doc_cache()
+# clears this too — it runs on every data reload, which is exactly when that state can
+# change (a fresh extract flips has_detail without touching the snapshot file).
+_SNAPSHOT_CACHE: dict[tuple[str, int], "Snapshot"] = {}
+
+
 def load_snapshot(path: Path) -> Snapshot | None:
-    """Load a snapshot JSON. Returns None if file missing or malformed."""
+    """Load a snapshot JSON. Returns None if file missing or malformed.
+
+    Cached by (path, mtime); callers only read the result (no row mutation — the market
+    sort copies rows into a fresh list first), so the shared instance is safe."""
     if not path.is_file():
         return None
+    try:
+        mtime = path.stat().st_mtime_ns
+    except OSError:
+        return None
+    cache_key = (str(path.resolve()), mtime)
+    cached = _SNAPSHOT_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
     try:
         data = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
@@ -295,7 +316,7 @@ def load_snapshot(path: Path) -> Snapshot | None:
         rows.append(row)
 
     bews = [r.bewertung for r in rows if r.bewertung is not None]
-    return Snapshot(
+    snap = Snapshot(
         date=data.get("date", ""),
         profile=data.get("profile", ""),
         source=data.get("source", ""),
@@ -304,6 +325,8 @@ def load_snapshot(path: Path) -> Snapshot | None:
         bewertung_lo=min(bews) if bews else None,
         bewertung_hi=max(bews) if bews else None,
     )
+    _SNAPSHOT_CACHE[cache_key] = snap
+    return snap
 
 
 def load_all_snapshots() -> list[tuple[str, Path]]:
@@ -405,9 +428,12 @@ def reset_doc_cache() -> None:
     resolve_stem. The URL manifest IS rewritten in-session — [H] live-harvest
     appends new stems — so the cache must be dropped on every data reload, or a
     freshly-harvested tariff keeps stem=None (invisible to detail/Vergleich/
-    change-tracking) until the app restarts."""
+    change-tracking) until the app restarts. Also drops the parsed-snapshot cache,
+    whose row enrichment (stem/has_detail/…) is derived from this same manifest and
+    the on-disk record state that a reload may have changed."""
     global _DOC_BY_TARIFF_CACHE
     _DOC_BY_TARIFF_CACHE = None
+    _SNAPSHOT_CACHE.clear()
 
 
 def resolve_stem(insurer: str, product: str) -> str | None:

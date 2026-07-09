@@ -23,6 +23,7 @@ import coverage_taxonomy as ctax  # noqa: E402
 import _providers  # noqa: E402
 import scorecard  # noqa: E402  — shared benchmark scoring (eval.py + Benchmark tab)
 import magic  # noqa: E402  — Magic Find quality-scoring core (rank / prescore)
+from _modules import MODULE_LABELS  # noqa: E402  — single source of truth for Baustein labels
 
 from tui_data import (  # noqa: E402
     ChangeInfo,
@@ -150,17 +151,6 @@ def _module_badge(mod: dict[str, Any]) -> str:
         return "[white]★ Basis[/white]"
     return "[cyan]✓[/cyan]"
 
-MODULE_LABELS = {
-    "privat": "Privat",
-    "beruf": "Beruf",
-    "verkehr": "Verkehr",
-    "wohnen_immobilien": "Wohnen",
-    "internet_web": "Internet",
-    "steuer": "Steuer",
-    "sozialgericht": "Sozialgericht",
-    "verwaltungsrecht": "Verwaltungsrecht",
-}
-
 # German labels for the Magic-Find score dimensions (presentation only; the keys
 # and their order are owned by magic.MagicScore.dims).
 MAGIC_DIM_LABELS = {
@@ -175,6 +165,16 @@ MAGIC_DIM_LABELS = {
 # Diff helper
 # -----------------------------------------------------------------------
 
+def _rows_by_first_key(rows: list[SnapshotRow]) -> dict[str, SnapshotRow]:
+    """Map snapshot rows by key, first occurrence wins — snapshot keys legitimately
+        repeat (same rationale as _populate_market_table), so join on the first row a
+        key names rather than the last duplicate."""
+    m: dict[str, SnapshotRow] = {}
+    for r in rows:
+        m.setdefault(r.key, r)
+    return m
+
+
 def _compute_diff(
     old_snap: Snapshot, new_snap: Snapshot
 ) -> tuple[list[tuple], list[str], list[str]]:
@@ -182,8 +182,8 @@ def _compute_diff(
         Returns (changes, added_keys, removed_keys).
         changes = [(key, old_price, new_price, delta), ...]
         """
-    old_map = {r.key: r for r in old_snap.rows}
-    new_map = {r.key: r for r in new_snap.rows}
+    old_map = _rows_by_first_key(old_snap.rows)
+    new_map = _rows_by_first_key(new_snap.rows)
 
     changes = []
     for key, new_row in new_map.items():
@@ -201,8 +201,8 @@ def _compute_diff(
 
 def _build_verlauf_rows(old_snap: Snapshot, new_snap: Snapshot) -> list[dict]:
     """Build one dict per row for the Verlauf DataTable, joining old and new snapshots by key."""
-    old_map = {r.key: r for r in old_snap.rows}
-    new_map = {r.key: r for r in new_snap.rows}
+    old_map = _rows_by_first_key(old_snap.rows)
+    new_map = _rows_by_first_key(new_snap.rows)
     rows = []
     for new_row in new_snap.rows:
         old_row = old_map.get(new_row.key)
@@ -381,6 +381,7 @@ class CheckApp(App):
         self._load_data()
         self._populate_favorites_table()
         self._populate_market_table()
+        self._populate_coverage()
         self._populate_verlauf()
         self._populate_benchmark()
         self._populate_magic()
@@ -941,9 +942,6 @@ class CheckApp(App):
             if r.key:
                 self._market_ident_to_rk.setdefault(r.key, rk)
 
-        # rebuild the Vergleich tab while we're refreshing
-        self._populate_coverage()
-
     # --- Detail panel (sidebar) ---
 
     def _doc_entry(self, row: SnapshotRow) -> dict | None:
@@ -1093,7 +1091,7 @@ class CheckApp(App):
                         parts.append(f"[bright_red]−{_esc(r[:38])}[/bright_red]")
                 if diff.get("modules"):
                     for ch in diff["modules"][:2]:
-                        lbl = self._MODULE_LABELS.get(ch["key"], ch["key"])
+                        lbl = MODULE_LABELS.get(ch["key"], ch["key"])
                         if ch["old_included"] != ch["new_included"]:
                             col = "bright_green" if ch["new_included"] else "bright_red"
                             gl = "+" if ch["new_included"] else "−"
@@ -1764,13 +1762,6 @@ class CheckApp(App):
             self._verlauf_rows[row_key] = r
             self._verlauf_ident_to_rk.setdefault(r["key"], row_key)
 
-    _MODULE_LABELS = {
-        "privat": "Privat", "beruf": "Beruf", "verkehr": "Verkehr",
-        "wohnen_immobilien": "Wohnen", "internet_web": "Internet",
-        "steuer": "Steuer", "sozialgericht": "Sozialgericht",
-        "verwaltungsrecht": "Verwaltungsrecht",
-    }
-
     def _render_verlauf_detail(self, row: SnapshotRow) -> str:
         """Market detail + feature-diff section for the Verlauf tab."""
         base = self._render_market_detail(row)
@@ -1806,7 +1797,7 @@ class CheckApp(App):
         if diff.get("modules"):
             lines.append("  [bold]Module[/bold]")
             for ch in diff["modules"]:
-                lbl = self._MODULE_LABELS.get(ch["key"], ch["key"])
+                lbl = MODULE_LABELS.get(ch["key"], ch["key"])
                 oi, ni = ch["old_included"], ch["new_included"]
                 ol, nl = ch["old_level"], ch["new_level"]
                 if oi != ni:
@@ -2451,6 +2442,10 @@ class CheckApp(App):
         self._load_data()
         self._populate_favorites_table()
         self._populate_market_table()
+        # Rebuild the Vergleich matrix here (not per market-filter keystroke): its
+        # inputs are the compare set and the analyzed records, both of which a reload
+        # can change — the market filter/sort cannot.
+        self._populate_coverage()
         self._populate_verlauf()
         self._populate_benchmark()
         self._populate_magic()
@@ -2933,7 +2928,7 @@ class CheckApp(App):
         entry = self._doc_entry(row) if row is not None else None
         if row is not None and entry and entry.get("docs"):
             def _go(confirmed: bool | None) -> None:
-                if confirmed:
+                if confirmed and self._claim_pipeline():
                     self._run_pipeline(entry, row)
                 else:
                     self.notify(
@@ -3610,7 +3605,6 @@ class CheckApp(App):
             _go,
         )
 
-    @work(thread=True, group="pipeline")
     # --- Live pipeline status line (bottom, above the Footer) ---
 
     def _set_pipeline_status(self, markup: str) -> None:
@@ -3673,6 +3667,38 @@ class CheckApp(App):
             f"[dim]{_esc(reason[:90])} · Log: {log_rel}[/dim]",
         )
         return False, reason
+
+    def _run_pipeline_tail(self, log_path: Path, *, base_idx: int, total: int,
+                           local_model: bool) -> None:
+        """Run the post-extract tail (Overlay → Render → Regression) that pipeline.sh
+            runs after extract, so a TUI-started analysis reaches the same on-disk state
+            (out/enriched, out/vergleich.md, the golden gate) instead of stopping at
+            Extract. Shared by the [g]/[G]/[H] pipeline and the [F] magic-scan funnel.
+
+            Warn-only, exactly like pipeline.sh: a failing step surfaces a warning
+            (status line + toast) but never aborts the chain or fails the run — the
+            extract results are already on disk. Render mirrors how Extract is launched
+            (same --model + local-cold timeout); overlay/regression are model-free and
+            fast, so they get a modest ceiling."""
+        tail = [
+            ("Overlay", ["uv", "run", "scripts/overlay.py"], 300),
+            ("Render",
+             ["uv", "run", "scripts/render.py", "--model", ANALYZE_MODEL],
+             1200 if local_model else 600),
+            ("Regression", ["uv", "run", "scripts/regression.py"], 300),
+        ]
+        for offset, (name, cmd, step_timeout) in enumerate(tail):
+            ok, reason = self._stream_step(
+                name, cmd, step_timeout, log_path,
+                idx=base_idx + offset, total=total,
+            )
+            if not ok:
+                self.call_from_thread(
+                    self.notify,
+                    f"{name} fehlgeschlagen (nicht fatal): {_esc(reason[:90])}",
+                    severity="warning",
+                    timeout=7,
+                )
 
     def _run_magic_scan(self, candidates: list[tuple[str, str]], n_dropped: int,
                         n_selected: int) -> None:
@@ -3739,13 +3765,15 @@ class CheckApp(App):
             log_path.write_text("", encoding="utf-8")
         except OSError:
             pass
-        total = len(steps)
+        total = len(steps) + 3  # + Overlay/Render/Regression tail
         for idx, (name, cmd, step_timeout) in enumerate(steps, 1):
             ok, _reason = self._stream_step(
                 name, cmd, step_timeout, log_path, idx=idx, total=total,
             )
             if not ok:
                 return
+        self._run_pipeline_tail(log_path, base_idx=len(steps) + 1, total=total,
+                                local_model=local_model)
         self.call_from_thread(self._after_magic_scan, len(candidates))
 
     def _after_magic_scan(self, n: int) -> None:
@@ -3852,7 +3880,7 @@ class CheckApp(App):
             log_path.write_text("", encoding="utf-8")
         except OSError:
             pass
-        total = len(steps)
+        total = len(steps) + 3  # + Overlay/Render/Regression tail
         for idx, (name, cmd) in enumerate(steps, 1):
             step_timeout = 1200 if (name == "Extract" and local_model) else 600
             ok, _reason = self._stream_step(
@@ -3860,6 +3888,8 @@ class CheckApp(App):
             )
             if not ok:
                 return
+        self._run_pipeline_tail(log_path, base_idx=len(steps) + 1, total=total,
+                                local_model=local_model)
         self.call_from_thread(self._after_pipeline, row)
 
     def _after_pipeline(self, row: SnapshotRow) -> None:

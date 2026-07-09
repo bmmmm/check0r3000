@@ -24,18 +24,16 @@ from pathlib import Path
 
 import coverage_taxonomy as ctax
 import tui_data
+from _modules import MODULE_KEYS as _MODULE_KEYS
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 WEIGHTS_PATH = REPO_ROOT / "config" / "magic-weights.json"
 NEEDS_PATH = REPO_ROOT / "config" / "needs-weights.json"
 
-# The eight canonical Bausteine. A fixed denominator (not len(record.modules)) so a
-# record that drops a key still scores against the full market breadth, and an extra
-# key can't inflate the ratio above the others'.
-_MODULE_KEYS = (
-    "privat", "beruf", "verkehr", "wohnen_immobilien",
-    "internet_web", "steuer", "sozialgericht", "verwaltungsrecht",
-)
+# The eight canonical Bausteine (from _modules, derived from the tariff schema). A
+# fixed denominator (not len(record.modules)) so a record that drops a key still scores
+# against the full market breadth, and an extra key can't inflate the ratio above the
+# others'.
 # Reuse the worst→best tier ranking that tui_format pins; kept local so magic.py has
 # no rendering dependency. Casefolded keys, matching _level_direction's lookup.
 _LEVEL_RANK = {"basis": 0, "komfort": 1, "premium": 2}
