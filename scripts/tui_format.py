@@ -162,15 +162,23 @@ def _col_label(stem: str) -> str:
     return head.upper() if len(head) <= 4 else head[:1].upper() + head[1:]
 
 
+_MODULE_LEVEL_CELLS = {
+    "premium": ("★★★ Premium", "bright_green"),
+    "komfort": ("★★ Komfort", "yellow"),
+    "basis": ("★ Basis", "white"),
+}
+
+
 def _module_cell(mod: dict[str, Any]) -> tuple[str, str]:
-    """(plain, colour) for one module in a tariff column."""
+    """(plain, colour) for one module in a tariff column. Level lookup is
+    casefolded, matching _level_direction/magic._module_stats -- a model
+    emitting "premium"/"KOMFORT" must not silently fall through to the
+    generic "✓" cell."""
     if not isinstance(mod, dict) or not mod.get("included"):
         return "—", "dim"
-    return {
-        "Premium": ("★★★ Premium", "bright_green"),
-        "Komfort": ("★★ Komfort", "yellow"),
-        "Basis": ("★ Basis", "white"),
-    }.get(mod.get("level"), ("✓", "cyan"))
+    level = mod.get("level")
+    key = level.strip().casefold() if isinstance(level, str) else None
+    return _MODULE_LEVEL_CELLS.get(key, ("✓", "cyan"))
 
 
 # Module quality tiers, worst→best. Comparing level strings directly is wrong in

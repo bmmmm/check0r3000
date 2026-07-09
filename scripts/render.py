@@ -83,7 +83,25 @@ def _as_dict(v) -> dict:
     return v if isinstance(v, dict) else {}
 
 
-def build_matrix_md(tariffs: list[dict]) -> str:
+def _beitrag_cell(t: dict, pure: bool) -> str:
+    """Beitrag/Monat cell for one tariff. out/tariffs/ must never carry a premium
+    (that's the overlay.py/out/enriched job) -- in the pure path, a non-null value
+    is a pipeline invariant violation, not data to publish into the tracked
+    out/vergleich.md/index.html. Warn loudly and render '-' instead; the enriched
+    path is untouched since a premium there is expected."""
+    val = _as_dict(t.get("beitrag")).get("monatlich_eur")
+    if pure and val is not None:
+        stem = t.get("insurer", "?") + " — " + t.get("tariff", "?")
+        print(f"  WARNING: {stem} carries a non-null beitrag.monatlich_eur "
+              f"({val!r}) in out/tariffs/ -- pipeline invariant violation "
+              f"(premiums only belong in out/enriched/ via overlay.py). "
+              f"Rendering '–' instead of the value; run scripts/regression.py "
+              f"to locate and fix the offending record.", file=sys.stderr)
+        return "–"
+    return fmt(val)
+
+
+def build_matrix_md(tariffs: list[dict], pure: bool) -> str:
     # Values are untrusted LLM text: a literal '|' would split a Markdown column, and
     # wrong nested types (a string where a dict is expected) would crash the join.
     def esc(s) -> str:
@@ -105,8 +123,7 @@ def build_matrix_md(tariffs: list[dict]) -> str:
     ]
     for label, f in cov_fields:
         rows.append((label, [esc(fmt(_as_dict(t.get("coverage")).get(f))) for t in tariffs]))
-    rows.append(("Beitrag/Monat (EUR)",
-                 [esc(fmt(_as_dict(t.get("beitrag")).get("monatlich_eur"))) for t in tariffs]))
+    rows.append(("Beitrag/Monat (EUR)", [esc(_beitrag_cell(t, pure)) for t in tariffs]))
 
     body = "".join(f"| {label} | " + " | ".join(cells) + " |\n" for label, cells in rows)
     return head + body
@@ -154,10 +171,10 @@ def md_to_html(md: str) -> str:
     )
 
 
-def build_doc(tariffs: list[dict], pros_cons: str | None) -> str:
+def build_doc(tariffs: list[dict], pros_cons: str | None, pure: bool) -> str:
     md = ["# Rechtsschutzversicherung — Vergleich\n",
           f"_{len(tariffs)} Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergebnisliste._\n",
-          "## Leistungsmatrix\n", build_matrix_md(tariffs), "",
+          "## Leistungsmatrix\n", build_matrix_md(tariffs, pure), "",
           "## Details je Tarif\n", build_lists_md(tariffs)]
     if pros_cons is not None:
         md.append(pros_cons)
@@ -188,7 +205,7 @@ def main() -> int:
 
     # Tracked, shareable deliverable: PURE facts only — never embeds a personal
     # premium/Stufe, so a routine `git add out/` cannot leak it.
-    pure_doc = build_doc(pure, pros_cons)
+    pure_doc = build_doc(pure, pros_cons, pure=True)
     (OUT / "vergleich.md").write_text(pure_doc, encoding="utf-8")
     (OUT / "index.html").write_text(md_to_html(pure_doc), encoding="utf-8")
     print(f"  -> {(OUT / 'vergleich.md').relative_to(ROOT)}  +  index.html  (pure, tracked)")
@@ -197,7 +214,7 @@ def main() -> int:
     # gitignored out/enriched/, so it can never be committed.
     if has_enriched():
         enriched = load_records(prefer_enriched=True)
-        enr_doc = build_doc(enriched, pros_cons)
+        enr_doc = build_doc(enriched, pros_cons, pure=False)
         ENRICHED.mkdir(parents=True, exist_ok=True)
         (ENRICHED / "vergleich.md").write_text(enr_doc, encoding="utf-8")
         (ENRICHED / "index.html").write_text(md_to_html(enr_doc), encoding="utf-8")

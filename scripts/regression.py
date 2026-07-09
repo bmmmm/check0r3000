@@ -84,7 +84,11 @@ def check_invariant(record: dict, inv: dict) -> tuple[bool, str]:
         if not isinstance(exp, (list, tuple, set, str)):
             raise ValueError(f"'in' check needs a container in 'expected' "
                              f"(path {inv['path']}, got {type(exp).__name__})")
-        return val in exp, f"{val!r} in {exp}"
+        try:
+            return val in exp, f"{val!r} in {exp}"
+        except TypeError:
+            return False, (f"value of type {type(val).__name__} cannot be tested "
+                           f"for membership in {exp!r}")
     raise ValueError(f"unknown check kind: {chk!r} (path {inv['path']})")
 
 
@@ -120,6 +124,24 @@ def check_record(record: dict, golden: dict, schema: dict) -> list[str]:
         ok, detail = check_invariant(record, inv)
         if not ok:
             violations.append(f"{inv['path']} [{inv['check']}]: {detail}  ({inv['why']})")
+    return violations
+
+
+def check_market_record(record: dict, schema: dict) -> list[str]:
+    """Market-wide checks applied to EVERY out/tariffs/*.json, not just the two
+    golden-pinned stems: schema conformance plus the beitrag-null pipeline
+    invariant (out/tariffs/ must never carry a premium -- that only ever belongs
+    in out/enriched/ via overlay.py; see the golden 'isnull' invariants for the
+    same semantics). Deliberately narrow: qualitative selbstbeteiligung data is
+    legitimate and not checked here."""
+    violations = [f"schema: {err}" for err in schema_errors(record, schema)]
+    for path in ("beitrag.monatlich_eur", "beitrag.jaehrlich_eur"):
+        val = get_path(record, path)
+        if val is not None:
+            violations.append(
+                f"{path} [isnull]: {val!r} is not null "
+                f"(out/tariffs must never carry a premium -- use overlay.py/out/enriched instead)"
+            )
     return violations
 
 
@@ -187,13 +209,40 @@ def main() -> int:
         else:
             print(f"PASS  {key}  ({n} invariants + schema)")
 
+    # Market-wide pass: schema + the beitrag-null invariant over EVERY out/tariffs/
+    # record, not just the two golden-pinned stems. golden.json only ever curates a
+    # handful of stems (hand-verified against the source PDFs), so without this pass
+    # most of the market silently got zero regression coverage. --record targets a
+    # single file for golden comparison, so skip the market sweep in that mode.
+    market_targets: list[Path] = []
+    market_failed = 0
+    if not args.record:
+        market_targets = sorted(TARIFFS.glob("*.json"))
+        if market_targets:
+            print()
+            print(f"--- market-wide ({len(market_targets)} out/tariffs/*.json): "
+                  f"schema + beitrag-null ---")
+            for path in market_targets:
+                record = json.loads(path.read_text(encoding="utf-8"))
+                violations = check_market_record(record, schema)
+                if violations:
+                    market_failed += 1
+                    print(f"FAIL  {path.stem}  ({len(violations)} violation(s))")
+                    for v in violations:
+                        print(f"        - {v}")
+                else:
+                    print(f"PASS  {path.stem}")
+
     print()
-    if failed:
-        print(f"REGRESSION: {failed}/{len(targets)} tariff(s) failed. "
+    if failed or market_failed:
+        extra = (f", {market_failed}/{len(market_targets)} market-wide tariff(s) failed"
+                 if market_targets else "")
+        print(f"REGRESSION: {failed}/{len(targets)} golden tariff(s) failed{extra}. "
               f"The extraction no longer produces the document-grounded facts.",
               file=sys.stderr)
         return 1
-    print(f"OK: {len(targets)} tariff(s) pass all invariants.")
+    extra = f"; {len(market_targets)} market-wide tariff(s) pass schema + beitrag-null" if market_targets else ""
+    print(f"OK: {len(targets)} tariff(s) pass all invariants{extra}.")
     return 0
 
 

@@ -39,7 +39,7 @@ def _find_latest_snapshot(snapshot_dir: Path) -> Path | None:
     import re
 
     candidates = sorted(p for p in snapshot_dir.glob("*.json")
-                        if re.match(r"\d{4}-\d{2}-\d{2}", p.stem))
+                        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", p.stem))
     return candidates[-1] if candidates else None
 
 
@@ -307,13 +307,22 @@ def load_snapshot(path: Path) -> Snapshot | None:
 
 
 def load_all_snapshots() -> list[tuple[str, Path]]:
-    """Return [(date_str, path), ...] sorted oldest→newest."""
+    """Return [(date_str, path), ...] sorted oldest→newest.
+
+    Only date-named files (YYYY-MM-DD.json, same pattern as _find_latest_snapshot)
+    are included -- a stray non-date *.json in data/snapshots/ (a backup, an
+    export) would otherwise masquerade as a snapshot and make every tracked
+    tariff look removed in the Verlauf diff."""
+    import re
+
     snap_dir = REPO_ROOT / "data" / "snapshots"
     if not snap_dir.is_dir():
         return []
     pairs = []
     for p in sorted(snap_dir.glob("*.json")):
         stem = p.stem
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", stem):
+            continue
         pairs.append((stem, p))
     return pairs
 
