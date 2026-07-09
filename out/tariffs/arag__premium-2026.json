@@ -160,5 +160,6 @@
   "_model": "haiku",
   "_filter": "avb-filter",
   "_repeat": 3,
-  "_repeat_ok": 2
+  "_repeat_ok": 2,
+  "_curated": true
 }

@@ -133,6 +133,7 @@
   "_filter": "avb-filter",
   "_repeat": 3,
   "_repeat_ok": 3,
+  "_curated": true,
   "sources": [
     {
       "doctype": "avb",

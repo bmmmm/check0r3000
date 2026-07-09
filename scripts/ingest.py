@@ -17,10 +17,15 @@ to the same hash. Identical content appearing under different tariffs is reporte
 as a warning — that is exactly how check24 attaches one generic document package
 to several ARAG tariffs.
 
+A PDF is skipped (no re-parse) when its .txt is already newer than the PDF itself;
+use --force to re-extract everything regardless.
+
 Run:  uv run scripts/ingest.py
+      uv run scripts/ingest.py --force
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import sys
@@ -40,7 +45,17 @@ def extract_text(pdf: Path) -> tuple[str, int]:
     return "\n".join(pages), len(reader.pages)
 
 
+def _page_count(pdf: Path) -> int:
+    """Page count without the expensive per-page text decoding (used on skip)."""
+    return len(PdfReader(str(pdf)).pages)
+
+
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--force", action="store_true",
+                     help="re-extract every PDF even if its .txt is already up to date")
+    args = ap.parse_args()
+
     if not RAW.is_dir():
         print(f"error: {RAW} not found. Drop PDFs into data/raw/<insurer>/<tariff>/", file=sys.stderr)
         return 2
@@ -54,32 +69,48 @@ def main() -> int:
     by_content: dict[str, list[str]] = defaultdict(list)
     no_text: list[str] = []
     failed: list[str] = []
+    n_extracted = 0
+    n_skipped = 0
 
     for pdf in pdfs:
         insurer, tariff = pdf.parts[-3], pdf.parts[-2]
         doctype = pdf.stem
         ident = f"{insurer}/{tariff}/{doctype}"
-        # Isolate per-file failures: one encrypted/corrupt/0-byte PDF must not abort
-        # the whole batch (mirroring fetch_docs/check) and lose the manifest for every
-        # other document. pypdf raises a wide family (FileNotDecryptedError,
-        # EmptyFileError, PdfReadError, ...) — name the file so the error is actionable.
-        try:
-            text, npages = extract_text(pdf)
-        except Exception as e:  # noqa: BLE001
-            print(f"  SKIPPED    {ident:<48} extract failed: {type(e).__name__}: {e}",
-                  file=sys.stderr)
-            failed.append(ident)
-            continue
+        dest = OUT / insurer / tariff / f"{doctype}.txt"
+
+        # Incremental skip: if the extracted .txt is already newer than its source PDF,
+        # re-running pypdf's per-page text decoding would reproduce the exact same
+        # bytes — reuse it instead. --force bypasses this for a full re-extract.
+        was_skipped = not args.force and dest.exists() and dest.stat().st_mtime >= pdf.stat().st_mtime
+        if was_skipped:
+            text = dest.read_text(encoding="utf-8")
+            try:
+                npages = _page_count(pdf)
+            except Exception:
+                npages = 0
+            n_skipped += 1
+        else:
+            # Isolate per-file failures: one encrypted/corrupt/0-byte PDF must not abort
+            # the whole batch (mirroring fetch_docs/check) and lose the manifest for every
+            # other document. pypdf raises a wide family (FileNotDecryptedError,
+            # EmptyFileError, PdfReadError, ...) — name the file so the error is actionable.
+            try:
+                text, npages = extract_text(pdf)
+            except Exception as e:  # noqa: BLE001
+                print(f"  SKIPPED    {ident:<48} extract failed: {type(e).__name__}: {e}",
+                      file=sys.stderr)
+                failed.append(ident)
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(text, encoding="utf-8")
+            n_extracted += 1
+
         stripped = text.strip()
         chash = hashlib.sha256(text.encode("utf-8")).hexdigest()
         # Dedup grouping keys on the *stripped* text, so two copies of one generic
         # package that differ only in trailing page whitespace still group; the record
         # keeps the raw-text hash (extract.py caches on it, whitespace-sensitive).
         dhash = hashlib.sha256(stripped.encode("utf-8")).hexdigest()
-
-        dest = OUT / insurer / tariff / f"{doctype}.txt"
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(text, encoding="utf-8")
 
         records.append({
             "insurer": insurer,
@@ -98,7 +129,8 @@ def main() -> int:
             by_content[dhash].append(ident)
         else:
             no_text.append(ident)
-        print(f"  extracted  {ident:<48} {npages:>3}p  {len(stripped):>6}ch  {chash[:12]}")
+        if not was_skipped:
+            print(f"  extracted  {ident:<48} {npages:>3}p  {len(stripped):>6}ch  {chash[:12]}")
 
     # Duplicate report: same extracted content under more than one location.
     warnings = [
@@ -114,7 +146,8 @@ def main() -> int:
     tmp.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     tmp.replace(manifest_path)
 
-    print(f"\n{len(records)} documents -> {OUT.relative_to(ROOT)}/manifest.json")
+    print(f"\n{len(records)} documents -> {OUT.relative_to(ROOT)}/manifest.json  "
+          f"({n_extracted} extracted, {n_skipped} skipped (up to date), {len(failed)} failed)")
     if failed:
         print(f"\n  WARNING: {len(failed)} document(s) could not be read and were "
               f"skipped (encrypted, corrupt, or 0-byte — decrypt or re-download):")

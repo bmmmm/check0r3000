@@ -68,7 +68,15 @@ async def scrape(url: str) -> list[dict]:
         page = await browser.new_page(user_agent=USER_AGENT)
 
         print(f"Loading {url[:90]}...")
-        await page.goto(url, wait_until="networkidle", timeout=60_000)
+        # wait_until="domcontentloaded", NOT "networkidle": CHECK24 keeps a steady stream
+        # of tracking/ad traffic, so the network never goes idle and networkidle
+        # deadlocks until its timeout fires (same fix as harvest_docs.py). The result
+        # list is SSR'd, so READY_SELECTOR below is the actual readiness signal.
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=60_000)
+        except PwTimeout:
+            sys.exit(f"page.goto timed out after 60s loading {url[:90]} — "
+                      "check network connectivity or whether CHECK24 changed its response.")
 
         # Wait for the SSR tariff list to be in the DOM (always present).
         await page.wait_for_selector(READY_SELECTOR, timeout=15_000)

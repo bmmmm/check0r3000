@@ -248,7 +248,12 @@ def main() -> int:
     only = set(args.only) if args.only else None
 
     transform = avb_transform if args.filter else None
-    filter_tag = "avb-filter" if args.filter else "none"
+    # Bake _filter.FILTER_VERSION into the cache tag so a heuristics change invalidates
+    # cached --filter records. Compat clause: at version 1 the tag stays "avb-filter"
+    # (byte-identical to before FILTER_VERSION existed) so this change alone does not
+    # invalidate today's caches and trigger a silent paid re-extract of everything.
+    filter_tag = ("avb-filter" if _filter.FILTER_VERSION == 1
+                  else f"avb-filter-v{_filter.FILTER_VERSION}") if args.filter else "none"
 
     manifest_path = EXTRACTED / "manifest.json"
     if not manifest_path.exists():
@@ -305,6 +310,14 @@ def main() -> int:
                         print(f"  cached    {insurer} / {tariff}  "
                               f"(kept repeat={prev_repeat} >= {args.repeat})")
                         continue
+                # Curated records carry hand-verified patches (e.g. golden-pinned
+                # module.level, a corrected Selbstbeteiligung) that a re-extract would
+                # silently clobber. Only --force may override this guard.
+                if prev.get("_curated"):
+                    print(f"  SKIPPED   {insurer} / {tariff} ({stem}): record is curated "
+                          f"(_curated: true, carries hand-verified patches) — re-extracting "
+                          f"would overwrite them; pass --force to override.", file=sys.stderr)
+                    continue
             except Exception:
                 pass
 

@@ -21,6 +21,10 @@ from __future__ import annotations
 import re
 import sys
 
+# Bump when ANCHORS or the trimming heuristics change, so extract.py's cache
+# signature invalidates previously cached --filter extractions.
+FILTER_VERSION = 1
+
 # Topic anchors: the schema fields we actually compare on. Lowercase, regex.
 ANCHORS = [
     r"selbstbeteiligung", r"versicherungssumme", r"warte ?zeit",

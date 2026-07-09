@@ -34,6 +34,9 @@ OUT = REPO_ROOT / "out" / "tariffs"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import feature_history  # noqa: E402
 
+# Primary guard is the "_curated": true marker in the record itself (extract.py refuses
+# to re-extract a curated stem without --force); this hardcoded set is a second,
+# reconcile-local safety net so those two records are never touched here either.
 SKIP = {"advocard__360-privat-rechtsschutz", "arag__premium-2026"}
 
 LIST_FIELDS = ("leistungen", "ausschluesse", "besonderheiten")

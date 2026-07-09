@@ -27,8 +27,13 @@ echo "==> ingest (PDF -> text, dedup)"
 uv run scripts/ingest.py
 
 echo "==> extract (structured facts via model)"
+# Non-fatal: extract.py returns rc=1 when any single tariff failed all its runs
+# (per-tariff resilience) — the records that did succeed are already written, so
+# surface the failure loudly but don't abort the rest of the pipeline.
 # shellcheck disable=SC2086
-uv run scripts/extract.py $MODEL_ARGS $FILTER_ARGS
+if uv run scripts/extract.py $MODEL_ARGS $FILTER_ARGS; then :; else
+  echo "WARNING: extract.py reported failed tariff(s) — see out/tariffs/ and the log above." >&2
+fi
 
 echo "==> overlay (structured price/Stufe from data/offers/, no model)"
 # Non-fatal: a self-check mismatch must be loud, but the common case (no offer
