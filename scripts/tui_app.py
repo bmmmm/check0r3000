@@ -8,10 +8,11 @@ module in scripts/."""
 
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import sys
-from datetime import datetime
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ import coverage_taxonomy as ctax  # noqa: E402
 import _providers  # noqa: E402
 import scorecard  # noqa: E402  — shared benchmark scoring (eval.py + Benchmark tab)
 import magic  # noqa: E402  — Magic Find quality-scoring core (rank / prescore)
+from _jsonio import atomic_write_json  # noqa: E402  — shared atomic JSON writer
 from _modules import MODULE_LABELS  # noqa: E402  — single source of truth for Baustein labels
 
 from tui_data import (  # noqa: E402
@@ -40,6 +42,7 @@ from tui_data import (  # noqa: E402
     load_change_summary,
     load_doc_by_tariff,
     load_doc_index,
+    load_favorite_notes,
     load_favorites,
     load_feature_diff,
     load_snapshot,
@@ -52,13 +55,16 @@ from tui_format import (  # noqa: E402
     STATUS_LEGEND,
     VERGLEICH_LABEL_W,
     benchmark_markup,
+    link_url,
     magic_bar,
     magic_score_cell,
+    price_delta,
+    record_body_lines,
+    verlauf_row_cells,
     _bewertung_cell,
     _bewertung_color,
     _col_label,
     _esc,
-    _fmt_eur,
     _level_direction,
     _module_cell,
     _pad_cell,
@@ -138,18 +144,6 @@ def _price_color(price: float | None, q1: float, q3: float) -> str:
     if price >= q3:
         return "bright_red"
     return "white"
-
-def _module_badge(mod: dict[str, Any]) -> str:
-    if not mod.get("included"):
-        return "[dim]—[/dim]"
-    level = mod.get("level")
-    if level == "Premium":
-        return "[bright_green]★★★ Premium[/bright_green]"
-    if level == "Komfort":
-        return "[yellow]★★ Komfort[/yellow]"
-    if level == "Basis":
-        return "[white]★ Basis[/white]"
-    return "[cyan]✓[/cyan]"
 
 # German labels for the Magic-Find score dimensions (presentation only; the keys
 # and their order are owned by magic.MagicScore.dims).
@@ -258,6 +252,52 @@ _VERLAUF_FILTER_LABELS = {
 }
 
 # ---------------------------------------------------------------------------
+# Per-tab widget wiring
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class TabSpec:
+    """One row of the tab -> widget-id dispatch table. Replaces the several
+    copy-pasted per-tab maps (active table, detail band, cursor adoption, focus on
+    activation). The table-less panels (Vergleich, Benchmark) carry only a focus_id;
+    their table/band/map fields stay None so the lookups skip them cleanly.
+
+    ident_map / rows_map / adopt are CheckApp attribute/method NAMES resolved via
+    getattr — the table is module-level, so it can't hold bound instance members."""
+
+    tab_id: str
+    focus_id: str                   # widget focused when this tab activates
+    table_id: str | None = None     # DataTable id (None for table-less panels)
+    band_id: str | None = None      # detail-band container id
+    content_id: str | None = None   # detail-band Static id
+    ident_map: str | None = None    # attr: ident -> row-key dict
+    rows_map: str | None = None      # attr: row-key -> row(/fav/score) dict
+    adopt: str | None = None        # method: reconcile active-state from a row-key
+
+
+TAB_SPECS: dict[str, TabSpec] = {
+    "favorites": TabSpec(
+        "favorites", "#fav-table", "#fav-table", "#fav-detail", "#fav-detail-content",
+        "_fav_ident_to_rk", "_fav_rows", "_adopt_favorites"),
+    "market": TabSpec(
+        "market", "#market-table", "#market-table", "#detail-panel", "#detail-content",
+        "_market_ident_to_rk", "_market_rows", "_adopt_market"),
+    "diff": TabSpec("diff", "#diff-panel"),
+    "verlauf": TabSpec(
+        "verlauf", "#verlauf-table", "#verlauf-table", "#verlauf-detail",
+        "#verlauf-detail-content", "_verlauf_ident_to_rk", "_verlauf_rows",
+        "_adopt_verlauf"),
+    "bench": TabSpec("bench", "#bench-panel"),
+    "magic": TabSpec(
+        "magic", "#magic-table", "#magic-table", "#magic-detail", "#magic-detail-content",
+        "_magic_ident_to_rk", "_magic_rows", "_adopt_magic"),
+}
+
+# Tabs that own a selectable row table — the only ones the row-cursor actions
+# ([u]/[R]/[a]/[N]/[o]/[D]/[g]/[G]/[H]) and the cross-tab reconcile apply to.
+ROW_TABS: tuple[str, ...] = tuple(t for t, s in TAB_SPECS.items() if s.table_id)
+
+# ---------------------------------------------------------------------------
 # The App
 # ---------------------------------------------------------------------------
 
@@ -327,6 +367,9 @@ class CheckApp(App):
         self._detail: DetailRecord | None = None
         self._q1 = self._median = self._q3 = 0.0
         self._favorites: dict[str, Any] = {}
+        # Per-stem free-text notes live in a gitignored sidecar, NOT in the tracked
+        # (PII-free) favorites.json — a typed note is personal, never committed.
+        self._favorite_notes: dict[str, str] = {}
         self._doc_index: dict[str, list[dict]] = {}
         self._doc_by_tariff: dict[tuple[str, str], dict] = {}
         self._doc_by_stem: dict[str, dict] = {}
@@ -406,6 +449,8 @@ class CheckApp(App):
         if self._snapshot:
             self._q1, self._median, self._q3 = _price_quartiles(self._snapshot.rows)
         self._favorites = load_favorites()
+        self._favorite_notes = load_favorite_notes()
+        self._migrate_favorite_notes()
         self._doc_index = load_doc_index()
         self._doc_by_tariff = load_doc_by_tariff()
         self._doc_by_stem = {
@@ -493,7 +538,7 @@ class CheckApp(App):
             self.sub_title = "No snapshot loaded — place files in data/snapshots/"
 
     def _update_status_bar(self) -> None:
-        t = datetime.now().strftime("%H:%M:%S")
+        t = datetime.datetime.now().strftime("%H:%M:%S")
         n = len(self._snapshot.rows) if self._snapshot else 0
         try:
             self.query_one("#status-bar", Label).update(
@@ -557,14 +602,12 @@ class CheckApp(App):
     ) -> str:
         """Δ vs the reference premium. Prefixes ≈ when the SB band differs (so the
             comparison is not 1:1) and renders an exact match as a neutral ±0."""
-        if ref_price is None or price is None:
+        delta = price_delta(price, ref_price)
+        if delta is None:
             return "[dim]—[/dim]"
-        d = price - ref_price
+        d, pct, color, sign = delta
         if abs(d) < 0.005:
             return "[dim]±0[/dim]"
-        pct = d / ref_price * 100 if ref_price else 0.0
-        color = "bright_green" if d < 0 else "bright_red"
-        sign = "" if d < 0 else "+"
         approx = "≈" if (sb or "") != (ref_sb or "") else ""
         return f"[{color}]{approx}{sign}{d:.2f} ({sign}{pct:.0f}%)[/{color}]"
 
@@ -693,7 +736,7 @@ class CheckApp(App):
         url = self._build_offer_url(row.position) if row.position else None
         if url:
             lines.append(
-                f'[link="{url}"][cyan]↗ auf CHECK24 ansehen[/cyan][/link]'
+                f'[link="{link_url(url)}"][cyan]↗ auf CHECK24 ansehen[/cyan][/link]'
                 f"   [dim](Position {row.position})[/dim]"
             )
         tag = fav.get("tag", "")
@@ -709,7 +752,7 @@ class CheckApp(App):
         return lines
 
     def _fav_detail_note(self, fav: dict) -> list[str]:
-        note = fav.get("note", "")
+        note = self._favorite_notes.get(fav.get("stem", ""), "")
         if note:
             lines: list[str] = [
                 "[bold underline]Notiz[/bold underline]   [dim](\\[N] bearbeiten)[/dim]"
@@ -734,14 +777,12 @@ class CheckApp(App):
             f"(SB {_esc(row.selbstbeteiligung or '—')})"
         )
         ref_price, ref_sb = self._reference_info()
-        if ref_price is not None and row.monatlich_eur is not None and not self._is_reference(fav):
-            d = row.monatlich_eur - ref_price
+        delta = price_delta(row.monatlich_eur, ref_price)
+        if delta is not None and not self._is_reference(fav):
+            d, pct, color, sign = delta
             if abs(d) < 0.005:
                 lines.append("vs. Referenz: [dim]±0 €/mo[/dim]")
             else:
-                pct = d / ref_price * 100 if ref_price else 0.0
-                color = "bright_green" if d < 0 else "bright_red"
-                sign = "" if d < 0 else "+"
                 lines.append(
                     f"vs. Referenz: [{color}]{sign}{d:.2f} €/mo ({sign}{pct:.0f}%)[/{color}]"
                 )
@@ -782,7 +823,7 @@ class CheckApp(App):
             fname = _esc((dd.get("file") or "")[:54])
             doc_url = dd.get("url") or ""
             if doc_url:
-                lines.append(f'  [cyan]{lbl:<6}[/cyan] [link="{_esc(doc_url)}"]{fname}[/link]')
+                lines.append(f'  [cyan]{lbl:<6}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]')
             else:
                 lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
         if detail_rec is None:
@@ -811,7 +852,7 @@ class CheckApp(App):
                 "[bold underline]Tarifdetails[/bold underline]   "
                 "[dim](\\[o] Quelle öffnen · \\[v] Vergleich)[/dim]"
             )
-            lines += self._record_body_lines(detail_rec)
+            lines += record_body_lines(detail_rec)
         else:
             lines.append(
                 "[dim italic]Noch keine AVB/PIB eingelesen — \\[g] lädt + analysiert "
@@ -834,7 +875,6 @@ class CheckApp(App):
         lcd = ci.last_change_date
         recent = False
         if lcd:
-            import datetime
             try:
                 recent = (datetime.date.today() - datetime.date.fromisoformat(lcd)).days <= 30
             except (ValueError, TypeError):
@@ -994,7 +1034,7 @@ class CheckApp(App):
                 doc_url = dd.get("url") or ""
                 if doc_url:
                     lines.append(
-                        f'  [cyan]{lbl:<6}[/cyan] [link="{_esc(doc_url)}"]{fname}[/link]'
+                        f'  [cyan]{lbl:<6}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]'
                     )
                 else:
                     lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
@@ -1040,7 +1080,6 @@ class CheckApp(App):
 
     def _render_change_history_block(self, row: SnapshotRow) -> str:
         """Compact Änderungshistorie section for the market detail band."""
-        import datetime
         stem = row.stem
         if not stem:
             return ""
@@ -1134,7 +1173,7 @@ class CheckApp(App):
         url = self._build_offer_url(row.position) if row.position else None
         if url:
             link_line = (
-                f'[link="{url}"][cyan]↗ auf CHECK24 ansehen[/cyan][/link]'
+                f'[link="{link_url(url)}"][cyan]↗ auf CHECK24 ansehen[/cyan][/link]'
                 f"   [dim](Position {row.position})[/dim]"
             )
             result = link_line + "\n\n" + result
@@ -1179,85 +1218,8 @@ class CheckApp(App):
         if detail.stand:
             lines.append(f"Stand: {_esc(detail.stand)}")
         lines.append("")
-        lines += self._record_body_lines(detail)
+        lines += record_body_lines(detail)
         return "\n".join(lines)
-
-    def _record_body_lines(self, detail: DetailRecord) -> list[str]:
-        """Modules → coverage → premium → benefits → exclusions → highlights.
-            Shared by the Market detail band and the Favorites band (when a record
-            exists), so an analyzed favorite shows the same full tariff detail instead
-            of a 'Module oben' pointer to a module list that the Favorites band never
-            actually rendered."""
-        lines: list[str] = []
-
-        # Modules
-        lines.append("[bold underline]Module[/bold underline]")
-        for mod_key, label in MODULE_LABELS.items():
-            mod = detail.modules.get(mod_key, {})
-            included = mod.get("included", False)
-            badge_str = _module_badge(mod)
-            note_str = mod.get("note") or ""
-            lines.append(f"  {label:<22} {badge_str}")
-            if included and note_str:
-                lines.append(f"    [dim]{_esc(note_str)}[/dim]")
-        lines.append("")
-
-        # Coverage — every value is model-emitted free text, so escape '[' (a
-        # literal bracket would otherwise be eaten by / break Rich markup).
-        cov = detail.coverage
-        if cov:
-            lines.append("[bold underline]Deckung[/bold underline]")
-            if cov.get("versicherungssumme"):
-                lines.append(f"  Versicherungssumme:  {_esc(str(cov['versicherungssumme']))}")
-            if cov.get("selbstbeteiligung"):
-                lines.append(f"  Selbstbeteiligung:   {_esc(str(cov['selbstbeteiligung']))}")
-            if cov.get("wartezeit_monate") is not None:
-                lines.append(f"  Wartezeit:           {_esc(cov['wartezeit_monate'])} Monate")
-            if cov.get("wartezeit_ausnahmen"):
-                lines.append("  Wartezeit-Ausnahmen:")
-                wa = cov["wartezeit_ausnahmen"]
-                for ex in (wa if isinstance(wa, list) else [wa]):
-                    lines.append(f"    • {_esc(str(ex))}")
-            if cov.get("geltungsbereich"):
-                lines.append(f"  Geltungsbereich:     {_esc(str(cov['geltungsbereich']))}")
-            if cov.get("vertragslaufzeit"):
-                lines.append(f"  Vertragslaufzeit:    {_esc(str(cov['vertragslaufzeit']))}")
-            lines.append("")
-
-        # Premium
-        if detail.beitrag:
-            lines.append("[bold underline]Beitrag[/bold underline]")
-            m = detail.beitrag.get("monatlich_eur")
-            y = detail.beitrag.get("jaehrlich_eur")
-            if m is not None:
-                lines.append(f"  [bright_green]€ {_fmt_eur(m)} / Monat[/bright_green]")
-            if y is not None:
-                lines.append(f"  € {_fmt_eur(y)} / Jahr")
-            if detail.beitrag.get("quelle"):
-                lines.append(f"  Quelle: {_esc(str(detail.beitrag['quelle']))}")
-            lines.append("")
-
-        # Leistungen
-        if detail.leistungen:
-            lines.append("[bold underline]Leistungen[/bold underline]")
-            for item in detail.leistungen:
-                lines.append(f"  [green]✓[/green] {_esc(item)}")
-            lines.append("")
-
-        # Ausschlüsse
-        if detail.ausschluesse:
-            lines.append("[bold underline]Ausschlüsse[/bold underline]")
-            for item in detail.ausschluesse:
-                lines.append(f"  [red]✗[/red] {_esc(item)}")
-            lines.append("")
-
-        # Besonderheiten
-        if detail.besonderheiten:
-            lines.append("[bold underline]Besonderheiten[/bold underline]")
-            for item in detail.besonderheiten:
-                lines.append(f"  [yellow]★[/yellow] {_esc(item)}")
-
-        return lines
 
     # --- Vergleich tab (cross-tariff coverage comparison) ---
 
@@ -1416,7 +1378,7 @@ class CheckApp(App):
             if url:
                 display = "↗ Link"
                 pad = " " * max(0, col_w - len(display))
-                link_row += f'[link="{url}"][cyan]{display}[/cyan][/link]{pad}'
+                link_row += f'[link="{link_url(url)}"][cyan]{display}[/cyan][/link]{pad}'
                 has_any_link = True
             else:
                 link_row += _pad_cell("—", col_w, "dim")
@@ -1679,36 +1641,6 @@ class CheckApp(App):
             return [r for r in all_rows if r["delta_price"] is not None and r["delta_price"] > 0]
         return all_rows
 
-    def _verlauf_row_cells(self, r: dict) -> tuple[str, str, str, str, str, str, str, str, str]:
-        pos_str = str(r["new_position"]) if r["new_position"] is not None else "—"
-        old_p = f"{r['old_price']:.2f}" if r["old_price"] is not None else "—"
-        new_p = f"{r['new_price']:.2f}" if r["new_price"] is not None else "—"
-        dp = r["delta_price"]
-        if dp is not None and dp != 0.0:
-            sign = "+" if dp > 0 else ""
-            col = "bright_red" if dp > 0 else "bright_green"
-            pct = dp / r["old_price"] * 100 if r["old_price"] else 0.0
-            delta_str = f"[{col}]{sign}{dp:.2f}[/{col}]"
-            pct_str = f"[{col}]{sign}{pct:.1f}%[/{col}]"
-        elif r["is_new"]:
-            delta_str = "[bright_cyan]neu[/bright_cyan]"
-            pct_str = "[bright_cyan]—[/bright_cyan]"
-        elif r["is_removed"]:
-            delta_str = "[dim]weggef.[/dim]"
-            pct_str = "[dim]—[/dim]"
-        else:
-            delta_str = "[dim]—[/dim]"
-            pct_str = "[dim]—[/dim]"
-        dpos = r["delta_pos"]
-        if dpos is not None and dpos != 0:
-            dp_sign = "+" if dpos > 0 else ""
-            dp_col = "bright_red" if dpos > 0 else "bright_green"
-            rank_str = f"[{dp_col}]{dp_sign}{dpos}[/{dp_col}]"
-        else:
-            rank_str = "[dim]—[/dim]"
-        return (pos_str, _esc(r["insurer"]), _esc(r["product"][:38]), _esc(r["sb"]),
-                old_p, new_p, delta_str, pct_str, rank_str)
-
     def _populate_verlauf(self) -> None:
         """Populate the Verlauf DataTable with price-drift data between two snapshots."""
         try:
@@ -1758,7 +1690,7 @@ class CheckApp(App):
         self._verlauf_ident_to_rk = {}
         for i, r in enumerate(rows):
             row_key = f'{r["key"]}#{i}'
-            table.add_row(*self._verlauf_row_cells(r), key=row_key)
+            table.add_row(*verlauf_row_cells(r), key=row_key)
             self._verlauf_rows[row_key] = r
             self._verlauf_ident_to_rk.setdefault(r["key"], row_key)
 
@@ -2066,20 +1998,15 @@ class CheckApp(App):
         ident = self._held_ident
         if not ident:
             return None
-        targets = {
-            "favorites": ("#fav-table", self._fav_ident_to_rk, self._fav_rows),
-            "market": ("#market-table", self._market_ident_to_rk, self._market_rows),
-            "verlauf": ("#verlauf-table", self._verlauf_ident_to_rk, self._verlauf_rows),
-            "magic": ("#magic-table", self._magic_ident_to_rk, self._magic_rows),
-        }
-        spec = targets.get(active)
-        if spec is None:
+        spec = TAB_SPECS.get(active)
+        if spec is None or spec.ident_map is None:
             return None
-        table_id, ident_to_rk, rows = spec
+        ident_to_rk = getattr(self, spec.ident_map)
+        rows = getattr(self, spec.rows_map)
         rk = ident_to_rk.get(ident)
         if rk and rk in rows:
-            self._move_cursor_safe(table_id, rk)
-            return table_id
+            self._move_cursor_safe(spec.table_id, rk)
+            return spec.table_id
         return None
 
     def _adopt_cursor_row(self, active: str) -> None:
@@ -2096,35 +2023,45 @@ class CheckApp(App):
             return
         if rk is None:
             return
-        rk = str(rk)
-        if active == "favorites":
-            entry = self._fav_rows.get(rk)
-            if entry is not None:
-                row, fav = entry
-                self._active_row, self._active_fav = row, fav
-                self._held_ident = self._tariff_key(row, fav)
-        elif active == "market":
-            row = self._market_rows.get(rk)
-            if row is not None:
-                self._active_row, self._active_fav = row, None
-                self._held_ident = row.key or self._held_ident
-        elif active == "verlauf":
-            rdict = self._verlauf_rows.get(rk)
-            if rdict is not None:
-                ident = rdict["key"]
-                self._active_row = (
-                    next((r for r in self._snapshot.rows if r.key == ident), None)
-                    if self._snapshot else None
-                )
-                self._active_fav = None
-                self._held_ident = ident
-        elif active == "magic":
-            score = self._magic_rows.get(rk)
-            if score is not None:
-                row = self._magic_snaprow_by_stem.get(score.stem)
-                self._active_row = row  # may be None (detail-only stem)
-                self._active_fav = None
-                self._held_ident = (row.key if (row and row.key) else None) or score.stem
+        spec = TAB_SPECS.get(active)
+        if spec is None or spec.adopt is None:
+            return
+        # Dispatch to the per-tab reconciler. These _adopt_* helpers are called ONLY
+        # from here, so this method stays the single reconcile entry point (the
+        # cross-tab SOLE-writer invariant) — the split is just per-tab unpacking.
+        getattr(self, spec.adopt)(str(rk))
+
+    def _adopt_favorites(self, rk: str) -> None:
+        entry = self._fav_rows.get(rk)
+        if entry is not None:
+            row, fav = entry
+            self._active_row, self._active_fav = row, fav
+            self._held_ident = self._tariff_key(row, fav)
+
+    def _adopt_market(self, rk: str) -> None:
+        row = self._market_rows.get(rk)
+        if row is not None:
+            self._active_row, self._active_fav = row, None
+            self._held_ident = row.key or self._held_ident
+
+    def _adopt_verlauf(self, rk: str) -> None:
+        rdict = self._verlauf_rows.get(rk)
+        if rdict is not None:
+            ident = rdict["key"]
+            self._active_row = (
+                next((r for r in self._snapshot.rows if r.key == ident), None)
+                if self._snapshot else None
+            )
+            self._active_fav = None
+            self._held_ident = ident
+
+    def _adopt_magic(self, rk: str) -> None:
+        score = self._magic_rows.get(rk)
+        if score is not None:
+            row = self._magic_snaprow_by_stem.get(score.stem)
+            self._active_row = row  # may be None (detail-only stem)
+            self._active_fav = None
+            self._held_ident = (row.key if (row and row.key) else None) or score.stem
 
     @on(DataTable.RowHighlighted, "#market-table")
     def on_market_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -2385,12 +2322,11 @@ class CheckApp(App):
             active = self.query_one("#tabs", TabbedContent).active
         except NoMatches:
             return None
-        tid = {"favorites": "#fav-table", "market": "#market-table",
-               "verlauf": "#verlauf-table", "magic": "#magic-table"}.get(active)
-        if not tid:
+        spec = TAB_SPECS.get(active)
+        if spec is None or spec.table_id is None:
             return None
         try:
-            return self.query_one(tid, DataTable)
+            return self.query_one(spec.table_id, DataTable)
         except NoMatches:
             return None
 
@@ -2417,23 +2353,21 @@ class CheckApp(App):
             active = self.query_one("#tabs", TabbedContent).active
         except NoMatches:
             return
-        target = {"favorites": "#fav-table", "market": "#market-table",
-                  "diff": "#diff-panel", "verlauf": "#verlauf-table",
-                  "bench": "#bench-panel", "magic": "#magic-table"}.get(active)
-        if not target:
+        spec = TAB_SPECS.get(active)
+        if spec is None:
             return
         try:
-            self.query_one(target).focus()
+            self.query_one(spec.focus_id).focus()
         except NoMatches:
             pass
         # Move the cursor to the held tariff if it is in this tab, then reconcile the
         # active selection to wherever the cursor actually is (held-absent included)
         # so tab-specific actions ([u]/[R]/[N]/[D]) never target the previous tab's
         # row. Center afterwards, once the pane's layout has settled.
-        if active in ("favorites", "market", "verlauf", "magic"):
+        if active in ROW_TABS:
             self._select_held(active)
             self._adopt_cursor_row(active)
-            self.call_after_refresh(self._center_cursor_in, target)
+            self.call_after_refresh(self._center_cursor_in, spec.focus_id)
 
     def _reload_all(self) -> None:
         """Reload every data source from disk and repaint both tables, the header
@@ -2457,7 +2391,7 @@ class CheckApp(App):
             active = self.query_one("#tabs", TabbedContent).active
         except NoMatches:
             active = None
-        if active in ("favorites", "market", "verlauf", "magic"):
+        if active in ROW_TABS:
             self._select_held(active)
             self._adopt_cursor_row(active)
         self._refresh_market_detail()
@@ -2720,6 +2654,33 @@ class CheckApp(App):
         )
         os.replace(tmp, path)
 
+    def _save_favorite_notes(self) -> None:
+        """Persist the per-stem notes to the gitignored sidecar config/favorite-notes.json
+        (atomic). Kept out of favorites.json so a typed personal note is never tracked."""
+        atomic_write_json(
+            REPO_ROOT / "config" / "favorite-notes.json", self._favorite_notes
+        )
+
+    def _migrate_favorite_notes(self) -> None:
+        """One-time code migration: move any legacy inline `note` fields out of the
+        tracked favorites.json into the sidecar, then rewrite favorites.json without
+        them (all other keys byte-identical). Mirrors the compare_stems seed/persist
+        pattern. favorites.json currently carries no notes, so this is a no-op in
+        practice — but it must exist so an older tracked file can never leak a note."""
+        favs = self._favorites.get("favorites", [])
+        moved = False
+        for f in favs:
+            note = f.pop("note", None)  # drop from the tracked structure regardless
+            if note is None:
+                continue
+            moved = True
+            stem = f.get("stem")
+            if stem:  # keyed by stem; don't clobber a note already in the sidecar
+                self._favorite_notes.setdefault(stem, str(note))
+        if moved:
+            self._save_favorite_notes()
+            self._save_favorites()  # favorites.json rewritten sans note fields
+
     def _is_favorite_stem(self, stem: str | None) -> bool:
         if not stem:
             return False
@@ -2732,8 +2693,7 @@ class CheckApp(App):
         Row-cursor actions ([u]/[R]/[a]/[N]/[o]/[D]/[g]/[G]/[H]) must consult this so they
         never fire on that stale, now-invisible row — [D] rmtrees it, [g]/[H] pay for it."""
         try:
-            return self.query_one("#tabs", TabbedContent).active in (
-                "favorites", "market", "verlauf", "magic")
+            return self.query_one("#tabs", TabbedContent).active in ROW_TABS
         except NoMatches:
             return False
 
@@ -2803,24 +2763,23 @@ class CheckApp(App):
 
     def action_edit_note(self) -> None:
         """Edit the free-text note on the active favorite — per-favorite context the
-            dashboard shows, saved to the favorite's 'note' field in favorites.json.
-            Only favorites carry notes; on a non-favorite row it points to \\[u]."""
+            dashboard shows, saved to the gitignored config/favorite-notes.json sidecar
+            (keyed by stem), NOT the tracked favorites.json. Only favorites carry notes;
+            on a non-favorite row it points to \\[u]."""
         ident = self._active_identity()
         if ident is None:
             self.notify("Erst einen Favoriten wählen (Pfeile / Klick).",
                         severity="warning")
             return
         insurer, product, stem = ident
-
-        def matches(f: dict) -> bool:
-            if stem and f.get("stem"):
-                return f.get("stem") == stem
-            return f.get("insurer") == insurer and f.get("product") == product
-
-        fav = next(
-            (f for f in self._favorites.get("favorites", []) if matches(f)), None
-        )
-        if fav is None:
+        if not stem:
+            self.notify(
+                "Notiz braucht einen kanonischen stem (Tarif ohne Manifest-Eintrag).",
+                severity="warning",
+                timeout=6,
+            )
+            return
+        if not self._is_favorite_stem(stem):
             self.notify(
                 f"{_esc(insurer)} {_esc(product)} ist kein Favorit — erst \\[u] hinzufügen.",
                 severity="warning",
@@ -2833,10 +2792,10 @@ class CheckApp(App):
                 return  # cancelled
             note = note.strip()
             if note:
-                fav["note"] = note
+                self._favorite_notes[stem] = note
             else:
-                fav.pop("note", None)  # empty text clears the note
-            self._save_favorites()
+                self._favorite_notes.pop(stem, None)  # empty text clears the note
+            self._save_favorite_notes()
             self.notify(
                 ("Notiz gespeichert" if note else "Notiz entfernt")
                 + f": {_esc(insurer)} {_esc(product)}",
@@ -2845,7 +2804,8 @@ class CheckApp(App):
             self._reload_all()
 
         self.push_screen(
-            NoteEditScreen(f"{insurer} {product}", fav.get("note", "")), _save
+            NoteEditScreen(f"{insurer} {product}", self._favorite_notes.get(stem, "")),
+            _save,
         )
 
     def action_set_reference(self) -> None:
@@ -3240,15 +3200,10 @@ class CheckApp(App):
             active = self.query_one("#tabs", TabbedContent).active
         except NoMatches:
             return None
-        if active == "favorites":
-            return "#fav-detail", "#fav-detail-content"
-        if active == "market":
-            return "#detail-panel", "#detail-content"
-        if active == "verlauf":
-            return "#verlauf-detail", "#verlauf-detail-content"
-        if active == "magic":
-            return "#magic-detail", "#magic-detail-content"
-        return None
+        spec = TAB_SPECS.get(active)
+        if spec is None or spec.band_id is None:
+            return None
+        return spec.band_id, spec.content_id
 
     def _render_active_into(self, ids: tuple[str, str]) -> None:
         """Render the current active row/favorite into a band's Static."""

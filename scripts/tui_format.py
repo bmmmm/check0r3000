@@ -8,8 +8,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from _modules import MODULE_LABELS  # stdlib-only leaf: canonical Baustein keys/labels
+
 if TYPE_CHECKING:  # annotations only; never imported at runtime (keeps this leaf
-    from tui_data import SnapshotRow  # module Textual-free and data-model-free)
+    from tui_data import DetailRecord, SnapshotRow  # Textual-free, data-model-free)
 
 
 # Data-availability status, from "we only read the listing" to "fully analyzed".
@@ -126,6 +128,17 @@ def _esc(s) -> str:
     if s is None:
         return ""
     return str(s).replace("[", r"\[")
+
+
+def link_url(url) -> str:
+    """Sanitize a URL for use inside a ``[link="{url}"]`` markup attribute. A literal
+    '"' would close the attribute early and a '[' / ']' would be parsed as Textual
+    markup — a manifest doc URL that carries any of them would break the tag (or its
+    surrounding cell). Percent-encode exactly those three (all valid URL escapes),
+    leaving existing %-escapes untouched. Tolerates non-string input (stringified)."""
+    if not url:
+        return ""
+    return (str(url).replace('"', "%22").replace("[", "%5B").replace("]", "%5D"))
 
 
 def _pad_cell(plain: str, width: int, color: str | None = None) -> str:
@@ -362,3 +375,154 @@ def benchmark_markup(meta: dict, groups: list) -> str:
             )
         out.append("")
     return "\n".join(out)
+
+
+# ---------------------------------------------------------------------------
+# Detail-band / Verlauf row rendering — pure (self-free) formatters moved out of
+# CheckApp so the detail markup lives with the other formatters, not the App.
+# ---------------------------------------------------------------------------
+
+def _module_badge(mod: dict[str, Any]) -> str:
+    """Full coloured badge for one module in the detail band (vs _module_cell, which
+    returns a padded (plain, colour) pair for the aligned Vergleich matrix)."""
+    if not mod.get("included"):
+        return "[dim]—[/dim]"
+    level = mod.get("level")
+    if level == "Premium":
+        return "[bright_green]★★★ Premium[/bright_green]"
+    if level == "Komfort":
+        return "[yellow]★★ Komfort[/yellow]"
+    if level == "Basis":
+        return "[white]★ Basis[/white]"
+    return "[cyan]✓[/cyan]"
+
+
+def record_body_lines(detail: "DetailRecord") -> list[str]:
+    """Modules → coverage → premium → benefits → exclusions → highlights, as markup
+    lines. Shared by the Market detail band and the Favorites band (when a record
+    exists). Duck-typed on the DetailRecord shape — no data-model import at runtime."""
+    lines: list[str] = []
+
+    # Modules
+    lines.append("[bold underline]Module[/bold underline]")
+    for mod_key, label in MODULE_LABELS.items():
+        mod = detail.modules.get(mod_key, {})
+        included = mod.get("included", False)
+        badge_str = _module_badge(mod)
+        note_str = mod.get("note") or ""
+        lines.append(f"  {label:<22} {badge_str}")
+        if included and note_str:
+            lines.append(f"    [dim]{_esc(note_str)}[/dim]")
+    lines.append("")
+
+    # Coverage — every value is model-emitted free text, so escape '[' (a
+    # literal bracket would otherwise be eaten by / break Rich markup).
+    cov = detail.coverage
+    if cov:
+        lines.append("[bold underline]Deckung[/bold underline]")
+        if cov.get("versicherungssumme"):
+            lines.append(f"  Versicherungssumme:  {_esc(str(cov['versicherungssumme']))}")
+        if cov.get("selbstbeteiligung"):
+            lines.append(f"  Selbstbeteiligung:   {_esc(str(cov['selbstbeteiligung']))}")
+        if cov.get("wartezeit_monate") is not None:
+            lines.append(f"  Wartezeit:           {_esc(cov['wartezeit_monate'])} Monate")
+        if cov.get("wartezeit_ausnahmen"):
+            lines.append("  Wartezeit-Ausnahmen:")
+            wa = cov["wartezeit_ausnahmen"]
+            for ex in (wa if isinstance(wa, list) else [wa]):
+                lines.append(f"    • {_esc(str(ex))}")
+        if cov.get("geltungsbereich"):
+            lines.append(f"  Geltungsbereich:     {_esc(str(cov['geltungsbereich']))}")
+        if cov.get("vertragslaufzeit"):
+            lines.append(f"  Vertragslaufzeit:    {_esc(str(cov['vertragslaufzeit']))}")
+        lines.append("")
+
+    # Premium
+    if detail.beitrag:
+        lines.append("[bold underline]Beitrag[/bold underline]")
+        m = detail.beitrag.get("monatlich_eur")
+        y = detail.beitrag.get("jaehrlich_eur")
+        if m is not None:
+            lines.append(f"  [bright_green]€ {_fmt_eur(m)} / Monat[/bright_green]")
+        if y is not None:
+            lines.append(f"  € {_fmt_eur(y)} / Jahr")
+        if detail.beitrag.get("quelle"):
+            lines.append(f"  Quelle: {_esc(str(detail.beitrag['quelle']))}")
+        lines.append("")
+
+    # Leistungen
+    if detail.leistungen:
+        lines.append("[bold underline]Leistungen[/bold underline]")
+        for item in detail.leistungen:
+            lines.append(f"  [green]✓[/green] {_esc(item)}")
+        lines.append("")
+
+    # Ausschlüsse
+    if detail.ausschluesse:
+        lines.append("[bold underline]Ausschlüsse[/bold underline]")
+        for item in detail.ausschluesse:
+            lines.append(f"  [red]✗[/red] {_esc(item)}")
+        lines.append("")
+
+    # Besonderheiten
+    if detail.besonderheiten:
+        lines.append("[bold underline]Besonderheiten[/bold underline]")
+        for item in detail.besonderheiten:
+            lines.append(f"  [yellow]★[/yellow] {_esc(item)}")
+
+    return lines
+
+
+def price_delta(
+    price: float | None, ref_price: float | None
+) -> tuple[float, float, str, str] | None:
+    """(delta, pct, colour, sign) of a premium vs a reference, or None when either
+    side is missing. Shared by the Δ-cell and the favorite pricing block. pct is 0.0
+    for a zero reference base (the ratio is undefined; callers render just the €
+    delta). Callers apply their own ±0 neutral-band rounding on the returned delta."""
+    if price is None or ref_price is None:
+        return None
+    d = price - ref_price
+    pct = d / ref_price * 100 if ref_price else 0.0
+    colour = "bright_green" if d < 0 else "bright_red"
+    sign = "" if d < 0 else "+"
+    return d, pct, colour, sign
+
+
+def verlauf_row_cells(r: dict) -> tuple[str, str, str, str, str, str, str, str, str]:
+    """The nine Verlauf DataTable cells for one joined old/new snapshot row."""
+    pos_str = str(r["new_position"]) if r["new_position"] is not None else "—"
+    old_p = f"{r['old_price']:.2f}" if r["old_price"] is not None else "—"
+    new_p = f"{r['new_price']:.2f}" if r["new_price"] is not None else "—"
+    dp = r["delta_price"]
+    if dp is not None and dp != 0.0:
+        sign = "+" if dp > 0 else ""
+        col = "bright_red" if dp > 0 else "bright_green"
+        delta_str = f"[{col}]{sign}{dp:.2f}[/{col}]"
+        # Only None is a missing base; a real 0.00 old price makes the ratio
+        # undefined (∞), so show the € delta without a bogus 0.0% (mirrors
+        # snapshot._price_or_worst: 0.0 is a real value, not "missing").
+        old_base = r["old_price"]
+        if old_base is not None and old_base != 0.0:
+            pct = dp / old_base * 100
+            pct_str = f"[{col}]{sign}{pct:.1f}%[/{col}]"
+        else:
+            pct_str = f"[{col}]—[/{col}]"
+    elif r["is_new"]:
+        delta_str = "[bright_cyan]neu[/bright_cyan]"
+        pct_str = "[bright_cyan]—[/bright_cyan]"
+    elif r["is_removed"]:
+        delta_str = "[dim]weggef.[/dim]"
+        pct_str = "[dim]—[/dim]"
+    else:
+        delta_str = "[dim]—[/dim]"
+        pct_str = "[dim]—[/dim]"
+    dpos = r["delta_pos"]
+    if dpos is not None and dpos != 0:
+        dp_sign = "+" if dpos > 0 else ""
+        dp_col = "bright_red" if dpos > 0 else "bright_green"
+        rank_str = f"[{dp_col}]{dp_sign}{dpos}[/{dp_col}]"
+    else:
+        rank_str = "[dim]—[/dim]"
+    return (pos_str, _esc(r["insurer"]), _esc(r["product"][:38]), _esc(r["sb"]),
+            old_p, new_p, delta_str, pct_str, rank_str)

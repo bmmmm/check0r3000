@@ -21,6 +21,10 @@ data/offers/*
 # profile with your birthdate + zipcode stays out of git.
 config/check24-profile.json
 
+# --- Favorite notes: free-text typed via [N] (personal, not shareable) ---
+# favorites.json stays PII-free (stem/tag/SB only); typed notes live in this sidecar.
+config/favorite-notes.json
+
 # --- Local scratch ---
 tmp/
 *.log

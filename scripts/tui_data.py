@@ -16,6 +16,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+# Sibling leaves (stdlib-only, no Textual): the coverage taxonomy is lru_cached and
+# must be invalidated on reload, and _jsonio carries the shared JSON read helper.
+import coverage_taxonomy
+from _jsonio import load_json_or
+
 # .resolve() so the repo root is found even when the launcher is reached through
 # a symlink (e.g. ~/.local/bin/check0r3000 -> scripts/tui.py); tui_data.py itself
 # is always imported by its real path, so __file__ here is scripts/tui_data.py.
@@ -362,6 +367,19 @@ def load_favorites() -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def load_favorite_notes() -> dict[str, str]:
+    """Load per-stem favorite notes from the gitignored sidecar
+    config/favorite-notes.json, or {}.
+
+    Notes are free text a user types via [N] — personal, not shareable — so they
+    live OUT of the tracked (stem/tag/SB-only, PII-free) favorites.json. Keyed by the
+    canonical tariff stem, merged over the favorites at render time."""
+    data = load_json_or(REPO_ROOT / "config" / "favorite-notes.json", {})
+    if not isinstance(data, dict):
+        return {}
+    return {str(k): str(v) for k, v in data.items() if v}
+
+
 def load_doc_index() -> dict[str, list[dict]]:
     """Map a tariff stem → its persisted source-document descriptors (from the
     manifest), so the Favorites view can show which AVB/PIB URLs we have on file."""
@@ -434,6 +452,10 @@ def reset_doc_cache() -> None:
     global _DOC_BY_TARIFF_CACHE
     _DOC_BY_TARIFF_CACHE = None
     _SNAPSHOT_CACHE.clear()
+    # The coverage taxonomy is lru_cached; drop it too so an edit to
+    # config/coverage_taxonomy.json mid-session takes effect on the next reload
+    # instead of staying invisible until an app restart.
+    coverage_taxonomy.load_taxonomy.cache_clear()
 
 
 def resolve_stem(insurer: str, product: str) -> str | None:
@@ -674,7 +696,18 @@ def stream_subprocess(
 
     tail: deque[str] = deque(maxlen=tail_n)
     timed_out = threading.Event()
-    timer = threading.Timer(timeout, lambda: (timed_out.set(), proc.kill()))
+
+    def _kill_on_timeout() -> None:
+        # Only flag a timeout if the child is STILL running when the timer fires.
+        # The timer can fire in the hairline window between proc.wait() returning
+        # and timer.cancel() below; a process that finished in time must not be
+        # reported as timed out. poll() is None iff the child is still alive, so
+        # the kill (and the flag) happen only when the timer actually ends it.
+        if proc.poll() is None:
+            timed_out.set()
+            proc.kill()
+
+    timer = threading.Timer(timeout, _kill_on_timeout)
     timer.start()
     last_push = 0.0
     logf = None

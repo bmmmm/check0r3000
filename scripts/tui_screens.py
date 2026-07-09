@@ -37,7 +37,7 @@ from textual.widgets import (  # noqa: E402
 from textual.widgets.option_list import Option  # noqa: E402
 
 from tui_data import _DOCTYPE_SHORT  # noqa: E402
-from tui_format import _esc  # noqa: E402
+from tui_format import _esc, link_url  # noqa: E402
 
 
 class ConfirmFetchScreen(ModalScreen[bool]):
@@ -484,7 +484,7 @@ class OpenSourceScreen(ModalScreen[str | None]):
                 doc_url = dd.get("url") or ""
                 if doc_url:
                     lines.append(
-                        f'  [cyan]{lbl:<6}[/cyan] [link="{_esc(doc_url)}"]{fname}[/link]'
+                        f'  [cyan]{lbl:<6}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]'
                     )
                 else:
                     lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
