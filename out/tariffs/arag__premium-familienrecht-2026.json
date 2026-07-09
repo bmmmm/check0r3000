@@ -1,271 +1,4 @@
 {
-  "versicherer": {
-    "name": "ARAG SE",
-    "kontakt": {
-      "telefon": "0211 98 700 700",
-      "fax": "0211 963 2850",
-      "email": "service@ARAG.de",
-      "adresse": "ARAG-Platz 1, 40472 Düsseldorf"
-    },
-    "datenschutzbeauftragter": "Datenschutz@ARAG.de"
-  },
-  "produkt": {
-    "name": "Aktiv-Rechtsschutz 2026",
-    "stand": "2.2022",
-    "produkttyp": "Rechtsschutzversicherung"
-  },
-  "tarifvarianten": [
-    {
-      "name": "Aktiv-Rechtsschutz Komfort",
-      "paragraph": "§ 26 ARB",
-      "zielgruppe": "Privatpersonen"
-    },
-    {
-      "name": "Aktiv-Rechtsschutz Kompakt",
-      "paragraph": "§ 26 b ARB",
-      "zielgruppe": "Privatpersonen"
-    },
-    {
-      "name": "Aktiv-Rechtsschutz Premium",
-      "paragraph": "§ 26 p ARB",
-      "zielgruppe": "Privatpersonen"
-    },
-    {
-      "name": "Aktiv-Rechtsschutz Basis/Komfort/Premium für Selbstständige",
-      "paragraph": "§ 28, § 28 b, § 28 p ARB",
-      "zielgruppe": "Selbstständige"
-    },
-    {
-      "name": "Aktiv-Rechtsschutz Verkehr",
-      "paragraph": "§ 21, § 21 b, § 21 p / § 23, § 23 b, § 23 p ARB",
-      "zielgruppe": "Private/Selbstständige"
-    },
-    {
-      "name": "Aktiv-Rechtsschutz Immobilie",
-      "paragraph": "§ 29, § 29 b, § 29 p ARB",
-      "zielgruppe": "Immobilienbesitzer/Mieter"
-    },
-    {
-      "name": "web@ktiv",
-      "varianten": [
-        "Basis",
-        "Komfort",
-        "Premium"
-      ],
-      "fokus": "Internet-Risiken"
-    }
-  ],
-  "leistungsarten": [
-    {
-      "id": "schadensersatz",
-      "name": "Schadenersatz-Rechtsschutz",
-      "beschreibung": "Durchsetzung von Schadenersatzansprüchen"
-    },
-    {
-      "id": "arbeitsrecht",
-      "name": "Arbeits-Rechtsschutz",
-      "beschreibung": "Wahrnehmung rechtlicher Interessen aus Arbeitsverhältnissen"
-    },
-    {
-      "id": "immobilien",
-      "name": "Wohnungs- und Grundstücks-Rechtsschutz",
-      "beschreibung": "Streitigkeiten bei Miet-/Pachtverhältnissen und Grundstücken"
-    },
-    {
-      "id": "vertragsrecht",
-      "name": "Rechtsschutz im Vertrags- und Sachenrecht",
-      "beschreibung": "Wahrnehmung rechtlicher Interessen aus privatrechtlichen Schuldverhältnissen"
-    },
-    {
-      "id": "steuer",
-      "name": "Steuer-Rechtsschutz",
-      "beschreibung": "Wahrnehmung rechtlicher Interessen in Steuer- und Abgabenfragen"
-    },
-    {
-      "id": "sozial",
-      "name": "Sozial-Rechtsschutz",
-      "beschreibung": "Wahrnehmung rechtlicher Interessen vor Sozialgerichten"
-    },
-    {
-      "id": "verkehr",
-      "name": "Verwaltungs-Rechtsschutz (Verkehrssachen)",
-      "beschreibung": "Verkehrsrechtliche Angelegenheiten"
-    },
-    {
-      "id": "straf",
-      "name": "Straf-Rechtsschutz",
-      "beschreibung": "Verteidigung bei Vorwurf einer Straftat"
-    },
-    {
-      "id": "ordnungswidrig",
-      "name": "Ordnungswidrigkeiten-Rechtsschutz",
-      "beschreibung": "Verteidigung bei Ordnungswidrigkeitsverstößen"
-    },
-    {
-      "id": "beratung_familie",
-      "name": "Beratungs-Rechtsschutz im Familien-, Lebenspartnerschafts- und Erbrecht",
-      "versicherungssumme_eur": 250
-    },
-    {
-      "id": "ehe",
-      "name": "Rechtsschutz in Ehesachen",
-      "versicherungssumme_eur": 30000
-    },
-    {
-      "id": "unterhalts",
-      "name": "Rechtsschutz in Unterhaltssachen",
-      "versicherungssumme_eur": 30000,
-      "wartezeit_monate": 12
-    },
-    {
-      "id": "opfer",
-      "name": "Opfer-Rechtsschutz",
-      "beschreibung": "Als Nebenkläger in Strafverfahren"
-    },
-    {
-      "id": "daten",
-      "name": "Daten-Rechtsschutz vor Gerichten",
-      "beschreibung": "Abwehr von Datenschutz-Ansprüchen"
-    }
-  ],
-  "versicherungssummen": {
-    "europa": "unbegrenzt",
-    "kaution_europa": {
-      "basis_komfort": "200.000 EUR",
-      "premium": "unbegrenzt"
-    },
-    "weltweit_1_jahr": {
-      "basis_komfort": "200.000 EUR",
-      "premium": "unbegrenzt"
-    },
-    "ehe_unterhalts": 30000,
-    "mediation_je": 3000,
-    "mediation_jahr": 6000
-  },
-  "wartezeiten": {
-    "standard_monate": 0,
-    "arbeitsrecht": 3,
-    "vertragsrecht": 3,
-    "steuer": 3,
-    "sozial": 3,
-    "immobilien": 3,
-    "ehesachen": 36,
-    "unterhaltssachen": 12,
-    "erbrecht": 12
-  },
-  "selbstbeteiligung": {
-    "standard": "wählbar",
-    "beispiele": [
-      "0 EUR",
-      "150 EUR",
-      "300 EUR"
-    ],
-    "aufnahme_in_tarif": "In Komfort/Premium Tarife zumindest bei Beratung entfallend"
-  },
-  "geltungsbereich": {
-    "inland": "Deutschland",
-    "europa": [
-      "EU-Länder",
-      "Anliegerstaaten des Mittelmeers",
-      "Kanarische Inseln",
-      "Madeira",
-      "Azoren"
-    ],
-    "weltweit": "Bei Auslandsaufenthalt bis 12 Monate Dauer",
-    "ausnahmen": [
-      "Steuer-Rechtsschutz: nur deutsche Gerichte",
-      "Sozial-Rechtsschutz: nur deutsche Sozialgerichte",
-      "Ehe-/Unterhaltssachen: nur deutsches Familiengericht"
-    ]
-  },
-  "leistungen_beispiele": [
-    "Rechtsanwaltsgebühren",
-    "Gerichtskosten",
-    "Sachverständigengebühren",
-    "Schiedsverfahrensgebühren",
-    "Mediationskosten",
-    "Dolmetscher",
-    "Strafkaution (als Darlehen)",
-    "Übersetzungen"
-  ],
-  "ausschlüsse": [
-    "Baufinanzierung",
-    "Patent-/Markenrecht",
-    "Spiel-/Wettverträge",
-    "Gewinnzusagen",
-    "Rassistische/extremistische Inhalte",
-    "Verbrechen (Straf-Rechtsschutz)",
-    "Versicherte untereinander (Ehe/Unterhalts)"
-  ],
-  "zusatzprodukte": [
-    {
-      "name": "web@ktiv Basis/Komfort/Premium",
-      "fokus": "Internet-Risiken und E-Reputation"
-    },
-    {
-      "name": "Erweiterter Straf-Rechtsschutz",
-      "beschreibung": "Für Beruf und privates Engagement"
-    },
-    {
-      "name": "ARAG Fahrzeug-Schutzbrief",
-      "fokus": "Pannenhilfe und Assistance"
-    },
-    {
-      "name": "ARAG Top-Schutzbrief",
-      "fokus": "Erweiterte Reiseleistungen"
-    },
-    {
-      "name": "ARAG JuraCheck®",
-      "fokus": "Telefonische Rechtsberatung und Vertragsprüfung"
-    },
-    {
-      "name": "ARAG Mietausfallschutz",
-      "fokus": "Versicherung gegen Mietverluste"
-    }
-  ],
-  "vertragskonditionen": {
-    "laufzeit_optionen": [
-      "1 Jahr",
-      "3 Jahre"
-    ],
-    "verlaengerung": "Automatisch um 1 Jahr, bei Kündigung mit 3 Monaten Vorlauf",
-    "kuendigung": {
-      "zum_ablauf_vereinbarter_laufzeit": "3 Monate vor Ablauf",
-      "vorzeitig": "Bei 2+ Fällen in 12 Monaten möglich"
-    },
-    "beitragszahlung": [
-      "Monatlich",
-      "Vierteljährlich",
-      "Halbjährlich",
-      "Jährlich"
-    ]
-  },
-  "versicherte_personen": {
-    "hauptversicherter": "Der Versicherungsnehmer",
-    "mitversicherte": [
-      "Ehegatten/Lebenspartner",
-      "Minderjährige Kinder",
-      "Unverheiratete volljährige Kinder (bis Berufseintritt)",
-      "Im Haushalt lebende Verwandte (angemeldet)"
-    ]
-  },
-  "automatisierte_entscheidungen": {
-    "bei_antragsstellung": [
-      "Vertragszustandekommen",
-      "Risikoausschlüsse",
-      "Prämienberechnung"
-    ],
-    "bei_leistungspruefung": [
-      "Leistungspflicht-Entscheidung",
-      "Fallbewertung"
-    ],
-    "recht_auf_manueller_uebergruefung": true
-  },
-  "datenschutz": {
-    "kontakt": "Datenschutz@ARAG.de",
-    "aufsichtsbehoerde": "Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen",
-    "speicherung": "Bis Verjährung (3-30 Jahre), gesetzliche Aufbewahrungspflichten bis 10 Jahre"
-  },
   "leistungen": [
     "JuraCheck® mit JuraTel® Beratung",
     "Mediation bis 6.000 € jährlich",
@@ -282,7 +15,21 @@
     "Online-Forderungsmanagement",
     "Dokumenten-Center und Anwaltsempfehlung",
     "Verzicht auf Selbstbeteiligung bei Erstberatung",
-    "Strafkaution als zinsenloses Darlehen"
+    "Strafkaution als zinsenloses Darlehen",
+    "Schadenersatz-Rechtsschutz",
+    "Arbeits-Rechtsschutz",
+    "Wohnungs- und Grundstücks-Rechtsschutz",
+    "Rechtsschutz im Vertrags- und Sachenrecht",
+    "Steuer-Rechtsschutz",
+    "Sozial-Rechtsschutz",
+    "Verwaltungs-Rechtsschutz (Verkehrssachen)",
+    "Straf-Rechtsschutz",
+    "Ordnungswidrigkeiten-Rechtsschutz",
+    "Beratungs-Rechtsschutz im Familien-, Lebenspartnerschafts- und Erbrecht",
+    "Rechtsschutz in Ehesachen",
+    "Rechtsschutz in Unterhaltssachen",
+    "Opfer-Rechtsschutz",
+    "Daten-Rechtsschutz vor Gerichten"
   ],
   "ausschluesse": [
     "Baufinanzierung",
@@ -298,7 +45,13 @@
     "Spiel- und Wettverträge",
     "Ansprüche zwischen Versicherten untereinander",
     "Familienrecht (Scheidung, Unterhalt) mit 1-3 Jahre Wartezeit",
-    "Manche Verwaltungsangelegenheiten bis 3 Monate Wartezeit"
+    "Manche Verwaltungsangelegenheiten bis 3 Monate Wartezeit",
+    "Patent-/Markenrecht",
+    "Spiel-/Wettverträge",
+    "Gewinnzusagen",
+    "Rassistische/extremistische Inhalte",
+    "Verbrechen (Straf-Rechtsschutz)",
+    "Versicherte untereinander (Ehe/Unterhalts)"
   ],
   "_input_hash": "6c94c3c780546d25c51b6d6ac9953e48ec58eb20dc47ac755f620eb2a26094ed",
   "_model": "haiku",

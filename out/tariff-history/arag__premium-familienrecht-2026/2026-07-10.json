@@ -1,0 +1,128 @@
+{
+  "stand": "2026",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Schadenersatz, Vertrags- und Sachenrecht, Arbeit, Immobilien, Strafrecht, Ordnungswidrigkeiten, Opferrechtsschutz"
+    },
+    "beruf": {
+      "included": true,
+      "level": null,
+      "note": "Arbeits-Rechtsschutz mitversichert"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrssachen, Bußgelder, Park-/Halteverstöße"
+    },
+    "wohnen_immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Miet- und Pacht, Grundstücke"
+    },
+    "internet_web": {
+      "included": true,
+      "level": null,
+      "note": "web@ktiv optional buchbar"
+    },
+    "steuer": {
+      "included": true,
+      "level": null,
+      "note": "Steuer-Rechtsschutz vor deutschen Gerichten"
+    },
+    "sozialgericht": {
+      "included": true,
+      "level": null,
+      "note": "Sozial-Rechtsschutz, Widerspruchsverfahren"
+    },
+    "verwaltungsrecht": {
+      "included": true,
+      "level": null,
+      "note": "Verkehrs- und Nichtverkehrssachen"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt in Europa; begrenzt je nach Leistungsart",
+    "selbstbeteiligung": "vereinbart, typischerweise 300 EUR je Versicherungsfall entfallbar bei Erstberatung",
+    "wartezeit_monate": 3,
+    "wartezeit_ausnahmen": [
+      "Arbeits-Rechtsschutz (0 Monate)",
+      "Verkehrsrecht (0 Monate)",
+      "Mediation (0 Monate)",
+      "Familienrecht (0-36 Monate je Leistungsart)"
+    ],
+    "geltungsbereich": "Europa, Mittelmeer-Anliegerstaaten, Kanarische Inseln, Madeira, Azoren; weltweit bei bis zu einem Jahr Auslandsaufenthalt",
+    "vertragslaufzeit": "1 oder 3 Jahre, mit automatischer jährlicher Verlängerung"
+  },
+  "leistungen": [
+    "JuraCheck® mit JuraTel® Beratung",
+    "Mediation bis 6.000 € jährlich",
+    "Testamenterstellung Beratung",
+    "Webcheck Privatpersonen",
+    "Vertrags- und Arbeitszeugnisprüfung",
+    "Beratung Urheberrechtsverstöße Internet",
+    "Telefonische und schriftliche Rechtsberatung",
+    "Anwaltsgebühren und Gerichtskosten",
+    "ARAG JuraTel (telefonische Rechtsberatung auch im Ausland)",
+    "Mediation mit Sachverständigengutachten bis 3000 EUR/Jahr",
+    "Außergerichtliche Konfliktlösung",
+    "Mobiler Anwalt (Hausbesuch)",
+    "Online-Forderungsmanagement",
+    "Dokumenten-Center und Anwaltsempfehlung",
+    "Verzicht auf Selbstbeteiligung bei Erstberatung",
+    "Strafkaution als zinsenloses Darlehen",
+    "Schadenersatz-Rechtsschutz",
+    "Arbeits-Rechtsschutz",
+    "Wohnungs- und Grundstücks-Rechtsschutz",
+    "Rechtsschutz im Vertrags- und Sachenrecht",
+    "Steuer-Rechtsschutz",
+    "Sozial-Rechtsschutz",
+    "Verwaltungs-Rechtsschutz (Verkehrssachen)",
+    "Straf-Rechtsschutz",
+    "Ordnungswidrigkeiten-Rechtsschutz",
+    "Beratungs-Rechtsschutz im Familien-, Lebenspartnerschafts- und Erbrecht",
+    "Rechtsschutz in Ehesachen",
+    "Rechtsschutz in Unterhaltssachen",
+    "Opfer-Rechtsschutz",
+    "Daten-Rechtsschutz vor Gerichten"
+  ],
+  "ausschluesse": [
+    "Baufinanzierung",
+    "Patent- und Markenrecht",
+    "Spiel- oder Wettverträge",
+    "Geplante/ausgeübte Selbstständigkeit",
+    "Krieg, feindliche Handlungen, Streik, Erdbeben",
+    "Nuklear- und genetische Schäden",
+    "Bergbauschäden",
+    "Vorsätzlich herbeigeführte Streitigkeiten",
+    "Grundstückserwerb/-finanzierung",
+    "Patent-, Marken-, Urheberrecht",
+    "Spiel- und Wettverträge",
+    "Ansprüche zwischen Versicherten untereinander",
+    "Familienrecht (Scheidung, Unterhalt) mit 1-3 Jahre Wartezeit",
+    "Manche Verwaltungsangelegenheiten bis 3 Monate Wartezeit",
+    "Patent-/Markenrecht",
+    "Spiel-/Wettverträge",
+    "Gewinnzusagen",
+    "Rassistische/extremistische Inhalte",
+    "Verbrechen (Straf-Rechtsschutz)",
+    "Versicherte untereinander (Ehe/Unterhalts)"
+  ],
+  "besonderheiten": [
+    "Modular aufgebaute Tarifgestaltung (Basis, Komfort, Premium)",
+    "Verzicht auf Einrede der Vorvertraglichkeit nach 3 Jahren Versicherungsdauer",
+    "Bündelrabatte für Mehrfachversicherungen",
+    "Differenzdeckung möglich",
+    "Vorsorge-Rechtsschutz bei Risikoveränderungen",
+    "Update-Garantie für Leistungsverbesserungen ohne Mehrbeitrag",
+    "Vorversicherungs-Garantie beim Wechsel"
+  ],
+  "beitrag": null,
+  "insurer": "arag",
+  "tariff": "premium-familienrecht-2026",
+  "stem": "arag__premium-familienrecht-2026",
+  "_history_date": "2026-07-10",
+  "_content_sha256": "558a8fb154d403b2c58310002498cdb6d7ea89cbb81ab9e236d74e21d6729e8b",
+  "_supersedes": "2026-06-30"
+}
