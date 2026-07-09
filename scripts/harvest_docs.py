@@ -47,9 +47,7 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "scripts"
-MANIFEST = ROOT / "data" / "sources" / "check24-documents.json"
 SCRAPE_JS = SCRIPTS / "check24_scrape.js"
-HOST = "https://rechtsschutz.check24.de"
 
 # _slug must match tui_data's (it names data/raw/ and is how the TUI resolves a row to a
 # record); KIND_TO_DOCTYPE must match fetch_docs's canonical mapping so the manifest's
@@ -58,6 +56,7 @@ HOST = "https://rechtsschutz.check24.de"
 sys.path.insert(0, str(SCRIPTS))
 from tui_data import _slug  # noqa: E402
 from fetch_docs import KIND_TO_DOCTYPE  # noqa: E402
+from _manifest import MANIFEST, load_manifest  # noqa: E402  — single source of truth for the manifest
 
 READY_SELECTOR = ".result_box__content"          # present after SSR (list loaded at all)
 HYDRATION_SELECTOR = ".efeedback-button__count"   # present after Vue hydrates (soft wait)
@@ -409,23 +408,6 @@ async def harvest(url: str, args, existing_by_hash: dict, existing_by_stem: dict
         return rows, entries
 
 
-def load_manifest() -> dict:
-    if MANIFEST.exists():
-        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            sys.exit(f"{MANIFEST.relative_to(ROOT)} is not an object — expected "
-                     "{quelle, host, tariffs:[...]}.")
-        data.setdefault("tariffs", [])
-        return data
-    return {
-        "quelle": "check24 rsv vergleichsergebnis (all insurers) — harvest_docs.py",
-        "host": HOST,
-        "note": "Source-PDF URLs only (PDFs are third-party/copyright -> data/raw is "
-                "gitignored). fetch_docs.py downloads on demand.",
-        "tariffs": [],
-    }
-
-
 def merge(manifest: dict, entries: list[dict]) -> tuple[int, int]:
     """Merge harvested entries into the manifest, keyed by STEM (the tariff identity).
     An existing stem is refreshed in place (its docs/hash/position re-captured); a new
@@ -485,7 +467,7 @@ def main() -> int:
     args.select_pairs = _load_select_file(args.select_file) if args.select_file else None
 
     today = datetime.date.today().isoformat()
-    manifest = load_manifest()
+    manifest = load_manifest(create_if_missing=True)
     existing_by_hash = {t["hash"]: t for t in manifest["tariffs"] if t.get("hash")}
     existing_by_stem = {t["stem"]: t for t in manifest["tariffs"] if t.get("stem")}
 

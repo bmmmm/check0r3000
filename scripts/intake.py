@@ -17,11 +17,14 @@ Run:  uv run scripts/intake.py            # dry-run: show the sort plan
 from __future__ import annotations
 
 import argparse
+import difflib
 import re
 import shutil
 import sys
 from pathlib import Path
 from urllib.parse import unquote
+
+from _manifest import load_manifest
 
 ROOT = Path(__file__).resolve().parent.parent
 INBOX = ROOT / "data" / "inbox"
@@ -76,7 +79,17 @@ def is_pdf(p: Path) -> bool:
         return False
 
 
-def classify(pdf: Path) -> dict:
+def _closest_stems(stem: str, insurer_part: str, known_stems: set[str]) -> list[str]:
+    """Suggest existing manifest stems close to a freshly minted one: same-insurer stems
+    first (most likely a tariff-name typo or rename), else a fuzzy match over all known
+    stems — so the user can tell a genuinely new tariff from an orphaned rename."""
+    same_insurer = sorted(s for s in known_stems if s.startswith(f"{insurer_part}__"))
+    if same_insurer:
+        return same_insurer[:5]
+    return difflib.get_close_matches(stem, sorted(known_stems), n=3, cutoff=0.4)
+
+
+def classify(pdf: Path, known_stems: set[str] | None = None) -> dict:
     # URL-decode (%C2%B0 -> °) and unify spaces/underscores so filenames with
     # blanks, mixed separators or download-encoding all parse the same way.
     stem = re.sub(r"[ _]+", "_", unquote(pdf.stem)).strip("_")
@@ -116,15 +129,29 @@ def classify(pdf: Path) -> dict:
 
     warns = []
     if doctype is None:
-        warns.append("unbekannter Dokumenttyp (Prefix nicht erkannt)")
+        warns.append("unknown document type (prefix not recognized)")
     if doctype == "versicherungsschein":
-        warns.append("VERSICHERUNGSSCHEIN — kann persönliche Daten enthalten, prüfen!")
+        warns.append("VERSICHERUNGSSCHEIN — may contain personal data, review before committing!")
     if insurer_slug and insurer_kw not in KNOWN_INSURERS and tokens:
-        warns.append(f"Versicherer geraten ('{insurer_slug}') — ggf. KNOWN_INSURERS ergänzen")
+        warns.append(f"insurer guessed ('{insurer_slug}') — consider adding it to KNOWN_INSURERS")
 
-    target = RAW / (insurer_slug or "unbekannt") / tariff_slug / f"{doctype or 'unsortiert'}.pdf"
+    insurer_part = insurer_slug or "unbekannt"
+    target = RAW / insurer_part / tariff_slug / f"{doctype or 'unsortiert'}.pdf"
+    # Cross-check the minted stem against the doc-URL manifest: a hand-dropped PDF for a
+    # known tariff, misspelled or renamed, would otherwise mint an orphan stem that never
+    # joins the pipeline (out/tariffs, the TUI) without anyone noticing. known_stems=None
+    # (manifest unavailable) disables the check rather than failing intake outright.
+    stem = f"{insurer_part}__{tariff_slug}"
+    orphan_stem = known_stems is not None and stem not in known_stems
+    if orphan_stem:
+        suggestions = _closest_stems(stem, insurer_part, known_stems)
+        hint = f" — closest known stem(s): {', '.join(suggestions)}" if suggestions else ""
+        warns.append(f"orphan stem {stem!r}: not in data/sources/check24-documents.json"
+                     f"{hint} (rename to match, or add it via harvest_docs.py — not "
+                     f"auto-fixed, verify before it silently misses the pipeline)")
     return {"src": pdf, "doctype": doctype, "insurer": insurer_slug,
-            "tariff": tariff_slug, "target": target, "warns": warns}
+            "tariff": tariff_slug, "target": target, "stem": stem,
+            "orphan_stem": orphan_stem, "warns": warns}
 
 
 def import_files(paths: list[str], move: bool) -> int:
@@ -135,21 +162,21 @@ def import_files(paths: list[str], move: bool) -> int:
     for raw in paths:
         src = Path(raw).expanduser()
         if not src.is_file():
-            print(f"  ! nicht gefunden: {raw}", file=sys.stderr)
+            print(f"  ! not found: {raw}", file=sys.stderr)
             rc = 1
             continue
         if src.suffix.lower() != ".pdf":
-            print(f"  ! kein PDF, übersprungen: {src.name}", file=sys.stderr)
+            print(f"  ! not a PDF, skipped: {src.name}", file=sys.stderr)
             rc = 1
             continue
         if not is_pdf(src):
-            print(f"  ! kein gültiges PDF (leer/kein %PDF-Header), übersprungen: "
+            print(f"  ! not a valid PDF (empty or missing %PDF header), skipped: "
                   f"{src.name}", file=sys.stderr)
             rc = 1
             continue
         dest = INBOX / src.name  # keep original filename so classify() can parse it
         if dest.exists():
-            print(f"  ! existiert schon in der Inbox, übersprungen (kein Überschreiben): "
+            print(f"  ! already in the inbox, skipped (no overwrite): "
                   f"{src.name}", file=sys.stderr)
             rc = 1
             continue
@@ -161,49 +188,63 @@ def import_files(paths: list[str], move: bool) -> int:
     return rc
 
 
+def _load_known_stems() -> set[str] | None:
+    """Stems already tracked in the doc-URL manifest, for classify()'s orphan check.
+    A missing/malformed manifest must not block intake's core job (sorting PDFs), so
+    degrade to "check disabled" instead of aborting."""
+    try:
+        return {t.get("stem") for t in load_manifest()["tariffs"] if t.get("stem")}
+    except SystemExit as exc:
+        print(f"  ! manifest unavailable ({exc}) — orphan-stem check disabled",
+              file=sys.stderr)
+        return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="PDFs in data/inbox/ aufnehmen und nach "
-                    "data/raw/<versicherer>/<tarif>/<doctype>.pdf einsortieren.")
-    ap.add_argument("sources", nargs="*", metavar="PFAD",
-                    help="optionale Dateipfade (z.B. ~/Downloads/*.pdf), die in die Inbox "
-                         "kopiert werden, bevor sortiert wird")
+        description="Pick up PDFs from data/inbox/ and sort them into "
+                    "data/raw/<insurer>/<tariff>/<doctype>.pdf.")
+    ap.add_argument("sources", nargs="*", metavar="PATH",
+                    help="optional file paths (e.g. ~/Downloads/*.pdf) to copy into the "
+                         "inbox before sorting")
     ap.add_argument("--move", action="store_true",
-                    help="übergebene Dateien verschieben statt kopieren")
+                    help="move the given files instead of copying")
     ap.add_argument("--apply", action="store_true",
-                    help="Inbox wirklich einsortieren (default: Dry-Run)")
+                    help="actually sort the inbox (default: dry-run)")
     args = ap.parse_args()
 
     if args.sources:
-        print(f"Import — {len(args.sources)} Datei(en) in die Inbox:")
+        print(f"Import — {len(args.sources)} file(s) into the inbox:")
         if import_files(args.sources, args.move):
-            print("\nMindestens eine Datei konnte nicht importiert werden (s.o.).")
+            print("\nAt least one file could not be imported (see above).")
         print()
 
     INBOX.mkdir(parents=True, exist_ok=True)
     pdfs = sorted(INBOX.glob("*.pdf"))
     if not pdfs:
-        print(f"Inbox leer: lege PDFs in {INBOX.relative_to(ROOT)}/ ab und führe das Script erneut aus.")
+        print(f"Inbox empty: drop PDFs into {INBOX.relative_to(ROOT)}/ and run this script again.")
         return 0
 
-    plans = [classify(p) for p in pdfs]
+    known_stems = _load_known_stems()
+    plans = [classify(p, known_stems) for p in pdfs]
 
     # Detect target collisions (within this batch) and content / on-disk problems.
     seen: dict[Path, Path] = {}
     for p in plans:
         if not is_pdf(p["src"]):
-            p["warns"].append("kein gültiges PDF (leer/kein %PDF-Header)")
+            p["warns"].append("not a valid PDF (empty or missing %PDF header)")
         if p["target"] in seen:
-            p["warns"].append(f"KOLLISION mit {seen[p['target']].name}")
+            p["warns"].append(f"COLLISION with {seen[p['target']].name}")
         else:
             seen[p["target"]] = p["src"]
         # An already-sorted file at the target must not be silently overwritten:
         # shutil.move clobbers a destination FILE, destroying a non-regenerable PDF.
         if p["target"].exists():
-            p["warns"].append(f"ZIEL existiert bereits: {p['target'].relative_to(ROOT)}")
+            p["warns"].append(f"TARGET already exists: {p['target'].relative_to(ROOT)}")
 
-    blockers = ("unbekannter Dokumenttyp", "KOLLISION", "ZIEL existiert", "kein gültiges PDF")
-    print(f"{'DRY-RUN' if not args.apply else 'APPLY'} — {len(plans)} Datei(en):\n")
+    blockers = ("unknown document type", "COLLISION", "TARGET already exists",
+                "not a valid PDF")
+    print(f"{'DRY-RUN' if not args.apply else 'APPLY'} — {len(plans)} file(s):\n")
     rc = 0
     for p in plans:
         print(f"  {p['src'].name}")
@@ -212,7 +253,7 @@ def main() -> int:
             print(f"    ! {w}")
         if any(b in w for w in p["warns"] for b in blockers):
             rc = 1
-            print("    (übersprungen)" if args.apply else "")
+            print("    (skipped)" if args.apply else "")
             continue
         if args.apply:
             p["target"].parent.mkdir(parents=True, exist_ok=True)
@@ -221,7 +262,7 @@ def main() -> int:
         print()
 
     if not args.apply:
-        print("Plan ok? Dann:  uv run scripts/intake.py --apply")
+        print("Plan OK? Then:  uv run scripts/intake.py --apply")
     return rc
 
 

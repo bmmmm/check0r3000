@@ -31,10 +31,10 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from urllib.parse import urlsplit
-import json
+
+from _manifest import load_manifest
 
 ROOT = Path(__file__).resolve().parent.parent
-MANIFEST = ROOT / "data" / "sources" / "check24-documents.json"
 INBOX = ROOT / "data" / "inbox"
 RAW = ROOT / "data" / "raw"
 UA = "Mozilla/5.0 (check0r3000 fetch_docs; personal RSV comparison)"
@@ -49,34 +49,6 @@ KIND_TO_DOCTYPE = {
     "tariff_infos": "produktinfoblatt",
     "tariff_concatenated_additional_documents": "weitere_unterlagen",
 }
-
-
-def load_manifest() -> list[dict]:
-    if not MANIFEST.exists():
-        sys.exit(f"No manifest at {MANIFEST.relative_to(ROOT)} — run the browser harvest "
-                 f"first (scripts/check24_scrape.js -> check24Docs).")
-    data = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    if isinstance(data, list):
-        sys.exit(f"{MANIFEST.relative_to(ROOT)} is a bare list (raw check24Docs() output, "
-                 f"grouped by hash). Wrap it as {{\"tariffs\": [{{stem, insurer, tariff, "
-                 f"docs:[{{doctype, url}}]}}]}} — see data/offers/README.md.")
-    tariffs = data.get("tariffs", [])
-    # The manifest is hand-reshaped from the browser harvest, with no schema gate.
-    # Validate the shape once here so a typo fails with an actionable message instead
-    # of a mid-batch traceback (download/urlsplit assume docs is a list, url a string).
-    for t in tariffs:
-        if not isinstance(t, dict):
-            sys.exit(f"Malformed manifest: a tariff entry is not an object "
-                     f"({type(t).__name__}).")
-        docs = t.get("docs")
-        if docs is not None and not isinstance(docs, list):
-            sys.exit(f"Malformed manifest entry {t.get('stem')!r}: 'docs' must be a list.")
-        for doc in (docs or []):
-            if not isinstance(doc, dict) or not isinstance(doc.get("url", ""), str):
-                sys.exit(f"Malformed manifest entry {t.get('stem')!r}: each doc must be "
-                         f"{{doctype, url}} with a string url — fix "
-                         f"data/sources/check24-documents.json.")
-    return tariffs
 
 
 def select(tariffs: list[dict], stems: list[str], insurer: str | None) -> list[dict]:
@@ -291,7 +263,7 @@ def main() -> int:
     if args.into_raw:
         args.apply = True
 
-    tariffs = select(load_manifest(), args.stems, args.insurer)
+    tariffs = select(load_manifest()["tariffs"], args.stems, args.insurer)
     if not tariffs:
         print("Nothing selected.")
         return 0
