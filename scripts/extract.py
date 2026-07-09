@@ -22,10 +22,13 @@ Run:  python3 scripts/extract.py                  (all tariffs, cached)
       python3 scripts/extract.py --model haiku --filter   (trim oversized AVBs)
       python3 scripts/extract.py --model ollama:llama3.1:8b
       python3 scripts/extract.py --only arag__premium-2026 --repeat 3
+      python3 scripts/extract.py --model haiku --jobs 4   (parallel; mind rate limits,
+                                                             2-4 is a reasonable range)
 """
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -224,6 +227,115 @@ def merge_records(records: list[dict]) -> dict:
     return merged
 
 
+def _sig_for(docs: list[dict], repeat: int, model: str, filter_tag: str) -> str:
+    tag = f"|repeat={repeat}" if repeat > 1 else ""
+    return (PROMPT_VERSION + f"|model={model}|filter={filter_tag}{tag}|"
+            + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs))
+
+
+def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force: bool,
+                  repeat: int, filter_tag: str, schema_text: str,
+                  transform) -> tuple[list[tuple[bool, str]], bool]:
+    """Cache-check and (re)extract one tariff. Returns (lines, failed).
+
+    `lines` is the ordered (is_stderr, text) output this stem produced; buffering it
+    (instead of printing directly) keeps one stem's output contiguous when several
+    stems run concurrently across --jobs worker threads — the caller prints each
+    stem's lines as one block as soon as its future completes. `failed` marks a
+    stem where every run produced no usable record (rc=1 case)."""
+    stem = f"{slug(insurer)}__{slug(tariff)}"
+    lines: list[tuple[bool, str]] = []
+
+    def emit(text: str, err: bool = False) -> None:
+        lines.append((err, text))
+
+    docs = sorted(docs, key=lambda d: d["doctype"])
+    input_hash = hashlib.sha256(_sig_for(docs, repeat, model, filter_tag).encode()).hexdigest()
+    out_path = OUT / f"{stem}.json"
+
+    if out_path.exists() and not force:
+        try:
+            prev = json.loads(out_path.read_text(encoding="utf-8"))
+            if prev.get("_input_hash") == input_hash:
+                emit(f"  cached    {insurer} / {tariff}")
+                return lines, False
+            # Keep a stored record extracted at an equal-or-higher repeat over the
+            # same inputs — it is strictly better; a lower-repeat run must not clobber
+            # it. Reconstruct what its hash would have been at its own repeat to be
+            # sure the inputs (docs/model/filter/prompt) actually match.
+            prev_repeat = prev.get("_repeat") or 1
+            if prev_repeat >= repeat:
+                prev_hash = hashlib.sha256(
+                    _sig_for(docs, prev_repeat, model, filter_tag).encode()).hexdigest()
+                if prev.get("_input_hash") == prev_hash:
+                    emit(f"  cached    {insurer} / {tariff}  "
+                         f"(kept repeat={prev_repeat} >= {repeat})")
+                    return lines, False
+            # Curated records carry hand-verified patches (e.g. golden-pinned
+            # module.level, a corrected Selbstbeteiligung) that a re-extract would
+            # silently clobber. Only --force may override this guard.
+            if prev.get("_curated"):
+                emit(f"  SKIPPED   {insurer} / {tariff} ({stem}): record is curated "
+                     f"(_curated: true, carries hand-verified patches) — re-extracting "
+                     f"would overwrite them; pass --force to override.", err=True)
+                return lines, False
+        except Exception:
+            pass
+
+    payload = build_payload(schema_text, docs, ROOT, transform)
+
+    rep = f", repeat={repeat}" if repeat > 1 else ""
+    emit(f"  extract   {insurer} / {tariff}  ({len(payload)} chars, {model}{rep}) ...")
+    runs: list[dict] = []
+    last_err = None
+    for n in range(repeat):
+        rec, err = extract_once(model, payload)
+        if rec is not None:
+            runs.append(rec)
+        else:
+            last_err = err
+            emit(f"    run {n + 1}/{repeat} failed: {err}", err=True)
+    if not runs:
+        emit(f"    FAILED: {last_err or 'all runs failed'}", err=True)
+        return lines, True
+    record = merge_records(runs) if len(runs) > 1 else runs[0]
+
+    record["_input_hash"] = input_hash
+    record["_model"] = model
+    record["_filter"] = filter_tag
+    if repeat > 1:
+        record["_repeat"] = repeat
+        record["_repeat_ok"] = len(runs)
+    # Identity is known from the manifest — never let a model leave it null.
+    record["insurer"] = record.get("insurer") or insurer
+    record["tariff"] = record.get("tariff") or tariff
+    # Provenance is the pipeline's job: set the real hashes authoritatively,
+    # overwriting anything the model may have (wrongly) produced.
+    record["sources"] = [{"doctype": d["doctype"],
+                          "content_sha256": d["content_sha256"]} for d in docs]
+    empty = [k for k in ("modules", "coverage") if not record.get(k)]
+    if empty:
+        emit(f"    warn: {insurer}/{tariff}: model returned empty {empty}", err=True)
+    # Atomic write (tmp twin + os.replace): a crash — or a second pipeline run
+    # racing on the same record — must never leave truncated/interleaved JSON
+    # that load_all_details() would then silently drop. Each stem owns a distinct
+    # out_path, so concurrent workers never race on the same file.
+    tmp_out = out_path.with_suffix(".json.tmp")
+    tmp_out.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp_out, out_path)
+    emit(f"    -> {out_path.relative_to(ROOT)}")
+    if feature_history.archive_version(out_path.stem, record):
+        emit(f"    -> history archived ({out_path.stem})")
+
+    return lines, False
+
+
+def _flush(lines: list[tuple[bool, str]]) -> None:
+    """Print one stem's buffered lines as a contiguous block."""
+    for err, text in lines:
+        print(text, file=sys.stderr if err else sys.stdout)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true", help="ignore cache, re-extract all")
@@ -240,10 +352,18 @@ def main() -> int:
     ap.add_argument("--only", nargs="+", metavar="STEM", default=None,
                     help="restrict to these stems (insurer__tariff); useful with "
                          "--repeat to re-extract just a shortlist")
+    ap.add_argument("--jobs", type=int, default=1, metavar="N",
+                    help="extract this many tariffs concurrently via a bounded thread "
+                         "pool (default: 1, sequential — identical to today's "
+                         "behavior); mind provider rate limits, 2-4 is a reasonable "
+                         "range for most APIs")
     args = ap.parse_args()
 
     if args.repeat < 1:
         print("error: --repeat must be >= 1", file=sys.stderr)
+        return 2
+    if args.jobs < 1:
+        print("error: --jobs must be >= 1", file=sys.stderr)
         return 2
     only = set(args.only) if args.only else None
 
@@ -272,99 +392,48 @@ def main() -> int:
     # --repeat is part of the cache signature (a repeat=N record is keyed differently
     # from repeat=1). That means a plain repeat=1 run would otherwise see every
     # repeat>=2 record as a cache MISS and clobber it with a lower-recall re-extract
-    # (this bit a deep-scan run after a reconcile). The cache check below guards against
-    # that: a stored record at an equal-or-higher repeat over the same inputs is kept.
-    repeat_tag = f"|repeat={args.repeat}" if args.repeat > 1 else ""
-
-    def _sig_for(docs_, repeat_):
-        tag = f"|repeat={repeat_}" if repeat_ > 1 else ""
-        return (PROMPT_VERSION + f"|model={args.model}|filter={filter_tag}{tag}|"
-                + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs_))
+    # (this bit a deep-scan run after a reconcile). The cache check in _process_stem
+    # guards against that: a stored record at an equal-or-higher repeat over the same
+    # inputs is kept.
 
     rc = 0
     seen_stems: set[str] = set()
+    work: list[tuple[str, str, list[dict]]] = []
     for (insurer, tariff), docs in sorted(tariffs.items()):
         stem = f"{slug(insurer)}__{slug(tariff)}"
         seen_stems.add(stem)
         if only is not None and stem not in only:
             continue
-        docs = sorted(docs, key=lambda d: d["doctype"])
-        input_hash = hashlib.sha256(_sig_for(docs, args.repeat).encode()).hexdigest()
-        out_path = OUT / f"{stem}.json"
+        work.append((insurer, tariff, docs))
 
-        if out_path.exists() and not args.force:
-            try:
-                prev = json.loads(out_path.read_text(encoding="utf-8"))
-                if prev.get("_input_hash") == input_hash:
-                    print(f"  cached    {insurer} / {tariff}")
-                    continue
-                # Keep a stored record extracted at an equal-or-higher repeat over the
-                # same inputs — it is strictly better; a lower-repeat run must not clobber
-                # it. Reconstruct what its hash would have been at its own repeat to be
-                # sure the inputs (docs/model/filter/prompt) actually match.
-                prev_repeat = prev.get("_repeat") or 1
-                if prev_repeat >= args.repeat:
-                    prev_hash = hashlib.sha256(
-                        _sig_for(docs, prev_repeat).encode()).hexdigest()
-                    if prev.get("_input_hash") == prev_hash:
-                        print(f"  cached    {insurer} / {tariff}  "
-                              f"(kept repeat={prev_repeat} >= {args.repeat})")
-                        continue
-                # Curated records carry hand-verified patches (e.g. golden-pinned
-                # module.level, a corrected Selbstbeteiligung) that a re-extract would
-                # silently clobber. Only --force may override this guard.
-                if prev.get("_curated"):
-                    print(f"  SKIPPED   {insurer} / {tariff} ({stem}): record is curated "
-                          f"(_curated: true, carries hand-verified patches) — re-extracting "
-                          f"would overwrite them; pass --force to override.", file=sys.stderr)
-                    continue
-            except Exception:
-                pass
-
-        payload = build_payload(schema_text, docs, ROOT, transform)
-
-        rep = f", repeat={args.repeat}" if args.repeat > 1 else ""
-        print(f"  extract   {insurer} / {tariff}  ({len(payload)} chars, {args.model}{rep}) ...")
-        runs: list[dict] = []
-        last_err = None
-        for n in range(args.repeat):
-            rec, err = extract_once(args.model, payload)
-            if rec is not None:
-                runs.append(rec)
-            else:
-                last_err = err
-                print(f"    run {n + 1}/{args.repeat} failed: {err}", file=sys.stderr)
-        if not runs:
-            print(f"    FAILED: {last_err or 'all runs failed'}", file=sys.stderr)
-            rc = 1
-            continue
-        record = merge_records(runs) if len(runs) > 1 else runs[0]
-
-        record["_input_hash"] = input_hash
-        record["_model"] = args.model
-        record["_filter"] = filter_tag
-        if args.repeat > 1:
-            record["_repeat"] = args.repeat
-            record["_repeat_ok"] = len(runs)
-        # Identity is known from the manifest — never let a model leave it null.
-        record["insurer"] = record.get("insurer") or insurer
-        record["tariff"] = record.get("tariff") or tariff
-        # Provenance is the pipeline's job: set the real hashes authoritatively,
-        # overwriting anything the model may have (wrongly) produced.
-        record["sources"] = [{"doctype": d["doctype"],
-                              "content_sha256": d["content_sha256"]} for d in docs]
-        empty = [k for k in ("modules", "coverage") if not record.get(k)]
-        if empty:
-            print(f"    warn: {insurer}/{tariff}: model returned empty {empty}", file=sys.stderr)
-        # Atomic write (tmp twin + os.replace): a crash — or a second pipeline run
-        # racing on the same record — must never leave truncated/interleaved JSON
-        # that load_all_details() would then silently drop.
-        tmp_out = out_path.with_suffix(".json.tmp")
-        tmp_out.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
-        os.replace(tmp_out, out_path)
-        print(f"    -> {out_path.relative_to(ROOT)}")
-        if feature_history.archive_version(out_path.stem, record):
-            print(f"    -> history archived ({out_path.stem})")
+    if args.jobs <= 1:
+        # Sequential fast path: byte-for-byte identical to pre-parallelization behavior
+        # (same code as the worker, called in manifest order, output flushed immediately).
+        for insurer, tariff, docs in work:
+            lines, failed = _process_stem(insurer, tariff, docs, args.model, args.force,
+                                          args.repeat, filter_tag, schema_text, transform)
+            _flush(lines)
+            if failed:
+                rc = 1
+    else:
+        # Each stem owns a distinct out_path and does its own atomic write, so workers
+        # never race on shared state; only the buffered print lines are consumed here,
+        # in the (arbitrary) order futures complete.
+        ex = concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs)
+        futs = {ex.submit(_process_stem, insurer, tariff, docs, args.model, args.force,
+                          args.repeat, filter_tag, schema_text, transform)
+                for insurer, tariff, docs in work}
+        try:
+            for fut in concurrent.futures.as_completed(futs):
+                lines, failed = fut.result()
+                _flush(lines)
+                if failed:
+                    rc = 1
+        except KeyboardInterrupt:
+            ex.shutdown(wait=False, cancel_futures=True)
+            raise
+        else:
+            ex.shutdown(wait=True)
 
     if only is not None:
         missing = sorted(only - seen_stems)
