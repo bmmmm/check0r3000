@@ -244,8 +244,9 @@ def _norm_note(note: float | None) -> float:
 
 def _norm_bewertung(v: float | None) -> float:
     """Customer rating → [0,1]. 3.5 → 0.0, 4.5 → 1.0. The real snapshot clusters
-    3.8–4.2, so this lands ~0.3–0.7 — a deliberately light touch (weight 0.10). A
-    missing rating is neutral (0.5), not a penalty."""
+    3.8–4.2, so this lands ~0.3–0.7 — a deliberately light touch (default weight
+    0.05, see MagicWeights.bewertung). A missing rating is neutral (0.5), not a
+    penalty."""
     if v is None:
         return 0.5
     return _clamp((v - 3.5) / (4.5 - 3.5))
