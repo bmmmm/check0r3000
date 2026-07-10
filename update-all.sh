@@ -14,8 +14,11 @@
 #
 # Options (any order):
 #   ./update-all.sh                                   # full refresh, defaults
-#   ./update-all.sh --model haiku --filter --jobs 3   # cheap model, trimmed AVBs, parallel extract
+#   ./update-all.sh --model haiku --filter --repeat 3 --jobs 3   # matches current record provenance
 #   ./update-all.sh --no-scan                         # skip Playwright scan (sandbox-safe)
+# NOTE: match --model/--filter/--repeat to the existing records' provenance
+# (currently haiku --filter --repeat 3) — the extract cache signature includes
+# them, so a mismatch silently re-extracts EVERY tariff at cost.
 set -eu
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -30,12 +33,14 @@ fi
 MODEL_ARGS=""
 FILTER_ARGS=""
 JOBS_ARGS=""
+REPEAT_ARGS=""
 NO_SCAN=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --model) MODEL_ARGS="--model $2"; shift 2 ;;
     --filter) FILTER_ARGS="--filter"; shift ;;
     --jobs) JOBS_ARGS="--jobs $2"; shift 2 ;;
+    --repeat) REPEAT_ARGS="--repeat $2"; shift 2 ;;
     --no-scan) NO_SCAN=1; shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -63,4 +68,4 @@ fi
 
 echo "==> pipeline (ingest -> extract -> render -> regression)"
 # shellcheck disable=SC2086
-exec ./pipeline.sh $MODEL_ARGS $FILTER_ARGS $JOBS_ARGS
+exec ./pipeline.sh $MODEL_ARGS $FILTER_ARGS $JOBS_ARGS $REPEAT_ARGS
