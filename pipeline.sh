@@ -6,7 +6,7 @@
 #   ./pipeline.sh                          # CLI default model, no AVB filter
 #   ./pipeline.sh --model haiku --filter   # cheap model + trimmed AVBs (recommended)
 #   ./pipeline.sh --model ollama:llama3.1:8b   # local model via OpenAI-compatible API
-# --model is forwarded to extract + render; --filter only to extract.
+# --model is forwarded to extract + render; --filter and --jobs only to extract.
 # For stage-specific flags (--force, --no-llm) run the scripts directly.
 set -eu
 
@@ -15,10 +15,12 @@ cd "$ROOT"
 
 MODEL_ARGS=""
 FILTER_ARGS=""
+JOBS_ARGS=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --model) MODEL_ARGS="--model $2"; shift 2 ;;
     --filter) FILTER_ARGS="--filter"; shift ;;
+    --jobs) JOBS_ARGS="--jobs $2"; shift 2 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -31,7 +33,7 @@ echo "==> extract (structured facts via model)"
 # (per-tariff resilience) — the records that did succeed are already written, so
 # surface the failure loudly but don't abort the rest of the pipeline.
 # shellcheck disable=SC2086
-if uv run scripts/extract.py $MODEL_ARGS $FILTER_ARGS; then :; else
+if uv run scripts/extract.py $MODEL_ARGS $FILTER_ARGS $JOBS_ARGS; then :; else
   echo "WARNING: extract.py reported failed tariff(s) — see out/tariffs/ and the log above." >&2
 fi
 
