@@ -45,6 +45,7 @@ from tui_data import (  # noqa: E402
     load_favorite_notes,
     load_favorites,
     load_feature_diff,
+    load_market_stats,
     load_snapshot,
     match_favorite,
     reset_doc_cache,
@@ -60,6 +61,7 @@ from tui_format import (  # noqa: E402
     magic_score_cell,
     price_delta,
     record_body_lines,
+    sparkline,
     verlauf_row_cells,
     _bewertung_cell,
     _bewertung_color,
@@ -1641,6 +1643,30 @@ class CheckApp(App):
             return [r for r in all_rows if r["delta_price"] is not None and r["delta_price"] > 0]
         return all_rows
 
+    def _verlauf_market_line(self) -> str:
+        """Second header line: market aggregates across ALL snapshots (count +
+        median with sparkline). Empty string when fewer than 2 snapshots carry
+        stats, so the header renders unchanged on thin data."""
+        stats = load_market_stats()
+        if len(stats) < 2:
+            return ""
+        medians = [s["median"] for s in stats]
+        counts = [s["count"] for s in stats]
+        first, last = stats[0], stats[-1]
+        med_str = (
+            f"{first['median']:.2f} → {last['median']:.2f} €"
+            if first["median"] is not None and last["median"] is not None
+            else "—"
+        )
+        cnt_str = (
+            f"{counts[0]} → {counts[-1]}" if counts[0] != counts[-1] else f"{counts[-1]}"
+        )
+        return (
+            f"\n[dim]Markt über Zeit:[/dim]  {len(stats)} Snapshots"
+            f"  ·  Tarife {cnt_str} [cyan]{sparkline(counts)}[/cyan]"
+            f"  ·  Median {med_str} [cyan]{sparkline(medians)}[/cyan]"
+        )
+
     def _populate_verlauf(self) -> None:
         """Populate the Verlauf DataTable with price-drift data between two snapshots."""
         try:
@@ -1677,6 +1703,7 @@ class CheckApp(App):
             f"[bold]Verlauf:[/bold]  {old_date} → {new_date}"
             f"  ·  [dim]Filter: [bold]{filter_lbl}[/bold]  ·  [bold]m[/bold] wechseln"
             f"  ·  [bold]d[/bold] Details{snap_cycle}[/dim]"
+            + self._verlauf_market_line()
         )
 
         rows = self._verlauf_filter_rows(_build_verlauf_rows(old_snap, new_snap))
@@ -1694,6 +1721,32 @@ class CheckApp(App):
             self._verlauf_rows[row_key] = r
             self._verlauf_ident_to_rk.setdefault(r["key"], row_key)
 
+    def _render_price_series(self, stem: str) -> str:
+        """Preisverlauf section: the pinned-SB price series across all snapshots,
+        as a sparkline plus the (last 8) dated points. Empty string below 2
+        priced points — one price is a fact, not a Verlauf."""
+        ci = self._change_summary.get(stem)
+        if ci is None:
+            return ""
+        series = ci.price_series
+        prices = [e.get("price") for e in series]
+        priced = [p for p in prices if p is not None]
+        if len(priced) < 2:
+            return ""
+        lo, hi = min(priced), max(priced)
+        range_str = f"{lo:.2f}–{hi:.2f} €" if hi != lo else f"stabil {lo:.2f} €"
+        shown = series[-8:]
+        trunc = f"letzte {len(shown)} von {len(series)} · " if len(series) > len(shown) else ""
+        pts = []
+        for e in shown:
+            p = f"{e['price']:.2f}" if e.get("price") is not None else "—"
+            pts.append(f"[dim]{e['date'][5:]}[/dim] {p}")
+        return (
+            f"[bold underline]Preisverlauf[/bold underline]   "
+            f"[dim]{len(series)} Snapshots · {trunc}gepinnte SB-Variante · {range_str}[/dim]\n"
+            f"  [cyan]{sparkline(prices)}[/cyan]   " + "  ·  ".join(pts)
+        )
+
     def _render_verlauf_detail(self, row: SnapshotRow) -> str:
         """Market detail + feature-diff section for the Verlauf tab."""
         base = self._render_market_detail(row)
@@ -1706,7 +1759,11 @@ class CheckApp(App):
 
         old_state, new_state, diff = load_feature_diff(row.stem, old_date, new_date)
 
-        lines = [
+        lines = []
+        price_hist = self._render_price_series(row.stem)
+        if price_hist:
+            lines.extend(["", price_hist])
+        lines += [
             "",
             f"[bold underline]Leistungsänderungen[/bold underline]   "
             f"[dim]{old_date} → {new_date}[/dim]",

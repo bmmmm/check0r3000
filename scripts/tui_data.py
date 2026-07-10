@@ -97,6 +97,9 @@ class ChangeInfo:
     first_seen_date: str | None     # date of the baseline history entry
     feature_changelog: list         # [(old_date, new_date, diff_dict), ...]
     price_changelog: list           # [{date, old_price, new_price, delta}, ...]
+    # Full pinned-SB price series across all snapshots (change events or not):
+    # [{date, price|None}, ...] oldest→newest — feeds the Preisverlauf sparkline.
+    price_series: list = field(default_factory=list)
 
 
 @dataclass
@@ -588,8 +591,9 @@ def load_change_summary() -> dict[str, ChangeInfo]:
                 first_seen_date=ci.first_seen_date,
                 feature_changelog=ci.feature_changelog,
                 price_changelog=pcl,
+                price_series=series,
             )
-        elif pc > 0:
+        elif pc > 0 or len([e for e in series if e.get("price") is not None]) >= 2:
             result[stem] = ChangeInfo(
                 feature_changes=0,
                 price_changes=pc,
@@ -598,9 +602,26 @@ def load_change_summary() -> dict[str, ChangeInfo]:
                 first_seen_date=None,
                 feature_changelog=[],
                 price_changelog=pcl,
+                price_series=series,
             )
 
     return result
+
+
+def load_market_stats() -> list[dict]:
+    """Per-snapshot market aggregates from price_history.market_stats().
+
+    Same lazy-import + swallow-errors contract as load_change_summary: the
+    Verlauf header degrades to no stats line rather than crashing the TUI."""
+    import sys as _sys
+    _scripts = str(REPO_ROOT / "scripts")
+    if _scripts not in _sys.path:
+        _sys.path.insert(0, _scripts)
+    try:
+        import price_history as ph
+        return ph.market_stats()
+    except Exception:
+        return []
 
 
 # ---------------------------------------------------------------------------

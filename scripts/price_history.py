@@ -96,6 +96,43 @@ def load_all_price_history(resolve_stem_fn) -> dict[str, list[dict]]:
     return result
 
 
+def market_stats() -> list[dict]:
+    """Per-snapshot market aggregates, oldest→newest — the Verlauf time-series view.
+
+    Returns [{date, count, priced, min, median, max}, ...] over ALL rows of each
+    snapshot (no stem resolution: this is the whole scraped market, including
+    tariffs that never map to a manifest stem). Unreadable snapshots are skipped,
+    price-less rows count toward `count` but not the price aggregates.
+    """
+    import statistics
+
+    if not SNAPSHOT_DIR.is_dir():
+        return []
+    out: list[dict] = []
+    for snap_path in sorted(
+        p for p in SNAPSHOT_DIR.glob("*.json") if _DATE_RE.match(p.stem)
+    ):
+        try:
+            data = json.loads(snap_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        tariffs = data.get("tariffs", [])
+        prices = [
+            t["monatlich_eur"] for t in tariffs
+            if isinstance(t.get("monatlich_eur"), (int, float))
+            and not isinstance(t.get("monatlich_eur"), bool)
+        ]
+        out.append({
+            "date": snap_path.stem,
+            "count": len(tariffs),
+            "priced": len(prices),
+            "min": min(prices) if prices else None,
+            "median": statistics.median(prices) if prices else None,
+            "max": max(prices) if prices else None,
+        })
+    return out
+
+
 def price_changelog(series: list[dict]) -> list[dict]:
     """Return [{date, old_price, new_price, delta}, ...] for each price change event."""
     changes = []
@@ -128,7 +165,21 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser(description="Show snapshot-based price history per stem")
     ap.add_argument("--stem", help="Show only this stem")
+    ap.add_argument("--market", action="store_true",
+                    help="show per-snapshot market aggregates instead of per-stem series")
     args = ap.parse_args()
+
+    if args.market:
+        stats = market_stats()
+        if not stats:
+            print("No snapshots found in data/snapshots/.")
+            raise SystemExit(0)
+        print(f"{'date':<12} {'tariffs':>7} {'priced':>6} {'min':>8} {'median':>8} {'max':>8}")
+        for s in stats:
+            fmt = lambda v: f"{v:8.2f}" if v is not None else f"{'—':>8}"
+            print(f"{s['date']:<12} {s['count']:>7} {s['priced']:>6} "
+                  f"{fmt(s['min'])} {fmt(s['median'])} {fmt(s['max'])}")
+        raise SystemExit(0)
 
     history = load_all_price_history(resolve_stem)
     stems = [args.stem] if args.stem else sorted(history)

@@ -489,6 +489,33 @@ def price_delta(
     return d, pct, colour, sign
 
 
+_SPARK_CHARS = "▁▂▃▄▅▆▇█"
+
+
+def sparkline(values: list) -> str:
+    """Unicode block sparkline over a numeric series; None gaps render as '·'.
+
+    Scaled to the series' own min→max so relative movement is visible even for
+    small deltas. A flat (or single-point) series renders mid-height blocks —
+    "present but unchanged" — rather than collapsing to the bottom glyph."""
+    numeric = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+    if not numeric:
+        return ""
+    lo, hi = min(numeric), max(numeric)
+    span = hi - lo
+    mid = _SPARK_CHARS[len(_SPARK_CHARS) // 2]
+    out = []
+    for v in values:
+        if not isinstance(v, (int, float)) or isinstance(v, bool):
+            out.append("·")
+        elif span <= 0:
+            out.append(mid)
+        else:
+            idx = int((v - lo) / span * (len(_SPARK_CHARS) - 1))
+            out.append(_SPARK_CHARS[idx])
+    return "".join(out)
+
+
 def verlauf_row_cells(r: dict) -> tuple[str, str, str, str, str, str, str, str, str]:
     """The nine Verlauf DataTable cells for one joined old/new snapshot row."""
     pos_str = str(r["new_position"]) if r["new_position"] is not None else "—"

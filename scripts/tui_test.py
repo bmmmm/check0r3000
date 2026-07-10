@@ -241,6 +241,39 @@ async def t_markup_hostile_nav(app, pilot) -> None:
     # Reaching here without a MarkupError is the real assertion.
 
 
+async def t_verlauf_stats(app, pilot) -> None:
+    """The Verlauf tab renders the market-over-time header line and the per-stem
+    Preisverlauf sparkline without markup errors (needs the repo's >=2 snapshots)."""
+    if len(app._all_snapshots) < 2:
+        return  # thin data: header shows the 2-snapshot hint instead — nothing to assert
+    await pilot.press("l")
+    await pilot.pause()  # _populate_verlauf ran -> header markup already survived render
+
+    spark_chars = set("▁▂▃▄▅▆▇█")
+    line = app._verlauf_market_line()
+    assert "Markt über Zeit" in line and "Median" in line, f"market line malformed: {line!r}"
+    assert spark_chars & set(line), f"no sparkline glyph in market line: {line!r}"
+
+    stem = next(
+        (s for s, ci in app._change_summary.items()
+         if len([e for e in ci.price_series if e.get("price") is not None]) >= 2),
+        None,
+    )
+    assert stem is not None, "no stem with >=2 priced snapshot points in change summary"
+    section = app._render_price_series(stem)
+    assert "Preisverlauf" in section and spark_chars & set(section), (
+        f"price series section malformed for {stem}: {section!r}")
+
+    # Full live path: highlight a Verlauf row and force the detail render.
+    table = _table(app, "#verlauf-table")
+    if table.row_count:
+        table.move_cursor(row=0)
+        await pilot.pause()
+        app._detail_visible = True
+        app._show_detail()
+        await pilot.pause()  # reaching here without MarkupError is the assertion
+
+
 async def t_table_less_tab_guards(app, pilot) -> None:
     """A row-cursor action must NOT fire on the last table tab's stale, now-invisible
     selection while a table-less tab (Benchmark) is active — the [D]-rmtrees-an-unseen-
@@ -491,6 +524,7 @@ CASES = [
     ("filter_debounce", t_filter_debounce),
     ("help_modal", t_help_modal),
     ("markup_hostile_nav", t_markup_hostile_nav),
+    ("verlauf_stats", t_verlauf_stats),
 ]
 
 
