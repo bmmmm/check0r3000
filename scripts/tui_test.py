@@ -529,6 +529,48 @@ async def t_pipeline_status_line(app, pilot) -> None:
     assert "Reload" in txt2, f"status line not restored after reload: {txt2!r}"
 
 
+async def t_splash_and_loader(app, pilot) -> None:
+    """Boot splash: never auto-pushed headless; frames advance on the timer; any
+    key skips; a fast full playback self-dismisses without a double-dismiss
+    crash. Loader bar: animates in front of the pipeline status while
+    _pipeline_running and disappears from the final line when the run ends."""
+    import tui_anim
+    from tui_screens import SplashScreen
+
+    assert not isinstance(app.screen, SplashScreen), "splash leaked into headless run"
+
+    frames = tui_anim.splash_frames("1")
+    await app.push_screen(SplashScreen(frames))
+    await pilot.pause()
+    assert isinstance(app.screen, SplashScreen)
+    idx0 = app.screen._idx
+    await asyncio.sleep(0.5)
+    await pilot.pause()
+    assert app.screen._idx > idx0, "splash frames did not advance"
+    await pilot.press("space")
+    await pilot.pause()
+    assert not isinstance(app.screen, SplashScreen), "key did not skip splash"
+
+    await app.push_screen(SplashScreen(frames, interval=0.005))
+    await asyncio.sleep(0.6)
+    await pilot.pause()
+    assert not isinstance(app.screen, SplashScreen), "splash did not self-dismiss"
+
+    app._pipeline_running = True
+    try:
+        app._set_pipeline_status("[yellow]⏳ [2/4] Extract[/yellow]")
+        before = str(app.query_one("#status-bar", Label).render())
+        app._animate_pipeline_status()
+        running = str(app.query_one("#status-bar", Label).render())
+        assert "⚡" in running and "Extract" in running, running
+        assert before != running, "loader bar did not animate"
+    finally:
+        app._pipeline_running = False
+    app._animate_pipeline_status()
+    final = str(app.query_one("#status-bar", Label).render())
+    assert "⚡" not in final and "Extract" in final, final
+
+
 CASES = [
     ("boot_and_tables", t_boot_and_tables),
     ("pipeline_single_flight", t_pipeline_single_flight),
@@ -549,6 +591,7 @@ CASES = [
     ("help_modal", t_help_modal),
     ("markup_hostile_nav", t_markup_hostile_nav),
     ("verlauf_stats", t_verlauf_stats),
+    ("splash_and_loader", t_splash_and_loader),
 ]
 
 

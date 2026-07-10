@@ -16,6 +16,7 @@ from pathlib import Path
 # `uv run`, then import the siblings.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from textual import events  # noqa: E402
 from textual.app import ComposeResult  # noqa: E402
 from textual.binding import Binding  # noqa: E402
 from textual.containers import (  # noqa: E402
@@ -38,6 +39,50 @@ from textual.widgets.option_list import Option  # noqa: E402
 
 from tui_data import _DOCTYPE_SHORT  # noqa: E402
 from tui_format import _esc, link_url  # noqa: E402
+
+
+class SplashScreen(ModalScreen[None]):
+    """Boot animation: the pre-rendered markup frames from tui_anim (the logo
+        assembling itself explosively) play at ~22 fps, then the screen dismisses
+        itself. Any key or click skips it. Purely decorative — the app has already
+        loaded underneath, nothing waits on this screen."""
+
+    def __init__(self, frames: list[str], interval: float = 0.045) -> None:
+        super().__init__()
+        self._frames = frames
+        self._interval = interval
+        self._idx = 0
+        self._done = False
+
+    def compose(self) -> ComposeResult:
+        yield Static(self._frames[0], id="splash-canvas")
+
+    def on_mount(self) -> None:
+        self.set_interval(self._interval, self._tick)
+
+    def _tick(self) -> None:
+        self._idx += 1
+        if self._idx >= len(self._frames):
+            self._finish()
+            return
+        try:
+            self.query_one("#splash-canvas", Static).update(self._frames[self._idx])
+        except NoMatches:
+            pass
+
+    def _finish(self) -> None:
+        # guard: the interval timer can fire once more after a key-skip
+        if not self._done:
+            self._done = True
+            self.dismiss(None)
+
+    def on_key(self, event: events.Key) -> None:
+        event.stop()
+        self._finish()
+
+    def on_click(self, event: events.Click) -> None:
+        event.stop()
+        self._finish()
 
 
 class ConfirmFetchScreen(ModalScreen[bool]):

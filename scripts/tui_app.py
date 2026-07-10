@@ -24,6 +24,7 @@ import coverage_taxonomy as ctax  # noqa: E402
 import _providers  # noqa: E402
 import scorecard  # noqa: E402  — shared benchmark scoring (eval.py + Benchmark tab)
 import magic  # noqa: E402  — Magic Find quality-scoring core (rank / prescore)
+import tui_anim  # noqa: E402  — boot-splash frames + pipeline loader bar
 from _jsonio import atomic_write_json  # noqa: E402  — shared atomic JSON writer
 from _modules import MODULE_LABELS  # noqa: E402  — single source of truth for Baustein labels
 
@@ -116,6 +117,7 @@ from tui_screens import (  # noqa: E402
     QueryEditScreen,
     QuerySaveConfirmScreen,
     QueryUrlScreen,
+    SplashScreen,
     UpdateAllScreen,
 )
 
@@ -422,6 +424,13 @@ class CheckApp(App):
         # cancels the worker — it cannot abort a blocked subprocess.run, so two
         # pipelines would run ingest/extract concurrently. Refuse a second start.
         self._pipeline_running: bool = False
+        # Loader-bar state: the last raw pipeline-status markup (re-rendered by the
+        # animation timer with the tui_anim loader bar in front while a pipeline
+        # runs) plus the tick counter and an active-flag so the final ✓/✗ line is
+        # redrawn once WITHOUT the bar when the run ends.
+        self._pipeline_status_markup: str = ""
+        self._loader_tick: int = 0
+        self._loader_was_active: bool = False
 
     # --- Lifecycle ---
 
@@ -435,6 +444,18 @@ class CheckApp(App):
         self._populate_magic()
         self._update_header()
         self._prewarm_analyze_model()
+        self._maybe_show_splash()
+        self.set_interval(0.09, self._animate_pipeline_status)
+
+    def _maybe_show_splash(self) -> None:
+        """Push the boot animation over the freshly-loaded app. CHECK0R_SPLASH
+            picks the variant (1|2|3|random, default 1) or disables it (off);
+            headless runs (tui_test.py, --screenshot) never see it — a modal
+            splash would swallow the Pilot's key presses."""
+        choice = (os.environ.get("CHECK0R_SPLASH") or "1").strip().lower()
+        if self.is_headless or choice in ("off", "0", "no", "none"):
+            return
+        self.push_screen(SplashScreen(tui_anim.splash_frames(choice)))
 
     def _load_data(self) -> None:
         """Load snapshot and supplemental data."""
@@ -3646,11 +3667,30 @@ class CheckApp(App):
         """Replace the persistent status line with live pipeline progress. Runs on
             the UI thread (callers use call_from_thread). Unlike a toast this stays
             put, so a failed stage + its log tail remain readable until the next
-            reload — which is the whole point: see what broke without scrollback."""
+            reload — which is the whole point: see what broke without scrollback.
+
+            While a pipeline is active the animated tui_anim loader bar is
+            prepended; the raw markup is kept so _animate_pipeline_status can
+            re-render it every tick (and once more without the bar at the end)."""
+        self._pipeline_status_markup = markup
+        if self._pipeline_running:
+            markup = f"{tui_anim.loader_markup(self._loader_tick)} {markup}"
         try:
             self.query_one("#status-bar", Label).update(markup)
         except NoMatches:
             pass
+
+    def _animate_pipeline_status(self) -> None:
+        """Interval-driven (~11 fps): advance the loader bar in front of the live
+            status while a pipeline runs; when the run ends, redraw the final
+            ✓/✗ status once without the bar and go idle."""
+        if self._pipeline_running:
+            self._loader_tick += 1
+            self._loader_was_active = True
+            self._set_pipeline_status(self._pipeline_status_markup)
+        elif self._loader_was_active:
+            self._loader_was_active = False
+            self._set_pipeline_status(self._pipeline_status_markup)
 
     def _stream_step(
         self, name: str, cmd: list[str], timeout: int, log_path: Path,

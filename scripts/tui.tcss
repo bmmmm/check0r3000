@@ -555,3 +555,15 @@ ScrollableContainer {
     scrollbar-background: $surface-darken-2;
     scrollbar-corner-color: $surface;
 }
+
+/* ── Boot splash (SplashScreen) ─────────────────────────────────────────── */
+
+SplashScreen {
+    align: center middle;
+    background: $surface-darken-2;
+}
+
+#splash-canvas {
+    width: auto;
+    height: auto;
+}
