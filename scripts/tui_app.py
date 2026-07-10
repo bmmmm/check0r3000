@@ -37,6 +37,7 @@ from tui_data import (  # noqa: E402
     _find_latest_snapshot,
     _load_detail,
     _raw_dir_for_stem,
+    dominant_provenance,
     load_all_details,
     load_all_snapshots,
     load_change_summary,
@@ -115,6 +116,7 @@ from tui_screens import (  # noqa: E402
     QueryEditScreen,
     QuerySaveConfirmScreen,
     QueryUrlScreen,
+    UpdateAllScreen,
 )
 
 # Model spec for the [g] "download + analyze" pipeline's extract stage. Matches
@@ -332,6 +334,7 @@ class CheckApp(App):
         Binding("P", "toggle_needs", "Bedarf", show=False),
         Binding("W", "edit_needs", "Bedarf-Gewichte", show=False),
         Binding("F", "magic_scan", "Markt-Scan", show=False),
+        Binding("U", "update_all", "Update-All", show=False),
         Binding("a", "add_to_compare", "Zum Vergleich", show=False),
         Binding("c", "manage_compare", "Vergleich verwalten", show=False),
         Binding("w", "toggle_compare_wording", "Wording", show=False),
@@ -3617,6 +3620,26 @@ class CheckApp(App):
             _go,
         )
 
+    def action_update_all(self) -> None:
+        """Full market refresh ([U]): live scan+snapshot, manifest PDF downloads,
+            then ingest → extract → overlay → render → regression — the TUI twin
+            of ./update-all.sh. Market-wide, needs no row selection; shares the
+            single-flight guard. Extract flags come from the dominant record
+            provenance (cache-signature match: unchanged tariffs cost nothing);
+            an explicitly set CHECK0R_ANALYZE_MODEL still wins for the model."""
+        if self._pipeline_busy():
+            return
+        prov_model, filter_on, repeat = dominant_provenance()
+        model = (ANALYZE_MODEL if "CHECK0R_ANALYZE_MODEL" in os.environ
+                 else (prov_model or ANALYZE_MODEL))
+        n_records = len(list((REPO_ROOT / "out" / "tariffs").glob("*.json")))
+
+        def _go(confirmed: bool | None) -> None:
+            if confirmed and self._claim_pipeline():
+                self._run_update_all(model, filter_on, repeat)
+
+        self.push_screen(UpdateAllScreen(model, filter_on, repeat, n_records), _go)
+
     # --- Live pipeline status line (bottom, above the Footer) ---
 
     def _set_pipeline_status(self, markup: str) -> None:
@@ -3712,11 +3735,16 @@ class CheckApp(App):
                     timeout=7,
                 )
 
+    @work(thread=True, group="pipeline")
     def _run_magic_scan(self, candidates: list[tuple[str, str]], n_dropped: int,
                         n_selected: int) -> None:
         """Run the market-scan funnel off the UI thread. Shares _pipeline_running with
             _run_pipeline (set here, cleared in finally) so the action-layer guard
-            refuses a second start rather than racing this one's subprocesses."""
+            refuses a second start rather than racing this one's subprocesses.
+
+            @work is load-bearing: without it this runs ON the UI thread and the
+            first call_from_thread in _stream_step raises RuntimeError (verified) —
+            [F]-confirm would crash before the harvest even starts."""
         self._pipeline_running = True
         try:
             self._run_magic_scan_steps(candidates, n_dropped, n_selected)
@@ -3799,6 +3827,75 @@ class CheckApp(App):
         self.notify(
             f"Markt-Scan fertig: {n} Tarif(e) analysiert — Ranking aktualisiert.",
             timeout=8,
+        )
+
+    @work(thread=True, group="pipeline")
+    def _run_update_all(self, model: str, filter_on: bool, repeat: int) -> None:
+        """Run the full market refresh off the UI thread. Shares _pipeline_running
+            with the other funnels (set here, cleared in finally)."""
+        self._pipeline_running = True
+        try:
+            self._run_update_all_steps(model, filter_on, repeat)
+        finally:
+            self._pipeline_running = False
+
+    def _run_update_all_steps(self, model: str, filter_on: bool, repeat: int) -> None:
+        # Mirrors ./update-all.sh: scan and docs failures warn but don't abort
+        # (the pipeline still runs on local data); ingest/extract failures abort
+        # like the other funnels. Extract carries the provenance flags so the
+        # cache signature matches the existing records.
+        local_model = _providers.parse_spec(model)[0] != "claude"
+        extract_cmd = ["uv", "run", "scripts/extract.py", "--model", model]
+        if filter_on:
+            extract_cmd.append("--filter")
+        if repeat > 1:
+            extract_cmd += ["--repeat", str(repeat)]
+        steps = [
+            ("Scan+Snapshot",
+             ["uv", "run", "scripts/fetch_ratings.py", "--snapshot"], 600, False),
+            ("Docs",
+             ["uv", "run", "scripts/fetch_docs.py", "--apply", "--into-raw"],
+             1800, False),
+            ("Ingest", ["uv", "run", "scripts/ingest.py"], 600, True),
+            # Ceiling, not an estimate: cache-current tariffs are skipped, so the
+            # common run is fast — but a doc-refresh wave re-extracts many stems
+            # at repeat×cost, and a cold local model is slowest.
+            ("Extract", extract_cmd, 5400 if local_model else 3600, True),
+        ]
+        log_path = REPO_ROOT / "tmp" / "update-all.log"
+        try:
+            log_path.parent.mkdir(exist_ok=True)
+            log_path.write_text("", encoding="utf-8")
+        except OSError:
+            pass
+        total = len(steps) + 3  # + Overlay/Render/Regression tail
+        for idx, (name, cmd, step_timeout, fatal) in enumerate(steps, 1):
+            ok, reason = self._stream_step(
+                name, cmd, step_timeout, log_path, idx=idx, total=total,
+            )
+            if not ok:
+                if fatal:
+                    return
+                self.call_from_thread(
+                    self.notify,
+                    f"{name} fehlgeschlagen (nicht fatal): {_esc(reason[:90])}",
+                    severity="warning",
+                    timeout=7,
+                )
+        self._run_pipeline_tail(log_path, base_idx=len(steps) + 1, total=total,
+                                local_model=local_model)
+        self.call_from_thread(self._after_update_all)
+
+    def _after_update_all(self) -> None:
+        """Reload from disk and jump to Verlauf — the fresh snapshot's diff plus
+            the market-over-time line are the natural "what changed" view."""
+        self._reload_all()
+        try:
+            self.query_one("#tabs", TabbedContent).active = "verlauf"
+        except NoMatches:
+            pass
+        self.notify(
+            "Update-All fertig — Verlauf zeigt den neuen Snapshot.", timeout=8,
         )
 
     @work(thread=True, group="prewarm")

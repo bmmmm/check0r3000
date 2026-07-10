@@ -608,6 +608,34 @@ def load_change_summary() -> dict[str, ChangeInfo]:
     return result
 
 
+def dominant_provenance() -> tuple[str | None, bool, int]:
+    """(model, filter_on, repeat) shared by the most out/tariffs records.
+
+    The extract cache signature includes all three — an Update-All that extracts
+    with a different spec silently re-extracts EVERY tariff at cost and replaces
+    union-of-N records with single runs. Deriving the flags from the records
+    themselves keeps the refresh cache-current by construction.
+    (None, False, 1) when no records exist yet."""
+    from collections import Counter
+
+    combos: Counter = Counter()
+    tdir = REPO_ROOT / "out" / "tariffs"
+    if tdir.is_dir():
+        for p in sorted(tdir.glob("*.json")):
+            d = load_json_or(p, None)
+            if not isinstance(d, dict):
+                continue
+            rep = d.get("_repeat")
+            combos[(
+                d.get("_model") or None,
+                bool(d.get("_filter")),
+                rep if isinstance(rep, int) and rep >= 1 else 1,
+            )] += 1
+    if not combos:
+        return None, False, 1
+    return combos.most_common(1)[0][0]
+
+
 def load_market_stats() -> list[dict]:
     """Per-snapshot market aggregates from price_history.market_stats().
 

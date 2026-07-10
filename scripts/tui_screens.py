@@ -172,6 +172,55 @@ class MagicScanScreen(ModalScreen[bool]):
         self.dismiss(False)
 
 
+class UpdateAllScreen(ModalScreen[bool]):
+    """Deliberate gate before the full market refresh ([U]): live scan+snapshot
+        (headless browser), manifest PDF downloads, then the whole analysis chain.
+        Extract runs with the dominant record provenance so cache-current tariffs
+        cost nothing — only changed documents re-extract. Returns True on confirm."""
+
+    BINDINGS = [
+        Binding("enter", "confirm", "Update"),
+        Binding("y", "confirm", "Yes"),
+        Binding("escape", "cancel", "Cancel"),
+        Binding("n", "cancel", "No"),
+    ]
+
+    def __init__(self, model: str, filter_on: bool, repeat: int, n_records: int) -> None:
+        super().__init__()
+        self._model = model
+        self._filter_on = filter_on
+        self._repeat = repeat
+        self._n_records = n_records
+
+    def compose(self) -> ComposeResult:
+        prov = (
+            f"Provenance aus {self._n_records} Records" if self._n_records
+            else "keine Records — CLI-Default"
+        )
+        lines = [
+            "[bold]⟳ Update-All — voller Markt-Refresh[/bold]",
+            "",
+            "  1. Markt-Scan + Snapshot   [dim]headless Browser → data/snapshots/[/dim]",
+            "  2. Quell-PDFs laden        [dim]alle Manifest-URLs → data/raw/[/dim]",
+            "  3. Ingest → Extract → Overlay → Render → Regression",
+            "",
+            f"Extract: [cyan]{_esc(self._model)}[/cyan]"
+            f" · Filter [bold]{'an' if self._filter_on else 'aus'}[/bold]"
+            f" · repeat [bold]{self._repeat}[/bold]   [dim]({prov})[/dim]",
+            "[dim]Cache-aktuelle Tarife kosten nichts — nur geänderte Dokumente werden",
+            "neu extrahiert; kuratierte Records werden übersprungen.[/dim]",
+            "",
+            "[bold]\\[↵/y][/bold] Starten     [bold]\\[Esc/n][/bold] Abbrechen",
+        ]
+        yield Container(Static("\n".join(lines)), id="confirm-box")
+
+    def action_confirm(self) -> None:
+        self.dismiss(True)
+
+    def action_cancel(self) -> None:
+        self.dismiss(False)
+
+
 class DeleteDataScreen(ModalScreen[str | None]):
     """Pick how much of a tariff's local data to delete. Returns the chosen scope
         ('records' | 'purge' | 'purge_unfav') or None on cancel."""
@@ -825,6 +874,7 @@ class HelpScreen(ModalScreen[None]):
             ("P", "Bedarf-Modus an/aus — Module nach deiner Gewichtung (needs-weights.json)"),
             ("W", "Bedarf-Gewichte bearbeiten — Relevanz je Baustein (0–3) setzen"),
             ("F", "Markt-Scan — Top-Kandidaten live harvesten + analysieren, dann ranken"),
+            ("U", "Update-All — Scan+Snapshot, Docs, volle Re-Analyse (Record-Provenance)"),
             ("Tab / ⇧Tab", "nächster / voriger Tab (zyklisch)"),
             ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
             ("d", "Detail-Band unter der Tabelle ein/aus"),

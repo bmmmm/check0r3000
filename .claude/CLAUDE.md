@@ -106,6 +106,7 @@ URLs in `[link="…"]` immer durch `tui_format.link_url()` (percent-encoded `"`/
 | `[G]` | Nur Analyse wenn PDFs schon lokal |
 | `[H]` | Live-Harvest via Playwright + Analyse (für Tarife ohne Manifest) |
 | `[F]` | Markt-Scan (Deep-Scan): Top-K vorab-bewertete fehlende Tarife harvesten+analysieren, dann neu ranken |
+| `[U]` | Update-All: Scan+Snapshot → Docs → volle Re-Analyse (Extract-Flags aus Record-Provenance, TUI-Zwilling von `update-all.sh`) |
 | `[a]` | Tarif in Vergleich aufnehmen / entfernen (Market-Tab) |
 | `[u]` | Favorit an/aus |
 | `[l]` | Verlauf-Tab (Snapshot-Diff + Feature-Diff) |

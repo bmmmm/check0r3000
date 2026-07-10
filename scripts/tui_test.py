@@ -473,6 +473,29 @@ async def t_magic_scan_modal(app, pilot) -> None:
         assert app._pipeline_running is False
 
 
+async def t_update_all_modal(app, pilot) -> None:
+    """[U] opens the UpdateAllScreen confirm (full refresh must NEVER auto-fire)
+    with extract flags derived from the record provenance; Escape cancels without
+    claiming the pipeline slot. Subprocesses are not exercised here."""
+    from tui_data import dominant_provenance
+    from tui_screens import UpdateAllScreen
+
+    model, filter_on, repeat = dominant_provenance()
+    assert isinstance(filter_on, bool) and repeat >= 1, (
+        f"provenance malformed: {model!r}, {filter_on!r}, {repeat!r}")
+
+    base = len(app.screen_stack)
+    await pilot.press("U")
+    assert await _wait_until(pilot, lambda: len(app.screen_stack) > base), (
+        "[U] did not open the update-all confirm")
+    assert isinstance(app.screen, UpdateAllScreen), (
+        f"[U] opened {type(app.screen).__name__}, want UpdateAllScreen")
+    await pilot.press("escape")
+    assert await _wait_until(pilot, lambda: len(app.screen_stack) == base), (
+        "update-all confirm did not close on escape")
+    assert app._pipeline_running is False, "cancel must not start the pipeline"
+
+
 async def t_pipeline_single_flight(app, pilot) -> None:
     """The analyze slot is single-flight: a second claim while one is held is refused,
     so two confirm callbacks (stacked confirm modals — App bindings keep firing under a
@@ -517,6 +540,7 @@ CASES = [
     ("magic_needs_toggle", t_magic_needs_toggle),
     ("needs_editor", t_needs_editor),
     ("magic_scan_modal", t_magic_scan_modal),
+    ("update_all_modal", t_update_all_modal),
     ("table_less_tab_guards", t_table_less_tab_guards),
     ("cross_tab_roundtrip", t_cross_tab_roundtrip),
     ("cross_tab_held_absent", t_cross_tab_held_absent),
