@@ -47,7 +47,9 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
   (`fetch_docs --apply --into-raw`) → `pipeline.sh`. Nur die Scan-Phase braucht echten
   Chromium (Sandbox-Bypass oder `--no-scan`); `rechtsschutz.check24.de` ist in
   `settings.local.json` sandbox-allowlisted → fetch_docs/Downloads laufen in-sandbox.
-  `--jobs N` wird bis zu `extract.py` durchgereicht.
+  `--jobs`/`--repeat` werden bis zu `extract.py` durchgereicht — **immer die Record-
+  Provenance matchen** (aktuell `--model haiku --filter --repeat 3`), sonst re-extrahiert
+  der Cache-Signatur-Mismatch still alle Tarife kostenpflichtig.
 - **Verlauf-Statistik:** `price_history.market_stats()` (CLI: `--market`) aggregiert je
   Snapshot count/min/median/max; TUI-Verlauf zeigt „Markt über Zeit"-Headerzeile +
   Preisverlauf-Sparkline je Stem (`ChangeInfo.price_series`, gepinnte SB-Variante).
