@@ -564,11 +564,27 @@ async def t_splash_and_loader(app, pilot) -> None:
         running = str(app.query_one("#status-bar", Label).render())
         assert "⚡" in running and "Extract" in running, running
         assert before != running, "loader bar did not animate"
+
+        # fat centered overlay: shown, on top at screen center, click-through
+        # at the edges (the layer container is visibility:hidden)
+        await pilot.pause()
+        layer = app.query_one("#loader-layer")
+        box = app.query_one("#loader-overlay", Static)
+        assert layer.display, "loader overlay not shown while pipeline runs"
+        assert "⚡" in str(box.render()) and "Extract" in str(box.render())
+        cx, cy = app.size.width // 2, app.size.height // 2
+        center_w, _ = app.get_widget_at(cx, cy)
+        assert center_w.id == "loader-overlay", f"overlay not on top: {center_w!r}"
+        corner_w, _ = app.get_widget_at(1, 4)
+        assert corner_w.id not in ("loader-layer", "loader-overlay"), (
+            f"loader layer swallows clicks outside the box: {corner_w!r}")
     finally:
         app._pipeline_running = False
     app._animate_pipeline_status()
+    await pilot.pause()
     final = str(app.query_one("#status-bar", Label).render())
     assert "⚡" not in final and "Extract" in final, final
+    assert not app.query_one("#loader-layer").display, "overlay not hidden after run"
 
 
 CASES = [

@@ -95,10 +95,12 @@ tui_anim.py      Textual-freier Boot-Splash (3 Varianten) + Pipeline-Loader-Bar;
 Kreisimport-Falle: `tui_screens.py` importiert `tui_data/tui_format`, nie `tui_app`.
 `tui_app.py` importiert alles. `tui.py` importiert nur `tui_app`.
 
-Boot-Splash: `CHECK0R_SPLASH=1|2|3|random|off` (Default 1); läuft NIE headless
-(`is_headless`-Guard — sonst schluckt der Modal die Pilot-Keys in tui_test.py und
-`--screenshot`). Loader-Bar hängt vor der Pipeline-Statuszeile, solange
-`_pipeline_running` (Timer `_animate_pipeline_status`, Raw-Markup bleibt in
+Boot-Splash: `CHECK0R_SPLASH=1|2|3|random|off` (Default: random pro Start); läuft
+NIE headless (`is_headless`-Guard — sonst schluckt der Modal die Pilot-Keys in
+tui_test.py und `--screenshot`). Loader solange `_pipeline_running`: fetter
+zentrierter Overlay (`#loader-layer` nach Toast-Muster — Layer-Container
+visibility:hidden = click-through, nur die Box sichtbar) + Bar vor der
+Pipeline-Statuszeile (Timer `_animate_pipeline_status`, Raw-Markup bleibt in
 `_pipeline_status_markup`).
 
 Per-Tab-Dispatch läuft über die `TAB_SPECS`-Tabelle in `tui_app.py` (TabSpec je Tab:

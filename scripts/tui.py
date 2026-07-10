@@ -27,10 +27,11 @@ background, after a confirm; [G] runs the same analysis WITHOUT the download whe
 the source PDFs are already in data/raw/<stem>/. The extract model defaults to
 "claude"; override with the CHECK0R_ANALYZE_MODEL env var. Tariffs whose URLs were
 never harvested point you back to the browser "Tarifdetails" step.
-On startup a boot animation assembles the logo (any key skips it); pick a
-variant or disable it with CHECK0R_SPLASH=1|2|3|random|off, and preview all
-variants standalone with `python3 scripts/tui_anim.py`. While an analyze
-pipeline runs, an animated loader bar precedes the live status line. The
+On startup a boot animation assembles the logo (any key skips it); a random
+variant plays per launch — pin or disable it with CHECK0R_SPLASH=1|2|3|off,
+and preview all variants standalone with `python3 scripts/tui_anim.py`. While
+an analyze pipeline runs, a fat centered loader overlay (click-through outside
+its box) plus an animated bar in the status line show the live progress. The
 Vergleich tab [v] shows an across-tariff coverage comparison (modules, coverage, and
 taxonomy-aligned Leistungen/Ausschlüsse) built from the analyzed records: [w]
 toggles the verbatim per-insurer wording (compact ↔ verbose), [t] opens a modal with

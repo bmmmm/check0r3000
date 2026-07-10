@@ -32,6 +32,8 @@ W, H = 78, 20
 LOGO_Y = 6
 SUB_Y = 13
 SUBTITLE = "» RECHTSSCHUTZ-VERGLEICH «"
+HINT = "kkknppthx check24.de ;)"
+HINT_Y = H - 2
 
 Cell = tuple[str, str]  # (char, style key); ("", "") never occurs, blank = (" ", "")
 Grid = list[list[Cell]]
@@ -129,9 +131,17 @@ def _put_subtitle(g: Grid, reveal: float = 1.0, *, typing: bool = False) -> None
             _put(g, x0 + i, SUB_Y, ch, "sub")
 
 
+def _put_hint(g: Grid) -> None:
+    """The dim credit line at the bottom of the splash finale."""
+    x0 = (W - len(HINT)) // 2
+    for i, ch in enumerate(HINT):
+        if ch != " ":
+            _put(g, x0 + i, HINT_Y, ch, "dim")
+
+
 def _flash_and_hold(cells: list[tuple[int, int, str, int]], hold: int = 10) -> list[Grid]:
     """Shared finale: white/hot flash, then the settled logo while the subtitle
-    fades in center-out."""
+    fades in center-out and the credit hint appears."""
     frames: list[Grid] = []
     for style in ("logo2", "hot", "logo2"):
         g = _grid()
@@ -143,6 +153,8 @@ def _flash_and_hold(cells: list[tuple[int, int, str, int]], hold: int = 10) -> l
         for x, y, ch, _gi in cells:
             _put(g, x, y, ch, "logo")
         _put_subtitle(g, reveal=(i + 1) / hold)
+        if i >= hold // 2:
+            _put_hint(g)
         frames.append(g)
     return frames
 
@@ -280,6 +292,8 @@ def frames_slam(rng: random.Random) -> list[Grid]:
         for x, y, ch, _gi in cells:
             _put(g, x, y, ch, "logo")
         _put_subtitle(g, reveal=min(1.0, (i + 1) / 7), typing=True)
+        if i >= 6:
+            _put_hint(g)
         frames.append(g)
     return frames
 
@@ -366,6 +380,54 @@ def loader_ansi(tick: int) -> str:
     return _render_row(_loader_cells(tick), "ansi")
 
 
+# Big centered loader block (the fat overlay variant of the bar above)
+
+LOADER_BIG_W = 40
+
+
+def _big_bar_row(pos: int, soften: int) -> list[Cell]:
+    """One row of the fat bar; soften pushes the fire packet one intensity
+    level down (used for the rows above/below the core)."""
+    cells: list[Cell] = []
+    for i in range(LOADER_BIG_W):
+        d = abs(i - pos) + soften
+        if d <= 1:
+            cells.append(("█", "logo2"))
+        elif d <= 3:
+            cells.append(("▓", "fire3"))
+        elif d <= 5:
+            cells.append(("▒", "fire2"))
+        elif d <= 7:
+            cells.append(("░", "fire1"))
+        else:
+            cells.append(("░", "dim"))
+    return cells
+
+
+def _loader_big_rows(tick: int, title: str = "A N A L Y S E") -> list[list[Cell]]:
+    span = LOADER_BIG_W - 1
+    ph = (tick * 2) % (2 * span)
+    pos = ph if ph <= span else 2 * span - ph
+    pad = max(0, (LOADER_BIG_W - len(title) - 4) // 2)
+    head: list[Cell] = [(" ", "")] * pad
+    head.append(("⚡", "spark" if tick % 2 == 0 else "fire2"))
+    head.append((" ", ""))
+    for i, ch in enumerate(title):  # shimmering title letters
+        head.append((ch, "fire3" if (tick + i) % 3 else "logo2") if ch != " "
+                    else (" ", ""))
+    head.append((" ", ""))
+    head.append(("⚡", "fire2" if tick % 2 == 0 else "spark"))
+    return [head, _big_bar_row(pos, 2), _big_bar_row(pos, 0), _big_bar_row(pos, 2)]
+
+
+def loader_big_markup(tick: int, title: str = "A N A L Y S E") -> str:
+    return "\n".join(_render_row(r, "markup") for r in _loader_big_rows(tick, title))
+
+
+def loader_big_ansi(tick: int, title: str = "A N A L Y S E") -> str:
+    return "\n".join(_render_row(r, "ansi") for r in _loader_big_rows(tick, title))
+
+
 # ---------------------------------------------------------------------------
 # Terminal demo player + selftest
 # ---------------------------------------------------------------------------
@@ -387,11 +449,15 @@ def _play(frames: list[Grid], fps: int, title: str) -> None:
 
 def _play_loader(seconds: float = 5.0) -> None:
     out = sys.stdout
-    out.write("\x1b[?25l")
+    out.write("\x1b[?25l\x1b[2J")
     try:
         for tick in range(int(seconds / 0.09)):
-            out.write("\r" + loader_ansi(tick)
-                      + " \x1b[2m[2/4] Extract  haiku --filter läuft …\x1b[0m ")
+            big = "\n".join("   " + r for r in loader_big_ansi(tick).split("\n"))
+            out.write(
+                "\x1b[H\n\n" + big
+                + "\n\n   \x1b[2m[2/4] Extract  haiku --filter running …\x1b[0m"
+                + "\n\n\n   status-bar variant:  " + loader_ansi(tick)
+                + " \x1b[2m[2/4] Extract …\x1b[0m \n")
             out.flush()
             time.sleep(0.09)
     finally:
@@ -412,6 +478,15 @@ def _selftest() -> int:
     distinct = {loader_markup(t) for t in range(2 * (LOADER_W - 1))}
     good = len(distinct) >= LOADER_W
     print(f"loader: {len(distinct)} distinct frames {'OK' if good else 'FAIL'}")
+    ok &= good
+    big = {loader_big_markup(t) for t in range(2 * (LOADER_BIG_W - 1))}
+    good = (len(big) >= LOADER_BIG_W
+            and all(b.count("\n") == 3 for b in big))
+    print(f"loader big: {len(big)} distinct frames {'OK' if good else 'FAIL'}")
+    ok &= good
+    hint_frames = [f for f in splash_frames("3") if "check24.de" in f]
+    good = len(hint_frames) >= 3
+    print(f"hint line: {len(hint_frames)} frames {'OK' if good else 'FAIL'}")
     ok &= good
     return 0 if ok else 1
 

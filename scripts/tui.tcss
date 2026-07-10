@@ -567,3 +567,24 @@ SplashScreen {
     width: auto;
     height: auto;
 }
+
+/* ── Pipeline loader overlay (fat centered bar over a click-through layer) ─ */
+
+#loader-layer {
+    layer: loader;
+    width: 1fr;
+    height: 1fr;
+    align: center middle;
+    visibility: hidden;
+    display: none;
+}
+
+#loader-overlay {
+    width: 48;
+    max-width: 90%;
+    height: auto;
+    padding: 1 3;
+    border: thick $warning;
+    background: $surface-darken-2;
+    visibility: visible;
+}

@@ -87,7 +87,7 @@ from tui_format import (  # noqa: E402
 from textual import on, work  # noqa: E402
 from textual.app import App, ComposeResult  # noqa: E402
 from textual.binding import Binding  # noqa: E402
-from textual.containers import ScrollableContainer, Vertical  # noqa: E402
+from textual.containers import Container, ScrollableContainer, Vertical  # noqa: E402
 from textual.css.query import NoMatches  # noqa: E402
 from textual.timer import Timer  # noqa: E402
 from textual.reactive import reactive  # noqa: E402
@@ -449,10 +449,10 @@ class CheckApp(App):
 
     def _maybe_show_splash(self) -> None:
         """Push the boot animation over the freshly-loaded app. CHECK0R_SPLASH
-            picks the variant (1|2|3|random, default 1) or disables it (off);
-            headless runs (tui_test.py, --screenshot) never see it — a modal
-            splash would swallow the Pilot's key presses."""
-        choice = (os.environ.get("CHECK0R_SPLASH") or "1").strip().lower()
+            picks the variant (1|2|3, default: random per launch) or disables it
+            (off); headless runs (tui_test.py, --screenshot) never see it — a
+            modal splash would swallow the Pilot's key presses."""
+        choice = (os.environ.get("CHECK0R_SPLASH") or "random").strip().lower()
         if self.is_headless or choice in ("off", "0", "no", "none"):
             return
         self.push_screen(SplashScreen(tui_anim.splash_frames(choice)))
@@ -551,6 +551,11 @@ class CheckApp(App):
                         )
         yield Label("", id="status-bar")
         yield Footer()
+        # Fat centered loader overlay, shown while a pipeline runs. Toast pattern:
+        # the full-screen layer container is visibility:hidden (clicks fall through
+        # to the widgets beneath), only the box inside is visible.
+        with Container(id="loader-layer"):
+            yield Static("", id="loader-overlay")
 
     # --- Header update ---
 
@@ -3679,11 +3684,29 @@ class CheckApp(App):
             self.query_one("#status-bar", Label).update(markup)
         except NoMatches:
             pass
+        self._update_loader_overlay()
+
+    def _update_loader_overlay(self) -> None:
+        """Show/refresh the fat centered loader while a pipeline runs (big
+            animated fire bar + the current stage line), hide it when idle."""
+        try:
+            layer = self.query_one("#loader-layer", Container)
+            box = self.query_one("#loader-overlay", Static)
+        except NoMatches:
+            return
+        if self._pipeline_running:
+            layer.display = True
+            box.update(
+                f"{tui_anim.loader_big_markup(self._loader_tick)}\n\n"
+                f"{self._pipeline_status_markup or '[dim]startet …[/dim]'}"
+            )
+        else:
+            layer.display = False
 
     def _animate_pipeline_status(self) -> None:
-        """Interval-driven (~11 fps): advance the loader bar in front of the live
-            status while a pipeline runs; when the run ends, redraw the final
-            ✓/✗ status once without the bar and go idle."""
+        """Interval-driven (~11 fps): advance the loader bar/overlay while a
+            pipeline runs; when the run ends, redraw the final ✓/✗ status once
+            without the bar and hide the overlay."""
         if self._pipeline_running:
             self._loader_tick += 1
             self._loader_was_active = True
