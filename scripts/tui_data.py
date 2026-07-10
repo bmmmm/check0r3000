@@ -954,5 +954,12 @@ def run_selftest(snapshot_path: Path | None) -> int:
 if __name__ == "__main__":
     import sys
 
+    if "--provenance" in sys.argv[1:]:
+        # Machine-readable dominant record provenance for update-all.sh:
+        # "<model>|<0/1 filter>|<repeat>" — empty model when no records exist.
+        m, f, r = dominant_provenance()
+        print(f"{m or ''}|{1 if f else 0}|{r}")
+        sys.exit(0)
+
     # Textual-free data smoke test (replaces `python3 tui.py --selftest`).
     sys.exit(run_selftest(None))

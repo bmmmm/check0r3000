@@ -13,12 +13,16 @@
 # Phase 3 (pipeline): ./pipeline.sh runs ingest -> extract -> render -> regression.
 #
 # Options (any order):
-#   ./update-all.sh                                   # full refresh, defaults
-#   ./update-all.sh --model haiku --filter --repeat 3 --jobs 3   # matches current record provenance
-#   ./update-all.sh --no-scan                         # skip Playwright scan (sandbox-safe)
-# NOTE: match --model/--filter/--repeat to the existing records' provenance
-# (currently haiku --filter --repeat 3) — the extract cache signature includes
-# them, so a mismatch silently re-extracts EVERY tariff at cost.
+#   ./update-all.sh                       # full refresh; extract flags derived from records
+#   ./update-all.sh --model haiku --filter --repeat 3 --jobs 3   # explicit override
+#   ./update-all.sh --no-scan             # skip Playwright scan (sandbox-safe)
+#
+# Extract flags: when NONE of --model/--filter/--repeat are given, they are
+# derived from the dominant record provenance (tui_data.py --provenance) so the
+# extract cache signature matches the existing records — unchanged tariffs cost
+# nothing. Passing ANY of the three switches to fully explicit mode: exactly the
+# given flags are used (a mismatched spec re-extracts EVERY tariff at cost and
+# replaces union-of-N records with single runs — know what you're doing).
 set -eu
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -45,6 +49,22 @@ while [ $# -gt 0 ]; do
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
+
+if [ -z "$MODEL_ARGS" ] && [ -z "$FILTER_ARGS" ] && [ -z "$REPEAT_ARGS" ]; then
+  PROV="$($PYRUN scripts/tui_data.py --provenance 2>/dev/null || true)"
+  PROV_MODEL="${PROV%%|*}"
+  rest="${PROV#*|}"
+  PROV_FILTER="${rest%%|*}"
+  PROV_REPEAT="${rest#*|}"
+  if [ -n "$PROV_MODEL" ]; then
+    MODEL_ARGS="--model $PROV_MODEL"
+    [ "$PROV_FILTER" = "1" ] && FILTER_ARGS="--filter"
+    [ "${PROV_REPEAT:-1}" -gt 1 ] 2>/dev/null && REPEAT_ARGS="--repeat $PROV_REPEAT"
+    echo "==> extract flags from record provenance: $MODEL_ARGS ${FILTER_ARGS:-} ${REPEAT_ARGS:-}"
+  else
+    echo "==> no existing records — extract runs with its CLI defaults"
+  fi
+fi
 
 if [ -n "$NO_SCAN" ]; then
   echo "==> scan (skipped: --no-scan)"
