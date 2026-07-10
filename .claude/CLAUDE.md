@@ -43,6 +43,14 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
 
 ## Pipeline-Invarianten
 
+- **`update-all.sh` = Voll-Refresh:** Scan+Snapshot (`fetch_ratings --snapshot`) → Docs
+  (`fetch_docs --apply --into-raw`) → `pipeline.sh`. Nur die Scan-Phase braucht echten
+  Chromium (Sandbox-Bypass oder `--no-scan`); `rechtsschutz.check24.de` ist in
+  `settings.local.json` sandbox-allowlisted → fetch_docs/Downloads laufen in-sandbox.
+  `--jobs N` wird bis zu `extract.py` durchgereicht.
+- **Verlauf-Statistik:** `price_history.market_stats()` (CLI: `--market`) aggregiert je
+  Snapshot count/min/median/max; TUI-Verlauf zeigt „Markt über Zeit"-Headerzeile +
+  Preisverlauf-Sparkline je Stem (`ChangeInfo.price_series`, gepinnte SB-Variante).
 - `out/tariffs/<stem>.json` enthält **nie** Beitrag, Stufe oder SB — die kommen nur via
   `overlay.py` aus `data/offers/` in `out/enriched/`. `regression.py` pinnt das.
 - `extract.py` ruft nach dem Schreiben automatisch `feature_history.archive_version()` auf.
