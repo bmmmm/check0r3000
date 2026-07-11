@@ -14,7 +14,8 @@ data/             Lokale Rohdaten — alles gitignored außer sources/
   raw/<stem>/     Klassifizierte PDFs (intake.py sortiert ein)
   extracted/      Klartext aus PDFs (ingest.py, gitignored)
   snapshots/      Datierte CHECK24-Preislisten (gitignored)
-  sources/        check24-documents.json — getrackte URL-Manifest (kein PDF-Inhalt)
+  sources/        check24-documents.json (URL-Manifest) + external-ratings.json
+                  (handkuratierte externe Testurteile) — beide getrackt, kein PDF-Inhalt
   offers/         Persönliche Beitrags-/Stufendaten (gitignored; nur _example + README getrackt)
 out/              Ergebnisse — getrackt außer enriched/ und screenshots/
   tariffs/        Reine LLM-Fakten-Records (beitrag immer null)
@@ -75,6 +76,13 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
   **`[W]`** öffnet den `NeedsEditorScreen` (diskrete 0–3-Skala je Baustein,
   `magic.save_needs` schreibt die JSON, behält `_comment`); ein non-neutraler Save
   schaltet `[P]` automatisch an. Feinere Floats bleiben per Hand-Edit der JSON möglich.
+- **Externe Bewertungen sind display-only** — `data/sources/external-ratings.json`
+  (getrackt, handkuratiert: Finanztip/F&B/Finanztest-Urteile, stem-keyed `tariffs` +
+  whole-word-gematchte `insurers` + `_market_notes` für Nicht-CHECK24-Tarife wie
+  WGV/HUK-Coburg). Fließt NIE in einen Score (sparse Coverage würde Magic biasen —
+  gleiche Regel wie Preis): nur Detail-Band-Sektion, Magic-„Ext"-Spalte und
+  Blind-Spot-Headerzeile. Staleness: `scripts/check_external_ratings.py` (greppt den
+  Stand auf der Finanztip-Seite; braucht Netz außerhalb der Sandbox-Allowlist).
 - **Konfidenz-Flag** — `leistung_low_confidence` (in `rank()` gesetzt) markiert Records,
   deren distinkte-Leistungs-Zahl weit unter dem Markt-Median liegt (Recall-Lücke, kein
   armer Tarif); rein Anzeige (⚠), der Score bleibt unangetastet. `quality_per_eur()` =

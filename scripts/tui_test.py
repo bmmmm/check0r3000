@@ -327,8 +327,8 @@ async def t_magic_tab(app, pilot) -> None:
     assert table.row_count > 0, "magic table empty — no analyzed tariffs?"
     totals = [s.total for s in app._magic_rows.values()]
     assert totals == sorted(totals, reverse=True), "magic rows not score-descending"
-    assert len(table.columns) == 11, (
-        f"magic table should have 11 columns incl. P/L, got {len(table.columns)}")
+    assert len(table.columns) == 12, (
+        f"magic table should have 12 columns incl. Ext + P/L, got {len(table.columns)}")
     table.move_cursor(row=0)
     await pilot.pause()
     assert app._active_row is not None, "magic top row has no representative snapshot row"
@@ -388,6 +388,60 @@ async def t_magic_needs_toggle(app, pilot) -> None:
     finally:
         _magic.NEEDS_PATH = orig
         shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+async def t_external_ratings(app, pilot) -> None:
+    """External test verdicts are display-only surfaces: whole-word insurer
+    matching (no 'arag'-in-'oerag' leak), the Magic Ext column, and the
+    'Externe Bewertungen' detail section render live without MarkupError."""
+    from tui_data import external_ratings_for
+
+    data = app._ext_ratings
+    if not data.get("tariffs") and not data.get("insurers"):
+        return  # sidecar absent: every surface degrades to a dash — nothing to assert
+
+    # Data layer: rated stem gets tariff- AND insurer-level entries; an ÖRAG
+    # product must get the insurer entry via the stem token but never ARAG's.
+    arag = external_ratings_for("arag__komfort-2026", "ARAG", data)
+    assert len(arag) >= 2, f"expected FT + FFF+ entries for arag komfort, got {arag}"
+    oerag = external_ratings_for(
+        "bavariadirekt__rundum-schutz-oerag", "BavariaDirekt / ÖRAG", data)
+    badges = [e.get("badge") for e in oerag]
+    assert "FFF+" in badges and not any("FT" in str(b) for b in badges), (
+        f"oerag stem should carry only insurer-level FFF+, got {badges}")
+    assert external_ratings_for("ergo__best", "Ergo", data) == [], (
+        "unrated stem must yield no entries")
+
+    await pilot.press("M")
+    await pilot.pause()
+    table = _table(app, "#magic-table")
+    labels = [str(c.label) for c in table.columns.values()]
+    assert "Ext" in labels, f"Magic table missing Ext column: {labels}"
+
+    # Live path: select a rated row, force the detail band, and require the
+    # external section in the rendered text (also proves the markup survives).
+    rk = app._magic_ident_to_rk.get("arag__komfort-2026")
+    if rk is not None:
+        idx = list(app._magic_rows).index(rk)
+        table.move_cursor(row=idx)
+        await pilot.pause()
+        app._detail_visible = True
+        app._show_detail()
+        await pilot.pause()
+        content = app.query_one("#magic-detail-content", Static)
+        rendered = content.render()
+        text = rendered.plain if hasattr(rendered, "plain") else str(rendered)
+        assert "Externe Bewertungen" in text, (
+            f"detail band missing external section: {text[:120]!r}")
+        assert "kein Score-Input" in text, "external section must state display-only"
+
+    # Blind-spot note: _market_notes surface in the Magic header.
+    if data.get("_market_notes"):
+        header = app.query_one("#magic-header")
+        hr = header.render()
+        htext = hr.plain if hasattr(hr, "plain") else str(hr)
+        assert "außerhalb CHECK24" in htext, (
+            f"header missing blind-spot note: {htext!r}")
 
 
 async def t_needs_editor(app, pilot) -> None:
@@ -596,6 +650,7 @@ CASES = [
     ("benchmark_tab", t_benchmark_tab),
     ("magic_tab", t_magic_tab),
     ("magic_needs_toggle", t_magic_needs_toggle),
+    ("external_ratings", t_external_ratings),
     ("needs_editor", t_needs_editor),
     ("magic_scan_modal", t_magic_scan_modal),
     ("update_all_modal", t_update_all_modal),

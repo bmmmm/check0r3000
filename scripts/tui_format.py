@@ -473,6 +473,49 @@ def record_body_lines(detail: "DetailRecord") -> list[str]:
     return lines
 
 
+# External test verdicts (Finanztip / F&B / Finanztest) — display-only rendering.
+_SENTIMENT_COLOR = {"pos": "bright_green", "neg": "bright_red"}
+
+
+def external_rating_lines(entries: list[dict]) -> list[str]:
+    """Detail-band section for external test verdicts. Pure display — these
+    NEVER feed a score (sparse coverage would bias any ranking)."""
+    if not entries:
+        return []
+    lines = [
+        "[bold underline]Externe Bewertungen[/bold underline] "
+        "[dim](nur Anzeige, kein Score-Input)[/dim]"
+    ]
+    for e in entries:
+        col = _SENTIMENT_COLOR.get(e.get("sentiment"), "cyan")
+        badge = _esc(str(e.get("badge") or e.get("source") or "?"))
+        src = _esc(str(e.get("source") or ""))
+        scope = "Versicherer" if e.get("scope") == "versicherer" else "Tarif"
+        stand = _esc(str(e.get("stand") or "?"))
+        verdict = _esc(str(e.get("verdict") or ""))
+        line = (
+            f"  [{col}]{badge}[/{col}] {src} "
+            f"[dim]({scope}, Stand {stand})[/dim]: {verdict}"
+        )
+        url = e.get("url")
+        if url:
+            line += f' [link="{link_url(str(url))}"][dim]↗[/dim][/link]'
+        lines.append(line)
+    return lines
+
+
+def external_badge_cell(entries: list[dict]) -> str:
+    """Narrow Magic-table 'Ext' cell: coloured badges joined, or a dim dash."""
+    if not entries:
+        return "[dim]—[/dim]"
+    return " ".join(
+        f"[{_SENTIMENT_COLOR.get(e.get('sentiment'), 'cyan')}]"
+        f"{_esc(str(e.get('badge') or '?'))}"
+        f"[/{_SENTIMENT_COLOR.get(e.get('sentiment'), 'cyan')}]"
+        for e in entries
+    )
+
+
 def price_delta(
     price: float | None, ref_price: float | None
 ) -> tuple[float, float, str, str] | None:

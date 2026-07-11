@@ -39,11 +39,14 @@ from tui_data import (  # noqa: E402
     _load_detail,
     _raw_dir_for_stem,
     dominant_provenance,
+    external_market_notes,
+    external_ratings_for,
     load_all_details,
     load_all_snapshots,
     load_change_summary,
     load_doc_by_tariff,
     load_doc_index,
+    load_external_ratings,
     load_favorite_notes,
     load_favorites,
     load_feature_diff,
@@ -58,6 +61,8 @@ from tui_format import (  # noqa: E402
     STATUS_LEGEND,
     VERGLEICH_LABEL_W,
     benchmark_markup,
+    external_badge_cell,
+    external_rating_lines,
     link_url,
     magic_bar,
     magic_score_cell,
@@ -420,6 +425,8 @@ class CheckApp(App):
         self._verlauf_old_idx: int = 0  # index into _all_snapshots for the "from" snapshot
         # Change tracking: loaded once at startup, refreshed on [r]
         self._change_summary: dict[str, ChangeInfo] = {}
+        # External test verdicts (Finanztip/F&B/Finanztest) — display-only sidecar
+        self._ext_ratings: dict = {}
         # Single-flight guard for the analyze pipeline. @work's exclusive=True only
         # cancels the worker — it cannot abort a blocked subprocess.run, so two
         # pipelines would run ingest/extract concurrently. Refuse a second start.
@@ -484,6 +491,7 @@ class CheckApp(App):
         }
         self._details_by_stem = dict(load_all_details())
         self._change_summary = load_change_summary()
+        self._ext_ratings = load_external_ratings()
         # invalidate cached offer URL base (profile may have changed)
         if hasattr(self, "_offer_url_cache"):
             del self._offer_url_cache
@@ -1194,6 +1202,9 @@ class CheckApp(App):
             plus the source-document / [g] block, for the inline Market band."""
         detail = self._detail_for_row(row)
         parts = [self._render_detail_full(row, detail)]
+        ext = external_ratings_for(row.stem, row.insurer, self._ext_ratings)
+        if ext:
+            parts.append("\n".join(external_rating_lines(ext)))
         docs = self._render_docs_block(row, detail)
         if docs:
             parts.append(docs)
@@ -1891,7 +1902,7 @@ class CheckApp(App):
         table.clear(columns=True)
         table.add_columns(
             "#", "Versicherer", "Tarif", "Score", "Note", "Bew.",
-            "Mod", "Leist.", "Deckung", "€/mo", "P/L",
+            "Mod", "Leist.", "Deckung", "Ext", "€/mo", "P/L",
         )
         self._magic_rows = {}
         self._magic_ident_to_rk = {}
@@ -1936,10 +1947,25 @@ class CheckApp(App):
                if n_low_conf else "")
             + " · \\[F] mehr scannen[/dim]"
         )
+        # Structural blind spot: externally recommended direct sellers (WGV,
+        # HUK-Coburg, …) never appear in the CHECK24 snapshot — name them here
+        # instead of letting the ranking imply market-wide completeness.
+        notes = external_market_notes(self._ext_ratings)
+        blind_note = ""
+        if notes:
+            names = ", ".join(
+                f"{n.get('versicherer', '?')} {n.get('tarif', '')}".strip()
+                for n in notes
+            )
+            blind_note = (
+                f"\n[yellow]⚠[/yellow] [dim]{len(notes)} extern empfohlene Tarife "
+                f"außerhalb CHECK24 (Direktvertrieb): {_esc(names)}[/dim]"
+            )
         header.update(
             f"{mode_note}, [bold]Preis zählt nicht[/bold].  {cov_note}\n"
             f"[dim]↑↓ wählen · \\[P] Bedarf an/aus · \\[d] Score-Beitrag je Dimension · "
-            "P/L = Preis-Leistung (nur Anzeige)[/dim]"
+            "P/L = Preis-Leistung (nur Anzeige) · Ext = externe Tests (nur Anzeige)[/dim]"
+            f"{blind_note}"
         )
 
         for i, s in enumerate(scores):
@@ -1972,6 +1998,8 @@ class CheckApp(App):
             else:
                 frac = qpe / max_qpe
                 pl_cell = f"{frac * 100:3.0f}% {magic_bar(frac, 6)}"
+            ext_cell = external_badge_cell(
+                external_ratings_for(s.stem, s.insurer, self._ext_ratings))
 
             table.add_row(
                 marker,
@@ -1983,6 +2011,7 @@ class CheckApp(App):
                 f"{s.n_modules}/8",
                 leist_cell,
                 deckung,
+                ext_cell,
                 price,
                 pl_cell,
                 key=row_key,

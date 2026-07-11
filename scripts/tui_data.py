@@ -653,6 +653,68 @@ def load_market_stats() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# External ratings (Finanztip / Franke & Bornberg / Finanztest) — display only
+# ---------------------------------------------------------------------------
+
+def load_external_ratings() -> dict[str, Any]:
+    """Hand-curated external test verdicts from data/sources/external-ratings.json.
+
+    Sparse by nature (external tests cover a fraction of the market), so these
+    are DISPLAY-ONLY — never a score input, same rule as price in Magic Find."""
+    data = load_json_or(REPO_ROOT / "data" / "sources" / "external-ratings.json", {})
+    return data if isinstance(data, dict) else {}
+
+
+def _rating_tokens(insurer: str, stem: str | None) -> set[str]:
+    """Whole-word tokens for insurer-level rating matches: the umlaut-normalised
+    insurer name plus every stem word (the stem carries risk-carrier names like
+    'oerag' that the display insurer may not, e.g. S-Direkt selling ÖRAG)."""
+    import re
+
+    text = (insurer or "").casefold()
+    for uml, ascii_ in (("ö", "oe"), ("ä", "ae"), ("ü", "ue"), ("ß", "ss")):
+        text = text.replace(uml, ascii_)
+    if stem:
+        text += " " + stem.casefold()
+    return {t for t in re.split(r"[^a-z0-9]+", text) if t}
+
+
+def external_ratings_for(
+    stem: str | None, insurer: str = "", data: dict[str, Any] | None = None
+) -> list[dict]:
+    """Tariff-level entries for the stem + insurer-level entries whose key matches
+    a whole word of the insurer name or stem. Whole-word matching is deliberate:
+    a substring test would let 'arag' hit 'oerag'."""
+    if data is None:
+        data = load_external_ratings()
+    out: list[dict] = []
+    tariffs = data.get("tariffs")
+    if isinstance(tariffs, dict) and stem:
+        entries = tariffs.get(stem)
+        if isinstance(entries, list):
+            out += [e for e in entries if isinstance(e, dict)]
+    insurers = data.get("insurers")
+    if isinstance(insurers, dict):
+        tokens = _rating_tokens(insurer, stem)
+        for key, entries in insurers.items():
+            if str(key).casefold() in tokens and isinstance(entries, list):
+                out += [e for e in entries if isinstance(e, dict)]
+    return out
+
+
+def external_market_notes(data: dict[str, Any] | None = None) -> list[dict]:
+    """Externally recommended tariffs that are NOT in the CHECK24 market at all
+    (direct sellers like WGV/HUK-Coburg) — the tool's structural blind spot,
+    surfaced as a Magic-Find note instead of being silently invisible."""
+    if data is None:
+        data = load_external_ratings()
+    notes = data.get("_market_notes")
+    if not isinstance(notes, list):
+        return []
+    return [n for n in notes if isinstance(n, dict)]
+
+
+# ---------------------------------------------------------------------------
 # Feature-history helpers
 # ---------------------------------------------------------------------------
 

@@ -1,0 +1,113 @@
+{
+  "_comment": "External test/rating verdicts, hand-curated with attribution (no scraped content). tariffs: stem-keyed tariff-level claims. insurers: insurer-level claims, matched by whole-word token against the (umlaut-normalised) insurer name or the stem. Display-only in the TUI — NEVER a score input: coverage is sparse, scoring it would bias Magic Find toward tested-at-all tariffs (same rule as price). Staleness: scripts/check_external_ratings.py --check greps the recorded stand date on the source page.",
+  "tariffs": {
+    "arag__komfort-2026": [
+      {
+        "source": "Finanztip",
+        "badge": "FT ✓",
+        "sentiment": "pos",
+        "scope": "tarif",
+        "verdict": "Empfehlung (ARAG Aktiv Komfort) im Rechtsschutz-Vergleich",
+        "stand": "2025-08-20",
+        "url": "https://www.finanztip.de/rechtsschutzversicherung/"
+      }
+    ],
+    "arag__premium-2026": [
+      {
+        "source": "Finanztip",
+        "badge": "FT ·",
+        "sentiment": "neutral",
+        "scope": "tarif",
+        "verdict": "Beste Leistungen im Testfeld (neben ROLAND), aber teurer als die Empfehlungen",
+        "stand": "2025-08-20",
+        "url": "https://www.finanztip.de/rechtsschutzversicherung/"
+      }
+    ],
+    "roland__top-rechtsschutz-komfort": [
+      {
+        "source": "Finanztip",
+        "badge": "FT ·",
+        "sentiment": "neutral",
+        "scope": "tarif",
+        "verdict": "Top-Leistungen im Testfeld, aber wegen SB-Regime (300 €, steigt bei Schaden auf 500 €) nicht empfohlen",
+        "stand": "2025-08-20",
+        "url": "https://www.finanztip.de/rechtsschutzversicherung/"
+      }
+    ],
+    "roland__top-rechtsschutz-premium": [
+      {
+        "source": "Finanztip",
+        "badge": "FT ·",
+        "sentiment": "neutral",
+        "scope": "tarif",
+        "verdict": "Top-Leistungen im Testfeld, aber wegen SB-Regime (300 €, steigt bei Schaden auf 500 €) nicht empfohlen",
+        "stand": "2025-08-20",
+        "url": "https://www.finanztip.de/rechtsschutzversicherung/"
+      }
+    ],
+    "advocard__360-privat-rechtsschutz": [
+      {
+        "source": "Finanztip",
+        "badge": "FT ✗",
+        "sentiment": "neg",
+        "scope": "tarif",
+        "verdict": "Keine Empfehlung — Advocard hat Finanztip-Anfragen nicht beantwortet",
+        "stand": "2025-08-20",
+        "url": "https://www.finanztip.de/rechtsschutzversicherung/"
+      }
+    ]
+  },
+  "insurers": {
+    "arag": [
+      {
+        "source": "Franke & Bornberg",
+        "badge": "FFF+",
+        "sentiment": "pos",
+        "scope": "versicherer",
+        "verdict": "Top-Bewertung FFF+ (hervorragend) im Rechtsschutz-Rating Privatpersonen 2025",
+        "stand": "2025-04-01",
+        "url": "https://www.franke-bornberg.de/de/ratings/kompositversicherung/rechtsschutzversicherung-privatperson"
+      }
+    ],
+    "oerag": [
+      {
+        "source": "Franke & Bornberg",
+        "badge": "FFF+",
+        "sentiment": "pos",
+        "scope": "versicherer",
+        "verdict": "Top-Bewertung FFF+ (hervorragend) im Rechtsschutz-Rating Privatpersonen 2025",
+        "stand": "2025-04-01",
+        "url": "https://www.franke-bornberg.de/de/ratings/kompositversicherung/rechtsschutzversicherung-privatperson"
+      }
+    ],
+    "roland": [
+      {
+        "source": "Franke & Bornberg",
+        "badge": "FFF+",
+        "sentiment": "pos",
+        "scope": "versicherer",
+        "verdict": "Top-Bewertung FFF+ (hervorragend) im Rechtsschutz-Rating Privatpersonen 2025",
+        "stand": "2025-04-01",
+        "url": "https://www.franke-bornberg.de/de/ratings/kompositversicherung/rechtsschutzversicherung-privatperson"
+      }
+    ]
+  },
+  "_market_notes": [
+    {
+      "versicherer": "WGV",
+      "tarif": "Privat- und Berufsrechtsschutz Optimal",
+      "source": "Finanztest 10/2025 + Finanztip",
+      "verdict": "Testsieger/Empfehlung — Direktvertrieb, nicht auf CHECK24 gelistet",
+      "stand": "2025-10-01",
+      "url": "https://www.test.de/thema/rechtsschutzversicherung/"
+    },
+    {
+      "versicherer": "HUK-Coburg",
+      "tarif": "PBV Plus",
+      "source": "Finanztest 10/2025 + Finanztip",
+      "verdict": "Testsieger/Empfehlung — Direktvertrieb, nicht auf CHECK24 gelistet",
+      "stand": "2025-10-01",
+      "url": "https://www.test.de/thema/rechtsschutzversicherung/"
+    }
+  ]
+}
