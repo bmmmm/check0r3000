@@ -1,5 +1,13 @@
 {
-  "_comment": "External test/rating verdicts, hand-curated with attribution (no scraped content). tariffs: stem-keyed tariff-level claims. insurers: insurer-level claims, matched by whole-word token against the (umlaut-normalised) insurer name or the stem. Display-only in the TUI — NEVER a score input: coverage is sparse, scoring it would bias Magic Find toward tested-at-all tariffs (same rule as price). Staleness: scripts/check_external_ratings.py --check greps the recorded stand date on the source page.",
+  "_comment": "External test/rating verdicts, hand-curated with attribution (no scraped content). tariffs: stem-keyed tariff-level claims. tariff_aliases: variant stem -> base stem whose verdicts apply product-identically (Flex/StrafrechtPlus/Familienrecht variants of the tested base tariff); the TUI marks these as base-variant verdicts. insurers: insurer-level claims, matched by whole-word token against the (umlaut-normalised) insurer name or the stem. Display-only in the TUI — NEVER a score input: coverage is sparse, scoring it would bias Magic Find toward tested-at-all tariffs (same rule as price). Staleness: scripts/check_external_ratings.py greps the recorded stand date on the source page (update-all.sh runs it warn-only).",
+  "tariff_aliases": {
+    "arag__komfort-flex-2026": "arag__komfort-2026",
+    "arag__premium-flex-2026": "arag__premium-2026",
+    "arag__premium-familienrecht-2026": "arag__premium-2026",
+    "arag__premium-flex-familienrecht-2026": "arag__premium-2026",
+    "roland__top-rechtsschutz-komfort-strafrechtplus": "roland__top-rechtsschutz-komfort",
+    "roland__top-rechtsschutz-premium-strafrechtplus": "roland__top-rechtsschutz-premium"
+  },
   "tariffs": {
     "arag__komfort-2026": [
       {

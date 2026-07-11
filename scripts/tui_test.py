@@ -411,6 +411,12 @@ async def t_external_ratings(app, pilot) -> None:
         f"oerag stem should carry only insurer-level FFF+, got {badges}")
     assert external_ratings_for("ergo__best", "Ergo", data) == [], (
         "unrated stem must yield no entries")
+    # Alias: a product-identical variant inherits the base verdicts, marked via=
+    if isinstance(data.get("tariff_aliases"), dict) and data["tariff_aliases"]:
+        variant, base = next(iter(data["tariff_aliases"].items()))
+        inherited = [e for e in external_ratings_for(variant, "", data)
+                     if e.get("via") == base]
+        assert inherited, f"alias {variant} did not inherit {base} verdicts"
 
     await pilot.press("M")
     await pilot.pause()

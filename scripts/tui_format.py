@@ -497,6 +497,8 @@ def external_rating_lines(entries: list[dict]) -> list[str]:
             f"  [{col}]{badge}[/{col}] {src} "
             f"[dim]({scope}, Stand {stand})[/dim]: {verdict}"
         )
+        if e.get("via"):
+            line += " [dim italic](Urteil zur produktgleichen Basis-Variante)[/dim italic]"
         url = e.get("url")
         if url:
             line += f' [link="{link_url(str(url))}"][dim]↗[/dim][/link]'

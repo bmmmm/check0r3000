@@ -684,13 +684,21 @@ def external_ratings_for(
 ) -> list[dict]:
     """Tariff-level entries for the stem + insurer-level entries whose key matches
     a whole word of the insurer name or stem. Whole-word matching is deliberate:
-    a substring test would let 'arag' hit 'oerag'."""
+    a substring test would let 'arag' hit 'oerag'. A stem listed in
+    tariff_aliases inherits its base stem's verdicts (product-identical
+    variant), marked with via=<base> so the display can say so."""
     if data is None:
         data = load_external_ratings()
     out: list[dict] = []
     tariffs = data.get("tariffs")
     if isinstance(tariffs, dict) and stem:
         entries = tariffs.get(stem)
+        if not entries:
+            aliases = data.get("tariff_aliases")
+            base = aliases.get(stem) if isinstance(aliases, dict) else None
+            if base:
+                entries = [{**e, "via": base} for e in tariffs.get(base) or []
+                           if isinstance(e, dict)]
         if isinstance(entries, list):
             out += [e for e in entries if isinstance(e, dict)]
     insurers = data.get("insurers")

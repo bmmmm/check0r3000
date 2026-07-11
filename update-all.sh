@@ -79,6 +79,16 @@ else
   fi
 fi
 
+if [ -z "$NO_SCAN" ]; then
+  # Warn-only, and only in scan mode: the check needs outbound net to the
+  # rating sites (finanztip.de), which sandboxed --no-scan runs don't have.
+  echo "==> external ratings staleness (warn-only)"
+  if $PYRUN scripts/check_external_ratings.py; then :; else
+    echo "WARNING: external test verdicts may be stale — review" >&2
+    echo "  data/sources/external-ratings.json (see the check output above)." >&2
+  fi
+fi
+
 echo "==> docs (download manifest PDFs into data/raw/)"
 # Non-fatal: a download hiccup (network, dead URL) is already logged per-tariff
 # by fetch_docs.py — surface it loudly but let the pipeline run on what's local.
