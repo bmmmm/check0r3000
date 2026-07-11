@@ -5,54 +5,354 @@
     "advocard__360-privat-rechtsschutz": {
       "insurer_contains": "ADVOCARD",
       "invariants": [
-        {"path": "insurer", "check": "contains", "expected": "ADVOCARD", "why": "identity known from manifest; must never be null (haiku dropped it once)"},
-        {"path": "tariff", "check": "nonnull", "why": "identity known from manifest"},
-        {"path": "modules.privat.included", "check": "eq", "expected": true, "why": "AVB §30(4): Privat-Rechtsschutz is a CORE Bereich of 360-PRIVAT"},
-        {"path": "modules.verkehr.included", "check": "eq", "expected": true, "why": "AVB §30(4)(C): Verkehrs-Rechtsschutz is a CORE Bereich (unconditional)"},
-        {"path": "modules.wohnen_immobilien.included", "check": "eq", "expected": true, "why": "AVB §30(4)(D): Wohnungs- und Haus-Rechtsschutz is a CORE Bereich"},
-        {"path": "modules.internet_web.included", "check": "eq", "expected": true, "why": "AVB §30(4)(G/H): Internet-Rechtsschutz + Identity Protection are CORE"},
-        {"path": "modules.privat.level", "check": "isnull", "why": "no Leistungsuebersicht fed -> chosen Stufe unknown, must not be guessed"},
-        {"path": "modules.beruf.level", "check": "isnull", "why": "Stufe unknown; guard against hallucinating a level"},
-        {"path": "modules.verkehr.level", "check": "isnull", "why": "Stufe unknown without Leistungsuebersicht"},
-        {"path": "modules.wohnen_immobilien.level", "check": "isnull", "why": "Stufe unknown without Leistungsuebersicht"},
-        {"path": "modules.internet_web.level", "check": "isnull", "why": "Stufe unknown without Leistungsuebersicht"},
-        {"path": "modules.steuer.level", "check": "isnull", "why": "Stufe unknown; guard against hallucinating a level"},
-        {"path": "modules.sozialgericht.level", "check": "isnull", "why": "Stufe unknown; guard against hallucinating a level"},
-        {"path": "modules.verwaltungsrecht.level", "check": "isnull", "why": "Stufe unknown; guard against hallucinating a level"},
-        {"path": "coverage.versicherungssumme", "check": "contains", "expected": "unbegrenzt", "why": "AVB: 'Die Versicherungssumme ist je Rechtsschutzfall unbegrenzt' (with documented per-area caps)"},
-        {"path": "coverage.selbstbeteiligung", "check": "contains_all_digits", "expected": ["150", "300"], "why": "AVB names the two deductible variants 'Selbstbeteiligung von 150 EUR / 300 EUR vereinbart'"},
-        {"path": "coverage.wartezeit_monate", "check": "eq", "expected": 3, "why": "AVB §4: general 'drei Monate ... Wartezeit' (with documented exceptions both ways)"},
-        {"path": "coverage.geltungsbereich", "check": "contains", "expected": "europ", "why": "AVB §6 oertlicher Geltungsbereich: 'in Europa' et al."},
-        {"path": "coverage.vertragslaufzeit", "check": "nonnull", "why": "PIB: contract for 1 or 3 years, auto-renewing"},
-        {"path": "beitrag.monatlich_eur", "check": "isnull", "why": "premium is NOT in AVB/PIB ('entnehmen Sie Ihrem Versicherungsschein') -> must stay null"},
-        {"path": "beitrag.jaehrlich_eur", "check": "isnull", "why": "premium is NOT in AVB/PIB -> must stay null"}
+        {
+          "path": "insurer",
+          "check": "contains",
+          "expected": "ADVOCARD",
+          "why": "identity known from manifest; must never be null (haiku dropped it once)"
+        },
+        {
+          "path": "tariff",
+          "check": "nonnull",
+          "why": "identity known from manifest"
+        },
+        {
+          "path": "modules.privat.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB §30(4): Privat-Rechtsschutz is a CORE Bereich of 360-PRIVAT"
+        },
+        {
+          "path": "modules.verkehr.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB §30(4)(C): Verkehrs-Rechtsschutz is a CORE Bereich (unconditional)"
+        },
+        {
+          "path": "modules.wohnen_immobilien.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB §30(4)(D): Wohnungs- und Haus-Rechtsschutz is a CORE Bereich"
+        },
+        {
+          "path": "modules.internet_web.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB §30(4)(G/H): Internet-Rechtsschutz + Identity Protection are CORE"
+        },
+        {
+          "path": "modules.privat.level",
+          "check": "isnull",
+          "why": "no Leistungsuebersicht fed -> chosen Stufe unknown, must not be guessed"
+        },
+        {
+          "path": "modules.beruf.level",
+          "check": "isnull",
+          "why": "Stufe unknown; guard against hallucinating a level"
+        },
+        {
+          "path": "modules.verkehr.level",
+          "check": "isnull",
+          "why": "Stufe unknown without Leistungsuebersicht"
+        },
+        {
+          "path": "modules.wohnen_immobilien.level",
+          "check": "isnull",
+          "why": "Stufe unknown without Leistungsuebersicht"
+        },
+        {
+          "path": "modules.internet_web.level",
+          "check": "isnull",
+          "why": "Stufe unknown without Leistungsuebersicht"
+        },
+        {
+          "path": "modules.steuer.level",
+          "check": "isnull",
+          "why": "Stufe unknown; guard against hallucinating a level"
+        },
+        {
+          "path": "modules.sozialgericht.level",
+          "check": "isnull",
+          "why": "Stufe unknown; guard against hallucinating a level"
+        },
+        {
+          "path": "modules.verwaltungsrecht.level",
+          "check": "isnull",
+          "why": "Stufe unknown; guard against hallucinating a level"
+        },
+        {
+          "path": "coverage.versicherungssumme",
+          "check": "contains",
+          "expected": "unbegrenzt",
+          "why": "AVB: 'Die Versicherungssumme ist je Rechtsschutzfall unbegrenzt' (with documented per-area caps)"
+        },
+        {
+          "path": "coverage.selbstbeteiligung",
+          "check": "contains_all_digits",
+          "expected": [
+            "150",
+            "300"
+          ],
+          "why": "AVB names the two deductible variants 'Selbstbeteiligung von 150 EUR / 300 EUR vereinbart'"
+        },
+        {
+          "path": "coverage.wartezeit_monate",
+          "check": "eq",
+          "expected": 3,
+          "why": "AVB §4: general 'drei Monate ... Wartezeit' (with documented exceptions both ways)"
+        },
+        {
+          "path": "coverage.geltungsbereich",
+          "check": "contains",
+          "expected": "europ",
+          "why": "AVB §6 oertlicher Geltungsbereich: 'in Europa' et al."
+        },
+        {
+          "path": "coverage.vertragslaufzeit",
+          "check": "nonnull",
+          "why": "PIB: contract for 1 or 3 years, auto-renewing"
+        },
+        {
+          "path": "beitrag.monatlich_eur",
+          "check": "isnull",
+          "why": "premium is NOT in AVB/PIB ('entnehmen Sie Ihrem Versicherungsschein') -> must stay null"
+        },
+        {
+          "path": "beitrag.jaehrlich_eur",
+          "check": "isnull",
+          "why": "premium is NOT in AVB/PIB -> must stay null"
+        }
       ]
     },
     "arag__premium-2026": {
       "insurer_contains": "ARAG",
       "invariants": [
-        {"path": "insurer", "check": "contains", "expected": "ARAG", "why": "identity known from manifest"},
-        {"path": "tariff", "check": "nonnull", "why": "identity known from manifest"},
-        {"path": "modules.privat.included", "check": "eq", "expected": true, "why": "AVB §26: Privat-Rechtsschutz is a core module"},
-        {"path": "modules.verkehr.included", "check": "eq", "expected": true, "why": "AVB: Verkehrs-/Ordnungswidrigkeiten-Rechtsschutz core module"},
-        {"path": "modules.wohnen_immobilien.included", "check": "eq", "expected": true, "why": "AVB: Wohnungs- und Grundstuecks-Rechtsschutz core module"},
-        {"path": "modules.steuer.included", "check": "eq", "expected": true, "why": "AVB: Steuer-Rechtsschutz vor Finanz-/Verwaltungsgerichten (verified core)"},
-        {"path": "modules.sozialgericht.included", "check": "eq", "expected": true, "why": "AVB: Sozial-Rechtsschutz vor Sozialgerichten (verified core)"},
-        {"path": "modules.verwaltungsrecht.included", "check": "eq", "expected": true, "why": "AVB: Verwaltungs-Rechtsschutz in Verkehrs-/Nichtverkehrssachen (verified core)"},
-        {"path": "modules.privat.level", "check": "isnull", "why": "Kompakt/Komfort/Premium listed as options only; chosen Stufe not stated -> null (haiku once hallucinated 'Komfort')"},
-        {"path": "modules.beruf.level", "check": "isnull", "why": "Stufe not stated -> null"},
-        {"path": "modules.verkehr.level", "check": "isnull", "why": "Stufe not stated -> null"},
-        {"path": "modules.wohnen_immobilien.level", "check": "isnull", "why": "Stufe not stated -> null"},
-        {"path": "modules.internet_web.level", "check": "isnull", "why": "web@ktiv tiers are options only -> null"},
-        {"path": "modules.steuer.level", "check": "isnull", "why": "Stufe not stated -> null"},
-        {"path": "modules.sozialgericht.level", "check": "isnull", "why": "Stufe not stated -> null"},
-        {"path": "modules.verwaltungsrecht.level", "check": "isnull", "why": "Stufe not stated -> null"},
-        {"path": "coverage.versicherungssumme", "check": "contains", "expected": "unbegrenzt", "why": "AVB coverage table: 'Europa unbegrenzt'"},
-        {"path": "coverage.selbstbeteiligung", "check": "nonnull", "why": "AVB offers a selectable deductible ('waehlbar'); specific amounts live in the Leistungsuebersicht, so only require non-null"},
-        {"path": "coverage.geltungsbereich", "check": "contains", "expected": "europ", "why": "PIB: scope Europa, Anliegerstaaten des Mittelmeers et al."},
-        {"path": "coverage.vertragslaufzeit", "check": "nonnull", "why": "PIB: 1/3-year contract duration"},
-        {"path": "beitrag.monatlich_eur", "check": "isnull", "why": "premium is NOT in AVB/PIB/weitere_unterlagen -> must stay null"},
-        {"path": "beitrag.jaehrlich_eur", "check": "isnull", "why": "premium is NOT in the fed documents -> must stay null"}
+        {
+          "path": "insurer",
+          "check": "contains",
+          "expected": "ARAG",
+          "why": "identity known from manifest"
+        },
+        {
+          "path": "tariff",
+          "check": "nonnull",
+          "why": "identity known from manifest"
+        },
+        {
+          "path": "modules.privat.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB §26: Privat-Rechtsschutz is a core module"
+        },
+        {
+          "path": "modules.verkehr.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB: Verkehrs-/Ordnungswidrigkeiten-Rechtsschutz core module"
+        },
+        {
+          "path": "modules.wohnen_immobilien.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB: Wohnungs- und Grundstuecks-Rechtsschutz core module"
+        },
+        {
+          "path": "modules.steuer.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB: Steuer-Rechtsschutz vor Finanz-/Verwaltungsgerichten (verified core)"
+        },
+        {
+          "path": "modules.sozialgericht.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB: Sozial-Rechtsschutz vor Sozialgerichten (verified core)"
+        },
+        {
+          "path": "modules.verwaltungsrecht.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB: Verwaltungs-Rechtsschutz in Verkehrs-/Nichtverkehrssachen (verified core)"
+        },
+        {
+          "path": "modules.privat.level",
+          "check": "isnull",
+          "why": "Kompakt/Komfort/Premium listed as options only; chosen Stufe not stated -> null (haiku once hallucinated 'Komfort')"
+        },
+        {
+          "path": "modules.beruf.level",
+          "check": "isnull",
+          "why": "Stufe not stated -> null"
+        },
+        {
+          "path": "modules.verkehr.level",
+          "check": "isnull",
+          "why": "Stufe not stated -> null"
+        },
+        {
+          "path": "modules.wohnen_immobilien.level",
+          "check": "isnull",
+          "why": "Stufe not stated -> null"
+        },
+        {
+          "path": "modules.internet_web.level",
+          "check": "isnull",
+          "why": "web@ktiv tiers are options only -> null"
+        },
+        {
+          "path": "modules.steuer.level",
+          "check": "isnull",
+          "why": "Stufe not stated -> null"
+        },
+        {
+          "path": "modules.sozialgericht.level",
+          "check": "isnull",
+          "why": "Stufe not stated -> null"
+        },
+        {
+          "path": "modules.verwaltungsrecht.level",
+          "check": "isnull",
+          "why": "Stufe not stated -> null"
+        },
+        {
+          "path": "coverage.versicherungssumme",
+          "check": "contains",
+          "expected": "unbegrenzt",
+          "why": "AVB coverage table: 'Europa unbegrenzt'"
+        },
+        {
+          "path": "coverage.selbstbeteiligung",
+          "check": "nonnull",
+          "why": "AVB offers a selectable deductible ('waehlbar'); specific amounts live in the Leistungsuebersicht, so only require non-null"
+        },
+        {
+          "path": "coverage.geltungsbereich",
+          "check": "contains",
+          "expected": "europ",
+          "why": "PIB: scope Europa, Anliegerstaaten des Mittelmeers et al."
+        },
+        {
+          "path": "coverage.vertragslaufzeit",
+          "check": "nonnull",
+          "why": "PIB: 1/3-year contract duration"
+        },
+        {
+          "path": "beitrag.monatlich_eur",
+          "check": "isnull",
+          "why": "premium is NOT in AVB/PIB/weitere_unterlagen -> must stay null"
+        },
+        {
+          "path": "beitrag.jaehrlich_eur",
+          "check": "isnull",
+          "why": "premium is NOT in the fed documents -> must stay null"
+        }
+      ]
+    },
+    "roland__top-rechtsschutz-premium": {
+      "insurer_contains": "ROLAND",
+      "invariants": [
+        {
+          "path": "insurer",
+          "check": "contains",
+          "expected": "ROLAND",
+          "why": "identity known from manifest; AVB signs 'ROLAND Rechtsschutz-Versicherungs-AG'"
+        },
+        {
+          "path": "tariff",
+          "check": "nonnull",
+          "why": "identity known from manifest"
+        },
+        {
+          "path": "modules.privat.included",
+          "check": "eq",
+          "expected": true,
+          "why": "Leistungsuebersicht 'Versicherte Bausteine': Privat-RS is core in every Paket (not 'Optional moeglich')"
+        },
+        {
+          "path": "modules.beruf.included",
+          "check": "eq",
+          "expected": true,
+          "why": "Leistungsuebersicht 'Versicherte Bausteine': Berufs-RS is core"
+        },
+        {
+          "path": "modules.verkehr.included",
+          "check": "eq",
+          "expected": true,
+          "why": "Leistungsuebersicht 'Versicherte Bausteine': Verkehrs-RS is core"
+        },
+        {
+          "path": "modules.wohnen_immobilien.included",
+          "check": "eq",
+          "expected": true,
+          "why": "Leistungsuebersicht 'Versicherte Bausteine': Immobilien-RS is core"
+        },
+        {
+          "path": "modules.privat.level",
+          "check": "isnull",
+          "why": "TIER-AS-PRODUCT GUARD: one AVB describes Basis/Komfort/Premium side by side and never states a chosen per-module Stufe; models hallucinate level='Premium' from the product NAME -> must stay null"
+        },
+        {
+          "path": "modules.beruf.level",
+          "check": "isnull",
+          "why": "TIER-AS-PRODUCT GUARD: one AVB describes Basis/Komfort/Premium side by side and never states a chosen per-module Stufe; models hallucinate level='Premium' from the product NAME -> must stay null"
+        },
+        {
+          "path": "modules.verkehr.level",
+          "check": "isnull",
+          "why": "TIER-AS-PRODUCT GUARD: one AVB describes Basis/Komfort/Premium side by side and never states a chosen per-module Stufe; models hallucinate level='Premium' from the product NAME -> must stay null"
+        },
+        {
+          "path": "modules.wohnen_immobilien.level",
+          "check": "isnull",
+          "why": "TIER-AS-PRODUCT GUARD: one AVB describes Basis/Komfort/Premium side by side and never states a chosen per-module Stufe; models hallucinate level='Premium' from the product NAME -> must stay null"
+        },
+        {
+          "path": "modules.internet_web.level",
+          "check": "isnull",
+          "why": "TIER-AS-PRODUCT GUARD: one AVB describes Basis/Komfort/Premium side by side and never states a chosen per-module Stufe; models hallucinate level='Premium' from the product NAME -> must stay null"
+        },
+        {
+          "path": "modules.steuer.level",
+          "check": "isnull",
+          "why": "TIER-AS-PRODUCT GUARD: one AVB describes Basis/Komfort/Premium side by side and never states a chosen per-module Stufe; models hallucinate level='Premium' from the product NAME -> must stay null"
+        },
+        {
+          "path": "modules.sozialgericht.level",
+          "check": "isnull",
+          "why": "TIER-AS-PRODUCT GUARD: one AVB describes Basis/Komfort/Premium side by side and never states a chosen per-module Stufe; models hallucinate level='Premium' from the product NAME -> must stay null"
+        },
+        {
+          "path": "modules.verwaltungsrecht.level",
+          "check": "isnull",
+          "why": "TIER-AS-PRODUCT GUARD: one AVB describes Basis/Komfort/Premium side by side and never states a chosen per-module Stufe; models hallucinate level='Premium' from the product NAME -> must stay null"
+        },
+        {
+          "path": "coverage.versicherungssumme",
+          "check": "contains",
+          "expected": "unbegrenzt",
+          "why": "Leistungsuebersicht: 'Versicherungssumme Unbegrenzt' in all three Pakete"
+        },
+        {
+          "path": "coverage.selbstbeteiligung",
+          "check": "nonnull",
+          "why": "AVB section 8 'Welche Selbstbeteiligungsvarianten gibt es?' — a deductible regime exists; the chosen amount is NOT in the fed docs"
+        },
+        {
+          "path": "coverage.geltungsbereich",
+          "check": "contains",
+          "expected": "europ",
+          "why": "Leistungsuebersicht Geltungsbereich: Europa (worldwide only as limited extension)"
+        },
+        {
+          "path": "beitrag.monatlich_eur",
+          "check": "isnull",
+          "why": "premium is NOT in AVB/PIB/weitere_unterlagen -> must stay null"
+        },
+        {
+          "path": "beitrag.jaehrlich_eur",
+          "check": "isnull",
+          "why": "premium is NOT in the fed documents -> must stay null"
+        }
       ]
     }
   }
