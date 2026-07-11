@@ -32,7 +32,7 @@ W, H = 78, 20
 LOGO_Y = 6
 SUB_Y = 13
 SUBTITLE = "» RECHTSSCHUTZ-VERGLEICH «"
-HINT = "kkknppthx check24.de ;)"
+HINT = "kkknppthx check24.de ;) — credits: finanztip · franke&bornberg · finanztest"
 HINT_Y = H - 2
 
 Cell = tuple[str, str]  # (char, style key); ("", "") never occurs, blank = (" ", "")
@@ -139,9 +139,17 @@ def _put_hint(g: Grid) -> None:
             _put(g, x0 + i, HINT_Y, ch, "dim")
 
 
-def _flash_and_hold(cells: list[tuple[int, int, str, int]], hold: int = 10) -> list[Grid]:
-    """Shared finale: white/hot flash, then the settled logo while the subtitle
-    fades in center-out and the credit hint appears."""
+# Frames the finished frame (logo + subtitle + credits) is repeated for at the
+# end: 44 frames ≈ 2s at the SplashScreen's 45ms interval. Without this the
+# credit line was on screen for ~5 frames (~225ms) before the auto-dismiss.
+SETTLE_FRAMES = 44
+
+
+def _flash_and_hold(cells: list[tuple[int, int, str, int]], hold: int = 10,
+                    settle: int = SETTLE_FRAMES) -> list[Grid]:
+    """Shared finale: white/hot flash, the settled logo while the subtitle fades
+    in center-out and the credit hint appears — then the finished frame holds
+    for ~2s so subtitle + credits are actually readable (any key still skips)."""
     frames: list[Grid] = []
     for style in ("logo2", "hot", "logo2"):
         g = _grid()
@@ -156,7 +164,20 @@ def _flash_and_hold(cells: list[tuple[int, int, str, int]], hold: int = 10) -> l
         if i >= hold // 2:
             _put_hint(g)
         frames.append(g)
+    frames.extend([_settled_frame(cells)] * settle)
     return frames
+
+
+def _settled_frame(cells: list[tuple[int, int, str, int]]) -> Grid:
+    """The finished splash frame: logo + full subtitle + credit line. Repeated
+    SETTLE_FRAMES times at the end of every variant; rendering is read-only,
+    so sharing one grid across the repeats is fine."""
+    g = _grid()
+    for x, y, ch, _gi in cells:
+        _put(g, x, y, ch, "logo")
+    _put_subtitle(g)
+    _put_hint(g)
+    return g
 
 
 # ---------------------------------------------------------------------------
@@ -287,7 +308,7 @@ def frames_slam(rng: random.Random) -> list[Grid]:
             style = "logo" if x < sweep_x - 3 else ("logo2" if x <= sweep_x else "hot")
             _put(g, x, y, ch, style)
         frames.append(g)
-    for i in range(12):  # subtitle types in, then hold
+    for i in range(12):  # subtitle types in
         g = _grid()
         for x, y, ch, _gi in cells:
             _put(g, x, y, ch, "logo")
@@ -295,6 +316,7 @@ def frames_slam(rng: random.Random) -> list[Grid]:
         if i >= 6:
             _put_hint(g)
         frames.append(g)
+    frames.extend([_settled_frame(cells)] * SETTLE_FRAMES)
     return frames
 
 
@@ -484,8 +506,11 @@ def _selftest() -> int:
             and all(b.count("\n") == 3 for b in big))
     print(f"loader big: {len(big)} distinct frames {'OK' if good else 'FAIL'}")
     ok &= good
-    hint_frames = [f for f in splash_frames("3") if "check24.de" in f]
-    good = len(hint_frames) >= 3
+    # The credit line must survive the settle phase, not just flash by: at the
+    # SplashScreen's 45ms interval SETTLE_FRAMES ≈ 2s of readable credits.
+    hint_frames = [f for f in splash_frames("3")
+                   if "check24.de" in f and "finanztip" in f]
+    good = len(hint_frames) >= SETTLE_FRAMES
     print(f"hint line: {len(hint_frames)} frames {'OK' if good else 'FAIL'}")
     ok &= good
     return 0 if ok else 1

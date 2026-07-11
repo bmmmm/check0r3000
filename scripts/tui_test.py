@@ -605,8 +605,10 @@ async def t_splash_and_loader(app, pilot) -> None:
     await pilot.pause()
     assert not isinstance(app.screen, SplashScreen), "key did not skip splash"
 
+    # ~100 frames since the settle phase; 5ms nominal + timer overhead needs
+    # more than the old 0.6s to play through.
     await app.push_screen(SplashScreen(frames, interval=0.005))
-    await asyncio.sleep(0.6)
+    await asyncio.sleep(1.5)
     await pilot.pause()
     assert not isinstance(app.screen, SplashScreen), "splash did not self-dismiss"
 
