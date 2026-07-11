@@ -111,6 +111,18 @@ visibility:hidden = click-through, nur die Box sichtbar) + Bar vor der
 Pipeline-Statuszeile (Timer `_animate_pipeline_status`, Raw-Markup bleibt in
 `_pipeline_status_markup`).
 
+Markup-Sicherheit ist zweischichtig: per-site `_esc()` an jedem Producer bleibt der
+Korrektheits-Mechanismus (Display-Fidelity); dahinter validieren `guard_cell`/
+`guard_content` (tui_app) jeden Daten-Sink mit dem echten Sink-Parser (DataTable =
+Rich, lazy geparst!; Static/Label = Textual Content) und rendern bei MarkupError
+escaped-plain statt zu crashen. Jeder Catch landet in `MARKUP_FALLBACKS`; der
+`hostile_data_sweep`-Testcase treibt feindliche Strings durch alle extern
+gespeisten Datenflächen und pinnt das Ledger auf **leer** — ein vergessenes `_esc`
+an einer neuen Producer-Stelle crasht also nicht mehr, fällt aber im Test auf.
+Extern gespeiste Felder (immer escapen): Scrape-Strings (insurer/product/
+tarifnote/SB), LLM-Record-Felder, Manifest-doctype/-file, `self._model`
+(Env-Var!), Favoriten-Tags/-Notizen, external-ratings-Einträge.
+
 Per-Tab-Dispatch läuft über die `TAB_SPECS`-Tabelle in `tui_app.py` (TabSpec je Tab:
 Table-/Band-/Focus-IDs + Adopt-Handler) — ein neuer Tab ist EIN TabSpec-Eintrag, keine
 verstreuten if-Ketten. `_adopt_cursor_row` bleibt der einzige Writer des Active-State.

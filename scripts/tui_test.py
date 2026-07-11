@@ -241,6 +241,140 @@ async def t_markup_hostile_nav(app, pilot) -> None:
     # Reaching here without a MarkupError is the real assertion.
 
 
+async def t_hostile_data_sweep(app, pilot) -> None:
+    """The dedicated hostile-data suite behind the _esc choke-point rework
+    (issue #1): drive Rich-markup metacharacters through EVERY externally
+    sourced data surface (scraped snapshot fields, LLM record fields, manifest
+    docs, favorites/tags/notes, external ratings, feature changelogs) and
+
+    1. require that no producer relies on the containment guard — the
+       MARKUP_FALLBACKS ledger must stay empty (per-site _esc is complete), and
+    2. prove the guard itself catches deliberately broken markup instead of
+       crashing (the containment layer for FUTURE producer sites)."""
+    import tui_app as A
+    from textual.content import Content
+    from rich.text import Text as RichText
+    from tui_data import ChangeInfo, DetailRecord
+    from tui_format import (external_badge_cell, external_rating_lines,
+                            record_body_lines, verlauf_row_cells)
+
+    H = "[/x][bold]BOOM[blink] ]a[ [/"
+    STEM = "hostile__sweep"
+    base_fb = len(A.MARKUP_FALLBACKS)
+
+    rec = DetailRecord(
+        insurer=H, tariff=H, stand=H,
+        modules={"privat": {"included": True, "level": H, "hinweis": H}},
+        coverage={"versicherungssumme": H, "selbstbeteiligung": H,
+                  "wartezeit_monate": H, "geltungsbereich": H,
+                  "vertragslaufzeit": H},
+        leistungen=[H, "[/]"], ausschluesse=[H], besonderheiten=[H],
+        beitrag={"monatlich_eur": 9.99, "quelle": H},
+    )
+    ext_entry = {"source": H, "badge": H, "sentiment": H, "scope": H,
+                 "verdict": H, "stand": H, "url": 'https://x.example/["a"]'}
+
+    # --- Part A: pure formatters, validated with their sink's real parser
+    Content.from_markup("\n".join(record_body_lines(rec)))
+    Content.from_markup("\n".join(external_rating_lines([ext_entry])))
+    RichText.from_markup(external_badge_cell([ext_entry]))
+    vrow = {"new_position": 1, "old_price": 0.0, "new_price": 2.0,
+            "delta_price": 2.0, "delta_pos": 1, "is_new": False,
+            "is_removed": False, "insurer": H, "product": H, "sb": H}
+    for cell in verlauf_row_cells(vrow):
+        RichText.from_markup(cell)
+
+    # --- Part B: in-memory injection + live walk over every tab
+    base = app._snapshot.rows[0]
+    hrow = dataclasses.replace(
+        base, position=998, insurer=H, product=H, tarifnote=H,
+        selbstbeteiligung=H, wartezeit_per_modul={"privat": H},
+        stem=STEM, has_detail=True, has_urls=True, key="hostile|sweep|1")
+    app._snapshot.rows.append(hrow)
+    app._details_by_stem[STEM] = rec
+    hostile_docs = [{"doctype": H, "name": H, "url": 'https://x.example/["d"]'}]
+    entry = {"stem": STEM, "insurer": H, "tariff": H, "docs": hostile_docs}
+    app._doc_by_stem[STEM] = entry
+    app._doc_index[STEM] = hostile_docs
+    app._favorites.setdefault("favorites", []).append(
+        {"insurer": H, "product": H, "sb": H, "tag": H, "stem": STEM})
+    app._favorites["compare_stems"] = [STEM]  # in-memory only, never saved here
+    app._favorite_notes[STEM] = H
+    app._ext_ratings.setdefault("tariffs", {})[STEM] = [ext_entry]
+    app._change_summary[STEM] = ChangeInfo(
+        feature_changes=1, price_changes=1, last_change_date="2026-01-02",
+        last_analysis_date="2026-01-02", first_seen_date="2026-01-01",
+        feature_changelog=[("2026-01-01", "2026-01-02",
+                            {"leistungen_added": [H], "leistungen_removed": [H]})],
+        price_changelog=[{"date": "2026-01-02", "old_price": 1.0,
+                          "new_price": 2.0, "delta": 1.0}],
+        price_series=[{"date": "2026-01-01", "price": 1.0},
+                      {"date": "2026-01-02", "price": 2.0}])
+
+    for tab_key, table_id, ident in (
+        ("x", "#market-table", "hostile|sweep|1"),
+        ("y", "#fav-table", None),
+        ("M", "#magic-table", STEM),
+    ):
+        await pilot.press(tab_key)
+        await pilot.pause()
+    app._populate_market_table()
+    app._populate_favorites_table()
+    app._populate_magic()
+    app._populate_coverage()
+    await pilot.pause()
+
+    for table_id, prefix in (("#market-table", "hostile|sweep|1"),
+                             ("#magic-table", STEM)):
+        table = _table(app, table_id)
+        rk = next((k for k in (app._market_rows if table_id == "#market-table"
+                               else app._magic_rows) if k.startswith(prefix)), None)
+        assert rk is not None, f"hostile row missing from {table_id}"
+        table.move_cursor(row=table.get_row_index(rk))
+        await pilot.pause()
+        app._detail_visible = True
+        app._show_detail()
+        await pilot.pause()
+
+    # Favorites band: highlight the hostile favorite (last row) + render.
+    await pilot.press("y")
+    await pilot.pause()
+    fav_table = _table(app, "#fav-table")
+    if fav_table.row_count:
+        fav_table.move_cursor(row=fav_table.row_count - 1)
+        await pilot.pause()
+        app._detail_visible = True
+        app._show_detail()
+        await pilot.pause()
+
+    # Vergleich matrix rendered with the hostile record as its only column.
+    await pilot.press("v")
+    await pilot.pause()
+
+    # Verlauf detail markup for the hostile row (its table rows come from disk
+    # snapshots, so validate the render path directly with the real parser).
+    Content.from_markup(app._render_verlauf_detail(hrow))
+    Content.from_markup(app._render_price_series(STEM))
+
+    # Modal screens that interpolate manifest data.
+    from tui_screens import ConfirmFetchScreen
+    await app.push_screen(ConfirmFetchScreen(entry, model=H))
+    await pilot.pause()
+    await pilot.press("escape")
+    await pilot.pause()
+
+    assert len(A.MARKUP_FALLBACKS) == base_fb, (
+        "a producer site relies on the containment guard — add the missing "
+        f"_esc: {A.MARKUP_FALLBACKS[base_fb:]}")
+
+    # --- Part C: the guard itself contains deliberately broken markup
+    broken = "[/x]raw [unclosed"
+    assert A.guard_content(broken).startswith("\\["), "guard_content no fallback"
+    assert A.guard_cell(broken).startswith("\\["), "guard_cell no fallback"
+    assert len(A.MARKUP_FALLBACKS) == base_fb + 2, "fallbacks not recorded"
+    del A.MARKUP_FALLBACKS[base_fb:]  # don't leak into other cases
+
+
 async def t_verlauf_stats(app, pilot) -> None:
     """The Verlauf tab renders the market-over-time header line and the per-stem
     Preisverlauf sparkline without markup errors (needs the repo's >=2 snapshots)."""
@@ -669,6 +803,7 @@ CASES = [
     ("filter_debounce", t_filter_debounce),
     ("help_modal", t_help_modal),
     ("markup_hostile_nav", t_markup_hostile_nav),
+    ("hostile_data_sweep", t_hostile_data_sweep),
     ("verlauf_stats", t_verlauf_stats),
     ("splash_and_loader", t_splash_and_loader),
 ]

@@ -89,9 +89,14 @@ from tui_format import (  # noqa: E402
     _vergleich_col_w,
 )
 
+from rich.errors import MarkupError as RichMarkupError  # noqa: E402
+from rich.text import Text as RichText  # noqa: E402
+
 from textual import on, work  # noqa: E402
 from textual.app import App, ComposeResult  # noqa: E402
 from textual.binding import Binding  # noqa: E402
+from textual.content import Content  # noqa: E402
+from textual.markup import MarkupError  # noqa: E402
 from textual.containers import Container, ScrollableContainer, Vertical  # noqa: E402
 from textual.css.query import NoMatches  # noqa: E402
 from textual.timer import Timer  # noqa: E402
@@ -130,6 +135,60 @@ from tui_screens import (  # noqa: E402
 # extract.py's own default ("claude" = the claude CLI); override without editing
 # code via CHECK0R_ANALYZE_MODEL (e.g. a local mlx:/ollama: spec).
 ANALYZE_MODEL = os.environ.get("CHECK0R_ANALYZE_MODEL", "claude")
+
+# ---------------------------------------------------------------------------
+# Markup containment choke point
+# ---------------------------------------------------------------------------
+# Per-site _esc at every producer stays the correctness mechanism (display
+# fidelity — a deliberate 2026-06-26 bughunt decision). These guards are the
+# containment layer behind it: every data-carrying render sink validates its
+# markup with the SAME parser the sink itself uses, and a string that would
+# raise MarkupError renders escaped-plain instead of crashing the app. A missed
+# _esc at a future producer site thus degrades visibly instead of killing the
+# TUI mid-session. DataTable parses cells LAZILY (the crash would surface in
+# the idle loop, far from the add_row call) with RICH's parser, while Static/
+# Label parse with Textual's Content parser — hence two guards.
+#
+# MARKUP_FALLBACKS records every catch; the hostile-data pilot suite asserts it
+# stays EMPTY while driving hostile strings through all producers, so a missed
+# _esc still fails the test suite loudly even though it no longer crashes.
+
+MARKUP_FALLBACKS: list[str] = []
+
+
+def _escaped_plain(markup: str) -> str:
+    """Render-safe fallback: every '[' escaped — shows raw tags, never crashes."""
+    return markup.replace("[", "\\[")
+
+
+def guard_content(markup):
+    """Validate Static/Label markup (Textual Content parser); non-str passes."""
+    if not isinstance(markup, str) or "[" not in markup:
+        return markup
+    try:
+        Content.from_markup(markup)
+        return markup
+    except MarkupError:
+        MARKUP_FALLBACKS.append(markup[:200])
+        return _escaped_plain(markup)
+
+
+def guard_cell(cell):
+    """Validate one DataTable cell (Rich parser — what DataTable renders with)."""
+    if not isinstance(cell, str) or "[" not in cell:
+        return cell
+    try:
+        RichText.from_markup(cell)
+        return cell
+    except RichMarkupError:
+        MARKUP_FALLBACKS.append(cell[:200])
+        return _escaped_plain(cell)
+
+
+def guard_cells(cells):
+    """Guard every cell of one table row."""
+    return tuple(guard_cell(c) for c in cells)
+
 
 # ---------------------------------------------------------------------------
 # Helpers used inside the app
@@ -653,7 +712,10 @@ class CheckApp(App):
     def _docs_label(self, stem: str) -> str:
         seen: list[str] = []
         for dd in self._doc_index.get(stem, []):
-            lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+            # doctype fallback = raw manifest data (harvest passes unknown
+            # CHECK24 kinds through verbatim) — escape before cell markup
+            lbl = _esc(_DOCTYPE_SHORT.get(dd.get("doctype", ""),
+                                          dd.get("doctype", "")))
             if lbl and lbl not in seen:
                 seen.append(lbl)
         return "·".join(seen) if seen else "[dim]—[/dim]"
@@ -676,7 +738,7 @@ class CheckApp(App):
             )
         parts.append("↵ Zeile wählen → Detail · \\[R] Referenz · \\[u] Favorit")
         parts.append(STATUS_LEGEND)
-        ko.update("\n".join(parts))
+        ko.update(guard_content("\n".join(parts)))
 
     def _fav_row_cells(
         self,
@@ -701,7 +763,7 @@ class CheckApp(App):
         else:
             star = "[yellow]★[/yellow]"
         nc = _tarifnote_color(row.tarifnote)
-        note_col = f"[{nc}]{row.tarifnote}[/{nc}]" if row.tarifnote else "—"
+        note_col = f"[{nc}]{_esc(row.tarifnote)}[/{nc}]" if row.tarifnote else "—"
         price_str = f"{row.monatlich_eur:.2f}" if row.monatlich_eur is not None else "—"
         pc = _price_color(row.monatlich_eur, self._q1, self._q3)
         price_col = f"[{pc}]{price_str}[/{pc}]"
@@ -761,7 +823,8 @@ class CheckApp(App):
         for idx, (fav, row, variants) in enumerate(entries):
             key = f"fav-{idx}"
             self._fav_rows[key] = (row, fav)
-            table.add_row(*self._fav_row_cells(fav, row, variants, ref_price, ref_sb), key=key)
+            table.add_row(*guard_cells(
+                self._fav_row_cells(fav, row, variants, ref_price, ref_sb)), key=key)
 
         self._fav_ident_to_rk = {}
         for rk, (row, fav) in self._fav_rows.items():
@@ -806,7 +869,8 @@ class CheckApp(App):
     def _fav_detail_pricing(self, row: SnapshotRow, fav: dict) -> list[str]:
         lines: list[str] = []
         nc = _tarifnote_color(row.tarifnote)
-        lines.append(f"Tarifnote : [{nc}]{row.tarifnote or '—'}[/{nc}]   [dim](Experten-Note)[/dim]")
+        lines.append(f"Tarifnote : [{nc}]{_esc(row.tarifnote or '—')}[/{nc}]   "
+                     "[dim](Experten-Note)[/dim]")
         if row.bewertung is not None:
             lines.append(f"Bewertung : {_bewertung_cell(row, *self._bew_lohi())}   "
                          "[dim](Kundenbewertung /5)[/dim]")
@@ -858,13 +922,14 @@ class CheckApp(App):
             return []
         lines = ["[underline]Quelldokumente (URLs gesichert)[/underline]"]
         for dd in docs:
-            lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+            lbl = _esc("{:<6}".format(
+                _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))))
             fname = _esc((dd.get("file") or "")[:54])
             doc_url = dd.get("url") or ""
             if doc_url:
-                lines.append(f'  [cyan]{lbl:<6}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]')
+                lines.append(f'  [cyan]{lbl}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]')
             else:
-                lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+                lines.append(f"  [cyan]{lbl}[/cyan] {fname}")
         if detail_rec is None:
             lines.append(
                 "[bright_yellow]  \\[g] herunterladen + analysieren"
@@ -989,7 +1054,8 @@ class CheckApp(App):
             star = _status_glyph(r)
 
             note_col = (
-                f"[{_tarifnote_color(r.tarifnote)}]{r.tarifnote}[/{_tarifnote_color(r.tarifnote)}]"
+                f"[{_tarifnote_color(r.tarifnote)}]{_esc(r.tarifnote)}"
+                f"[/{_tarifnote_color(r.tarifnote)}]"
                 if r.tarifnote
                 else "—"
             )
@@ -1002,15 +1068,17 @@ class CheckApp(App):
             row_key = f"{r.key or r.position}#{i}"
             self._market_rows[row_key] = r
             table.add_row(
-                str(r.position),
-                star,
-                _esc(r.insurer),
-                _esc(r.product),
-                note_col,
-                _bewertung_cell(r, *self._bew_lohi()),
-                price_col,
-                _esc(r.selbstbeteiligung or "—"),
-                self._change_cell(r.stem),
+                *guard_cells((
+                    str(r.position),
+                    star,
+                    _esc(r.insurer),
+                    _esc(r.product),
+                    note_col,
+                    _bewertung_cell(r, *self._bew_lohi()),
+                    price_col,
+                    _esc(r.selbstbeteiligung or "—"),
+                    self._change_cell(r.stem),
+                )),
                 key=row_key,
             )
 
@@ -1068,15 +1136,20 @@ class CheckApp(App):
         if entry and entry.get("docs"):
             lines.append("[underline]Quelldokumente[/underline]")
             for dd in entry["docs"]:
-                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                # The doctype fallback is raw manifest data — harvest_docs passes
+                # unknown CHECK24 `kind`s through verbatim, so escape it (pad
+                # first: the escape backslash renders zero-width).
+                raw_lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""),
+                                             dd.get("doctype", ""))
+                lbl = _esc(f"{raw_lbl:<6}")
                 fname = _esc((dd.get("file") or "")[:60])
                 doc_url = dd.get("url") or ""
                 if doc_url:
                     lines.append(
-                        f'  [cyan]{lbl:<6}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]'
+                        f'  [cyan]{lbl}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]'
                     )
                 else:
-                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+                    lines.append(f"  [cyan]{lbl}[/cyan] {fname}")
             if detail:
                 lines.append("[bright_green]  ✓ analysiert[/bright_green]")
             else:
@@ -1085,8 +1158,8 @@ class CheckApp(App):
                     "   ·   \\[G] nur analysieren (PDFs lokal)[/bright_yellow]"
                 )
                 lines.append(
-                    f"  [dim]→ fetch_docs.py {entry.get('stem')} --into-raw"
-                    " → ingest → extract[/dim]"
+                    f"  [dim]→ fetch_docs.py {_esc(str(entry.get('stem') or ''))}"
+                    " --into-raw → ingest → extract[/dim]"
                 )
         elif not detail:
             twin = self._equivalent_analyzed(row)
@@ -1319,7 +1392,7 @@ class CheckApp(App):
         try:
             results = scorecard.load_results()
             groups = list(scorecard.scored_by_tariff(results.get("rows", [])))
-            widget.update(benchmark_markup(results, groups))
+            widget.update(guard_content(benchmark_markup(results, groups)))
         except Exception as exc:  # a hand-edited / old-schema digest must not kill mount
             widget.update(
                 f"[bright_red]benchmarks/results.json ist unlesbar:[/bright_red] "
@@ -1340,12 +1413,12 @@ class CheckApp(App):
         if not cols:
             if pending:
                 names = ", ".join(_col_label(s) for s in pending)
-                widget.update(
+                widget.update(guard_content(
                     "[dim italic]Im Vergleich vorgemerkt, aber noch nicht "
                     f"analysiert: {_esc(names)}.\n"
                     "Markiere den Tarif im Markt und drücke \\[g] (Download + Analyse) "
                     "— dann erscheint seine Spalte hier.[/dim italic]"
-                )
+                ))
             else:
                 widget.update(
                     "[dim italic]Der Vergleich ist leer.\n"
@@ -1400,7 +1473,7 @@ class CheckApp(App):
         tail = self._render_snapshot_pricediff()
         if tail:
             parts.append(tail)
-        widget.update("\n\n".join(parts))
+        widget.update(guard_content("\n\n".join(parts)))
 
     def _render_market_matrix(self, cols, col_w, snap_by_stem: dict) -> str:
         """Snapshot-sourced market data for the compared tariffs: price, expert
@@ -1739,12 +1812,12 @@ class CheckApp(App):
             else ""
         )
         filter_lbl = _VERLAUF_FILTER_LABELS.get(self._verlauf_filter, "Alle")
-        header.update(
+        header.update(guard_content(
             f"[bold]Verlauf:[/bold]  {old_date} → {new_date}"
             f"  ·  [dim]Filter: [bold]{filter_lbl}[/bold]  ·  [bold]m[/bold] wechseln"
             f"  ·  [bold]d[/bold] Details{snap_cycle}[/dim]"
             + self._verlauf_market_line()
-        )
+        ))
 
         rows = self._verlauf_filter_rows(_build_verlauf_rows(old_snap, new_snap))
 
@@ -1757,7 +1830,7 @@ class CheckApp(App):
         self._verlauf_ident_to_rk = {}
         for i, r in enumerate(rows):
             row_key = f'{r["key"]}#{i}'
-            table.add_row(*verlauf_row_cells(r), key=row_key)
+            table.add_row(*guard_cells(verlauf_row_cells(r)), key=row_key)
             self._verlauf_rows[row_key] = r
             self._verlauf_ident_to_rk.setdefault(r["key"], row_key)
 
@@ -1961,12 +2034,12 @@ class CheckApp(App):
                 f"\n[yellow]⚠[/yellow] [dim]{len(notes)} extern empfohlene Tarife "
                 f"außerhalb CHECK24 (Direktvertrieb): {_esc(names)}[/dim]"
             )
-        header.update(
+        header.update(guard_content(
             f"{mode_note}, [bold]Preis zählt nicht[/bold].  {cov_note}\n"
             f"[dim]↑↓ wählen · \\[P] Bedarf an/aus · \\[d] Score-Beitrag je Dimension · "
             "P/L = Preis-Leistung (nur Anzeige) · Ext = externe Tests (nur Anzeige)[/dim]"
             f"{blind_note}"
-        )
+        ))
 
         for i, s in enumerate(scores):
             rank_no = i + 1
@@ -1978,7 +2051,7 @@ class CheckApp(App):
 
             if snaprow and snaprow.tarifnote:
                 nc = _tarifnote_color(snaprow.tarifnote)
-                note_col = f"[{nc}]{snaprow.tarifnote}[/{nc}]"
+                note_col = f"[{nc}]{_esc(snaprow.tarifnote)}[/{nc}]"
             elif s.note is not None:
                 note_col = f"{s.note:.1f}".replace(".", ",")
             else:
@@ -2002,18 +2075,20 @@ class CheckApp(App):
                 external_ratings_for(s.stem, s.insurer, self._ext_ratings))
 
             table.add_row(
-                marker,
-                _esc(s.insurer),
-                _esc(s.product),
-                magic_score_cell(s.total),
-                note_col,
-                bew_cell,
-                f"{s.n_modules}/8",
-                leist_cell,
-                deckung,
-                ext_cell,
-                price,
-                pl_cell,
+                *guard_cells((
+                    marker,
+                    _esc(s.insurer),
+                    _esc(s.product),
+                    magic_score_cell(s.total),
+                    note_col,
+                    bew_cell,
+                    f"{s.n_modules}/8",
+                    leist_cell,
+                    deckung,
+                    ext_cell,
+                    price,
+                    pl_cell,
+                )),
                 key=row_key,
             )
             # Map both the stem and the representative row's bare key to this row, so a
@@ -2249,7 +2324,7 @@ class CheckApp(App):
             if self._detail_visible:
                 try:
                     content = self.query_one("#verlauf-detail-content", Static)
-                    content.update(self._render_verlauf_detail(row))
+                    content.update(guard_content(self._render_verlauf_detail(row)))
                 except NoMatches:
                     pass
 
@@ -2262,7 +2337,8 @@ class CheckApp(App):
             band.display = True
             content = self.query_one("#verlauf-detail-content", Static)
             if self._active_row:
-                content.update(self._render_verlauf_detail(self._active_row))
+                content.update(guard_content(
+                    self._render_verlauf_detail(self._active_row)))
             band.scroll_home(animate=False)
             band.focus()
         except NoMatches:
@@ -3321,7 +3397,11 @@ class CheckApp(App):
         return spec.band_id, spec.content_id
 
     def _render_active_into(self, ids: tuple[str, str]) -> None:
-        """Render the current active row/favorite into a band's Static."""
+        """Render the current active row/favorite into a band's Static.
+
+        Single funnel for all four detail bands: every branch only computes the
+        markup, the one update at the end runs it through the containment guard
+        — one choke point for the whole detail-band crash class."""
         band_id, content_id = ids
         try:
             content = self.query_one(content_id, Static)
@@ -3330,9 +3410,9 @@ class CheckApp(App):
         if band_id == "#fav-detail":
             fav, row = self._active_fav, self._active_row
             if fav is None:
-                content.update("[dim]Favoriten-Zeile wählen (Pfeile / Klick).[/dim]")
+                markup = "[dim]Favoriten-Zeile wählen (Pfeile / Klick).[/dim]"
             elif row is None:
-                content.update(
+                markup = (
                     f"[bold]{_esc(fav.get('insurer', ''))}[/bold] — "
                     f"[italic]{_esc(fav.get('product', ''))}[/italic]\n\n"
                     "[yellow]Kein passender Tarif im aktuellen Snapshot.[/yellow]\n"
@@ -3340,13 +3420,13 @@ class CheckApp(App):
                     "oder scripts/snapshot.py auffrischen.[/dim]"
                 )
             else:
-                content.update(self._render_favorite_detail(row, fav))
+                markup = self._render_favorite_detail(row, fav)
         elif band_id == "#verlauf-detail":
             row = self._active_row
             if row is None:
-                content.update("[dim]Verlauf-Zeile wählen (Pfeile / Enter).[/dim]")
+                markup = "[dim]Verlauf-Zeile wählen (Pfeile / Enter).[/dim]"
             else:
-                content.update(self._render_verlauf_detail(row))
+                markup = self._render_verlauf_detail(row)
         elif band_id == "#magic-detail":
             row = self._active_row
             score = (
@@ -3354,15 +3434,16 @@ class CheckApp(App):
                 if (row is not None and row.stem) else None
             )
             if score is None:
-                content.update("[dim]Magic-Find-Zeile wählen (Pfeile / Klick).[/dim]")
+                markup = "[dim]Magic-Find-Zeile wählen (Pfeile / Klick).[/dim]"
             else:
-                content.update(self._render_magic_detail(score, row))
+                markup = self._render_magic_detail(score, row)
         else:  # market band
             row = self._active_row
             if row is None:
-                content.update("[dim]Markt-Zeile wählen (Pfeile / Klick).[/dim]")
+                markup = "[dim]Markt-Zeile wählen (Pfeile / Klick).[/dim]"
             else:
-                content.update(self._render_market_detail(row))
+                markup = self._render_market_detail(row)
+        content.update(guard_content(markup))
 
     def action_toggle_detail(self) -> None:
         """Show/hide the inline detail band below the active tab's table."""
@@ -3710,7 +3791,7 @@ class CheckApp(App):
         if self._pipeline_running:
             markup = f"{tui_anim.loader_markup(self._loader_tick)} {markup}"
         try:
-            self.query_one("#status-bar", Label).update(markup)
+            self.query_one("#status-bar", Label).update(guard_content(markup))
         except NoMatches:
             pass
         self._update_loader_overlay()
@@ -3725,10 +3806,10 @@ class CheckApp(App):
             return
         if self._pipeline_running:
             layer.display = True
-            box.update(
+            box.update(guard_content(
                 f"{tui_anim.loader_big_markup(self._loader_tick)}\n\n"
                 f"{self._pipeline_status_markup or '[dim]startet …[/dim]'}"
-            )
+            ))
         else:
             layer.display = False
 

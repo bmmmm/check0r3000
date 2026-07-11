@@ -115,7 +115,7 @@ class ConfirmFetchScreen(ModalScreen[bool]):
                 "[bold]Live-Harvest[/bold] — lädt die CHECK24-Ergebnisseite headless "
                 "([dim]~30–60s[/dim]), liest die Tarifdetails-URLs,",
                 "lädt die PDFs nach [cyan]data/raw/[/cyan], dann ingest → extract  "
-                f"[dim](Modell: {self._model})[/dim].",
+                f"[dim](Modell: {_esc(self._model)})[/dim].",
                 "[dim]Headless-Browser + Drittanbieter-Copyright + ein Modell-Call.[/dim]",
                 "",
                 "[bold]\\[↵/y][/bold] Harvest + Analyse     [bold]\\[Esc/n][/bold] Abbrechen",
@@ -126,7 +126,7 @@ class ConfirmFetchScreen(ModalScreen[bool]):
                 "",
                 "[bold]Analyse ohne Download[/bold] — PDFs liegen lokal "
                 f"([cyan]data/raw/{_esc(e.get('stem', '').replace('__', '/'))}/[/cyan]).",
-                f"ingest → extract  [dim](Modell: {self._model})[/dim]",
+                f"ingest → extract  [dim](Modell: {_esc(self._model)})[/dim]",
                 "[dim]Extraktion ist ein Modell-Call.[/dim]",
                 "",
                 "[bold]\\[↵/y][/bold] Analysieren     [bold]\\[Esc/n][/bold] Abbrechen",
@@ -139,11 +139,13 @@ class ConfirmFetchScreen(ModalScreen[bool]):
                 f"[bold]{len(docs)}[/bold] PDF(s)",
             ]
             for dd in docs:
-                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
-                lines.append(f"  • [cyan]{lbl:<6}[/cyan] {_esc((dd.get('file') or '')[:48])}")
+                # doctype fallback = raw manifest data — escape (pad first)
+                lbl = _esc("{:<6}".format(
+                    _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))))
+                lines.append(f"  • [cyan]{lbl}[/cyan] {_esc((dd.get('file') or '')[:48])}")
             lines += [
                 "",
-                f"dann: ingest → extract  [dim](Modell: {self._model})[/dim]",
+                f"dann: ingest → extract  [dim](Modell: {_esc(self._model)})[/dim]",
                 "[dim]Drittanbieter-Copyright — nur für den Eigengebrauch.[/dim]",
                 "",
                 "[bold]\\[↵/y][/bold] Download + Analyse     [bold]\\[Esc/n][/bold] Abbrechen",
@@ -186,7 +188,7 @@ class MagicScanScreen(ModalScreen[bool]):
             f"Top {self._n_selected} der Vorab-Bewertung — davon [bold]{n}[/bold] noch "
             "ohne Analyse. Diese werden",
             "live geharvestet ([dim]headless Browser[/dim]), geladen und analysiert  "
-            f"[dim](Modell: {self._model})[/dim]:",
+            f"[dim](Modell: {_esc(self._model)})[/dim]:",
         ]
         shown = self._candidates[:15]
         for ins, prod in shown:
@@ -573,15 +575,16 @@ class OpenSourceScreen(ModalScreen[str | None]):
         if self._docs:
             lines.append("[underline]Dokumente[/underline]")
             for dd in self._docs:
-                lbl = _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))
+                lbl = _esc("{:<6}".format(
+                    _DOCTYPE_SHORT.get(dd.get("doctype", ""), dd.get("doctype", ""))))
                 fname = _esc((dd.get("file") or "")[:50])
                 doc_url = dd.get("url") or ""
                 if doc_url:
                     lines.append(
-                        f'  [cyan]{lbl:<6}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]'
+                        f'  [cyan]{lbl}[/cyan] [link="{link_url(doc_url)}"]{fname}[/link]'
                     )
                 else:
-                    lines.append(f"  [cyan]{lbl:<6}[/cyan] {fname}")
+                    lines.append(f"  [cyan]{lbl}[/cyan] {fname}")
             lines.append("")
         url_label = f"{self._n_urls} URL{'s' if self._n_urls != 1 else ''}"
         online = (
