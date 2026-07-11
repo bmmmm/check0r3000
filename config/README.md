@@ -1,7 +1,7 @@
-# config/ — quote profile, query builder inputs, provider map
+# config/ — quote profile, query builder inputs, weights & taxonomy
 
-This holds the **reproducible CHECK24 quote setup** so the comparison can be re-run
-without retyping the form. Nothing here touches a model.
+This holds the **reproducible CHECK24 quote setup** plus the TUI's curation and
+weighting files. Nothing here touches a model.
 
 ## Files
 
@@ -11,6 +11,10 @@ without retyping the form. Nothing here touches a model.
 | `check24-profile.example.json` | yes | Placeholder twin with fake birthdate/zipcode. Copy it to `check24-profile.json` and edit. |
 | `check24-providers.json` | yes | `provider_filter` ID → insurer name. Public; used to pin one insurer by id. |
 | `favorites.json` | yes | Curated shortlist for the TUI Favorites board. PII-free by contract: only insurer/product/SB-band/tag/stem (+ `recommended`/`reference` flags). No prices — those are read from the gitignored snapshot at render time. |
+| `favorite-notes.json` | **no** (gitignored) | Free-text notes typed via `[N]` — personal, stem-keyed sidecar, merged over the favorites at render time. |
+| `coverage_taxonomy.json` | yes | Canonical benefit/exclusion categories for the Vergleich matrices — maps free-text wording across insurers onto one row (no model call). |
+| `magic-weights.json` | yes | Dimension weights + `pool_k` for the Magic Find score. Any subset overrides the code defaults in `magic.MagicWeights`. |
+| `needs-weights.json` | yes | Personal per-module relevance (0–3 scale, `[W]` editor) for the `[P]` Bedarf mode. Neutral 1.0 placeholder = identical to the objective ranking; no PII. |
 
 ## Building a result URL — `scripts/check24_query.py`
 
