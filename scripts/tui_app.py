@@ -411,8 +411,10 @@ class VergleichPane(TabPane):
 class VerlaufPane(TabPane):
     BINDINGS = [
         Binding("m", "app.verlauf_filter", "Filter", show=True),
-        Binding("comma", "app.verlauf_prev_snap", "Älterer Snap", show=True),
-        Binding("period", "app.verlauf_next_snap", "Neuerer Snap", show=True),
+        Binding("comma", "app.verlauf_prev_snap", "Älterer Snap", show=True,
+                key_display=","),
+        Binding("period", "app.verlauf_next_snap", "Neuerer Snap", show=True,
+                key_display="."),
     ]
 
 
