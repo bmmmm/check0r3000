@@ -32,6 +32,9 @@ config/tui-prefs.json
 tmp/
 *.log
 
+# --- Pitch material (strategy + contact data, never for the public mirror) ---
+pitch/
+
 # --- Python / uv ---
 .venv/
 __pycache__/
