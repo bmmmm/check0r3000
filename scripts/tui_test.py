@@ -26,6 +26,7 @@ import sys
 import traceback
 from collections import Counter
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -264,6 +265,44 @@ async def t_market_sort_toggle(app, pilot) -> None:
     await pilot.press("n")
     await pilot.pause()
     assert app.sort_col == "price", "sort key leaked from the Favorites tab"
+
+
+async def t_market_sort_bew(app, pilot) -> None:
+    """Clicking the Bew. header (column index 5) sorts by customer rating,
+    descending on the first click (best rating first) with None-rating rows
+    pushed to the end in both directions; a second click flips to ascending."""
+    await pilot.press("x")
+    await pilot.pause()
+    market = _table(app, "#market-table")
+
+    def bew_header() -> str:
+        return list(market.columns.values())[5].label.plain
+
+    app.on_header_selected(SimpleNamespace(column_index=5))
+    await pilot.pause()
+    assert app.sort_col == "bew" and not app.sort_asc, "header click did not sort bew desc"
+    assert "▼" in bew_header(), f"no desc indicator in header {bew_header()!r}"
+
+    bews = [r.bewertung for r in app._visible_rows()]
+    rated = [b for b in bews if b is not None]
+    assert rated == sorted(rated, reverse=True), "rows not bewertung-descending"
+    none_count = sum(1 for b in bews if b is None)
+    if none_count:
+        assert all(b is None for b in bews[-none_count:]), (
+            "None-bewertung rows not at the end (desc)")
+
+    app.on_header_selected(SimpleNamespace(column_index=5))
+    await pilot.pause()
+    assert app.sort_col == "bew" and app.sort_asc, "second click did not flip to asc"
+    assert "▲" in bew_header(), f"no asc indicator in header {bew_header()!r}"
+
+    bews = [r.bewertung for r in app._visible_rows()]
+    rated = [b for b in bews if b is not None]
+    assert rated == sorted(rated), "rows not bewertung-ascending"
+    none_count = sum(1 for b in bews if b is None)
+    if none_count:
+        assert all(b is None for b in bews[-none_count:]), (
+            "None-bewertung rows not at the end (asc)")
 
 
 async def t_help_modal(app, pilot) -> None:
@@ -862,6 +901,7 @@ CASES = [
     ("detail_toggle", t_detail_toggle),
     ("enter_detail_no_browser", t_enter_detail_no_browser),
     ("market_sort_toggle", t_market_sort_toggle),
+    ("market_sort_bew", t_market_sort_bew),
     ("filter_debounce", t_filter_debounce),
     ("help_modal", t_help_modal),
     ("markup_hostile_nav", t_markup_hostile_nav),
