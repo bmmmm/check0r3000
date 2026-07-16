@@ -68,6 +68,7 @@ from tui_screens import (  # noqa: E402
     CompareManagerScreen,
     CompareTextScreen,
     ConfirmFetchScreen,
+    HelpScreen,
     OpenSourceScreen,
 )
 
@@ -152,6 +153,37 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
                 app._compare_verbose = False
                 app._populate_coverage()
 
+                # --- Verlauf: reveal the detail band on the first row, if any ---
+                tabs.active = "verlauf"
+                await pilot.pause()
+                verlauf_table = app.query_one("#verlauf-table", DataTable)
+                if verlauf_table.row_count:
+                    verlauf_table.move_cursor(row=0)
+                    app._show_detail()
+                    await pilot.pause()
+                app.save_screenshot(filename="verlauf.svg", path=str(screenshot_dir))
+
+                # --- Benchmark: model scorecard from benchmarks/results.json ---
+                tabs.active = "bench"
+                await pilot.pause()
+                app.save_screenshot(filename="benchmark.svg", path=str(screenshot_dir))
+
+                # --- Magic Find: market-wide quality ranking (price never scored) ---
+                tabs.active = "magic"
+                await pilot.pause()
+                if app._magic_rows:
+                    app.query_one("#magic-table", DataTable).move_cursor(row=0)
+                    app._show_detail()
+                    await pilot.pause()
+                app.save_screenshot(filename="magic.svg", path=str(screenshot_dir))
+
+                # --- Help modal ([?]) — full keyboard reference ---
+                await app.push_screen(HelpScreen())
+                await pilot.pause()
+                app.save_screenshot(filename="help.svg", path=str(screenshot_dir))
+                app.pop_screen()
+                await pilot.pause()
+
                 # --- Vergleich full-text modal ([t]) — full wording per category ---
                 ft_entries, ft_ncols = app._fulltext_entries()
                 if ft_entries:
@@ -222,7 +254,8 @@ def _launch_app(snapshot_path: Path | None, screenshot_dir: Path | None = None) 
         asyncio.run(_shoot())
         print(
             "Saved screenshots (favorites/market/market-detail/vergleich/"
-            "vergleich-verbose/fulltext/compare-manager/open/confirm .svg) to "
+            "vergleich-verbose/verlauf/benchmark/magic/help/fulltext/"
+            "compare-manager/open/confirm .svg) to "
             f"{screenshot_dir}"
         )
         return
