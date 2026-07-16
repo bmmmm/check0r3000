@@ -10,14 +10,24 @@
                           » RECHTSSCHUTZ-VERGLEICH «
 ```
 
-**Der ganze Rechtsschutz-Markt in einem Terminal.** Scraped CHECK24, liest die
-Original-AVB der Versicherer, extrahiert per LLM vergleichbare Fakten und rankt
-den Markt nach Qualität — mit Preisverlauf, Feature-Diffs über die Zeit und
-externen Testurteilen. Kein DB-Engine, keine schweren Frameworks: **Dateien +
+**Versicherungsbedingungen rein, vergleichbare Fakten raus — für ~20 Cent pro
+Tarif.** check0r3000 liest die Original-AVB der Versicherer, extrahiert per LLM
+schema-valide, regressionsgetestete Leistungsdaten und rankt den ganzen
+deutschen Rechtsschutz-Markt nach Qualität — mit Preisverlauf, Feature-Diffs
+über die Zeit („was hat der Versicherer still gestrichen?") und externen
+Testurteilen. Kein DB-Engine, keine schweren Frameworks: **Dateien +
 Python-stdlib + `uv`**, Modell-Backend frei wählbar (Claude-Cloud oder lokal via
 Ollama/oMLX/mlx).
 
 `Python + uv` · `Textual-TUI` · `modellfrei wo immer möglich` · `GPL-3.0`
+
+> **Datenherkunft & Spielregeln:** Die Fakten kommen aus den Bedingungswerken
+> (AVB/PIB) — öffentlich zugängliche Dokumente der Versicherer. Die PDFs selbst
+> bleiben lokal (fremdes Urheberrecht); getrackt sind nur abgeleitete Fakten und
+> URL-Manifeste. Die Markt-Sicht (Preise, Tarifnoten, Verlauf) entsteht aus
+> einem persönlichen, rate-limited CHECK24-Scan für den Eigenbedarf — gescrapte
+> Rohdaten werden weder committet noch weiterverbreitet.
+> Details: [Was getrackt wird](#-was-getrackt-wird-und-was-nicht).
 
 ---
 
@@ -368,6 +378,11 @@ mit menschlicher Freigabe, nie als stiller Loop.
 `schema/tariff.schema.json` ist die Source-of-Truth dafür, welche Merkmale
 verglichen werden. Schema erweitern → `PROMPT_VERSION` in `scripts/extract.py`
 erhöhen (invalidiert den Cache), Invarianten in `golden.json` nachziehen.
+
+## ❤️ Support
+
+Wenn dir das Projekt gefällt oder weiterhilft:
+[ko-fi.com/bmabma](https://ko-fi.com/bmabma).
 
 ## License
 

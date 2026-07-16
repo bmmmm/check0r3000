@@ -1,5 +1,5 @@
 {
-  "quelle": "check24 rsv vergleichsergebnis (all insurers, couple profile), Tarifdetails harvest 2026-06-24",
+  "quelle": "check24 rsv vergleichsergebnis (all insurers), Tarifdetails harvest 2026-06-24",
   "host": "https://rechtsschutz.check24.de",
   "harvested": "2026-06-24",
   "note": "Source-PDF URLs only (PDFs are third-party/copyright -> data/inbox is gitignored). URLs reconstructed from host+kind+hash+filename. fetch_docs.py downloads on demand.",
