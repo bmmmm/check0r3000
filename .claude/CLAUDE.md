@@ -168,6 +168,9 @@ URLs in `[link="…"]` immer durch `tui_format.link_url()` (percent-encoded `"`/
 - `[link={url}]` mit einer URL im Wert crasht auf mount → immer `[link="{url}"]` (quoted).
 - SVG-Screenshots via `--screenshot` sind non-deterministisch (Font-Metrik-Abhängigkeit) —
   nie per `diff` vergleichen; stattdessen `ast.dump` oder inhaltliche Assertions.
+- **Visuelle UI-Verifikation:** `--screenshot tmp/x` → SVGs → `qlmanage -t -s 2200 -o . f.svg`
+  (braucht Sandbox-Bypass: qlmanage hat eine eigene macOS-Sandbox) → Read-Tool aufs `.svg.png`.
+  Deckt alle Tabs + Help-Modal ab (seit df1649a).
 - Textual 8.x: `[link=value]` muss gequotet sein wenn value ein URL-Sonderzeichen enthält.
 
 ## Modell-Empfehlung
