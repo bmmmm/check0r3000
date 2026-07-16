@@ -1036,6 +1036,15 @@ class CheckApp(App):
                 key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0,
                 reverse=not self.sort_asc,
             )
+        elif key == "bew":
+            # None must sort LAST in both directions: the sentinel is the extreme
+            # that ends up at the tail once `reverse` is applied, so it flips with
+            # the direction (+inf for ascending, -inf for descending).
+            none_sentinel = float("inf") if self.sort_asc else float("-inf")
+            rows.sort(
+                key=lambda r: r.bewertung if r.bewertung is not None else none_sentinel,
+                reverse=not self.sort_asc,
+            )
         elif key == "changed":
             def changed_key(r: SnapshotRow) -> tuple:
                 ci = self._change_summary.get(r.stem or "")
@@ -1056,9 +1065,9 @@ class CheckApp(App):
         # [s]/[n]/[p]/[j] press (or header click) is visible instead of a silent
         # re-order. Index map matches on_header_selected's col_map.
         labels = ["#", "St", "Versicherer", "Produkt", "Note", "Bew.", "€/mo", "SB", "Δ"]
-        sort_idx = {"position": 0, "insurer": 2, "note": 4, "price": 6, "changed": 8}.get(
-            self.sort_col
-        )
+        sort_idx = {
+            "position": 0, "insurer": 2, "note": 4, "bew": 5, "price": 6, "changed": 8,
+        }.get(self.sort_col)
         if sort_idx is not None:
             labels[sort_idx] += " ▲" if self.sort_asc else " ▼"
         table.add_columns(*labels)
@@ -2421,9 +2430,14 @@ class CheckApp(App):
         self._detail_visible = True
         self._show_detail(focus=True)
 
+    # Header-click default direction per column: most columns start ascending,
+    # but "best rating first" / "most recently changed first" reads better
+    # starting descending — a repeated click still toggles either way.
+    _HEADER_CLICK_DEFAULT_ASC = {"bew": False, "changed": False}
+
     @on(DataTable.HeaderSelected, "#market-table")
     def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
-        col_map = {0: "position", 2: "insurer", 4: "note", 6: "price"}
+        col_map = {0: "position", 2: "insurer", 4: "note", 5: "bew", 6: "price", 8: "changed"}
         col = col_map.get(event.column_index)
         if col is None:
             return
@@ -2431,7 +2445,7 @@ class CheckApp(App):
             self.sort_asc = not self.sort_asc
         else:
             self.sort_col = col
-            self.sort_asc = True
+            self.sort_asc = self._HEADER_CLICK_DEFAULT_ASC.get(col, True)
         self._populate_market_table()
 
     @on(Input.Changed, "#filter-input")
