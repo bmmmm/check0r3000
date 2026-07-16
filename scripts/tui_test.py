@@ -206,6 +206,66 @@ async def t_filter_debounce(app, pilot) -> None:
         f"escape did not restore full rows ({market.row_count}/{full})")
 
 
+async def t_enter_detail_no_browser(app, pilot) -> None:
+    """Enter on a Market row opens + focuses the detail band and does NOT launch
+    the browser (the old surprising side effect); Esc hands focus back to the
+    table. Pins the [O]-decoupling behavior."""
+    opened: list[list[str]] = []
+    app._open_external = lambda targets: opened.append(list(targets))  # type: ignore[method-assign]
+    await pilot.press("x")
+    await pilot.pause()
+    market = _table(app, "#market-table")
+    market.move_cursor(row=0)
+    await pilot.pause()
+    market.focus()
+    await pilot.press("enter")
+    await pilot.pause()
+    band = app.query_one("#detail-panel")
+    assert band.display, "enter did not open the detail band"
+    assert not opened, f"enter launched the browser: {opened}"
+    assert app.focused is band, f"band not focused after enter (focused={app.focused})"
+    await pilot.press("escape")
+    await pilot.pause()
+    assert app.focused is market, (
+        f"escape did not return focus to the table (focused={app.focused})")
+    # [O] is the explicit opener — it must hit _open_external with the offer URL.
+    await pilot.press("O")
+    await pilot.pause()
+    if app._active_row is not None and app._active_row.position and app._build_offer_url(
+            app._active_row.position):
+        assert opened and opened[0], "[O] did not open the offer URL"
+
+
+async def t_market_sort_toggle(app, pilot) -> None:
+    """[s] sorts the Market table by price ascending and marks the column header
+    with ▲; a second [s] flips to descending (▼). A sort key pressed on another
+    tab must leave the market sort untouched (scope guard)."""
+    await pilot.press("x")
+    await pilot.pause()
+    market = _table(app, "#market-table")
+
+    def price_header() -> str:
+        return list(market.columns.values())[6].label.plain
+
+    await pilot.press("s")
+    await pilot.pause()
+    assert app.sort_col == "price" and app.sort_asc, "s did not sort price asc"
+    assert "▲" in price_header(), f"no asc indicator in header {price_header()!r}"
+    prices = [r.monatlich_eur for r in app._visible_rows() if r.monatlich_eur is not None]
+    assert prices == sorted(prices), "rows not price-ascending after [s]"
+
+    await pilot.press("s")
+    await pilot.pause()
+    assert app.sort_col == "price" and not app.sort_asc, "second s did not flip direction"
+    assert "▼" in price_header(), f"no desc indicator in header {price_header()!r}"
+
+    await pilot.press("y")  # Favorites — sort keys are market-scoped
+    await pilot.pause()
+    await pilot.press("n")
+    await pilot.pause()
+    assert app.sort_col == "price", "sort key leaked from the Favorites tab"
+
+
 async def t_help_modal(app, pilot) -> None:
     """[?] pushes the help modal; Escape pops it."""
     base = len(app.screen_stack)
@@ -800,6 +860,8 @@ CASES = [
     ("cross_tab_roundtrip", t_cross_tab_roundtrip),
     ("cross_tab_held_absent", t_cross_tab_held_absent),
     ("detail_toggle", t_detail_toggle),
+    ("enter_detail_no_browser", t_enter_detail_no_browser),
+    ("market_sort_toggle", t_market_sort_toggle),
     ("filter_debounce", t_filter_debounce),
     ("help_modal", t_help_modal),
     ("markup_hostile_nav", t_markup_hostile_nav),

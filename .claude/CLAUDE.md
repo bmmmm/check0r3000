@@ -139,6 +139,7 @@ URLs in `[link="…"]` immer durch `tui_format.link_url()` (percent-encoded `"`/
 | `[U]` | Update-All: Scan+Snapshot → Docs → volle Re-Analyse (Extract-Flags aus Record-Provenance, TUI-Zwilling von `update-all.sh`) |
 | `[a]` | Tarif in Vergleich aufnehmen / entfernen (Market-Tab) |
 | `[u]` | Favorit an/aus |
+| `[O]` | Angebot der markierten Zeile auf CHECK24 öffnen (Enter öffnet nur das Detail-Band) |
 | `[l]` | Verlauf-Tab (Snapshot-Diff + Feature-Diff) |
 | `[x]` | Markt-Tab (Tarifliste) |
 | `[v]` | Vergleich-Tab (Coverage-Matrix) |

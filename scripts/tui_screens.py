@@ -925,6 +925,7 @@ class HelpScreen(ModalScreen[None]):
             ("U", "Update-All — Scan+Snapshot, Docs, volle Re-Analyse (Record-Provenance)"),
             ("Tab / ⇧Tab", "nächster / voriger Tab (zyklisch)"),
             ("↑ ↓ / Klick", "Zeile wählen (aktualisiert das Detail-Band)"),
+            ("↵ / Enter", "Detail-Band öffnen + fokussieren (\\[Esc] zurück zur Tabelle)"),
             ("d", "Detail-Band unter der Tabelle ein/aus"),
         ]),
         ("Tarif-Aktionen (markierte Zeile)", [
@@ -933,6 +934,7 @@ class HelpScreen(ModalScreen[None]):
             ("H", "live harvesten (Browser) + laden + analysieren — wenn keine URLs da"),
             ("a", "zum Vergleich hinzufügen/entfernen (analysiert bei Bedarf)"),
             ("o", "Quelle öffnen (online im Browser / lokale PDFs)"),
+            ("O", "Angebot auf CHECK24 im Browser öffnen"),
             ("R", "als Referenz setzen — Δ rechnet neu"),
             ("u", "Favorit an/aus"),
             ("N", "Notiz zum Favoriten bearbeiten"),
@@ -944,16 +946,20 @@ class HelpScreen(ModalScreen[None]):
             ("w", "Wortlaut ein/aus (kompakt ↔ ausführlich)"),
             ("t", "Volltext-Modal: ganze Texte je Kategorie, alle Tarife"),
         ]),
-        ("Markt", [
-            ("f", "Filter (Versicherer / Produkt)"),
+        ("Markt \\[x]", [
+            ("f", "Filter (Versicherer / Produkt) — ↵ zurück zur Tabelle"),
             ("Esc", "Filter leeren"),
-            ("s / n / p / j", "Sortierung: €/Monat · Note · Position · Jüngste Änderung"),
+            ("s / n / p / j", "Sortierung: € · Note · Position · Änderung — erneut = Richtung ↑↓"),
+        ]),
+        ("Verlauf \\[l]", [
+            ("m", "Filter zyklisch: Alle → Geändert → Günstiger → Teurer"),
+            (", / .", "älteren / neueren Vergleichs-Snapshot wählen (ab 3 Snapshots)"),
         ]),
         ("Werkzeuge", [
             ("b", "CHECK24-Query-URL bauen (nur Ansicht)"),
             ("e", "CHECK24-Suche bearbeiten (Levers ändern + speichern)"),
             ("r", "Daten neu laden"),
-            ("T", "Theme wechseln (rose-pine, nord, dracula, …)"),
+            ("T", "Theme wechseln — Wahl wird gespeichert (config/tui-prefs.json)"),
             ("?", "diese Hilfe"),
             ("q", "Beenden"),
         ]),

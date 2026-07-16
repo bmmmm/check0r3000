@@ -408,7 +408,8 @@ HelpScreen {
 }
 
 #help-box {
-    width: 64;
+    width: 88;
+    max-width: 95%;
     height: auto;
     max-height: 90%;
     padding: 1 2;

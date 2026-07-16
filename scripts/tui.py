@@ -35,9 +35,10 @@ its box) plus an animated bar in the status line show the live progress. The
 Vergleich tab [v] shows an across-tariff coverage comparison (modules, coverage, and
 taxonomy-aligned Leistungen/Ausschlüsse) built from the analyzed records: [w]
 toggles the verbatim per-insurer wording (compact ↔ verbose), [t] opens a modal with
-the full untruncated wording per category across all tariffs, [c] hides/shows the
-selected tariff in the comparison, and [o] opens a tariff's source documents online
-or as the local PDFs. Press [b] to view the read-only CHECK24 query URL, or [e] to
+the full untruncated wording per category across all tariffs, [c] opens the compare
+manager (toggle/clear/include-all), and [o] opens a tariff's source documents online
+or as the local PDFs; [O] opens the row's CHECK24 offer page (Enter only opens and
+focuses the detail band). Press [b] to view the read-only CHECK24 query URL, or [e] to
 edit the query levers (provider, modules, birthdate, zipcode, sort, …) in place and
 save them back to config/check24-profile.json.
 """

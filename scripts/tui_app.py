@@ -25,7 +25,7 @@ import _providers  # noqa: E402
 import scorecard  # noqa: E402  — shared benchmark scoring (eval.py + Benchmark tab)
 import magic  # noqa: E402  — Magic Find quality-scoring core (rank / prescore)
 import tui_anim  # noqa: E402  — boot-splash frames + pipeline loader bar
-from _jsonio import atomic_write_json  # noqa: E402  — shared atomic JSON writer
+from _jsonio import atomic_write_json, load_json_or  # noqa: E402  — shared atomic JSON IO
 from _modules import MODULE_LABELS  # noqa: E402  — single source of truth for Baustein labels
 
 from tui_data import (  # noqa: E402
@@ -379,46 +379,49 @@ class CheckApp(App):
 
     BINDINGS = [
         # Footer (show=True): only the most-used keys; [?] lists everything.
-        Binding("y", "switch_tab('favorites')", "Favorites", show=True),
-        Binding("x", "switch_tab('market')", "Market", show=True),
+        Binding("y", "switch_tab('favorites')", "Favoriten", show=True),
+        Binding("x", "switch_tab('market')", "Markt", show=True),
         Binding("v", "switch_tab('diff')", "Vergleich", show=True),
         Binding("l", "switch_tab('verlauf')", "Verlauf", show=True),
-        Binding("B", "switch_tab('bench')", "Benchmark", show=True),
+        # Benchmark stays reachable via [B]/tab bar/help — footer space goes to
+        # Magic Find, the primary ranking view.
+        Binding("B", "switch_tab('bench')", "Benchmark", show=False),
+        Binding("M", "switch_tab('magic')", "Magic Find", show=True),
         # Tab cycles tabs forward, Shift+Tab backward. priority=True beats the
         # Screen's default tab->focus_next; action_cycle_tab restores that default
         # when a modal is open or a text field is focused.
-        Binding("tab", "cycle_tab(1)", "Next tab", show=False, priority=True),
-        Binding("shift+tab", "cycle_tab(-1)", "Prev tab", show=False, priority=True),
+        Binding("tab", "cycle_tab(1)", "Nächster Tab", show=False, priority=True),
+        Binding("shift+tab", "cycle_tab(-1)", "Voriger Tab", show=False, priority=True),
         Binding("d", "toggle_detail", "Details", show=True),
-        Binding("g", "fetch_docs", "Get docs", show=True),
-        Binding("question_mark", "help", "Help", show=True, key_display="?"),
-        Binding("q", "quit", "Quit", show=True),
+        Binding("g", "fetch_docs", "Docs+Analyse", show=True),
+        Binding("question_mark", "help", "Hilfe", show=True, key_display="?"),
+        Binding("q", "quit", "Beenden", show=True),
         # Context / power keys — documented in [?], hidden from the footer.
-        Binding("G", "analyze_local", "Analyze local", show=False),
-        Binding("H", "harvest", "Harvest+Analyze", show=False),
-        Binding("M", "switch_tab('magic')", "Magic Find", show=False),
+        Binding("G", "analyze_local", "Nur analysieren", show=False),
+        Binding("H", "harvest", "Harvest+Analyse", show=False),
         Binding("P", "toggle_needs", "Bedarf", show=False),
         Binding("W", "edit_needs", "Bedarf-Gewichte", show=False),
         Binding("F", "magic_scan", "Markt-Scan", show=False),
         Binding("U", "update_all", "Update-All", show=False),
         Binding("a", "add_to_compare", "Zum Vergleich", show=False),
         Binding("c", "manage_compare", "Vergleich verwalten", show=False),
-        Binding("w", "toggle_compare_wording", "Wording", show=False),
+        Binding("w", "toggle_compare_wording", "Wortlaut", show=False),
         Binding("t", "compare_fulltext", "Volltext", show=False),
-        Binding("o", "open_source", "Open source", show=False),
+        Binding("o", "open_source", "Quelle öffnen", show=False),
+        Binding("O", "open_offer", "Auf CHECK24 öffnen", show=False),
         Binding("f", "focus_filter", "Filter", show=False),
-        Binding("escape", "clear_filter", "Clear filter", show=False),
-        Binding("s", "sort_price", "Sort €", show=False),
-        Binding("n", "sort_note", "Sort note", show=False),
-        Binding("p", "sort_position", "Sort #", show=False),
-        Binding("j", "sort_changed", "Sort Änderungen", show=False),
+        Binding("escape", "clear_filter", "Zur Tabelle / Filter leeren", show=False),
+        Binding("s", "sort_price", "Sortieren: €", show=False),
+        Binding("n", "sort_note", "Sortieren: Note", show=False),
+        Binding("p", "sort_position", "Sortieren: Position", show=False),
+        Binding("j", "sort_changed", "Sortieren: Änderungen", show=False),
         Binding("b", "build_query", "Query-URL", show=False),
         Binding("e", "edit_query", "Suche bearbeiten", show=False),
-        Binding("u", "toggle_favorite", "Favorite", show=False),
+        Binding("u", "toggle_favorite", "Favorit", show=False),
         Binding("N", "edit_note", "Notiz", show=False),
-        Binding("R", "set_reference", "Reference", show=False),
-        Binding("D", "delete_data", "Delete data", show=False),
-        Binding("r", "refresh_data", "Reload", show=True),
+        Binding("R", "set_reference", "Referenz", show=False),
+        Binding("D", "delete_data", "Daten löschen", show=False),
+        Binding("r", "refresh_data", "Neu laden", show=True),
         Binding("m", "verlauf_filter", "Verlauf-Filter", show=False),
         Binding("comma", "verlauf_prev_snap", "Älterer Snap", show=False),
         Binding("period", "verlauf_next_snap", "Neuerer Snap", show=False),
@@ -501,6 +504,7 @@ class CheckApp(App):
     # --- Lifecycle ---
 
     def on_mount(self) -> None:
+        self._restore_prefs()
         self._load_data()
         self._populate_favorites_table()
         self._populate_market_table()
@@ -512,6 +516,23 @@ class CheckApp(App):
         self._prewarm_analyze_model()
         self._maybe_show_splash()
         self.set_interval(0.09, self._animate_pipeline_status)
+
+    # Personal UI preferences (theme, …) — gitignored sidecar, no PII. Written on
+    # every [T] cycle so the chosen theme survives a restart instead of resetting
+    # to the default each launch.
+    _PREFS_PATH = REPO_ROOT / "config" / "tui-prefs.json"
+
+    def _restore_prefs(self) -> None:
+        prefs = load_json_or(self._PREFS_PATH, {})
+        theme = prefs.get("theme") if isinstance(prefs, dict) else None
+        if isinstance(theme, str) and theme in self._THEMES:
+            self.theme = theme
+
+    def _save_prefs(self) -> None:
+        try:
+            atomic_write_json(self._PREFS_PATH, {"theme": self.theme})
+        except OSError as exc:
+            self.notify(f"Theme nicht gespeichert: {exc}", severity="warning", timeout=5)
 
     def _maybe_show_splash(self) -> None:
         """Push the boot animation over the freshly-loaded app. CHECK0R_SPLASH
@@ -573,28 +594,28 @@ class CheckApp(App):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with TabbedContent(id="tabs", initial="favorites"):
-            with TabPane("★ Favorites [y]", id="favorites"):
+            with TabPane("★ Favoriten [y]", id="favorites"):
                 yield Label("", id="fav-knockout")
                 with Vertical(id="fav-layout"):
                     yield DataTable(id="fav-table", cursor_type="row", zebra_stripes=True)
                     with ScrollableContainer(id="fav-detail", classes="detail-band"):
                         yield Static(
-                            "Select a favorite to see full details, SB variants and documents.",
+                            "Favorit wählen — Details, SB-Varianten und Quelldokumente.",
                             id="fav-detail-content",
                         )
-            with TabPane("Market [x]", id="market"):
+            with TabPane("Markt [x]", id="market"):
                 yield Input(
-                    placeholder="Filter by insurer or product…",
+                    placeholder="Filter: Versicherer / Produkt…",
                     id="filter-input",
                 )
                 yield Label(STATUS_LEGEND, id="market-legend")
                 with Vertical(id="market-layout"):
                     yield DataTable(id="market-table", cursor_type="row", zebra_stripes=True)
                     with ScrollableContainer(id="detail-panel", classes="detail-band"):
-                        yield Static("Select a row to see details.", id="detail-content")
+                        yield Static("Zeile wählen für Details.", id="detail-content")
             with TabPane("Vergleich [v]", id="diff"):
                 with ScrollableContainer(id="diff-panel"):
-                    yield Static("Loading diff…", id="diff-content")
+                    yield Static("Vergleich wird geladen…", id="diff-content")
             with TabPane("Verlauf [l]", id="verlauf"):
                 yield Label("", id="verlauf-header")
                 with Vertical(id="verlauf-layout"):
@@ -630,10 +651,10 @@ class CheckApp(App):
         if self._snapshot:
             self.sub_title = (
                 f"{self._snapshot.date}  |  {self._snapshot.profile}"
-                f"  |  {len(self._snapshot.rows)} tariffs"
+                f"  |  {len(self._snapshot.rows)} Tarife"
             )
         else:
-            self.sub_title = "No snapshot loaded — place files in data/snapshots/"
+            self.sub_title = "Kein Snapshot geladen — [U] Update-All erstellt einen"
 
     def _update_status_bar(self) -> None:
         t = datetime.datetime.now().strftime("%H:%M:%S")
@@ -736,7 +757,9 @@ class CheckApp(App):
                 f"(SB {_esc(ref_sb)}, €{ref_price:.2f}/mo) — \\[R] setzt eine andere; "
                 f"Δ vergleicht dagegen, ≈ markiert eine abweichende SB-Stufe (nicht 1:1)."
             )
-        parts.append("↵ Zeile wählen → Detail · \\[R] Referenz · \\[u] Favorit")
+        parts.append(
+            "↵ Detail · \\[O] auf CHECK24 öffnen · \\[R] Referenz · \\[u] Favorit"
+        )
         parts.append(STATUS_LEGEND)
         ko.update(guard_content("\n".join(parts)))
 
@@ -794,7 +817,7 @@ class CheckApp(App):
             return
 
         table.clear(columns=True)
-        table.add_columns("★", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB", "Δ ref", "Status")
+        table.add_columns("★", "Versicherer", "Produkt", "Note", "Bew.", "€/mo", "SB", "Δ Ref", "Status")
         self._fav_rows = {}
 
         ref_price, ref_sb = self._reference_info()
@@ -911,7 +934,7 @@ class CheckApp(App):
             variants, key=lambda r: r.monatlich_eur if r.monatlich_eur is not None else 9999.0
         ):
             p = f"{v.monatlich_eur:.2f}" if v.monatlich_eur is not None else "—"
-            mark = " [bright_yellow]◀ shown[/bright_yellow]" if v.key == row.key else ""
+            mark = " [bright_yellow]◀ angezeigt[/bright_yellow]" if v.key == row.key else ""
             lines.append(f"  {_esc(v.selbstbeteiligung):<18} €{p}{mark}")
         lines.append("")
         return lines
@@ -1029,18 +1052,27 @@ class CheckApp(App):
             return
 
         table.clear(columns=True)
-        table.add_columns("#", "St", "Insurer", "Product", "Note", "Bew.", "€/mo", "SB", "Δ")
+        # Sort feedback: the active sort column carries a direction arrow, so a
+        # [s]/[n]/[p]/[j] press (or header click) is visible instead of a silent
+        # re-order. Index map matches on_header_selected's col_map.
+        labels = ["#", "St", "Versicherer", "Produkt", "Note", "Bew.", "€/mo", "SB", "Δ"]
+        sort_idx = {"position": 0, "insurer": 2, "note": 4, "price": 6, "changed": 8}.get(
+            self.sort_col
+        )
+        if sort_idx is not None:
+            labels[sort_idx] += " ▲" if self.sort_asc else " ▼"
+        table.add_columns(*labels)
 
         rows = self._visible_rows()
         row_count_label = self.query_one("#filter-input", Input)
         # update placeholder with count
         row_count_label.placeholder = (
-            f"Filter by insurer or product… ({len(rows)} shown)"
+            f"Filter: Versicherer / Produkt… ({len(rows)} angezeigt)"
         )
         try:
             date = self._snapshot.date if self._snapshot else "?"
             self.query_one("#market-legend", Label).update(
-                f"{STATUS_LEGEND}   [dim]· gelesen am {date}[/dim]"
+                f"{STATUS_LEGEND}   [dim]· Δ Änderungen (\\[j]) · gelesen am {date}[/dim]"
             )
         except NoMatches:
             pass
@@ -1309,24 +1341,24 @@ class CheckApp(App):
                     " ist unter einem anderen Vertrieb analysiert (siehe unten)."
                     "[/dim italic]"
                 )
-            # Only suggest ingest when the PDFs are actually on disk; otherwise it's
+            # Only point at [G] when the PDFs are actually on disk; otherwise it's
             # a dead end (nothing to extract). The docs block below states the real
             # next step: [g] download, or the browser harvest when there are no
             # source URLs at all (e.g. KS/Auxilia — never harvested).
             ingest_hint = (
-                "\n[dim]Run: uv run scripts/ingest.py  to extract tariff details."
+                "\n[dim]PDFs liegen lokal — \\[G] analysiert sie (ingest → extract)."
                 "[/dim]" if row.has_pdf else ""
             )
             return (
-                head + "[dim italic]No detailed record ingested yet.[/dim italic]"
+                head + "[dim italic]Noch nicht analysiert.[/dim italic]"
                 + ingest_hint
             )
 
         lines: list[str] = []
         badge = (
-            "[bright_green]enriched record[/bright_green]"
+            "[bright_green]angereicherter Record (mit Beitrag/Stufe)[/bright_green]"
             if detail.is_enriched
-            else "[cyan]base tariff record[/cyan]"
+            else "[cyan]Basis-Record[/cyan]"
         )
         lines.append(f"[bold underline]{_esc(detail.insurer)}[/bold underline]  — {badge}")
         lines.append(f"[bold]{_esc(detail.tariff)}[/bold]")
@@ -2344,26 +2376,20 @@ class CheckApp(App):
         except NoMatches:
             pass
 
-    # Enter / double-click: open the offer on CHECK24 + ensure detail band is visible.
+    # Enter / double-click: open + focus the detail band. Deliberately NO browser
+    # launch here — that used to be a surprising side effect that contradicted the
+    # in-app hint ("↵ Detail"); the offer opens explicitly via [O] or the ↗ link.
     @on(DataTable.RowSelected, "#market-table")
     def on_market_selected(self, event: DataTable.RowSelected) -> None:
         self.on_market_highlighted(event)  # ensure active row is current
         self._detail_visible = True
         self._show_detail(focus=True)
-        if self._active_row and self._active_row.position:
-            url = self._build_offer_url(self._active_row.position)
-            if url:
-                self._open_external([url])
 
     @on(DataTable.RowSelected, "#fav-table")
     def on_fav_selected(self, event: DataTable.RowSelected) -> None:
         self.on_fav_highlighted(event)
         self._detail_visible = True
         self._show_detail(focus=True)
-        if self._active_row and self._active_row.position:
-            url = self._build_offer_url(self._active_row.position)
-            if url:
-                self._open_external([url])
 
     @on(DataTable.RowHighlighted, "#magic-table")
     def on_magic_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -2394,10 +2420,6 @@ class CheckApp(App):
         self.on_magic_highlighted(event)
         self._detail_visible = True
         self._show_detail(focus=True)
-        if self._active_row and self._active_row.position:
-            url = self._build_offer_url(self._active_row.position)
-            if url:
-                self._open_external([url])
 
     @on(DataTable.HeaderSelected, "#market-table")
     def on_header_selected(self, event: DataTable.HeaderSelected) -> None:
@@ -2419,6 +2441,15 @@ class CheckApp(App):
             self._filter_timer.stop()
         self._filter_timer = self.set_timer(0.15, self._populate_market_table)
 
+    @on(Input.Submitted, "#filter-input")
+    def on_filter_submitted(self, event: Input.Submitted) -> None:
+        """Enter in the filter keeps the filter text and returns to the table —
+        without this the only way out was Esc, which also CLEARS the filter."""
+        try:
+            self.query_one("#market-table", DataTable).focus()
+        except NoMatches:
+            pass
+
     def on_resize(self, event) -> None:
         """Re-render the Vergleich matrix on resize so its width-capped columns
             track the new terminal size instead of leaving a stale layout."""
@@ -2432,7 +2463,28 @@ class CheckApp(App):
         except NoMatches:
             pass
 
+    # Band ids for the Esc dismiss check (focus sits on the ScrollableContainer).
+    _BAND_IDS = frozenset(
+        s.band_id.lstrip("#") for s in TAB_SPECS.values() if s.band_id
+    )
+
     def action_clear_filter(self) -> None:
+        """Esc, contextual dismiss: a focused detail band (Enter/[d] moved focus
+        there for scrolling) hands focus back to the active table; on the Market
+        tab it clears the filter. Previously this always reached for the Market
+        widgets — which focus-stole the *hidden* market table from other tabs."""
+        focused = self.focused
+        if focused is not None and focused.id in self._BAND_IDS:
+            table = self._active_data_table()
+            if table is not None:
+                table.focus()
+                return
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            return
+        if active != "market":
+            return
         try:
             inp = self.query_one("#filter-input", Input)
             inp.value = ""
@@ -2441,25 +2493,37 @@ class CheckApp(App):
         except NoMatches:
             pass
 
-    def action_sort_price(self) -> None:
-        self.sort_col = "price"
-        self.sort_asc = True
+    def _apply_sort(self, col: str, default_asc: bool = True) -> None:
+        """Shared sort action: scoped to the Market tab (a sort key pressed on any
+        other tab used to re-order the invisible market table silently), with a
+        repeated press of the same key flipping the direction — the header arrow
+        set in _populate_market_table makes both visible."""
+        try:
+            active = self.query_one("#tabs", TabbedContent).active
+        except NoMatches:
+            return
+        if active != "market":
+            self.notify("Sortierung gilt im Markt-Tab \\[x].",
+                        severity="information", timeout=3)
+            return
+        if self.sort_col == col:
+            self.sort_asc = not self.sort_asc
+        else:
+            self.sort_col = col
+            self.sort_asc = default_asc
         self._populate_market_table()
+
+    def action_sort_price(self) -> None:
+        self._apply_sort("price")
 
     def action_sort_note(self) -> None:
-        self.sort_col = "note"
-        self.sort_asc = True
-        self._populate_market_table()
+        self._apply_sort("note")
 
     def action_sort_position(self) -> None:
-        self.sort_col = "position"
-        self.sort_asc = True
-        self._populate_market_table()
+        self._apply_sort("position")
 
     def action_sort_changed(self) -> None:
-        self.sort_col = "changed"
-        self.sort_asc = False  # most-recently changed first
-        self._populate_market_table()
+        self._apply_sort("changed", default_asc=False)  # most-recently changed first
 
     def action_switch_tab(self, tab_id: str) -> None:
         try:
@@ -2595,7 +2659,19 @@ class CheckApp(App):
         self._reload_all()
         self.notify("Daten neu geladen.", timeout=3)
 
+    def _verlauf_tab_active(self) -> bool:
+        """Scope guard for the Verlauf-only keys ([m], [,], [.]): pressed anywhere
+        else they used to mutate the invisible Verlauf state silently."""
+        try:
+            return self.query_one("#tabs", TabbedContent).active == "verlauf"
+        except NoMatches:
+            return False
+
     def action_verlauf_filter(self) -> None:
+        if not self._verlauf_tab_active():
+            self.notify("Verlauf-Filter gilt im Verlauf-Tab \\[l].",
+                        severity="information", timeout=3)
+            return
         idx = _VERLAUF_FILTERS.index(self._verlauf_filter) if self._verlauf_filter in _VERLAUF_FILTERS else 0
         self._verlauf_filter = _VERLAUF_FILTERS[(idx + 1) % len(_VERLAUF_FILTERS)]
         self._populate_verlauf()
@@ -2603,14 +2679,14 @@ class CheckApp(App):
         self.notify(f"Verlauf-Filter: {lbl}", timeout=2)
 
     def action_verlauf_prev_snap(self) -> None:
-        if len(self._all_snapshots) < 3:
+        if not self._verlauf_tab_active() or len(self._all_snapshots) < 3:
             return
         self._verlauf_old_idx = max(0, self._verlauf_old_idx - 1)
         self._populate_verlauf()
 
     def action_verlauf_next_snap(self) -> None:
         max_idx = len(self._all_snapshots) - 2
-        if max_idx <= 0:
+        if not self._verlauf_tab_active() or max_idx <= 0:
             return
         self._verlauf_old_idx = min(max_idx, self._verlauf_old_idx + 1)
         self._populate_verlauf()
@@ -2630,7 +2706,8 @@ class CheckApp(App):
         except ValueError:
             idx = -1
         self.theme = self._THEMES[(idx + 1) % len(self._THEMES)]
-        self.notify(f"Theme: {self.theme}", timeout=2)
+        self._save_prefs()
+        self.notify(f"Theme: {self.theme} (gespeichert)", timeout=2)
 
     # --- Build the CHECK24 result URL ([b]) ---
 
@@ -3208,6 +3285,30 @@ class CheckApp(App):
             OpenSourceScreen(label, docs, len(urls), n_pdfs, stem or ""), _go
         )
 
+    def action_open_offer(self) -> None:
+        """Open the active row's CHECK24 offer page in the browser — the explicit
+        replacement for the old Enter side effect (Enter now only opens the detail
+        band; the same URL stays clickable as the ↗ link in the band)."""
+        ident = self._active_identity()
+        if ident is None:
+            self.notify("Erst eine Zeile wählen (Pfeile / Klick).", severity="warning")
+            return
+        row = self._active_row
+        if row is None or not row.position:
+            self.notify(
+                "Keine CHECK24-Position für diese Zeile — kein Angebots-Link baubar.",
+                severity="warning", timeout=5,
+            )
+            return
+        url = self._build_offer_url(row.position)
+        if url:
+            self._open_external([url])
+        else:
+            self.notify(
+                "Kein Query-Profil (config/check24-profile.json) — Link nicht baubar.",
+                severity="warning", timeout=6,
+            )
+
     def _open_external(self, targets: list[str]) -> None:
         """Hand off URLs / paths to the OS opener (browser / Finder). Best-effort:
             a missing opener or a launch error is surfaced, never fatal."""
@@ -3469,7 +3570,7 @@ class CheckApp(App):
     def _show_detail(self, focus: bool = False) -> None:
         """Reveal the active tab's detail band and render the active row.
         With focus=True, keyboard focus moves to the band so arrow keys scroll it
-        (return focus to the table by pressing Tab or clicking it)."""
+        (Esc hands focus back to the table — Tab would switch tabs)."""
         ids = self._detail_band_for_tab()
         if ids is None:
             return
