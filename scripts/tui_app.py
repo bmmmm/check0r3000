@@ -368,6 +368,64 @@ TAB_SPECS: dict[str, TabSpec] = {
 ROW_TABS: tuple[str, ...] = tuple(t for t, s in TAB_SPECS.items() if s.table_id)
 
 # ---------------------------------------------------------------------------
+# Per-tab contextual footer
+# ---------------------------------------------------------------------------
+# A TabPane is an ancestor of whatever widget is focused inside its tab (the
+# table, the detail band, the filter Input — see on_tabbed_content_tab_activated),
+# so its class-level BINDINGS surface in screen.active_bindings, and thus the
+# Footer, ONLY while that tab is active. Each context key's action is namespaced
+# to the app ("app.<action>"), so pressing it runs the exact same App action as
+# its still-present global binding. Those global bindings stay in place (as
+# show=False) so every key keeps working from other tabs with its existing
+# scope-guard notify; the pane entry is only what the Footer shows on the active
+# tab. The tab-switch keys are dropped from the footer app-side (show=False) —
+# the tab titles already carry them ("★ Favoriten [y]", "Markt [x]", …).
+
+class FavoritesPane(TabPane):
+    BINDINGS = [
+        Binding("u", "app.toggle_favorite", "Favorit", show=True),
+        Binding("R", "app.set_reference", "Referenz", show=True),
+        Binding("N", "app.edit_note", "Notiz", show=True),
+        Binding("O", "app.open_offer", "CHECK24", show=True),
+    ]
+
+
+class MarketPane(TabPane):
+    BINDINGS = [
+        Binding("f", "app.focus_filter", "Filter", show=True),
+        Binding("s", "app.sort_price", "Sort €", show=True),
+        Binding("n", "app.sort_note", "Sort Note", show=True),
+        Binding("j", "app.sort_changed", "Sort Δ", show=True),
+        Binding("O", "app.open_offer", "CHECK24", show=True),
+    ]
+
+
+class VergleichPane(TabPane):
+    BINDINGS = [
+        Binding("c", "app.manage_compare", "Verwalten", show=True),
+        Binding("w", "app.toggle_compare_wording", "Wortlaut", show=True),
+        Binding("t", "app.compare_fulltext", "Volltext", show=True),
+    ]
+
+
+class VerlaufPane(TabPane):
+    BINDINGS = [
+        Binding("m", "app.verlauf_filter", "Filter", show=True),
+        Binding("comma", "app.verlauf_prev_snap", "Älterer Snap", show=True),
+        Binding("period", "app.verlauf_next_snap", "Neuerer Snap", show=True),
+    ]
+
+
+class MagicPane(TabPane):
+    BINDINGS = [
+        Binding("P", "app.toggle_needs", "Bedarf", show=True),
+        Binding("W", "app.edit_needs", "Gewichte", show=True),
+        Binding("F", "app.magic_scan", "Markt-Scan", show=True),
+        Binding("O", "app.open_offer", "CHECK24", show=True),
+    ]
+
+
+# ---------------------------------------------------------------------------
 # The App
 # ---------------------------------------------------------------------------
 
@@ -378,15 +436,16 @@ class CheckApp(App):
     TITLE = "check0r3000 — Rechtsschutz-Vergleich"
 
     BINDINGS = [
-        # Footer (show=True): only the most-used keys; [?] lists everything.
-        Binding("y", "switch_tab('favorites')", "Favoriten", show=True),
-        Binding("x", "switch_tab('market')", "Markt", show=True),
-        Binding("v", "switch_tab('diff')", "Vergleich", show=True),
-        Binding("l", "switch_tab('verlauf')", "Verlauf", show=True),
-        # Benchmark stays reachable via [B]/tab bar/help — footer space goes to
-        # Magic Find, the primary ranking view.
+        # Tab-switch keys stay bound but OUT of the footer (show=False): the tab
+        # titles already carry them ("★ Favoriten [y]", "Markt [x]", …), and the
+        # footer space now goes to each active pane's contextual keys (per-pane
+        # BINDINGS above). They keep dispatching from any tab.
+        Binding("y", "switch_tab('favorites')", "Favoriten", show=False),
+        Binding("x", "switch_tab('market')", "Markt", show=False),
+        Binding("v", "switch_tab('diff')", "Vergleich", show=False),
+        Binding("l", "switch_tab('verlauf')", "Verlauf", show=False),
         Binding("B", "switch_tab('bench')", "Benchmark", show=False),
-        Binding("M", "switch_tab('magic')", "Magic Find", show=True),
+        Binding("M", "switch_tab('magic')", "Magic Find", show=False),
         # Tab cycles tabs forward, Shift+Tab backward. priority=True beats the
         # Screen's default tab->focus_next; action_cycle_tab restores that default
         # when a modal is open or a text field is focused.
@@ -594,7 +653,7 @@ class CheckApp(App):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with TabbedContent(id="tabs", initial="favorites"):
-            with TabPane("★ Favoriten [y]", id="favorites"):
+            with FavoritesPane("★ Favoriten [y]", id="favorites"):
                 yield Label("", id="fav-knockout")
                 with Vertical(id="fav-layout"):
                     yield DataTable(id="fav-table", cursor_type="row", zebra_stripes=True)
@@ -603,7 +662,7 @@ class CheckApp(App):
                             "Favorit wählen — Details, SB-Varianten und Quelldokumente.",
                             id="fav-detail-content",
                         )
-            with TabPane("Markt [x]", id="market"):
+            with MarketPane("Markt [x]", id="market"):
                 yield Input(
                     placeholder="Filter: Versicherer / Produkt…",
                     id="filter-input",
@@ -613,10 +672,10 @@ class CheckApp(App):
                     yield DataTable(id="market-table", cursor_type="row", zebra_stripes=True)
                     with ScrollableContainer(id="detail-panel", classes="detail-band"):
                         yield Static("Zeile wählen für Details.", id="detail-content")
-            with TabPane("Vergleich [v]", id="diff"):
+            with VergleichPane("Vergleich [v]", id="diff"):
                 with ScrollableContainer(id="diff-panel"):
                     yield Static("Vergleich wird geladen…", id="diff-content")
-            with TabPane("Verlauf [l]", id="verlauf"):
+            with VerlaufPane("Verlauf [l]", id="verlauf"):
                 yield Label("", id="verlauf-header")
                 with Vertical(id="verlauf-layout"):
                     yield DataTable(id="verlauf-table", cursor_type="row", zebra_stripes=True)
@@ -628,7 +687,7 @@ class CheckApp(App):
             with TabPane("Benchmark [B]", id="bench"):
                 with ScrollableContainer(id="bench-panel"):
                     yield Static("Benchmark wird geladen…", id="bench-content")
-            with TabPane("✨ Magic Find [M]", id="magic"):
+            with MagicPane("✨ Magic Find [M]", id="magic"):
                 yield Label("", id="magic-header")
                 with Vertical(id="magic-layout"):
                     yield DataTable(id="magic-table", cursor_type="row", zebra_stripes=True)

@@ -109,6 +109,46 @@ async def t_tab_cycle(app, pilot) -> None:
     assert _active_tab(app) == "magic", f"shift+tab -> {_active_tab(app)!r}"
 
 
+def _shown_footer_keys(app) -> set[str]:
+    """The keys the Footer would show right now: active_bindings filtered on the
+    binding's show flag. active_bindings walks the focused widget's ancestor chain
+    (which includes the active TabPane) up through the screen and app — so a pane's
+    contextual BINDINGS appear only while its tab is active."""
+    return {k for k, ab in app.screen.active_bindings.items() if ab.binding.show}
+
+
+async def t_contextual_footer(app, pilot) -> None:
+    """The footer is per-tab: each pane's contextual keys surface only while its
+    tab is active (per-pane BINDINGS on the TabPane ancestor), while the tab-switch
+    keys leave the footer yet keep dispatching. Market shows the sort/filter keys
+    but not Verlauf's [m] or Magic's [P]; Verlauf shows [m] but not the market sort
+    [s]; Magic shows [P] but not [m]. The switch key [x] is hidden but still works."""
+    await pilot.press("x")
+    await pilot.pause()
+    market = _shown_footer_keys(app)
+    assert {"s", "f"} <= market, f"market footer missing sort/filter keys: {sorted(market)}"
+    assert "m" not in market and "P" not in market, (
+        f"market footer leaks another tab's keys: {sorted(market)}")
+
+    await pilot.press("l")
+    await pilot.pause()
+    verlauf = _shown_footer_keys(app)
+    assert "m" in verlauf, f"verlauf footer missing snapshot-filter [m]: {sorted(verlauf)}"
+    assert "s" not in verlauf, f"verlauf footer leaks the market sort [s]: {sorted(verlauf)}"
+
+    await pilot.press("M")
+    await pilot.pause()
+    magic = _shown_footer_keys(app)
+    assert "P" in magic, f"magic footer missing Bedarf [P]: {sorted(magic)}"
+    assert "m" not in magic, f"magic footer leaks the verlauf filter [m]: {sorted(magic)}"
+
+    # Tab-switch key [x] is no longer shown anywhere, but still switches tabs.
+    assert "x" not in magic, f"tab-switch [x] should be hidden from the footer: {sorted(magic)}"
+    await pilot.press("x")
+    await pilot.pause()
+    assert _active_tab(app) == "market", f"[x] no longer switches tabs: {_active_tab(app)!r}"
+
+
 async def t_cross_tab_roundtrip(app, pilot) -> None:
     """A selection held in Market survives a round-trip through a tab that owns no
     table (Vergleich), restoring the exact held row. (Round-tripping through another
@@ -888,6 +928,7 @@ CASES = [
     ("pipeline_status_line", t_pipeline_status_line),
     ("tab_shortcuts", t_tab_shortcuts),
     ("tab_cycle", t_tab_cycle),
+    ("contextual_footer", t_contextual_footer),
     ("benchmark_tab", t_benchmark_tab),
     ("magic_tab", t_magic_tab),
     ("magic_needs_toggle", t_magic_needs_toggle),
