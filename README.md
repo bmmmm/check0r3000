@@ -85,10 +85,10 @@ Die wichtigsten Aktionen (`[?]` zeigt alle):
 | `[H]` | Quell-URLs **live ernten** (Playwright) + direkt analysieren |
 | `[F]` | Markt-Scan: Top-K vielversprechende, noch nicht analysierte Tarife holen + ranken |
 | `[U]` | **Update-All**: Scan+Snapshot → Docs → volle Re-Analyse (Zwilling von `update-all.sh`) |
-| `[a]` / `[u]` | Tarif in den Vergleich aufnehmen / Favorit an-aus |
+| `[a]` / `[u]` | Tarif zum Vergleich hinzufügen/entfernen / Favorit an-aus |
 | `[P]` / `[W]` | Bedarf-Modus an/aus / Bedarf-Gewichte-Editor (0–3 je Baustein) |
 | `[d]` | Detail-Band ein/aus (voller Record, Score-Breakdown, externe Bewertungen, Preisverlauf) |
-| `[R]` / `[D]` / `[o]` | Δ-Referenz setzen / lokale Daten löschen / Quelldokumente öffnen |
+| `[R]` / `[D]` / `[o]` / `[O]` | Δ-Referenz setzen / lokale Daten löschen / Quelldokumente öffnen / Auf CHECK24 öffnen |
 
 **Identität über den `stem`:** jeder Tarif hat eine kanonische ID
 `<versicherer>__<tarif>` (aus `data/sources/check24-documents.json`). TUI,
