@@ -6,7 +6,7 @@ dependencies = [
     "jsonschema>=4",
     "playwright",
     "pypdf>=4",
-    "textual>=8.0",
+    "textual>=8.2.8",
 ]
 
 [tool.uv]
