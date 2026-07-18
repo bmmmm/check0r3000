@@ -1,0 +1,45 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python-selftests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      # Textual-free data smoke test: loads config/out fixtures, exercises the
+      # subprocess-streaming core. Gracefully skips the gitignored snapshot.
+      - run: uv run scripts/tui_data.py
+      # Magic Find scoring invariants + a real-data smoke rank over out/tariffs/.
+      - run: uv run scripts/magic.py --selftest
+      - run: uv run scripts/scorecard.py
+      - run: uv run scripts/feature_history.py
+      - run: uv run scripts/coverage_taxonomy.py --selftest
+      # Regression guard: out/tariffs/*.json vs benchmarks/golden.json invariants.
+      - run: uv run scripts/regression.py
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # check24_scrape.js is a browser-DevTools paste-in script (window/document/
+      # copy()), not a Node module — syntax-only check, never executed.
+      - run: node --check scripts/check24_scrape.js
+      - uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: .
+          ignore_paths: .venv
