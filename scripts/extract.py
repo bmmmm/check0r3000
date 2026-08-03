@@ -176,9 +176,19 @@ def build_payload(schema_text: str, docs: list[dict], root: Path,
     return "\n".join(parts)
 
 
+# Per-AVB character budget for --filter, set from what actually goes through rather than
+# a round number: a 228k-char AVB (ROLAND) extracts fine, a 321k one (ARAG) is rejected
+# outright — 0 tokens, 0 cost, no error beyond a stop_sequence. The true ceiling lies
+# between the two, so the budget sits just above the largest known-good document. That
+# way it binds on the ARAG family alone; every other AVB already trims below it and
+# keeps both its full clause context and its cached extraction.
+AVB_MAX_CHARS = 250_000
+
+
 def avb_transform(doctype: str, text: str) -> str:
     """Trim only the AVB (the oversized document); pass others through unchanged."""
-    return _filter.filter_text(text) if doctype == "avb" else text
+    return (_filter.filter_text(text, max_chars=AVB_MAX_CHARS)
+            if doctype == "avb" else text)
 
 
 # Fields whose cross-run UNION we keep when --repeat > 1. Run-to-run variance in

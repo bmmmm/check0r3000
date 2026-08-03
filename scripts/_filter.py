@@ -86,7 +86,8 @@ def _sections(lines: list[str]) -> list[str]:
     return out
 
 
-def filter_text(text: str, context: int = 4, min_fraction: float = 0.15) -> str:
+def filter_text(text: str, context: int = 4, min_fraction: float = 0.15,
+                max_chars: int | None = None) -> str:
     """Return a trimmed copy of `text`; never shrink below `min_fraction` of it.
 
     If BOTH strategies collapse the document below the keep-floor — which happens
@@ -94,7 +95,23 @@ def filter_text(text: str, context: int = 4, min_fraction: float = 0.15) -> str:
     term in ANCHORS) — the trimmed result is near-empty placeholder text. Feeding
     the model a content-free AVB yields an all-null record, so in that case keep the
     original intact: an oversized prompt beats a blank one.
+
+    `max_chars` narrows the context window until the result fits, instead of trimming
+    everything harder by default. Anchor density varies a lot between insurers — ARAG's
+    ARB hit an anchor on 10% of lines against 5-6% elsewhere, so at the default window
+    its 711k-char AVB still came out at 321k and blew up the extract call, while smaller
+    documents had room to spare. Narrowing only where it is needed keeps the full clause
+    context everywhere else.
     """
+    if max_chars is not None:
+        for ctx in range(context, 0, -1):
+            out = filter_text(text, ctx, min_fraction)
+            if len(out) <= max_chars or ctx == 1:
+                if len(out) > max_chars:
+                    print(f"_filter: {len(out)} chars at the narrowest window still "
+                          f"exceeds the {max_chars}-char budget — the model may reject "
+                          f"the payload.", file=sys.stderr)
+                return out
     # PDF extraction hyphenates words across line breaks ("Versicherungs-\nsumme"); a
     # split anchor then matches nothing and the clause is dropped. Rejoin a word broken
     # by hyphen+newline where the continuation starts lowercase (legal-typography
