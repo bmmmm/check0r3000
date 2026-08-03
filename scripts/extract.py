@@ -34,6 +34,7 @@ import json
 import os
 import re
 import sys
+import threading
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -233,6 +234,36 @@ def _sig_for(docs: list[dict], repeat: int, model: str, filter_tag: str) -> str:
             + "|".join(f"{d['doctype']}:{d['content_sha256']}" for d in docs))
 
 
+# CHECK24 serves ONE document bundle for several tariffs — the 26 analyzed tariffs share
+# only 15 distinct document sets. Since _sig_for() hashes the documents (plus prompt,
+# model, filter, repeat) and nothing tariff-specific, those stems are literally the same
+# extraction request. The per-stem cache in _process_stem cannot see that: it only ever
+# looks at out/tariffs/<own stem>.json. So a full re-extract paid for 26 model runs where
+# 15 would do — with --repeat 3, 78 calls instead of 45.
+#
+# Reusing the twin's facts is not a shortcut but the more honest result: with identical
+# inputs any difference between the two records is model variance, not a product
+# difference the documents could ever justify.
+_SHARED_LOCK = threading.Lock()
+_SHARED_BY_HASH: dict[str, tuple[str, dict]] = {}  # input hash -> (source stem, record)
+
+
+def _seed_shared_index() -> None:
+    """Index already-extracted records by input hash so a stem whose twin is on disk
+    reuses it instead of re-extracting. Skipped under --force, which must re-run the
+    model for real."""
+    for path in sorted(OUT.glob("*.json")):
+        try:
+            rec = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        h = rec.get("_input_hash")
+        # A curated record carries hand-verified patches for ITS tariff; cloning those
+        # onto a twin would silently spread an edit that was never verified there.
+        if h and not rec.get("_curated"):
+            _SHARED_BY_HASH.setdefault(h, (path.stem, rec))
+
+
 def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force: bool,
                   repeat: int, filter_tag: str, schema_text: str,
                   transform) -> tuple[list[tuple[bool, str]], bool]:
@@ -282,30 +313,44 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
         except Exception:
             pass
 
-    payload = build_payload(schema_text, docs, ROOT, transform)
+    # A twin is another stem whose documents (and prompt/model/filter/repeat) hash
+    # identically — the very same extraction request, so its facts are reusable verbatim.
+    with _SHARED_LOCK:
+        entry = _SHARED_BY_HASH.get(input_hash)
+    shared_from = None
+    if entry is not None and entry[0] != stem:
+        shared_from, twin = entry
+        record = json.loads(json.dumps(twin))  # deep copy: stems must not share objects
+        record.pop("_curated", None)  # hand-verified for ITS tariff, not for this one
+        emit(f"  shared    {insurer} / {tariff}  "
+             f"(same documents as {shared_from} — no model call)")
+    else:
+        payload = build_payload(schema_text, docs, ROOT, transform)
 
-    rep = f", repeat={repeat}" if repeat > 1 else ""
-    emit(f"  extract   {insurer} / {tariff}  ({len(payload)} chars, {model}{rep}) ...")
-    runs: list[dict] = []
-    last_err = None
-    for n in range(repeat):
-        rec, err = extract_once(model, payload)
-        if rec is not None:
-            runs.append(rec)
-        else:
-            last_err = err
-            emit(f"    run {n + 1}/{repeat} failed: {err}", err=True)
-    if not runs:
-        emit(f"    FAILED: {last_err or 'all runs failed'}", err=True)
-        return lines, True
-    record = merge_records(runs) if len(runs) > 1 else runs[0]
+        rep = f", repeat={repeat}" if repeat > 1 else ""
+        emit(f"  extract   {insurer} / {tariff}  ({len(payload)} chars, {model}{rep}) ...")
+        runs: list[dict] = []
+        last_err = None
+        for n in range(repeat):
+            rec, err = extract_once(model, payload)
+            if rec is not None:
+                runs.append(rec)
+            else:
+                last_err = err
+                emit(f"    run {n + 1}/{repeat} failed: {err}", err=True)
+        if not runs:
+            emit(f"    FAILED: {last_err or 'all runs failed'}", err=True)
+            return lines, True
+        record = merge_records(runs) if len(runs) > 1 else runs[0]
+        if repeat > 1:
+            record["_repeat"] = repeat
+            record["_repeat_ok"] = len(runs)
 
     record["_input_hash"] = input_hash
     record["_model"] = model
     record["_filter"] = filter_tag
-    if repeat > 1:
-        record["_repeat"] = repeat
-        record["_repeat_ok"] = len(runs)
+    if shared_from:
+        record["_shared_from"] = shared_from
     # Identity is known from the manifest — never let a model leave it null.
     record["insurer"] = record.get("insurer") or insurer
     record["tariff"] = record.get("tariff") or tariff
@@ -326,6 +371,11 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
     emit(f"    -> {out_path.relative_to(ROOT)}")
     if feature_history.archive_version(out_path.stem, record):
         emit(f"    -> history archived ({out_path.stem})")
+    # Publish for the twins: a later stem over the same documents reuses this instead of
+    # paying for an identical extraction. setdefault, so the first writer stays the
+    # source and the attribution in _shared_from cannot flip mid-run.
+    with _SHARED_LOCK:
+        _SHARED_BY_HASH.setdefault(input_hash, (stem, record))
 
     return lines, False
 
@@ -395,6 +445,12 @@ def main() -> int:
     # (this bit a deep-scan run after a reconcile). The cache check in _process_stem
     # guards against that: a stored record at an equal-or-higher repeat over the same
     # inputs is kept.
+
+    # Under --force every stem must genuinely re-run the model, so the on-disk twins are
+    # NOT seeded — within the run, the first stem of each document set still serves the
+    # rest.
+    if not args.force:
+        _seed_shared_index()
 
     rc = 0
     seen_stems: set[str] = set()

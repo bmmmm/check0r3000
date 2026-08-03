@@ -2243,6 +2243,14 @@ class CheckApp(App):
                 "evtl. zu niedrig (Recall-Lücke, kein armer Tarif). \\[F] / neu "
                 "extrahieren hilft.[/dim]"
             )
+        if score.shared_documents_with:
+            twins = ", ".join(_esc(t) for t in score.shared_documents_with)
+            lines.append(
+                f"  [yellow]⚠ Gleiche Dokumente[/yellow] [dim]— identisches "
+                f"Unterlagen-Paket wie {twins}. Unterschiede in den extrahierten Fakten "
+                "sind Extraktions-Varianz, kein belegter Produktunterschied — "
+                "Rangabstände zwischen diesen Tarifen nicht überinterpretieren.[/dim]"
+            )
 
         lines.append("")
         if row is not None:

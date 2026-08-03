@@ -167,6 +167,8 @@ class MagicScore:
     n_leistung_cats: int = 0              # distinct benefit categories covered
     module_tier_raw: float = 0.0          # tier ratio [0,1] — info only, NOT scored
     leistung_low_confidence: bool = False # benefit-recall looks thin (see rank())
+    # Other stems extracted from the SAME documents (see _flag_shared_documents).
+    shared_documents_with: tuple[str, ...] = ()
 
     def quality_per_eur(self) -> float | None:
         """Quality units per euro/month — display-only efficiency, never a score input.
@@ -408,6 +410,31 @@ def _flag_low_confidence(scores: list[MagicScore]) -> None:
         s.leistung_low_confidence = s.n_leistung_cats < floor
 
 
+def _flag_shared_documents(
+    scores: list[MagicScore], details_by_stem: dict[str, tui_data.DetailRecord]
+) -> None:
+    """Mark tariffs whose facts come from the very same documents as another tariff's.
+
+    CHECK24 serves one document bundle for several tariffs — of 26 analyzed tariffs only
+    15 have a distinct document set. Their extracted facts still differ, but with
+    identical inputs that difference is model variance, not a product difference the
+    documents could support. Ranking them apart on it invents precision: two ROLAND
+    Premium variants sharing one bundle landed five ranks apart purely on extraction
+    noise.
+
+    Display-only, exactly like leistung_low_confidence — the score stays untouched, the
+    tab can qualify it. Mutates in place."""
+    by_hash: dict[str, list[str]] = {}
+    for s in scores:
+        rec = details_by_stem.get(s.stem)
+        if rec is not None and rec.input_hash:
+            by_hash.setdefault(rec.input_hash, []).append(s.stem)
+    for s in scores:
+        rec = details_by_stem.get(s.stem)
+        group = by_hash.get(rec.input_hash, []) if rec is not None and rec.input_hash else []
+        s.shared_documents_with = tuple(sorted(x for x in group if x != s.stem))
+
+
 def rank(
     rows: list[tui_data.SnapshotRow],
     details_by_stem: dict[str, tui_data.DetailRecord],
@@ -436,6 +463,7 @@ def rank(
         scores.append(score_one(stem, rec, note, bew, price, weights, tax, needs))
 
     _flag_low_confidence(scores)
+    _flag_shared_documents(scores, details_by_stem)
 
     scores.sort(
         key=lambda s: (

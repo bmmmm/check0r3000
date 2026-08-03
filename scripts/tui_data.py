@@ -116,6 +116,10 @@ class DetailRecord:
     besonderheiten: list[str]
     beitrag: dict[str, Any] | None
     is_enriched: bool = False
+    # Hash of the extraction input (documents + prompt/model/filter/repeat). Two stems
+    # sharing it were extracted from the SAME documents, so any difference between their
+    # facts is model variance rather than a real product difference.
+    input_hash: str | None = None
 
 
 def _slug(insurer: str, product: str) -> str:
@@ -163,6 +167,8 @@ def _record_from_data(
         besonderheiten=[str(x) for x in _as_list(data.get("besonderheiten"))],
         beitrag=data.get("beitrag") if isinstance(data.get("beitrag"), dict) else None,
         is_enriched=is_enriched,
+        input_hash=(data.get("_input_hash")
+                    if isinstance(data.get("_input_hash"), str) else None),
     )
 
 
