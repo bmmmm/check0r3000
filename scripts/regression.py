@@ -196,6 +196,59 @@ def check_attribution(entry: dict) -> str:
             f"re-harvest this stem")
 
 
+def current_document_hashes() -> dict[str, dict[str, str]] | None:
+    """stem -> {doctype: content_sha256} for the texts extract.py would read today.
+
+    Returns None when data/extracted/manifest.json is absent — it is gitignored (the
+    texts are derived from third-party PDFs), so CI and fresh clones legitimately lack
+    it and the staleness check below simply does not run there.
+    """
+    path = ROOT / "data" / "extracted" / "manifest.json"
+    try:
+        docs = json.loads(path.read_text(encoding="utf-8"))["documents"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return None
+    out: dict[str, dict[str, str]] = {}
+    for d in docs:
+        stem = f"{d.get('insurer', '')}__{d.get('tariff', '')}"
+        if d.get("doctype") and d.get("content_sha256"):
+            out.setdefault(stem, {})[d["doctype"]] = d["content_sha256"]
+    return out
+
+
+def check_staleness(stem: str, record: dict, current: dict[str, dict[str, str]]) -> str:
+    """Was this record extracted from the documents that are on disk now?
+
+    The attribution gate above validates the MANIFEST; this validates the RECORD against
+    it. The two diverge exactly when a mis-attributed entry gets re-harvested: the
+    manifest and the PDFs are then correct while out/tariffs/ still holds facts read
+    from the previous, wrong documents — a state the attribution gate reports as fully
+    healthy. extract.py resolves it on its next successful run (the input hash no longer
+    matches, so it is a cache miss), but until then the record is silently wrong.
+
+    Returns "" on pass, else a violation string.
+    """
+    have = current.get(stem)
+    if not have:  # tariff not in the extracted set (e.g. never ingested) — not our call
+        return ""
+    was = {s.get("doctype"): s.get("content_sha256")
+           for s in record.get("sources", []) if isinstance(s, dict)}
+    if not was:
+        return ""
+    if was == have:
+        return ""
+    added = sorted(set(have) - set(was))
+    dropped = sorted(set(was) - set(have))
+    changed = sorted(d for d in set(was) & set(have) if was[d] != have[d])
+    detail = ", ".join(filter(None, [
+        f"changed: {', '.join(changed)}" if changed else "",
+        f"new documents: {', '.join(added)}" if added else "",
+        f"no longer present: {', '.join(dropped)}" if dropped else "",
+    ]))
+    return (f"stale: the record was extracted from different documents than the ones on "
+            f"disk ({detail}) — re-run extract.py for this stem")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Check tariff records against golden invariants.")
     ap.add_argument("--golden", default=str(GOLDEN), help="golden invariants file")
@@ -273,9 +326,16 @@ def main() -> int:
             print()
             print(f"--- market-wide ({len(market_targets)} out/tariffs/*.json): "
                   f"schema + beitrag-null ---")
+            current_docs = current_document_hashes()
+            if current_docs is None:
+                print("  (staleness check skipped: data/extracted/manifest.json absent)")
             for path in market_targets:
                 record = json.loads(path.read_text(encoding="utf-8"))
                 violations = check_market_record(record, schema)
+                if current_docs is not None:
+                    stale = check_staleness(path.stem, record, current_docs)
+                    if stale:
+                        violations.append(stale)
                 if violations:
                     market_failed += 1
                     print(f"FAIL  {path.stem}  ({len(violations)} violation(s))")
