@@ -1,6 +1,4 @@
 {
-  "insurer": "ARAG SE",
-  "tariff": "Aktiv-Rechtsschutz für Privatpersonen Premium",
   "stand": "02.2022",
   "modules": {
     "privat": {
@@ -149,25 +147,10 @@
     "Erweiterte Leistungen für Rechtsmittel und Verfahren"
   ],
   "beitrag": null,
-  "_input_hash": "6321e63546219b2fba692f71edf6a1508b3865d6c603f81230f2731438ef44b6",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "_repeat": 3,
-  "_repeat_ok": 2,
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "5de19b50976366a9bc61aaa26bd325fd2fa44c061fa95f6c45f2027ea3489d0a"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "45ddaf8573f0cf3febe87f0ecdb8c1f0d43d5c63e37a771a456cea46e04347cf"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "a62ef039a3018a065d24eb06d1a9593b0e5cdb0e6fd31b7aa1c455d935364ecd"
-    }
-  ],
-  "_reconciled": true,
-  "_shared_from": "arag__premium-flex-familienrecht-2026"
+  "insurer": "ARAG SE",
+  "tariff": "Aktiv-Rechtsschutz für Privatpersonen Premium",
+  "stem": "arag__komfort-2026",
+  "_history_date": "2026-08-03",
+  "_content_sha256": "66be468df905b7ed60848e7e191700f031c21306d8c02adc635bcb09f4f7b56d",
+  "_supersedes": "2026-08-03"
 }
