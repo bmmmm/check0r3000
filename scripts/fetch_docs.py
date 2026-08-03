@@ -181,29 +181,37 @@ def remote_size(url: str) -> int | None:
     return None
 
 
-def download(url: str, dest: Path, attempts: int = 3) -> str:
-    # The filestore truncates bodies mid-transfer under load: three back-to-back GETs of
-    # the same URL returned the full 121153 bytes, then IncompleteRead at 98068, then at
-    # 81684. A single attempt therefore fails often enough to matter — and on a --refresh
-    # run a lost attempt leaves the STALE document on disk, so retry before giving up.
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
+def download(url: str, dest: Path, attempts: int = 5) -> str:
+    """Fetch one document, retrying the filestore's mid-transfer cutoffs.
+
+    The server truncates bodies under load — repeated GETs of one URL stopped at
+    different offsets, and the larger the document the likelier it breaks (a 4.7 MB AVB
+    lost several attempts in a row). Resuming is not an option: the filestore ignores
+    Range outright, answering 200 with no Content-Range and the full Content-Length, so
+    every attempt must re-fetch the whole body. Backoff grows because the cutoffs cluster
+    when the host is being hammered — the retry is what makes a --refresh run reliable,
+    since a lost attempt otherwise leaves the STALE document in place.
+    """
     last = ""
+    data = b""
+    ctype = ""
+    clen = None
     for attempt in range(attempts):
         try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=60) as resp:
                 ctype = resp.headers.get_content_type()
                 clen = resp.headers.get("Content-Length")
                 data = resp.read()
             break
-        except (urllib.error.URLError, ValueError, TimeoutError,
+        except (ValueError, urllib.error.HTTPError) as e:
+            return f"FAILED ({e})"  # a bad URL or an HTTP status won't fix itself
+        except (urllib.error.URLError, TimeoutError,
                 http.client.IncompleteRead) as e:
-            # ValueError: malformed/scheme-less URL; IncompleteRead: truncated body.
             # Mirror check(); one bad doc must not abort the whole --apply batch.
             last = f"FAILED ({e})"
-            if isinstance(e, (ValueError, urllib.error.HTTPError)):
-                return last  # a bad URL or an HTTP status won't fix itself
             if attempt + 1 < attempts:
-                time.sleep(1.5 * (attempt + 1))
+                time.sleep(2.0 * (attempt + 1))
     else:
         return last
     # Guard against a truncated/empty body or an HTML error page served as 200
