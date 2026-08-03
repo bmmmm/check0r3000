@@ -7,8 +7,8 @@
 # sandbox — run this script from a normal terminal, or pass --no-scan to skip
 # phase 1 and go straight to docs + pipeline.
 #
-# Phase 2 (docs): scripts/fetch_docs.py --apply --into-raw downloads any
-# manifest PDFs into data/raw/.
+# Phase 2 (docs): scripts/fetch_docs.py --into-raw --refresh downloads any missing
+# manifest PDFs into data/raw/ AND re-downloads those whose upstream size changed.
 #
 # Phase 3 (pipeline): ./pipeline.sh runs ingest -> extract -> render -> regression.
 #
@@ -89,11 +89,14 @@ if [ -z "$NO_SCAN" ]; then
   fi
 fi
 
-echo "==> docs (download manifest PDFs into data/raw/)"
+echo "==> docs (download manifest PDFs into data/raw/, re-fetching what changed)"
+# --refresh is what makes this a REFRESH rather than a resume: without it an already
+# present file is skipped unconditionally, so an insurer re-issuing its AVB under the
+# same URL would stay invisible (file exists -> skipped -> extract hashes stale text).
 # Non-fatal: a download hiccup (network, dead URL) is already logged per-tariff
 # by fetch_docs.py — surface it loudly but let the pipeline run on what's local.
-if $PYRUN scripts/fetch_docs.py --apply --into-raw; then :; else
-  echo "WARNING: fetch_docs.py --apply --into-raw failed — see the log above." >&2
+if $PYRUN scripts/fetch_docs.py --into-raw --refresh; then :; else
+  echo "WARNING: fetch_docs.py --into-raw --refresh failed — see the log above." >&2
 fi
 
 echo "==> pipeline (ingest -> extract -> render -> regression)"
