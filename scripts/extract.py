@@ -248,6 +248,26 @@ _SHARED_LOCK = threading.Lock()
 _SHARED_BY_HASH: dict[str, tuple[str, dict]] = {}  # input hash -> (source stem, record)
 
 
+def _is_degenerate(stem: str, rec: dict) -> bool:
+    """Does this record just echo its own stem instead of carrying extracted facts?
+
+    A real extraction reads insurer and tariff out of the documents ("ARAG SE",
+    "Aktiv-Rechtsschutz für Privatpersonen Premium"). A record whose identity equals the
+    slug it is filed under never got that far — arag__premium-familienrecht-2026 sits at
+    insurer='arag', tariff='premium-familienrecht-2026'. Such a record must not seed the
+    twin index: cloning it spreads a failed extraction to every stem sharing its
+    documents, turning one bad record into several.
+
+    BOTH halves must echo the slug. A tariff name alone legitimately matches its slug
+    ("Klaro" -> dmb__klaro, "JURPRIVAT" -> ks-auxilia__jurprivat) while the insurer
+    field carries a proper extracted name — requiring only one match would reject those
+    healthy records as sources.
+    """
+    insurer_slug, _, tariff_slug = stem.partition("__")
+    return (slug(str(rec.get("insurer") or "")) == insurer_slug
+            and slug(str(rec.get("tariff") or "")) == tariff_slug)
+
+
 def _seed_shared_index() -> None:
     """Index already-extracted records by input hash so a stem whose twin is on disk
     reuses it instead of re-extracting. Skipped under --force, which must re-run the
@@ -260,7 +280,7 @@ def _seed_shared_index() -> None:
         h = rec.get("_input_hash")
         # A curated record carries hand-verified patches for ITS tariff; cloning those
         # onto a twin would silently spread an edit that was never verified there.
-        if h and not rec.get("_curated"):
+        if h and not rec.get("_curated") and not _is_degenerate(path.stem, rec):
             _SHARED_BY_HASH.setdefault(h, (path.stem, rec))
 
 
@@ -373,9 +393,12 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
         emit(f"    -> history archived ({out_path.stem})")
     # Publish for the twins: a later stem over the same documents reuses this instead of
     # paying for an identical extraction. setdefault, so the first writer stays the
-    # source and the attribution in _shared_from cannot flip mid-run.
-    with _SHARED_LOCK:
-        _SHARED_BY_HASH.setdefault(input_hash, (stem, record))
+    # source and the attribution in _shared_from cannot flip mid-run. Same degeneracy
+    # guard as the on-disk seed — a run that produced slug-echo identity must not
+    # become the template for its twins.
+    if not _is_degenerate(stem, record):
+        with _SHARED_LOCK:
+            _SHARED_BY_HASH.setdefault(input_hash, (stem, record))
 
     return lines, False
 
