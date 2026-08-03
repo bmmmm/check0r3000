@@ -176,13 +176,17 @@ def build_payload(schema_text: str, docs: list[dict], root: Path,
     return "\n".join(parts)
 
 
-# Per-AVB character budget for --filter, set from what actually goes through rather than
-# a round number: a 228k-char AVB (ROLAND) extracts fine, a 321k one (ARAG) is rejected
-# outright — 0 tokens, 0 cost, no error beyond a stop_sequence. The true ceiling lies
-# between the two, so the budget sits just above the largest known-good document. That
-# way it binds on the ARAG family alone; every other AVB already trims below it and
-# keeps both its full clause context and its cached extraction.
-AVB_MAX_CHARS = 250_000
+# Per-AVB character budget for --filter, calibrated against real calls rather than set
+# to a round number. Trimming costs recall, so the budget belongs as HIGH as the model
+# still accepts:
+#   AVB 321k -> payload 391k  rejected (0 tokens, 0 cost, bare stop_sequence)
+#   AVB 283k -> payload 350k  accepted, 54 benefits extracted
+#   AVB 239k -> payload 310k  accepted, but only 26 benefits — half the recall
+# The first budget tried here was 250k, and that 26-vs-54 gap is what it cost: a
+# document that fits is worthless if the clauses got cut out of it. 290k keeps the
+# largest window that still goes through, and binds on the ARAG family alone — every
+# other AVB trims below it and keeps both its clause context and its cached extraction.
+AVB_MAX_CHARS = 290_000
 
 
 def avb_transform(doctype: str, text: str) -> str:

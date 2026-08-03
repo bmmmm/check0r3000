@@ -1,6 +1,4 @@
 {
-  "insurer": "ARAG SE",
-  "tariff": "Aktiv-Rechtsschutz Premium für Privatpersonen",
   "stand": "2026",
   "modules": {
     "privat": {
@@ -153,23 +151,10 @@
     "Globale Gerichtsbarkeit bei Internetverträgen"
   ],
   "beitrag": null,
-  "_repeat": 3,
-  "_repeat_ok": 3,
-  "_input_hash": "6c94c3c780546d25c51b6d6ac9953e48ec58eb20dc47ac755f620eb2a26094ed",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "5de19b50976366a9bc61aaa26bd325fd2fa44c061fa95f6c45f2027ea3489d0a"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "45ddaf8573f0cf3febe87f0ecdb8c1f0d43d5c63e37a771a456cea46e04347cf"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "6abaeef287ab921ae35ee3f0bdf66304abe80ad913f5f43b4e6b04331151c049"
-    }
-  ]
+  "insurer": "ARAG SE",
+  "tariff": "Aktiv-Rechtsschutz Premium für Privatpersonen",
+  "stem": "arag__premium-familienrecht-2026",
+  "_history_date": "2026-08-03",
+  "_content_sha256": "a2969bc77bc4b2a2730d405436a21b7c342491cc18d12d5b945bde0dc68b5078",
+  "_supersedes": "2026-08-03"
 }
