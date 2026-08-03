@@ -109,6 +109,19 @@ def load_rows(path: Path) -> list[dict]:
     return out
 
 
+def _comparable(rows: list[dict]) -> list[dict]:
+    """Rows reduced to what constitutes a market change, for the unchanged-check.
+
+    `position` is dropped: it is the rank in the result list, and the two scan paths
+    order differently (fetch_ratings.py reads the hydrated DOM, which Vue re-sorts;
+    fetch_prices.py reads the server-rendered order). A reshuffle is not a price event,
+    and nothing downstream keys on position — snapshots key on
+    insurer|product|selbstbeteiligung. Sorted by that key so ordering alone never
+    registers as a change."""
+    return sorted(({k: v for k, v in r.items() if k != "position"} for r in rows),
+                  key=lambda r: str(r.get("key", "")))
+
+
 def build(args) -> int:
     rows = load_rows(Path(args.rows))
     # Validate/normalise the date so the filename is always canonical zero-padded ISO
@@ -124,6 +137,24 @@ def build(args) -> int:
             "count": len(rows), "tariffs": rows}
     SNAPDIR.mkdir(parents=True, exist_ok=True)
     dest = SNAPDIR / f"{date}.json"
+
+    # A snapshot that says nothing new is worse than no snapshot: it inflates the
+    # history price_history/the Verlauf tab read, so a flat market looks like a
+    # series of events. Two of the first five snapshots were byte-identical in
+    # content to their predecessor. Compare the tariff data only — date, source
+    # and label differ by construction on every run.
+    if not args.force:
+        prev = sorted(p for p in SNAPDIR.glob("*.json") if p.name < dest.name)
+        if prev:
+            try:
+                before = json.loads(prev[-1].read_text(encoding="utf-8")).get("tariffs")
+            except (OSError, json.JSONDecodeError):
+                before = None
+            if before is not None and _comparable(before) == _comparable(rows):
+                print(f"Unchanged vs {prev[-1].relative_to(ROOT)} — no snapshot written "
+                      f"({len(rows)} tariffs identical). Pass --force to write anyway.")
+                return 0
+
     if dest.exists():
         print(f"note: overwriting existing snapshot {dest.relative_to(ROOT)}.",
               file=sys.stderr)
@@ -198,6 +229,8 @@ def main() -> int:
     ap.add_argument("--label", help="profile label stored in the snapshot")
     ap.add_argument("--source", default="check24 rsv vergleichsergebnis (all insurers)",
                     help="provenance label")
+    ap.add_argument("--force", action="store_true",
+                    help="write the snapshot even when it is identical to the previous one")
     ap.add_argument("--diff", nargs=2, metavar=("OLD", "NEW"), help="diff two snapshot files")
     args = ap.parse_args()
 
