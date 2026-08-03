@@ -29,14 +29,30 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _manifest import load_manifest  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLDEN = ROOT / "benchmarks" / "golden.json"
 SCHEMA = ROOT / "schema" / "tariff.schema.json"
 TARIFFS = ROOT / "out" / "tariffs"
+
+# Tokens that carry no product identity — they appear in nearly every document
+# filename and would make the attribution check below pass on noise alone.
+_GENERIC_TOKENS = {
+    "rechtsschutz", "versicherung", "versicherungsbedingungen", "allgemeine",
+    "produktinformationsblatt", "weitere", "unterlagen", "ag", "se", "gmbh",
+    "und", "mit", "der", "die", "das", "fuer", "von", "privat",
+}
+# A manifest entry passes when at least this share of its tariff-name tokens shows up
+# in its own document filenames. Calibrated over the 26 tracked entries: the known
+# mis-attribution scores 0.25, the weakest legitimate entry 0.80, all others 1.00.
+_ATTRIBUTION_MIN = 0.5
 
 
 def amounts(s: str) -> set[str]:
@@ -145,6 +161,41 @@ def check_market_record(record: dict, schema: dict) -> list[str]:
     return violations
 
 
+def _identity_tokens(text: str) -> list[str]:
+    folded = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
+    return [t for t in re.split(r"[^a-z0-9]+", folded)
+            if len(t) >= 2 and t not in _GENERIC_TOKENS]
+
+
+def check_attribution(entry: dict) -> str:
+    """Does a manifest entry's own document set belong to the tariff it names?
+
+    harvest_docs resolves a stem partly from the filestore bundle hash, but that hash
+    identifies a document BUNDLE, not a tariff, and CHECK24 serves one bundle for many
+    tariffs. A shared bundle could therefore land on a foreign tariff's entry — which is
+    how arag__komfort-2026 came to hold Provinzial Rheinland documents, and
+    arag__premium-flex-familienrecht-2026 the ARAG Komfort set, both undetected for five
+    weeks. Nothing downstream notices: the PDFs are real, the schema fits, and the
+    extracted record simply describes the wrong product.
+
+    Compares the tariff name against the document filenames, which CHECK24 derives from
+    the product itself. Returns "" on pass, else a violation string.
+    """
+    wanted = _identity_tokens(entry.get("tariff", ""))
+    if not wanted:
+        return ""
+    have = set(_identity_tokens(" ".join(d.get("file", "") for d in entry.get("docs", []))))
+    hits = [t for t in wanted if t in have]
+    share = len(hits) / len(wanted)
+    if share >= _ATTRIBUTION_MIN:
+        return ""
+    sample = next((d.get("file", "") for d in entry.get("docs", [])), "(no documents)")
+    return (f"attribution: only {len(hits)}/{len(wanted)} tariff-name token(s) of "
+            f"{entry.get('tariff')!r} appear in its document filenames "
+            f"(e.g. {sample!r}) — the documents likely belong to another tariff; "
+            f"re-harvest this stem")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Check tariff records against golden invariants.")
     ap.add_argument("--golden", default=str(GOLDEN), help="golden invariants file")
@@ -233,15 +284,38 @@ def main() -> int:
                 else:
                     print(f"PASS  {path.stem}")
 
+    # Manifest attribution: catches a stem whose DOCUMENTS belong to another tariff.
+    # Independent of the record checks above — a mis-attributed entry produces a
+    # perfectly schema-valid record, it just describes the wrong product.
+    attribution_failed = 0
+    n_entries = 0
+    if not args.record:
+        entries = load_manifest()["tariffs"]
+        n_entries = len(entries)
+        print()
+        print(f"--- manifest attribution ({n_entries} entries): "
+              f"documents vs. tariff name ---")
+        for entry in sorted(entries, key=lambda e: e.get("stem", "")):
+            violation = check_attribution(entry)
+            if violation:
+                attribution_failed += 1
+                print(f"FAIL  {entry.get('stem')}\n        - {violation}")
+        if not attribution_failed:
+            print(f"PASS  all {n_entries} entries carry their own tariff's documents")
+
     print()
-    if failed or market_failed:
+    if failed or market_failed or attribution_failed:
         extra = (f", {market_failed}/{len(market_targets)} market-wide tariff(s) failed"
                  if market_targets else "")
+        if attribution_failed:
+            extra += f", {attribution_failed}/{n_entries} manifest entry/entries mis-attributed"
         print(f"REGRESSION: {failed}/{len(targets)} golden tariff(s) failed{extra}. "
               f"The extraction no longer produces the document-grounded facts.",
               file=sys.stderr)
         return 1
     extra = f"; {len(market_targets)} market-wide tariff(s) pass schema + beitrag-null" if market_targets else ""
+    if n_entries:
+        extra += f"; {n_entries} manifest entry/entries correctly attributed"
     print(f"OK: {len(targets)} tariff(s) pass all invariants{extra}.")
     return 0
 

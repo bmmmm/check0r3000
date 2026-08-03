@@ -267,8 +267,14 @@ def build_entry(row: dict, group: dict, existing_by_hash: dict, existing_by_stem
                 used_by_stem: dict, today: str) -> dict:
     """Turn one (fresh row, harvested filestore bundle) into a manifest entry. Stem
     resolution, in order, so the same tariff maps to ONE stable stem across re-harvests:
-      1. this exact filestore hash is already in the manifest -> reuse its stem (matches
-         the hand-authored stems of the original 10 when their PDFs are unchanged);
+      1. this exact filestore hash is already in the manifest AND names the same product
+         -> reuse its stem (matches the hand-authored stems of the original 10 when their
+         PDFs are unchanged). The product guard is essential: the hash identifies a
+         document BUNDLE, not a tariff, and CHECK24 serves one bundle for many tariffs
+         (26 analyzed tariffs share only 15 distinct document sets). Without it a shared
+         bundle hijacks whichever stem registered it first, and the harvested row is
+         written over a FOREIGN tariff's entry — how arag__komfort-2026 came to hold a
+         Provinzial Rheinland document set on 2026-06-30;
       2. else the product's _slug already names an entry FOR THE SAME PRODUCT -> reuse it
          (a re-harvest that grabbed a different variant-row/hash still lands on the same
          stem);
@@ -277,8 +283,9 @@ def build_entry(row: dict, group: dict, existing_by_hash: dict, existing_by_stem
          clobber each other in the tracked manifest."""
     h = group["hash"]
     slug = _slug(row["insurer"], row["product"])
-    if h in existing_by_hash:
-        stem = existing_by_hash[h]["stem"]
+    by_hash = existing_by_hash.get(h)
+    if by_hash is not None and _same_product(row, by_hash):
+        stem = by_hash["stem"]
     else:
         incumbent = existing_by_stem.get(slug) or used_by_stem.get(slug)
         if incumbent is not None and _same_product(row, incumbent):

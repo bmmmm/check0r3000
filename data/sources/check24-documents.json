@@ -524,7 +524,7 @@
       "tariff": "Komfort Flex (2026)",
       "position": 32,
       "hash": "ef7c981a115a4a01d63ad0ac499c2adb",
-      "harvested": "2026-06-30",
+      "harvested": "2026-08-03",
       "docs": [
         {
           "doctype": "avb",
@@ -584,43 +584,9 @@
       "stem": "arag__komfort-2026",
       "insurer": "ARAG",
       "tariff": "Komfort (2026)",
-      "position": 60,
-      "hash": "e6f0d4a71facab0579674bb0d7e27900",
-      "harvested": "2026-06-30",
-      "docs": [
-        {
-          "doctype": "avb",
-          "kind": "tariff_terms",
-          "file": "Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
-          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/e6f0d4a71facab0579674bb0d7e27900/Allgemeine_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
-        },
-        {
-          "doctype": "produktinfoblatt",
-          "kind": "tariff_infos",
-          "file": "Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
-          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/e6f0d4a71facab0579674bb0d7e27900/Produktinformationsblatt_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
-        },
-        {
-          "doctype": "avb_besondere",
-          "kind": "tariff_terms_extra",
-          "file": "Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
-          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms_extra/e6f0d4a71facab0579674bb0d7e27900/Besondere_Versicherungsbedingungen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
-        },
-        {
-          "doctype": "weitere_unterlagen",
-          "kind": "tariff_concatenated_additional_documents",
-          "file": "Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(ÖRAG_Rechtsschutz)",
-          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/e6f0d4a71facab0579674bb0d7e27900/Weitere_Unterlagen_Provinzial_Rheinland_Versicherung_AG_Rundum-Schutz_-_PLUS_mit_Beitragsgarantie_(%C3%96RAG_Rechtsschutz).pdf"
-        }
-      ]
-    },
-    {
-      "stem": "arag__premium-flex-familienrecht-2026",
-      "insurer": "ARAG",
-      "tariff": "Premium Flex + Familienrecht (2026)",
-      "position": 82,
+      "position": 61,
       "hash": "cb6d21af147e0ad5e082b3eb7d8c73d1",
-      "harvested": "2026-06-30",
+      "harvested": "2026-08-03",
       "docs": [
         {
           "doctype": "avb",
@@ -639,6 +605,34 @@
           "kind": "tariff_concatenated_additional_documents",
           "file": "Weitere_Unterlagen_ARAG_SE_Komfort_(2026)",
           "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/cb6d21af147e0ad5e082b3eb7d8c73d1/Weitere_Unterlagen_ARAG_SE_Komfort_(2026).pdf"
+        }
+      ]
+    },
+    {
+      "stem": "arag__premium-flex-familienrecht-2026",
+      "insurer": "ARAG",
+      "tariff": "Premium Flex + Familienrecht (2026)",
+      "position": 85,
+      "hash": "b4ebe6471973ffe007fac16883e71f82",
+      "harvested": "2026-08-03",
+      "docs": [
+        {
+          "doctype": "avb",
+          "kind": "tariff_terms",
+          "file": "Allgemeine_Versicherungsbedingungen_ARAG_SE_Premium_Flex_+_Familienrecht_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_terms/b4ebe6471973ffe007fac16883e71f82/Allgemeine_Versicherungsbedingungen_ARAG_SE_Premium_Flex_+_Familienrecht_(2026).pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "tariff_infos",
+          "file": "Produktinformationsblatt_ARAG_SE_Premium_Flex_+_Familienrecht_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_infos/b4ebe6471973ffe007fac16883e71f82/Produktinformationsblatt_ARAG_SE_Premium_Flex_+_Familienrecht_(2026).pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "tariff_concatenated_additional_documents",
+          "file": "Weitere_Unterlagen_ARAG_SE_Premium_Flex_+_Familienrecht_(2026)",
+          "url": "https://rechtsschutz.check24.de/filestore/tariff_concatenated_additional_documents/b4ebe6471973ffe007fac16883e71f82/Weitere_Unterlagen_ARAG_SE_Premium_Flex_+_Familienrecht_(2026).pdf"
         }
       ]
     },
