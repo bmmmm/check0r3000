@@ -35,62 +35,48 @@ von 391 446 Zeichen sprengt den Extract-Call (Abbruch mit 0 Tokens, 0 Kosten).
 brach beim ersten Versuch bei 4,0 von 4,4 MB ab. Range-Requests werden ignoriert
 (200 statt 206, kein `Accept-Ranges`) — Resume ist unmöglich, nur Retry hilft.
 
-## Maßnahmen, in Bearbeitungsreihenfolge
+## Umgesetzt am 2026-08-03
 
-### 1. Preis-Scan ohne Browser
-Größter Hebel, kleinster Aufwand. Neues `scripts/fetch_prices.py`: HTTP-GET +
-Parser über das server-gerenderte HTML, schreibt denselben Snapshot wie
-`fetch_ratings.py`. Läuft **in-sandbox** — kein Bypass, kein Chromium, ~3 s
-statt ~20 s plus Bypass-Ritual, damit auch cron-/CI-tauglich.
+Alle fünf geplanten Maßnahmen sind erledigt. Was jeweils daraus wurde:
 
-Bewertungen aus dem letzten vollen Snapshot übernehmen und mit
-`bewertung_stand: <datum>` markieren — **nicht** auf `null` setzen, sonst kippt
-das Magic-Ranking (Gewicht 0,05) bei jedem Schnell-Scan.
-`fetch_ratings.py` bleibt als Voll-Scan bestehen, läuft aber nur noch monatlich
-oder auf Ansage.
+**1. Preis-Scan ohne Browser** — `scripts/fetch_prices.py` (`4e34029`).
+Läuft in-sandbox in 3–7 s statt Chromium plus Bypass. Gegen den
+Playwright-Snapshot desselben Tages validiert: 214/214 Zeilen, alle von
+`snapshot.py` gespeicherten Felder identisch. Bewertungen werden aus dem letzten
+Snapshot übernommen und mit `bewertung_stand` gestempelt.
+`fetch_ratings.py` bleibt der Voll-Scan für die Bewertungen.
 
-### 2. Plausibilitäts-Guard für den Cross-Stem-Cache
-Der Reuse in `extract.py` prüft nur Hash-Gleichheit. Er hat deshalb den
-degenerierten Record `arag__premium-familienrecht-2026` (`insurer='arag'`,
-`tariff='premium-familienrecht-2026'` — Stem-Fragmente statt Extraktionswerten)
-auf einen zweiten Stem kopiert; das wurde zurückgerollt.
-Guard: Record nicht als Twin-Quelle verwenden, wenn `insurer`/`tariff` dem Slug
-entsprechen. `_curated` wird bereits geschützt, Degeneration bisher nicht.
+**2. Plausibilitäts-Guard** — `035e6d6`. Ein Record zählt nur als degeneriert,
+wenn **beide** Identitätsfelder den Slug echoen. Die ODER-Form hätte gesunde
+Records mitgenommen, deren Tarifname legitim dem Slug gleicht (`Klaro`,
+`JURPRIVAT`) — gemessen über alle 26 Records: ODER markiert 3, UND genau den
+einen kaputten.
 
-### 3. Record-Aktualitäts-Invariante
-Das Attributions-Gate in `regression.py` prüft das **Manifest**, nicht die
-Records. Genau deshalb meldet es „alle 26 korrekt attribuiert", während zwei
-Records inhaltlich veraltet sind. Invariante ergänzen: `record.sources` ==
-Dokumente des aktuellen Manifest-Eintrags.
+**3. Record-Aktualitäts-Invariante** — `1ce6ceb`. Vergleicht `record.sources`
+gegen `data/extracted/manifest.json`; übersprungen, wenn die Datei fehlt
+(gitignored, also in CI und frischen Clones legitim abwesend).
 
-### 4. Snapshot nur bei Änderung schreiben
-Fünf Snapshots à ~101 KiB, davon zwei mit null Änderungen. Hash-Vergleich vor
-dem Schreiben spart Platz und macht `price_history` aussagekräftiger — heute
-steht dort Rauschen aus identischen Ständen.
+**4. Snapshot-Dedup** — `87d9952`. Der Vergleich lässt `position` aus: die beiden
+Scan-Pfade sortieren unterschiedlich, und eine Umsortierung ist kein Preisereignis.
+`--force` überschreibt.
 
-### 5. ARAG-Filter schärfen
-Löst den aktuell blockierten Extract. Zwei Ansätze in dieser Reihenfolge:
-(a) klären, warum `_filter` bei ARAG nur 45 % trimmt — vermutlich verteilen sich
-die Anker über das ganze Dokument, sodass die Kontextfenster verschmelzen;
-(b) harte Obergrenze pro Payload mit Priorisierung nach Ankerdichte.
+**5. ARAG-Filter** — `d5a0337`. `filter_text` nimmt ein `max_chars`-Budget und
+verengt das Kontextfenster (4 → 1) nur so weit, bis es passt. Budget 250k, aus
+der Messung abgeleitet statt gerundet: 228k geht durch, 321k nicht. Bindet
+dadurch allein auf die ARAG-Familie (321k → 239k); die übrigen 20 AVB bleiben
+bit-identisch und behalten Kontext wie Cache. `FILTER_VERSION` bewusst **nicht**
+erhöht — das hätte alle 26 Records für Geld neu extrahiert.
 
-Achtung: `FILTER_VERSION` hochziehen invalidiert den Extract-Cache. Nur
-**zusammen mit einem geplanten Re-Extract** anfassen, sonst kostet es alle 26
-Tarife. Deshalb zuletzt.
+**Altlasten erledigt** (`b4a7944`): Beide re-geharvesteten ARAG-Tarife sind aus
+ihren korrekten Dokumenten neu extrahiert. `arag__komfort-2026` liest jetzt
+`ARAG SE` statt `ÖRAG Rechtsschutzversicherungs-AG`. Beide über den Twin-Index
+aufgelöst, ohne bezahlte Modell-Calls. `regression.py` ist auf allen drei Gates grün.
 
-## Bewusst nicht angefasst
+## Offen
 
-**`fetch_docs`-Parallelität.** 91 Dokumente laufen bereits mit `--jobs 6`. Mehr
-Parallelität verschärft nur die Truncation — mehrfach belegt am 2026-08-03, als
-5 von 6 Dokumenten verloren gingen und mehrere zeitlich gestreckte Läufe nötig
-waren. Hier ist Geduld die Optimierung, nicht Durchsatz.
-
-## Offene Altlasten
-
-- `arag__komfort-2026` und `arag__premium-flex-familienrecht-2026` haben
-  korrigierte Manifest-Einträge und korrekte lokale PDFs (verifiziert: ARAG ARB
-  2026), aber **noch die alten Records**. Die Neu-Extraktion scheitert am
-  Payload-Limit (→ Maßnahme 5). Heilt sich beim nächsten erfolgreichen
-  Extract-Lauf selbst, da der `_input_hash` nicht mehr passt (Cache-Miss).
-- `arag__premium-familienrecht-2026` ist degeneriert (siehe Maßnahme 2) und
-  braucht eine echte Neu-Extraktion, keinen Twin-Reuse.
+- `arag__premium-familienrecht-2026` ist weiterhin degeneriert (`insurer='arag'`).
+  Der Guard verhindert nur die Verbreitung, nicht den Defekt selbst — der Record
+  braucht eine echte Neu-Extraktion mit `--force`.
+- `_sections` im Filter ist faktisch wirkungslos (behält 79–100 %); `_window`
+  gewinnt in jedem gemessenen Fall. Die Strategie kostet Rechenzeit ohne Nutzen
+  und könnte entfallen.
