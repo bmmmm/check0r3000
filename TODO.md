@@ -72,11 +72,27 @@ ihren korrekten Dokumenten neu extrahiert. `arag__komfort-2026` liest jetzt
 `ARAG SE` statt `ÖRAG Rechtsschutzversicherungs-AG`. Beide über den Twin-Index
 aufgelöst, ohne bezahlte Modell-Calls. `regression.py` ist auf allen drei Gates grün.
 
-## Offen
+## Nachgezogen am 2026-08-03 (Optimierungsrunde)
 
-- `arag__premium-familienrecht-2026` ist weiterhin degeneriert (`insurer='arag'`).
-  Der Guard verhindert nur die Verbreitung, nicht den Defekt selbst — der Record
-  braucht eine echte Neu-Extraktion mit `--force`.
-- `_sections` im Filter ist faktisch wirkungslos (behält 79–100 %); `_window`
-  gewinnt in jedem gemessenen Fall. Die Strategie kostet Rechenzeit ohne Nutzen
-  und könnte entfallen.
+**AVB-Budget von 250k auf 290k korrigiert** (`340d099`). Das erste Budget war zu
+aggressiv — Trimmen kostet Recall, und der Preis war messbar:
+
+| AVB | Payload | Ergebnis |
+|---|---|---|
+| 321k | 391k | abgelehnt (0 Tokens, 0 Kosten) |
+| 283k | 350k | akzeptiert, **54 Leistungen** |
+| 239k | 310k | akzeptiert, **26 Leistungen** |
+
+Ein Dokument, das passt, nützt nichts, wenn die Klauseln herausgeschnitten wurden.
+Das Budget gehört so hoch wie das Modell es noch annimmt.
+
+**`arag__premium-familienrecht-2026` repariert** (`340d099`). Der Record, den der
+Guard zwar markieren, aber nicht heilen konnte. Liest jetzt
+`ARAG SE / Aktiv-Rechtsschutz Premium für Privatpersonen`, 54 Leistungen, 3/3 Runs.
+
+**`_sections` bleibt** (`ad5aaae`). Die frühere Notiz „faktisch wirkungslos" war aus
+vier AVB-Stichproben gezogen und hielt nicht: für AVBs gewinnt die Strategie nie
+(0 von 108 Kombinationen), für andere Dokumenttypen aber schon — und `filter_text`
+ist ein allgemeiner Einstiegspunkt. Statt sie zu entfernen wird sie nur noch einmal
+statt je Retry berechnet (`_sections` kennt keinen `context`): 499 ms → 368 ms,
+Output byte-identisch über 54 Vergleiche.
