@@ -18,15 +18,18 @@ Run:
   uv run scripts/fetch_docs.py --check                  # probe URLs reachable (downloads nothing)
   uv run scripts/fetch_docs.py arag__premium-2026 --apply   # download into data/inbox/ (then intake.py)
   uv run scripts/fetch_docs.py arag__premium-2026 --into-raw  # canonical: straight into data/raw/ (then ingest.py)
+  uv run scripts/fetch_docs.py --into-raw --refresh     # re-download only what changed upstream
 """
 from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import functools
 import http.client
 import os
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -155,18 +158,54 @@ def check(url: str) -> str:
         return f"FAILED ({e})"
 
 
-def download(url: str, dest: Path) -> str:
+def remote_size(url: str) -> int | None:
+    """Byte length the server declares for a URL, without downloading the body.
+
+    This is the only cheap change-signal we have: the filestore serves no ETag and no
+    Last-Modified, and a re-issued AVB keeps both its URL and its filename. Returns None
+    when the size cannot be established (no Content-Length, or the probe failed), which
+    callers must treat as "unknown", never as "unchanged".
+    """
+    for method, extra in (("HEAD", {}), ("GET", {"Range": "bytes=0-0"})):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA, **extra},
+                                         method=method)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                if method == "GET":  # 206 -> "bytes 0-0/<total>"
+                    total = resp.headers.get("Content-Range", "").rpartition("/")[2]
+                    return int(total) if total.isdigit() else None
+                clen = resp.headers.get("Content-Length")
+                return int(clen) if clen and clen.isdigit() else None
+        except (urllib.error.URLError, urllib.error.HTTPError, ValueError, TimeoutError):
+            continue
+    return None
+
+
+def download(url: str, dest: Path, attempts: int = 3) -> str:
+    # The filestore truncates bodies mid-transfer under load: three back-to-back GETs of
+    # the same URL returned the full 121153 bytes, then IncompleteRead at 98068, then at
+    # 81684. A single attempt therefore fails often enough to matter — and on a --refresh
+    # run a lost attempt leaves the STALE document on disk, so retry before giving up.
     req = urllib.request.Request(url, headers={"User-Agent": UA})
-    try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            ctype = resp.headers.get_content_type()
-            clen = resp.headers.get("Content-Length")
-            data = resp.read()
-    except (urllib.error.URLError, ValueError, TimeoutError,
-            http.client.IncompleteRead) as e:
-        # ValueError: malformed/scheme-less URL; IncompleteRead: truncated body.
-        # Mirror check(); one bad doc must not abort the whole --apply batch.
-        return f"FAILED ({e})"
+    last = ""
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                ctype = resp.headers.get_content_type()
+                clen = resp.headers.get("Content-Length")
+                data = resp.read()
+            break
+        except (urllib.error.URLError, ValueError, TimeoutError,
+                http.client.IncompleteRead) as e:
+            # ValueError: malformed/scheme-less URL; IncompleteRead: truncated body.
+            # Mirror check(); one bad doc must not abort the whole --apply batch.
+            last = f"FAILED ({e})"
+            if isinstance(e, (ValueError, urllib.error.HTTPError)):
+                return last  # a bad URL or an HTTP status won't fix itself
+            if attempt + 1 < attempts:
+                time.sleep(1.5 * (attempt + 1))
+    else:
+        return last
     # Guard against a truncated/empty body or an HTML error page served as 200
     # (expired link etc.) — a 0-byte file must never be written out as "ok".
     if not data:
@@ -237,12 +276,27 @@ def _run_pool(fn, items: list[dict], jobs: int) -> None:
             futs[fut]["result"] = fut.result()
 
 
-def _download_one(item: dict) -> str:
+def _download_one(item: dict, refresh: bool = False) -> str:
     """Worker: skip an already-present file (so re-runs are cheap and resumable),
-    else download it via the guarded download()."""
+    else download it via the guarded download().
+
+    With `refresh`, an already-present file is not trusted blindly: its size is compared
+    against what the server declares and it is re-downloaded on a mismatch. Without this
+    an insurer re-issuing its AVB under the same URL stays invisible forever — the file
+    exists, so it is skipped, and extract.py hashes the unchanged local text.
+    """
     dest: Path = item["dest"]
     if dest.exists():
-        return "exists, skipped"
+        if not refresh:
+            return "exists, skipped"
+        local = dest.stat().st_size
+        remote = remote_size(item["url"])
+        if remote is None:
+            return f"unknown remote size, kept ({local // 1024} KiB)"
+        if remote == local:
+            return f"unchanged ({local // 1024} KiB)"
+        res = download(item["url"], dest)
+        return res if res.startswith("FAILED") else f"CHANGED {local} -> {remote} bytes, re-downloaded"
     dest.parent.mkdir(parents=True, exist_ok=True)
     return download(item["url"], dest)
 
@@ -257,10 +311,14 @@ def main() -> int:
                          "skips the filename-guessing intake step); implies --apply")
     ap.add_argument("--check", action="store_true",
                     help="probe each URL for reachability + PDF type (downloads nothing)")
+    ap.add_argument("--refresh", action="store_true",
+                    help="re-download documents whose remote size differs from the local "
+                         "copy (detects a re-issued AVB served under the same URL); "
+                         "implies --apply")
     ap.add_argument("--jobs", type=int, default=6, metavar="N",
                     help="concurrent downloads/probes (default: 6; bounded for politeness)")
     args = ap.parse_args()
-    if args.into_raw:
+    if args.into_raw or args.refresh:
         args.apply = True
 
     tariffs = select(load_manifest()["tariffs"], args.stems, args.insurer)
@@ -300,9 +358,10 @@ def main() -> int:
 
     if args.apply:
         flat = [it for _, items in groups for it in items]
-        _run_pool(_download_one, flat, args.jobs)
+        _run_pool(functools.partial(_download_one, refresh=args.refresh), flat, args.jobs)
 
     fails = 0
+    changed = 0
     for t, items in groups:
         print(f"  {t.get('stem')}  [{t.get('insurer')} — {t.get('tariff')}]")
         for it in items:
@@ -312,6 +371,8 @@ def main() -> int:
                 res = it["result"]
                 if res.startswith("FAILED"):
                     fails += 1
+                elif res.startswith("CHANGED"):
+                    changed += 1
                 print(f"    {it['doctype']}: {res} -> {it['rel']}")
         print()
 
@@ -321,6 +382,15 @@ def main() -> int:
         return 0
     tail = ("Downloaded into data/raw/. Next: uv run scripts/ingest.py" if args.into_raw
             else "Downloaded. Next: uv run scripts/intake.py  (sort into data/raw/)")
+    if args.refresh:
+        if changed:
+            tail = f"{changed} document(s) CHANGED and were re-downloaded. {tail}"
+        elif fails:
+            # Never claim "nothing changed" when a probe/download failed: the local copy
+            # may well be stale, we just could not establish it.
+            tail = f"Change status UNKNOWN for {fails} document(s) — see FAILED above. {tail}"
+        else:
+            tail = f"No document changed upstream. {tail}"
     print(f"{tail}  ({fails} failed)" if fails else tail)
     return 1 if fails else 0
 
