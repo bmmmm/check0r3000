@@ -103,38 +103,47 @@ def filter_text(text: str, context: int = 4, min_fraction: float = 0.15,
     documents had room to spare. Narrowing only where it is needed keeps the full clause
     context everywhere else.
     """
-    if max_chars is not None:
-        for ctx in range(context, 0, -1):
-            out = filter_text(text, ctx, min_fraction)
-            if len(out) <= max_chars or ctx == 1:
-                if len(out) > max_chars:
-                    print(f"_filter: {len(out)} chars at the narrowest window still "
-                          f"exceeds the {max_chars}-char budget — the model may reject "
-                          f"the payload.", file=sys.stderr)
-                return out
     # PDF extraction hyphenates words across line breaks ("Versicherungs-\nsumme"); a
     # split anchor then matches nothing and the clause is dropped. Rejoin a word broken
     # by hyphen+newline where the continuation starts lowercase (legal-typography
     # hyphenation); a capital/non-letter continuation is a real compound, left intact.
     text = re.sub(r"([A-Za-z\xc0-\xff])-\n([a-z\xe0-\xff])", r"\1\2", text)
     lines = text.splitlines()
-    candidates = [_window(lines, context), _sections(lines)]
-    rendered = ["\n".join(c) for c in candidates]
     floor = len(text) * min_fraction
-    viable = [r for r in rendered if len(r) >= floor]
-    if not viable:
-        # Both strategies fell below the keep-floor. If the doc has at least one anchor,
-        # a sub-floor trim still beats handing a small/local model an oversized AVB it
-        # cannot fit — return the smallest candidate and say so. Only a genuinely
-        # anchor-free doc (nothing to trim toward) keeps the original.
-        if _PAT.search(_fold(text)):
-            best = min(rendered, key=len)
-            print(f"_filter: both strategies fell below the {min_fraction:.0%} keep-floor; "
-                  f"returning the {len(best)}-char trim of {len(text)} (sparse anchors — "
-                  f"verify the model still sees the key clauses).", file=sys.stderr)
-            return best
-        return text
-    return min(viable, key=len)
+    # _sections takes no context — it is the same result at every window width, so it is
+    # computed once and reused across the max_chars retries below. Recomputing it per
+    # attempt cost 550ms on a 711k AVB, three quarters of it for identical output.
+    sections = "\n".join(_sections(lines))
+
+    def best_at(ctx: int) -> str:
+        rendered = ["\n".join(_window(lines, ctx)), sections]
+        viable = [r for r in rendered if len(r) >= floor]
+        if not viable:
+            # Both strategies fell below the keep-floor. If the doc has at least one
+            # anchor, a sub-floor trim still beats handing a small/local model an
+            # oversized AVB it cannot fit — return the smallest candidate and say so.
+            # Only a genuinely anchor-free doc (nothing to trim toward) keeps the original.
+            if _PAT.search(_fold(text)):
+                best = min(rendered, key=len)
+                print(f"_filter: both strategies fell below the {min_fraction:.0%} "
+                      f"keep-floor; returning the {len(best)}-char trim of {len(text)} "
+                      f"(sparse anchors — verify the model still sees the key clauses).",
+                      file=sys.stderr)
+                return best
+            return text
+        return min(viable, key=len)
+
+    if max_chars is None:
+        return best_at(context)
+    for ctx in range(context, 0, -1):
+        out = best_at(ctx)
+        if len(out) <= max_chars or ctx == 1:
+            if len(out) > max_chars:
+                print(f"_filter: {len(out)} chars at the narrowest window still "
+                      f"exceeds the {max_chars}-char budget — the model may reject "
+                      f"the payload.", file=sys.stderr)
+            return out
+    return best_at(1)  # unreachable: the ctx == 1 branch above always returns
 
 
 def stats(original: str, filtered: str) -> dict:
