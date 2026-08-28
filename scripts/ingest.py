@@ -3,8 +3,11 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "pypdf>=4",
+#     "cryptography>=3.1",
 # ]
 # ///
+# cryptography: some insurers serve AES-encrypted PDFs (e.g. BavariaDirekt
+# hausrat) — pypdf needs it to decrypt them, otherwise ingest SKIPs the doc.
 """Ingest stage: extract text from every source PDF and detect duplicates.
 
 Reads:   data/raw/<insurer>/<tariff>/<doctype>.pdf
