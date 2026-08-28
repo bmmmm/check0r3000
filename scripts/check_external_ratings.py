@@ -35,6 +35,13 @@ GERMAN_MONTHS = [
 ]
 
 
+def fetch_page(url: str, timeout: int = 30) -> str:
+    """One plain GET with a browser UA (shared with update_external_ratings.py)."""
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", errors="replace")
+
+
 def _stand_variants(stand: str) -> list[str]:
     """The recorded ISO date in the forms a German page typically prints."""
     try:
@@ -92,9 +99,7 @@ def main() -> int:
     stale = 0
     for url, stand in sorted(stands_by_url.items()):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                page = resp.read().decode("utf-8", errors="replace")
+            page = fetch_page(url)
         except OSError as e:
             print(f"WARN {url}: fetch failed ({e}) — check network/URL by hand")
             stale += 1
@@ -103,7 +108,7 @@ def main() -> int:
             print(f"ok   {url}: stand {stand} still on page")
         else:
             print(f"WARN {url}: stand {stand} not found — page likely updated,"
-                  " review the entries in external-ratings.json")
+                  " run scripts/update_external_ratings.py to review/refresh")
             stale += 1
     return 1 if stale else 0
 

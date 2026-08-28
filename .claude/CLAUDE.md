@@ -83,6 +83,8 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
   gleiche Regel wie Preis): nur Detail-Band-Sektion, Magic-„Ext"-Spalte und
   Blind-Spot-Headerzeile. Staleness: `scripts/check_external_ratings.py` (greppt den
   Stand auf der Finanztip-Seite; braucht Netz außerhalb der Sandbox-Allowlist).
+  Refresh: `scripts/update_external_ratings.py` (parst den Seiten-Stand, bumpt `stand`
+  nur bei intakten kuratierten `evidence`-Strings via `--apply`, sonst REVIEW).
 - **Konfidenz-Flag** — `leistung_low_confidence` (in `rank()` gesetzt) markiert Records,
   deren distinkte-Leistungs-Zahl weit unter dem Markt-Median liegt (Recall-Lücke, kein
   armer Tarif); rein Anzeige (⚠), der Score bleibt unangetastet. `quality_per_eur()` =

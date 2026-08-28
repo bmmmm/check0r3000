@@ -1,5 +1,5 @@
 {
-  "_comment": "External test/rating verdicts, hand-curated with attribution (no scraped content). tariffs: stem-keyed tariff-level claims. tariff_aliases: variant stem -> base stem whose verdicts apply product-identically (Flex/StrafrechtPlus/Familienrecht variants of the tested base tariff); the TUI marks these as base-variant verdicts. insurers: insurer-level claims, matched by whole-word token against the (umlaut-normalised) insurer name or the stem. Display-only in the TUI — NEVER a score input: coverage is sparse, scoring it would bias Magic Find toward tested-at-all tariffs (same rule as price). Staleness: scripts/check_external_ratings.py greps the recorded stand date on the source page (update-all.sh runs it warn-only).",
+  "_comment": "External test/rating verdicts, hand-curated with attribution (no scraped content). tariffs: stem-keyed tariff-level claims. tariff_aliases: variant stem -> base stem whose verdicts apply product-identically (Flex/StrafrechtPlus/Familienrecht variants of the tested base tariff); the TUI marks these as base-variant verdicts. insurers: insurer-level claims, matched by whole-word token against the (umlaut-normalised) insurer name or the stem. Display-only in the TUI — NEVER a score input: coverage is sparse, scoring it would bias Magic Find toward tested-at-all tariffs (same rule as price). Staleness: scripts/check_external_ratings.py greps the recorded stand date on the source page (update-all.sh runs it warn-only). Refresh: scripts/update_external_ratings.py parses the page's current stand and bumps entries whose `evidence` strings (curator-chosen prose fragments that must appear, tag-stripped, on the page for the verdict to still hold) are all still present; anything else is flagged for hand-review.",
   "tariff_aliases": {
     "arag__komfort-flex-2026": "arag__komfort-2026",
     "arag__premium-flex-2026": "arag__premium-2026",
@@ -16,6 +16,10 @@
         "sentiment": "pos",
         "scope": "tarif",
         "verdict": "Empfehlung (ARAG Aktiv Komfort) im Rechtsschutz-Vergleich",
+        "evidence": [
+          "Aktiv Komfort",
+          "Empfehlung"
+        ],
         "stand": "2025-08-20",
         "url": "https://www.finanztip.de/rechtsschutzversicherung/"
       }
@@ -27,6 +31,10 @@
         "sentiment": "neutral",
         "scope": "tarif",
         "verdict": "Beste Leistungen im Testfeld (neben ROLAND), aber teurer als die Empfehlungen",
+        "evidence": [
+          "Aktiv Premium",
+          "bessere Leistungen als die Empfohlenen"
+        ],
         "stand": "2025-08-20",
         "url": "https://www.finanztip.de/rechtsschutzversicherung/"
       }
@@ -38,6 +46,10 @@
         "sentiment": "neutral",
         "scope": "tarif",
         "verdict": "Top-Leistungen im Testfeld, aber wegen SB-Regime (300 €, steigt bei Schaden auf 500 €) nicht empfohlen",
+        "evidence": [
+          "Roland mit den Tarifen Komfort und Premium",
+          "Selbstbeteiligung von 300 Euro"
+        ],
         "stand": "2025-08-20",
         "url": "https://www.finanztip.de/rechtsschutzversicherung/"
       }
@@ -49,6 +61,10 @@
         "sentiment": "neutral",
         "scope": "tarif",
         "verdict": "Top-Leistungen im Testfeld, aber wegen SB-Regime (300 €, steigt bei Schaden auf 500 €) nicht empfohlen",
+        "evidence": [
+          "Roland mit den Tarifen Komfort und Premium",
+          "Selbstbeteiligung von 300 Euro"
+        ],
         "stand": "2025-08-20",
         "url": "https://www.finanztip.de/rechtsschutzversicherung/"
       }
@@ -60,6 +76,10 @@
         "sentiment": "neg",
         "scope": "tarif",
         "verdict": "Keine Empfehlung — Advocard hat Finanztip-Anfragen nicht beantwortet",
+        "evidence": [
+          "Advocard",
+          "nicht beantwortet"
+        ],
         "stand": "2025-08-20",
         "url": "https://www.finanztip.de/rechtsschutzversicherung/"
       }
