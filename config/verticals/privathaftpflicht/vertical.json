@@ -64,6 +64,21 @@
     "pin_keys": [],
     "module_labels": {}
   },
+  "harvest": {
+    "_comment": "Panel-flow spec for harvest_docs.py (flow=panel): the real expander is the 'Tarifdetails' TEXT link inside the card (clicking the surrounding details_button--wrap div toggles nothing); once expanded the /file/ links are in the DOM without a tab click (docs_tab_text null). URLs are session-free; 'weiter' is a login wall.",
+    "flow": "panel",
+    "card_sel": ".result_box__content",
+    "expand_text": "Tarifdetails",
+    "docs_tab_text": null,
+    "doc_link_filter": "/file/",
+    "kind_to_doctype": {
+      "terms": "avb",
+      "terms_combined": "avb",
+      "terms_extra": "avb_besondere",
+      "infos_static": "produktinfoblatt",
+      "additional_documents": "weitere_unterlagen"
+    }
+  },
   "regression_generic_tokens": [
     "privathaftpflicht",
     "haftpflicht",

@@ -88,6 +88,21 @@
       "bike_insurance_sum": "Fahrradversicherung"
     }
   },
+  "harvest": {
+    "_comment": "Panel-flow spec for harvest_docs.py (flow=panel): documents live in the Tarifdetails panel behind /file/ URLs (session-free; 'weiter' is a login wall). The Dokumente tab needs a REAL Playwright click on THIS card (a JS el.click() does not fire the Vue tab handler).",
+    "flow": "panel",
+    "card_sel": ".result_tile",
+    "details_btn": ".result_tile__details",
+    "docs_tab_text": "Dokumente",
+    "doc_link_filter": "/file/",
+    "kind_to_doctype": {
+      "terms": "avb",
+      "terms_combined": "avb",
+      "terms_extra": "avb_besondere",
+      "infos_static": "produktinfoblatt",
+      "additional_documents": "weitere_unterlagen"
+    }
+  },
   "regression_generic_tokens": [
     "hausrat",
     "hausratversicherung",

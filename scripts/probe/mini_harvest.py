@@ -9,8 +9,10 @@ data/<v>/raw/<insurer>/<tariff>/<doctype>.pdf; finally write the vertical's trac
 doc manifest (data/<v>/sources/check24-documents.json) and a rows dump for
 snapshot.py.
 
-Deliberately a probe-grade tool in tmp/: generalizing harvest_docs.py to the
-per-vertical panel flows is follow-up work; this proves the pipeline end to end.
+SUPERSEDED (2026-08-28): harvest_docs.py now handles the panel flows itself via
+the per-vertical "harvest" spec in config/verticals/<v>/vertical.json
+(flow=panel) — use that for real harvesting. This probe stays as the recorded
+Phase-D evidence path (funnel walk + top-K harvest in one pass).
 
 Run OUTSIDE the sandbox (chromium + non-allowlisted hosts):
     .venv/bin/python scripts/probe/mini_harvest.py hausrat --k 3
