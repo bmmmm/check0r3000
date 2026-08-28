@@ -1,0 +1,116 @@
+# Rechtsschutzversicherung — Vergleich
+
+_3 Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergebnisliste._
+
+## Leistungsmatrix
+
+| Merkmal | agencio — natura base | agencio (Ammerländer Versicherung) — natura optimum | Allianz Direct Versicherungs-AG — Hausratversicherung |
+|---|---|---|---|
+| Feuer | ✓ | ✓ | ✓ |
+| Einbruch/Diebstahl | ✓ | ✓ | ✓ |
+| Wasserschäden | ✓ | ✓ | ✓ |
+| Naturgefahren | – | – | ✓ |
+| Tiere | – | ✓ | ✓ |
+| Fahrzeuganprall | ✓ | ✓ | ✓ |
+| Erw. Diebstahl | ✓ | ✓ | – |
+| Internetschutz | ✓ | ✓ | – |
+| Notfalldienste | – | – | – |
+| Glas-Schutz | – | – | – |
+| Fahrrad-Schutz | – | ✓ | – |
+| Überschwemmung | – | – | – |
+| Versicherungssumme | – | – | – |
+| Selbstbeteiligung | unterschiedlich je Deckungsart: Überspannung 150 EUR, Leitungswasser/Gas 50 EUR | vereinbart, Höhe im Versicherungsschein | wählbar (Höhe im Versicherungsschein) |
+| Wartezeit (Monate) | 0 | 0 | 0 |
+| Geltungsbereich | Deutschland (Versicherungsort); weltweit bis 3 Monate begrenzt auf 10% der Versicherungssumme | Deutschland; Außenversicherung weltweit bis zu 12 Monaten | Deutschland (versicherte Wohnung); Hausrat weltweit bis 12 Monate, bei Ausbildung/Studium unbegrenzt |
+| Laufzeit | mindestens 1 Jahr; danach jährliche Verlängerung | 1 oder mehr Jahre | 1 Jahr mit automatischer Verlängerung; täglich kündbar |
+| Beitrag/Monat (EUR) | – | – | – |
+
+
+## Details je Tarif
+
+### agencio — natura base
+
+**Leistungen:** Schadenabwendung und Schadenminerung; Aufräumungs-, Transport- und Lagerkosten; Hotelkosten; Schlossänderung; Reparaturkosten nach Einbruch und Nässeschäden; Psychologische Betreuung nach Einbruch oder Brand; Rückreisekosten bei Schadenfall; CO₂-Kompensation bei Brandschäden; Kostenpauschale für Schadensermittlung
+
+**Ausschlüsse:** Gebäudebestandteile und Eigentum des Vermieters; Kraft-, Wasser- und Luftfahrzeuge; Hausrat von Mietern in der versicherten Wohnung; Elektronisch gespeicherte Daten und Programme; Krieg, Kernenergie, innere Unruhen; Schwamm, Sturmflut; Überschwemmung und Naturgefahren; Bereits anderweitig versicherte Sachen
+
+**Besonderheiten:** Basis-Tarif der natura-Produktfamilie (auch Fair, Ideal, Optimum); Optionale Module: Glasversicherung und Elementarschadenversicherung; Nachhaltigkeitsleistungen: CO₂-Kompensation bei Brandschäden; Jährliche Anpassung der Versicherungssumme nach Verbraucherpreisindex; Schadenfreiheitsrabatt für schadenfrei verlaufene Jahre; Fahrraddiebstahl zusätzlich wählbar
+
+
+### agencio (Ammerländer Versicherung) — natura optimum
+
+**Leistungen:** Schlossänderungskosten; Schlüsseldienst bis 150 EUR; Umzugskosten nach Schaden; Hotelkosten ohne zeitliche Begrenzung; Reparaturkosten für provisorische Maßnahmen; Bewachungskosten bis 10 Tage; Psychologische Betreuung nach Einbruch, Raub, Brand bis 500 EUR; Tierarztkosten und Tierunterbringung; Kinderbetreuung im Notfall bis 350 EUR; Rückreisekosten bei Reiseabbruch; Datenrettungskosten nach versichertem Schaden; Telefonmissbrauch nach Einbruch bis 500 EUR; Scheck- und Kreditkartenmissbrauch bis 5.000 EUR; Online-Handel-Betrug bis 3.500 EUR (Cyber); Phishing/Pharming Schadensersatz bis 3.500 EUR; Fahrraddiebstahl rund um die Uhr; Wallbox (Ladestation) bis 3.500 EUR; Nachhaltige Reparatur mit 30 % Neuwert-Zuschuss; Kompensation von CO2-Emissionen bei Brandschaden; Besitzstandsgarantie; Erweiterte Leistungsgarantie
+
+**Ausschlüsse:** Krieg und kriegsähnliche Ereignisse; Kernenergie und nukleare Strahlung; Schwamm und Fäulnis; Sturmflut; Vorsätzlich herbeigeführte Schäden; Vom Gebäudeeigentümer eingebrachte Sachen; Kraftfahrzeuge aller Art; Luft- und Wasserfahrzeuge; Elektronisch gespeicherte Daten (mit Ausnahmen); Erdbeben, Erdfall, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch (außer optional); Abnutzung, Verschleiß, Alterung; Schäden durch Bedienungsfehler und mangelnde Wartung
+
+**Besonderheiten:** Mehrschichtiges Tarifwerk: Base, Fair, Ideal, Optimum, Optimum+; Umfangreiche Cyber-Schutz-Module; Weltweite Außenversicherung bis 12 Monate für optimum; Erweiterte Diebstahlabdeckung (Arbeitsplatz, Trick, Haushaltshilfen, etc.); Fahrraddiebstahl ohne Einstellpflicht bereits mitversichert; Psychologische und soziale Unterstützung nach Schaden; Nachhaltigkeit-Features (CO2-Kompensation, grüne Investitionen); Besitzstandsgarantie bei Versichererwechsel; Unterversicherungsverzicht für Kleinschäden; Erweiterter Unterversicherungsverzicht bei Wohnungswechsel
+
+
+### Allianz Direct Versicherungs-AG — Hausratversicherung
+
+**Leistungen:** Schadenminderungs- und Ermittlungskosten; Aufräum-, Transport-, Lager- und Entsorgungskosten; Rückreisekosten aus Urlaub; Unterbringung, Umzugs- und Einlagerungskosten; Reparaturkosten für Gebäudebeschädigungen bei Einbruch; Unterversicherungsverzicht; Versicherung grober Fahrlässigkeit; Automatische jährliche Anpassung der Versicherungssumme an Verbraucherpreise
+
+**Ausschlüsse:** Vorsätzlich verursachte Schäden; Kriegsereignisse, innere Unruhen, Kernenergie; Handelswaren; Motorfahrzeuge mit amtlichem Kennzeichen; Hauschwamm; Rückstau aus öffentlicher Abwasserkanalisation (ohne Zusatzbaustein); Schäden durch eigene Insekten und Haustiere; Luftfahrzeuge und Wasserfahrzeuge >6m
+
+**Besonderheiten:** Optionale Produktlinie Direct Plus mit erweiterten Leistungen; Optionale Zusatzbausteine für Glas, Fahrrad und Überschwemmung; Digitales Produkt mit Online-Portal-Verwaltung; Tägliche Kündigungsmöglichkeit jederzeit; Weltweiter Schutz für vorübergehend außerhalb der Wohnung befindlichen Hausrat
+
+
+## Vor- & Nachteile im Vergleich
+
+### agencio — natura base
+
+**Vorteile:**
+- Basis-Tarif mit soliden Kernmodulen (Feuer, Einbruch, Wasser, Fahrzeuganprall)
+- Erweiterte Diebstahlversicherung mit Schlossänderungen und Psychotherapie nach Einbruch
+- Cyber-Schutz bereits im Tarif enthalten (Phishing bis 2.500 EUR)
+- Jährliche automatische Anpassung der Versicherungssumme nach Verbraucherpreisindex
+
+**Nachteile:**
+- **Keine Tierversicherung** (im Gegensatz zu optimum und Allianz)
+- Cyber-Schutz deutlich kleiner (2.500 EUR Limit vs. 3.500 EUR bei optimum)
+- Weniger Zusatzleistungen als optimum (z. B. keine Kinderbetreuung, kein Wallbox-Schutz)
+- Naturgefahren nur optional, nicht in der Basisabdeckung enthalten
+- Stand 01.03.2023 (älter als Allianz 03/2024)
+- Keine beitragsfreie Fahrradversicherung
+
+### agencio — natura optimum
+
+**Vorteile:**
+- **Umfassendste Leistungsliste** der drei Tarife (21 dokumentierte Zusatzleistungen)
+- Vollständige Module: Tiere (bis 10.000 EUR), Fahrradschutz (1 % VS beitragsfrei)
+- Erweiterter Cyber-Schutz (Phishing, Pharming, Skimming, Online-Handel bis 3.500 EUR)
+- Zusatzservices: Tierarztkosten, Kinderbetreuung im Notfall (350 EUR), Datenrettung
+- Weltweite Außenversicherung bis 12 Monate
+- Fahrzeuganprall mit klarer Rangfolge (Schienen-, Wasser- und Straßenfahrzeuge)
+- Nachhaltige Reparatur mit 30 % Neuwert-Zuschuss
+- Besitzstandsgarantie bei Versichererwechsel
+
+**Nachteile:**
+- Naturgefahren weiterhin optional (außer in optimum+ Variante)
+- Keine tägliche Kündbarkeit erwähnt
+- Komplexes Tarifwerk (Base, Fair, Ideal, Optimum, Optimum+) macht Vergleiche schwierig
+- Stand ebenfalls 01.03.2023
+
+### Allianz Direct — Hausratversicherung
+
+**Vorteile:**
+- **Naturgefahren bereits im Standardtarif enthalten** (bei agencio nur optional)
+- Modular aufgebaut: einfacher Basissatz + Direct Plus für Zusätze (Cyber, Diebstahl erweitert, Wohnungsschutzbrief)
+- **Tägliche Kündbarkeit** (große Flexibilität für Kunden)
+- Aktueller Tarifstand: 03/2024
+- Automatische jährliche Anpassung der Versicherungssumme
+- Weltweiter Schutz bis 12 Monate + unbegrenzt bei Ausbildung/Studium
+- Grobe Fahrlässigkeit versichert
+
+**Nachteile:**
+- **Deutlich weniger dokumentierte Zusatzleistungen** als agencio optimum (8 vs. 21)
+- Erweiterte Features (Cyber-Schutz, erweiterter Diebstahl) erfordern Direct Plus Upgrade
+- Keine spezifischen Cyber-Limits aufgelistet (bei optimum klar: 3.500 EUR)
+- Weniger explizite Detailleistungen (z. B. keine Tierkrankenkosten, keine Datenrettung erwähnt)
+- Fahrradschutz ist optional, nicht beitragsfrei
+
+### Fazit
+
+- **Für umfassende Leistungen & Premium-Service:** agencio natura optimum – beste Abdeckung mit Tierversicherung, Fahrradschutz beitragsfrei und erweiterte Zusatzleistungen (Psychotherapie, Tierarzt, Kinderbetreuung, Wallbox).
+- **Für Preis-bewusste Käufer mit Grundschutz:** agencio natura base – solide Kerndeckung zu voraussichtlich niedrigerem Beitrag.
+- **Für Flexibilität & aktuelle Bedingungen:** Allianz Direct – Naturgefahren im Standard, tägliche Kündbarkeit, modular erweiterbar, neuester Tarifstand.

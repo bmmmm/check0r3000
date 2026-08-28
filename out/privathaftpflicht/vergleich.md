@@ -1,0 +1,98 @@
+# Rechtsschutzversicherung — Vergleich
+
+_3 Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergebnisliste._
+
+## Leistungsmatrix
+
+| Merkmal | Neodigital Versicherung AG — AO NOW Balance 2025 | BavariaDirekt Versicherung AG — Privathaftpflichtversicherung | BavariaDirekt Versicherung AG — Privathaftpflichtversicherung |
+|---|---|---|---|
+| Privat | ✓ | ✓ | ✓ |
+| Haushalt | ✓ | ✓ | ✓ |
+| Ehrenamt | ✓ | ✓ | ✓ |
+| Immobilien | ✓ | ✓ | ✓ |
+| Mietsache | ✓ | ✓ | ✓ |
+| Tiere | ✓ | ✓ | ✓ |
+| Verkehr | ✓ | ✓ | ✓ |
+| Daten | ✓ | ✓ | ✓ |
+| Ausland | ✓ | ✓ | ✓ |
+| Umwelt | ✓ | – | – |
+| Versicherungssumme | – | – | – |
+| Selbstbeteiligung | vereinbart (Höhe im Versicherungsschein) | vereinbart (Höhe im Versicherungsschein) | vereinbart (Höhe im Versicherungsschein) |
+| Wartezeit (Monate) | – | 0 | 0 |
+| Geltungsbereich | Weltweit bei vorübergehendem Auslandsaufenthalt (bis 5 Jahre, EU unbegrenzt) | Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein | Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein |
+| Laufzeit | Mindestens 1 Jahr mit automatischer Verlängerung | 1 Jahr (automatische Verlängerung um weitere Jahre) | 1 Jahr (automatische Verlängerung um weitere Jahre) |
+| Beitrag/Monat (EUR) | – | – | – |
+
+
+## Details je Tarif
+
+### Neodigital Versicherung AG — AO NOW Balance 2025
+
+**Leistungen:** Prüfung der Haftpflichtfrage; Abwehr unberechtigter Schadensersatzansprüche; Freistellung von berechtigten Schadensersatzverpflichtungen; Neuwertentschädigung (bis 3.000 EUR); Schäden aus Gefälligkeitsverhältnis (bis 10.000 EUR); Tagesmutter/Tagesvater-Haftung auch gewerblich; Kautionsleistung im Ausland (bis 100.000 EUR); Schlüsselverlust (bis 10.000 EUR); Mietsachschäden (bis 10.000 EUR); Beschädigung gemieteter, geliehener Sachen (bis 10.000 EUR); Schäden durch mitversicherte minderjährige Kinder (bis 50.000 EUR); Schäden durch nicht deliktfähige Personen (bis 50.000 EUR); Ersatz notwendiger Aufwendungen zur Gefahrenabwehr; Bestellung von Verteidigern in Strafverfahren; Rechtsstreitführung durch bestellten Rechtsanwalt; Weltweit geltend gemachte Datenschäden (bis 10.000 EUR)
+
+**Ausschlüsse:** Vorsätzlich herbeigeführte Schäden; Kenntnis der Mangelhaftigkeit von Erzeugnissen oder Leistungen; Ansprüche zwischen Mitversicherten; Ansprüche gegen Versicherungsnehmer durch Angehörige; Leasing, Pacht, Leihe, verbotene Eigenmacht; Schäden an hergestellten oder gelieferten Sachen; Asbest und asbesthaltige Substanzen; Gentechnologie und GVO; Persönlichkeits- und Namensrechtsverletzungen; Anfeindung, Schikane, Belästigung, Diskriminierung; Übertragung von Krankheiten; Senkungen, Erdrutschungen, Überschwemmungen; Ionisierende Strahlen; Versicherungspflichtige Kraftfahrzeuge; Ungewöhnliche und gefährliche Beschäftigung; Verantwortliche Betätigung in Vereinigungen; Abnutzung und Verschleiß bei gemieteten Sachen; Jagdliche Betätigung und Rennwagen; Gewerbliche oder landwirtschaftliche Tierhaltung
+
+**Besonderheiten:** Tägliches Kündigungsrecht des Versicherungsnehmers; Teilkündigungsrecht für einzelne Bausteine möglich; Innovationsgarantie für Leistungserweiterungen; Konditions- und Summendifferenzdeckung; Partner ohne namentliche Nennung versicherbar; Eltern im Haushalt mitversicherbar; Familienangehörige in Pflegeeinrichtungen versichert; Alleinstehende Familienangehörige im Haushalt versicherbar; Unverheiratete Kinder nach Ausbildung 1 Jahr versichert; Erwachsene Kinder im gleichen Haushalt versichert; Pflegeleistende Personen mitversichert; Erweiterte Vorsorge für neue Risiken; Forderungsausfallrisiko optional; Immobilien in Europa versicherbar; Anlagen für erneuerbare Energien versichert; Vermietung Fremdenzimmer bis 8 Betten; Vermietung Wohnungen bis 30.000 EUR Jahresmietwert; Wilde Kleintiere im Haushalt versichert; Signal- und Behindertenbegleithunde versichert; Fahrräder und Pedelecs versichert; Radrennen-Teilnahme versichert; Kite-Sport versichert; Segelboote bis 15 qm versichert; Flugmodelle bis 5 kg versichert; Mallorca-Deckung für fremde Kraftwagen; Betankungsschäden fremder Fahrzeuge; Be- und Entladeschäden versichert
+
+
+### BavariaDirekt Versicherung AG — Privathaftpflichtversicherung
+
+**Leistungen:** Ehrenamtliche Tätigkeiten/Freiwilligenarbeit; Elektronischer Datenaustausch/Internetnutzung; Auslandsschutz weltweit; Schlüsselverlust (optional); Kautionsleistung im Ausland bis 200.000 EUR (optional); Schadenersatzausfallversicherung (optional); Neuwertentschädigung (optional); Tagesmutter/Babysitter; Haftung bei Schäden durch deliktsunfähige Personen
+
+**Ausschlüsse:** Vorsatz; Grobe Fahrlässigkeit mit Kenntnis; Familienmitglieder; Eigenschäden des Versicherungsnehmers; Berufliche/gewerbliche Tätigkeiten; Versicherungspflichtige Kraftfahrzeuge; Hunde, Rinder, Pferde (außer Assistenzhund); Umweltschäden nach USchadG; Asbestschäden; Strahlenschäden; Abwässer, Senkungen, Überschwemmungen; Jagd und Rennveranstaltungen
+
+**Besonderheiten:** Garantie: keine Schlechterstellung gegenüber GDV-Musterbedingungen (Stand 2020); Leistungs-Update-Garantie für zukünftige Verbesserungen kostenfrei; Best-Bedingungs-Zusage (erweiterter Vorsorgeschutz optional); Nebenberufliche Tätigkeiten bis 12.000 EUR Jahresumsatz versicherbar; Beitragsgarantie 36 Monate optional; Mallorca-Deckung (Differenzdeckung im EU-Ausland optional); Besitzstandsgarantie bei Tarifwechsel optional; Smartphone-Reparaturmehrleistung bis 20 %; Nachhaltigkeitsmehrleistungen optional bis 1.000 EUR
+
+
+### BavariaDirekt Versicherung AG — Privathaftpflichtversicherung
+
+**Leistungen:** Ehrenamtliche Tätigkeiten/Freiwilligenarbeit; Elektronischer Datenaustausch/Internetnutzung; Auslandsschutz weltweit; Schlüsselverlust (optional); Kautionsleistung im Ausland bis 200.000 EUR (optional); Schadenersatzausfallversicherung (optional); Neuwertentschädigung (optional); Tagesmutter/Babysitter; Haftung bei Schäden durch deliktsunfähige Personen
+
+**Ausschlüsse:** Vorsatz; Grobe Fahrlässigkeit mit Kenntnis; Familienmitglieder; Eigenschäden des Versicherungsnehmers; Berufliche/gewerbliche Tätigkeiten; Versicherungspflichtige Kraftfahrzeuge; Hunde, Rinder, Pferde (außer Assistenzhund); Umweltschäden nach USchadG; Asbestschäden; Strahlenschäden; Abwässer, Senkungen, Überschwemmungen; Jagd und Rennveranstaltungen
+
+**Besonderheiten:** Garantie: keine Schlechterstellung gegenüber GDV-Musterbedingungen (Stand 2020); Leistungs-Update-Garantie für zukünftige Verbesserungen kostenfrei; Best-Bedingungs-Zusage (erweiterter Vorsorgeschutz optional); Nebenberufliche Tätigkeiten bis 12.000 EUR Jahresumsatz versicherbar; Beitragsgarantie 36 Monate optional; Mallorca-Deckung (Differenzdeckung im EU-Ausland optional); Besitzstandsgarantie bei Tarifwechsel optional; Smartphone-Reparaturmehrleistung bis 20 %; Nachhaltigkeitsmehrleistungen optional bis 1.000 EUR
+
+
+## Vor- & Nachteile im Vergleich
+
+### Neodigital — AO NOW Balance 2025
+
+**Vorteile:**
+- Umweltrisiko (Gewässerschäden, USchadG) **im Basis-Tarif** enthalten
+- Erweiterte Tierhaltung: Signalhunde, Behindertenbegleithunde, wilde Kleintiere im Haushalt
+- Sportliche Aktivitäten pauschal eingeschlossen: Radrennen, Kite-Sport, Segelboote bis 15 m², Flugmodelle bis 5 kg
+- Immobilien-Vielfalt: Vermietung bis 8 Fremdenzimmerbetten, Wohnungen bis 30.000 EUR Jahresmietwert, Anlagen für erneuerbare Energien
+- Fahrzeug-Leistungen: Betankungsschäden fremder Fahrzeuge, Be-/Entladeschäden
+- Tägliches Kündigungsrecht und Teilkündigungsrecht je Baustein
+- Partner ohne namentliche Nennung versicherbar
+
+**Nachteile:**
+- Umfangreichere Feature-Liste kann undurchsichtiger wirken
+- Nischendeckungen (z. B. Radrennen, Kite-Sport) sind für viele Versicherte irrelevant
+
+---
+
+### BavariaDirekt — Privathaftpflichtversicherung
+
+**Vorteile:**
+- Umweltschäden nur als **optionale Erweiterung** – schlankerer Basis-Tariff
+- Explizite Beitragsgarantie 36 Monate (optional)
+- Leistungs-Update-Garantie für zukünftige Verbesserungen kostenfrei
+- Garantie: keine Schlechterstellung gegenüber GDV-Musterbedingungen (Stand 2020)
+- Smartphone-Reparaturmehrleistung bis 20 % (optional)
+- Nachhaltigkeitsmehrleistungen optional bis 1.000 EUR
+- Nebenberufliche Tätigkeiten bis 12.000 EUR Jahresumsatz versicherbar
+- Best-Bedingungs-Zusage mit optionalem erweitertem Vorsorgeschutz
+
+**Nachteile:**
+- Umweltschäden nicht im Standard-Leistungsumfang (Zusatzkosten nötig)
+- Weniger detaillierte Sport-/Hobby-Abdeckung explizit genannt
+- Weniger ausführliche Tierhaltungs-Optionen (Assistenzhunde ausgenommen, aber kein Behindertenbegleithund erwähnt)
+
+---
+
+### Fazit
+
+**Neodigital passt für:** Versicherte mit vielfältigen Aktivitäten, Immobilien-Engagement oder besonderen Hobbys (Sport, Kleintiere), die alles in einem Tariff abgedeckt haben möchten.
+
+**BavariaDirekt passt für:** Versicherte, die einen standardisierten, schlankeren Tariff bevorzugen und nur Zusatzbausteine hinzukaufen, die sie wirklich benötigen – insbesondere mit Wertschätzung für Beitragsgarantien und Leistungs-Updates.

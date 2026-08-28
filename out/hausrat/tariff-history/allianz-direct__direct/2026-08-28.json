@@ -3,42 +3,48 @@
   "modules": {
     "feuer": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": null
     },
     "einbruchdiebstahl": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": null
     },
     "wasserschaeden": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": null
     },
     "naturgefahren": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": null
     },
     "tiere": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": null
     },
     "fahrzeuganprall": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": null
     },
     "diebstahl_erweitert": {
       "included": null,
       "level": null,
-      "note": "Nur in Direct Plus"
+      "note": "Optionale Leistung in Direct Plus"
     },
     "internet": {
       "included": null,
       "level": null,
-      "note": "Internetschutz nur in Direct Plus"
+      "note": "Internetschutz in Direct Plus"
     },
     "wohnungsschutzbrief": {
       "included": null,
       "level": null,
-      "note": "Nur in Direct Plus"
+      "note": "Optional in Direct Plus"
     },
     "glasschutz": {
       "included": null,
@@ -58,41 +64,44 @@
   },
   "coverage": {
     "versicherungssumme": null,
-    "selbstbeteiligung": "wählbar, Höhe im Versicherungsschein",
+    "selbstbeteiligung": "wählbar (Höhe im Versicherungsschein)",
     "wartezeit_monate": 0,
     "wartezeit_ausnahmen": [],
-    "geltungsbereich": "Deutschland; weltweit bis 12 Monate temporär; bei Ausbildung/Studium weltweit unbegrenzt",
-    "vertragslaufzeit": "jährlich mit automatischer Verlängerung um 1 Jahr"
+    "geltungsbereich": "Deutschland (versicherte Wohnung); Hausrat weltweit bis 12 Monate, bei Ausbildung/Studium unbegrenzt",
+    "vertragslaufzeit": "1 Jahr mit automatischer Verlängerung; täglich kündbar"
   },
   "leistungen": [
-    "Reparaturkosten nach Einbruch",
-    "Rückreisekosten",
-    "Umzugskosten",
-    "Unterbringungskosten bei unbewohnbarer Wohnung",
-    "Aufräum- und Entsorgungskosten",
-    "Versicherung grober Fahrlässigkeit"
+    "Schadenminderungs- und Ermittlungskosten",
+    "Aufräum-, Transport-, Lager- und Entsorgungskosten",
+    "Rückreisekosten aus Urlaub",
+    "Unterbringung, Umzugs- und Einlagerungskosten",
+    "Reparaturkosten für Gebäudebeschädigungen bei Einbruch",
+    "Unterversicherungsverzicht",
+    "Versicherung grober Fahrlässigkeit",
+    "Automatische jährliche Anpassung der Versicherungssumme an Verbraucherpreise"
   ],
   "ausschluesse": [
     "Vorsätzlich verursachte Schäden",
-    "Kriegsereignisse und innere Unruhen",
-    "Schäden durch Kernenergie",
-    "Hauschwamm",
-    "Sturmflut",
-    "Motorfahrzeuge mit amtlichem Kennzeichen",
+    "Kriegsereignisse, innere Unruhen, Kernenergie",
     "Handelswaren",
-    "Diebstahl aus Kfz (Wertsachen und Bargeld)"
+    "Motorfahrzeuge mit amtlichem Kennzeichen",
+    "Hauschwamm",
+    "Rückstau aus öffentlicher Abwasserkanalisation (ohne Zusatzbaustein)",
+    "Schäden durch eigene Insekten und Haustiere",
+    "Luftfahrzeuge und Wasserfahrzeuge >6m"
   ],
   "besonderheiten": [
-    "Unterversicherungsverzicht",
-    "Jährliche Anpassung der Versicherungssumme nach Verbraucherpreisindex",
-    "Weltweiter Schutz bei Hausrat außerhalb des Haushalts für 12 Monate",
-    "Unbegrenzter Schutz bei Ausbildung/Studium weltweit"
+    "Optionale Produktlinie Direct Plus mit erweiterten Leistungen",
+    "Optionale Zusatzbausteine für Glas, Fahrrad und Überschwemmung",
+    "Digitales Produkt mit Online-Portal-Verwaltung",
+    "Tägliche Kündigungsmöglichkeit jederzeit",
+    "Weltweiter Schutz für vorübergehend außerhalb der Wohnung befindlichen Hausrat"
   ],
   "beitrag": null,
   "insurer": "Allianz Direct Versicherungs-AG",
   "tariff": "Hausratversicherung",
   "stem": "allianz-direct__direct",
   "_history_date": "2026-08-28",
-  "_content_sha256": "71a82ab5e529942fcaa8f8d52aadec665bc2315d5c26dd418fa03674a6ac8fae",
-  "_supersedes": null
+  "_content_sha256": "21effe96e1d3d65902dfee397a5c543f2e69d9ab47d7a9374ebe30a34cd82b55",
+  "_supersedes": "2026-08-28"
 }
