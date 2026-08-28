@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Run the full comparison pipeline: ingest -> extract -> render.
+# Run the full comparison pipeline: ingest -> extract -> golden pins -> render.
 # Portable POSIX sh. Requires: uv (for ingest) and the `claude` CLI (extract/render).
 #
 # Options (any order):
@@ -40,6 +40,14 @@ echo "==> extract (structured facts via model)"
 # shellcheck disable=SC2086
 if uv run scripts/extract.py $MODEL_ARGS $FILTER_ARGS $JOBS_ARGS $REPEAT_ARGS; then :; else
   echo "WARNING: extract.py reported failed tariff(s) — see out/tariffs/ and the log above." >&2
+fi
+
+echo "==> golden pins (auto-repair hallucinated isnull fields on golden stems)"
+# Non-fatal by design and exits 0 anyway: re-nulls fields golden.json pins as
+# structurally unsupported (module levels, beitrag) that a cheap-model re-extract
+# hallucinated back. Repairs are logged + recorded in tmp/golden-pin-repairs.json.
+if uv run scripts/golden_pins.py; then :; else
+  echo "WARNING: golden_pins.py failed — golden isnull pins were not enforced." >&2
 fi
 
 echo "==> overlay (structured price/Stufe from data/offers/, no model)"

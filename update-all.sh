@@ -10,7 +10,9 @@
 # Phase 2 (docs): scripts/fetch_docs.py --into-raw --refresh downloads any missing
 # manifest PDFs into data/raw/ AND re-downloads those whose upstream size changed.
 #
-# Phase 3 (pipeline): ./pipeline.sh runs ingest -> extract -> render -> regression.
+# Phase 3 (pipeline): ./pipeline.sh runs ingest -> extract -> golden pins -> render
+# -> regression; afterwards scripts/update_report.py writes tmp/update-report.md and
+# appends one line to tmp/update-runs.jsonl (what changed, cost, regression state).
 #
 # Options (any order):
 #   ./update-all.sh                       # full refresh; extract flags derived from records
@@ -99,6 +101,18 @@ if $PYRUN scripts/fetch_docs.py --into-raw --refresh; then :; else
   echo "WARNING: fetch_docs.py --into-raw --refresh failed — see the log above." >&2
 fi
 
-echo "==> pipeline (ingest -> extract -> render -> regression)"
+echo "==> pipeline (ingest -> extract -> golden pins -> render -> regression)"
+# No exec: the report step below must run after the pipeline. set -e would abort
+# on a nonzero pipeline rc before the report, hence the || capture; the rc is
+# re-raised at the end so callers still see pipeline.sh's result.
+PIPELINE_RC=0
 # shellcheck disable=SC2086
-exec ./pipeline.sh $MODEL_ARGS $FILTER_ARGS $JOBS_ARGS $REPEAT_ARGS
+./pipeline.sh $MODEL_ARGS $FILTER_ARGS $JOBS_ARGS $REPEAT_ARGS || PIPELINE_RC=$?
+
+echo "==> update report (what changed + cost + regression -> tmp/update-report.md)"
+# uv run (not $PYRUN): the report imports regression.py and thus needs the
+# jsonschema dep from its script header. Non-fatal — a report bug must never
+# mask the pipeline result.
+uv run scripts/update_report.py --label update-all || true
+
+exit $PIPELINE_RC

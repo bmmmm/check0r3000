@@ -4062,17 +4062,19 @@ class CheckApp(App):
 
     def _run_pipeline_tail(self, log_path: Path, *, base_idx: int, total: int,
                            local_model: bool) -> None:
-        """Run the post-extract tail (Overlay → Render → Regression) that pipeline.sh
-            runs after extract, so a TUI-started analysis reaches the same on-disk state
-            (out/enriched, out/vergleich.md, the golden gate) instead of stopping at
-            Extract. Shared by the [g]/[G]/[H] pipeline and the [F] magic-scan funnel.
+        """Run the post-extract tail (Golden-Pins → Overlay → Render → Regression)
+            that pipeline.sh runs after extract, so a TUI-started analysis reaches the
+            same on-disk state (out/enriched, out/vergleich.md, the golden gate) instead
+            of stopping at Extract. Shared by the [g]/[G]/[H] pipeline, the [F]
+            magic-scan funnel and [U] Update-All.
 
             Warn-only, exactly like pipeline.sh: a failing step surfaces a warning
             (status line + toast) but never aborts the chain or fails the run — the
             extract results are already on disk. Render mirrors how Extract is launched
-            (same --model + local-cold timeout); overlay/regression are model-free and
-            fast, so they get a modest ceiling."""
+            (same --model + local-cold timeout); golden-pins/overlay/regression are
+            model-free and fast, so they get a modest ceiling."""
         tail = [
+            ("Golden-Pins", ["uv", "run", "scripts/golden_pins.py"], 60),
             ("Overlay", ["uv", "run", "scripts/overlay.py"], 300),
             ("Render",
              ["uv", "run", "scripts/render.py", "--model", ANALYZE_MODEL],
@@ -4162,7 +4164,7 @@ class CheckApp(App):
             log_path.write_text("", encoding="utf-8")
         except OSError:
             pass
-        total = len(steps) + 3  # + Overlay/Render/Regression tail
+        total = len(steps) + 4  # + Golden-Pins/Overlay/Render/Regression tail
         for idx, (name, cmd, step_timeout) in enumerate(steps, 1):
             ok, _reason = self._stream_step(
                 name, cmd, step_timeout, log_path, idx=idx, total=total,
@@ -4225,7 +4227,8 @@ class CheckApp(App):
             log_path.write_text("", encoding="utf-8")
         except OSError:
             pass
-        total = len(steps) + 3  # + Overlay/Render/Regression tail
+        # + Golden-Pins/Overlay/Render/Regression tail + the Report step below.
+        total = len(steps) + 5
         for idx, (name, cmd, step_timeout, fatal) in enumerate(steps, 1):
             ok, reason = self._stream_step(
                 name, cmd, step_timeout, log_path, idx=idx, total=total,
@@ -4241,6 +4244,21 @@ class CheckApp(App):
                 )
         self._run_pipeline_tail(log_path, base_idx=len(steps) + 1, total=total,
                                 local_model=local_model)
+        # Report only in the full-update funnels ([U] + update-all.sh): summarize
+        # what changed, cost and regression state into tmp/update-report.md and
+        # append one run-log line — non-fatal like the tail steps.
+        ok, reason = self._stream_step(
+            "Report", ["uv", "run", "scripts/update_report.py",
+                       "--label", "tui-update-all"],
+            120, log_path, idx=len(steps) + 5, total=total,
+        )
+        if not ok:
+            self.call_from_thread(
+                self.notify,
+                f"Report fehlgeschlagen (nicht fatal): {_esc(reason[:90])}",
+                severity="warning",
+                timeout=7,
+            )
         self.call_from_thread(self._after_update_all)
 
     def _after_update_all(self) -> None:
@@ -4252,7 +4270,9 @@ class CheckApp(App):
         except NoMatches:
             pass
         self.notify(
-            "Update-All fertig — Verlauf zeigt den neuen Snapshot.", timeout=8,
+            "Update-All fertig — Verlauf zeigt den neuen Snapshot. "
+            "Bericht: tmp/update-report.md",
+            timeout=8,
         )
 
     @work(thread=True, group="prewarm")
@@ -4346,7 +4366,7 @@ class CheckApp(App):
             log_path.write_text("", encoding="utf-8")
         except OSError:
             pass
-        total = len(steps) + 3  # + Overlay/Render/Regression tail
+        total = len(steps) + 4  # + Golden-Pins/Overlay/Render/Regression tail
         for idx, (name, cmd) in enumerate(steps, 1):
             step_timeout = 1200 if (name == "Extract" and local_model) else 600
             ok, _reason = self._stream_step(

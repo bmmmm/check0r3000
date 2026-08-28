@@ -38,8 +38,12 @@ from _jsonio import atomic_write_json  # noqa: E402
 
 # Primary guard is the "_curated": true marker in the record itself (extract.py refuses
 # to re-extract a curated stem without --force); this hardcoded set is a second,
-# reconcile-local safety net so those two records are never touched here either.
-SKIP = {"advocard__360-privat-rechtsschutz", "arag__premium-2026"}
+# reconcile-local safety net so those records are never touched here either. roland is
+# golden-PINNED, not curated: its modules.*.level nulls are enforced by golden_pins.py,
+# and this merge's blunt whole-block comparison would happily keep a hallucinated
+# non-null level from the "more complete" side — so it must not touch roland either.
+SKIP = {"advocard__360-privat-rechtsschutz", "arag__premium-2026",
+        "roland__top-rechtsschutz-premium"}
 
 LIST_FIELDS = ("leistungen", "ausschluesse", "besonderheiten")
 

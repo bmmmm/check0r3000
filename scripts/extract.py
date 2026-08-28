@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import datetime
 import hashlib
 import json
 import os
@@ -39,6 +40,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _filter  # noqa: E402
+import _jsonio  # noqa: E402
 import _providers  # noqa: E402
 import coverage_taxonomy  # noqa: E402
 import feature_history  # noqa: E402
@@ -204,16 +206,39 @@ def avb_transform(doctype: str, text: str) -> str:
 # levels, coverage amounts, notes) would risk inventing a combination no run produced.
 _UNION_FIELDS = ("leistungen", "ausschluesse")
 
+# Run-level stats for the update report. Cost is run metadata, not record content —
+# records stay content-hashed, so the totals land in a tmp/ sidecar (written by main()),
+# never in a record field. Workers under --jobs share these, hence the lock.
+_STATS_LOCK = threading.Lock()
+_RUN_STATS = {"cost_usd": 0.0, "priced_calls": 0, "unpriced_calls": 0,
+              "cached": 0, "shared": 0, "extracted": 0, "failed": 0}
 
-def extract_once(model: str, payload: str) -> tuple[dict | None, str | None]:
-    """One model call → (record, None) or (None, error). No side effects."""
+
+def _record_cost(cost_usd) -> None:
+    with _STATS_LOCK:
+        if isinstance(cost_usd, (int, float)):
+            _RUN_STATS["cost_usd"] += cost_usd
+            _RUN_STATS["priced_calls"] += 1
+        else:
+            # Local backends (omlx:/mlx:/ollama:) report cost_usd = null.
+            _RUN_STATS["unpriced_calls"] += 1
+
+
+def _tally(kind: str) -> None:
+    with _STATS_LOCK:
+        _RUN_STATS[kind] += 1
+
+
+def extract_once(model: str, payload: str) -> tuple[dict | None, str | None, float | None]:
+    """One model call → (record, error, cost_usd). No side effects."""
     result = _providers.run(model, INSTRUCTION, payload)
+    cost = result.get("cost_usd")
     if result["error"] or not result["text"]:
-        return None, result["error"] or "empty response"
+        return None, result["error"] or "empty response", cost
     try:
-        return coerce_json(result["text"]), None
+        return coerce_json(result["text"]), None, cost
     except Exception as e:  # noqa: BLE001 — surface any parse failure as a run error
-        return None, f"could not parse JSON: {e}"
+        return None, f"could not parse JSON: {e}", cost
 
 
 def merge_records(records: list[dict]) -> dict:
@@ -323,6 +348,7 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
             prev = json.loads(out_path.read_text(encoding="utf-8"))
             if prev.get("_input_hash") == input_hash:
                 emit(f"  cached    {insurer} / {tariff}")
+                _tally("cached")
                 return lines, False
             # Keep a stored record extracted at an equal-or-higher repeat over the
             # same inputs — it is strictly better; a lower-repeat run must not clobber
@@ -335,6 +361,7 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
                 if prev.get("_input_hash") == prev_hash:
                     emit(f"  cached    {insurer} / {tariff}  "
                          f"(kept repeat={prev_repeat} >= {repeat})")
+                    _tally("cached")
                     return lines, False
             # Curated records carry hand-verified patches (e.g. golden-pinned
             # module.level, a corrected Selbstbeteiligung) that a re-extract would
@@ -343,6 +370,7 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
                 emit(f"  SKIPPED   {insurer} / {tariff} ({stem}): record is curated "
                      f"(_curated: true, carries hand-verified patches) — re-extracting "
                      f"would overwrite them; pass --force to override.", err=True)
+                _tally("cached")  # no model call, existing record kept
                 return lines, False
         except Exception:
             pass
@@ -358,6 +386,7 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
         record.pop("_curated", None)  # hand-verified for ITS tariff, not for this one
         emit(f"  shared    {insurer} / {tariff}  "
              f"(same documents as {shared_from} — no model call)")
+        _tally("shared")
     else:
         payload = build_payload(schema_text, docs, ROOT, transform)
 
@@ -366,7 +395,8 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
         runs: list[dict] = []
         last_err = None
         for n in range(repeat):
-            rec, err = extract_once(model, payload)
+            rec, err, cost = extract_once(model, payload)
+            _record_cost(cost)
             if rec is not None:
                 runs.append(rec)
             else:
@@ -374,8 +404,10 @@ def _process_stem(insurer: str, tariff: str, docs: list[dict], model: str, force
                 emit(f"    run {n + 1}/{repeat} failed: {err}", err=True)
         if not runs:
             emit(f"    FAILED: {last_err or 'all runs failed'}", err=True)
+            _tally("failed")
             return lines, True
         record = merge_records(runs) if len(runs) > 1 else runs[0]
+        _tally("extracted")
         if repeat > 1:
             record["_repeat"] = repeat
             record["_repeat_ok"] = len(runs)
@@ -534,6 +566,18 @@ def main() -> int:
             print(f"warn: --only stem(s) not found in manifest: {', '.join(missing)}",
                   file=sys.stderr)
             rc = rc or 3
+
+    # Run-cost sidecar for update_report.py. Overwritten each run: it describes THIS
+    # invocation, while tmp/update-runs.jsonl (written by the report) accumulates.
+    stats = dict(_RUN_STATS)
+    stats["cost_usd"] = round(stats["cost_usd"], 6)
+    cost_path = ROOT / "tmp" / "extract-cost.json"
+    cost_path.parent.mkdir(parents=True, exist_ok=True)
+    _jsonio.atomic_write_json(cost_path, {
+        "ts": datetime.datetime.now().isoformat(timespec="seconds"),
+        "model": args.model, "filter": filter_tag, "repeat": args.repeat,
+        **stats,
+    })
 
     return rc
 
