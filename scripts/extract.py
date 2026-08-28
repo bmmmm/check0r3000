@@ -54,32 +54,18 @@ OUT = _vertical.tariffs_dir()
 # Bump when the prompt/schema semantics change to invalidate all caches.
 PROMPT_VERSION = "4"
 
-INSTRUCTION = """You are extracting structured, comparable facts from a German \
-legal-protection-insurance (Rechtsschutzversicherung) document set.
+def _load_instruction() -> str:
+    """The extraction prompt — per-vertical DATA (config/verticals/<v>/vertical.json,
+    key `extract_instruction`). A vertical without one cannot extract; fail loudly
+    instead of prompting a model with nothing."""
+    ins = _vertical.vertical_config().get("extract_instruction")
+    if not isinstance(ins, str) or not ins.strip():
+        sys.exit(f"vertical config {_vertical.vertical_json_path()} lacks "
+                 "'extract_instruction' — extraction needs the domain prompt.")
+    return ins
 
-The stdin input contains:
-  1. A JSON Schema describing the exact output shape.
-  2. One or more documents (AVB, Produktinformationsblatt, weitere Unterlagen, \
-Leistungsübersicht), each prefixed with a `===== <doctype> =====` header.
 
-Rules:
-- Output ONLY one JSON object that validates against the schema. No prose, no \
-code fences.
-- Facts only. Do NOT copy verbatim policy text into the output.
-- Use null / empty arrays where the documents do not state a value. NEVER guess \
-a number.
-- For module `level`, use Basis/Komfort/Premium ONLY if the documents state which \
-variant THIS tariff actually has. If they merely list the variants as selectable \
-options without naming the chosen one (typical for AVB/PIB), use null — never guess \
-a level.
-- For `coverage.selbstbeteiligung`: if the documents establish that a deductible \
-applies (a 'vereinbarte Selbstbeteiligung', a per-scenario amount, or a waiver \
-clause) but state no single fixed tariff amount, describe the arrangement \
-qualitatively (e.g. 'vereinbart, Höhe im Versicherungsschein') instead of null. \
-Describing a stated arrangement is not guessing a number.
-- Keep array entries short (a few words each), in German.
-- Omit the `sources` field entirely — the pipeline adds provenance; never invent \
-content hashes."""
+INSTRUCTION = _load_instruction()
 
 
 def slug(s: str) -> str:

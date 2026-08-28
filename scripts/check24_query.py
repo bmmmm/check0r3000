@@ -32,13 +32,13 @@ PROFILE = _vertical.profile_path()
 EXAMPLE = _vertical.profile_example_path()
 PROVIDERS = _vertical.providers_path()
 
-# Params that pin the result list to one insurer / package. --all-insurers drops them.
-PIN_KEYS = ("provider_filter", "tariff_package", "tariff_position")
-# module_* flag -> human label, for --show.
-MODULE_LABELS = {
-    "module_priv": "Privat", "module_job": "Beruf", "module_traffic": "Verkehr",
-    "module_living": "Wohnen", "module_rental": "Vermietung",
-}
+# Query lever map — per-vertical DATA (config/verticals/<v>/vertical.json, key
+# `query`): pin_keys are the params that pin the result list to one insurer /
+# package (--all-insurers drops them); module_labels maps module_* query flags
+# to human labels for --show. An un-curated vertical has neither yet.
+_QUERY_CFG = _vertical.vertical_config().get("query") or {}
+PIN_KEYS = tuple(_QUERY_CFG.get("pin_keys") or ())
+MODULE_LABELS = dict(_QUERY_CFG.get("module_labels") or {})
 
 
 def load_profile() -> tuple[dict, bool]:

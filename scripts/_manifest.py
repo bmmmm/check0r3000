@@ -17,13 +17,18 @@ import _vertical
 ROOT = _vertical.ROOT
 MANIFEST = _vertical.manifest_path()
 
-DEFAULT_MANIFEST: dict = {
-    "quelle": "check24 rsv vergleichsergebnis (all insurers) — harvest_docs.py",
-    "host": "https://rechtsschutz.check24.de",
-    "note": "Source-PDF URLs only (PDFs are third-party/copyright -> data/raw is "
-            "gitignored). fetch_docs.py downloads on demand.",
-    "tariffs": [],
-}
+def _default_manifest() -> dict:
+    """Fresh-manifest skeleton for a first harvest run — host from the active
+    vertical's registry entry, so a new vertical seeds its own manifest."""
+    return {
+        "quelle": (f"check24 {_vertical.active()} vergleichsergebnis "
+                   "(all insurers) — harvest_docs.py"),
+        "host": _vertical.entry().get("host", ""),
+        "note": "Source-PDF URLs only (PDFs are third-party/copyright -> the "
+                "vertical's data/<v>/raw is gitignored). fetch_docs.py downloads "
+                "on demand.",
+        "tariffs": [],
+    }
 
 
 def load_manifest(create_if_missing: bool = False) -> dict:
@@ -41,7 +46,7 @@ def load_manifest(create_if_missing: bool = False) -> dict:
     """
     if not MANIFEST.exists():
         if create_if_missing:
-            return json.loads(json.dumps(DEFAULT_MANIFEST))  # defensive copy
+            return _default_manifest()
         sys.exit(f"No manifest at {MANIFEST.relative_to(ROOT)} — run the browser harvest "
                  f"first (scripts/harvest_docs.py, or scripts/check24_scrape.js -> "
                  f"check24Docs).")

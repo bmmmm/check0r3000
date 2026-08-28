@@ -21,22 +21,37 @@ from __future__ import annotations
 import re
 import sys
 
-# Bump when ANCHORS or the trimming heuristics change, so extract.py's cache
-# signature invalidates previously cached --filter extractions.
+import _vertical
+
+# Bump when the trimming heuristics change, so extract.py's cache signature
+# invalidates previously cached --filter extractions. (The topic anchors are
+# per-vertical DATA — config/verticals/<v>/vertical.json `filter_anchors`;
+# anchor edits within a vertical warrant a bump here too.)
 FILTER_VERSION = 1
 
-# Topic anchors: the schema fields we actually compare on. Lowercase, regex.
-ANCHORS = [
-    r"selbstbeteiligung", r"versicherungssumme", r"warte ?zeit",
-    r"geltungsbereich", r"leistungsart",
-    r"privat-?rechtsschutz", r"rechtsschutz für privat", r"verkehrs-?rechtsschutz",
-    r"berufs-?rechtsschutz", r"selbstständige", r"immobilie", r"wohnungs",
-    r"internet", r"web@ktiv", r"steuer-?rechtsschutz", r"sozialgericht",
-    r"verwaltungs-?rechtsschutz", r"mediation", r"kaution",
-    r"schadenfreiheitsrabatt", r"nicht versichert", r"ausgeschlossen",
-    r"ausschluss", r"vertragsdauer", r"laufzeit", r"selbstbehalt",
-]
-_PAT = re.compile("|".join(ANCHORS), re.IGNORECASE)
+# A regex that can never match — the anchor pattern of a vertical with no
+# curated anchors yet. filter_text then keeps every document intact (its
+# keep-floor logic returns the original when nothing anchors), which is the
+# right conservative behavior while a vertical is being scaffolded.
+_MATCH_NOTHING = re.compile(r"(?!x)x")
+_pat_cache: dict[str, re.Pattern] = {}
+_warned: set[str] = set()
+
+
+def _pat() -> re.Pattern:
+    """The active vertical's anchor pattern (lowercase regexes, ORed), cached."""
+    v = _vertical.active()
+    if v not in _pat_cache:
+        anchors = _vertical.vertical_config(v).get("filter_anchors")
+        if isinstance(anchors, list) and anchors:
+            _pat_cache[v] = re.compile("|".join(anchors), re.IGNORECASE)
+        else:
+            if v not in _warned:
+                print(f"_filter: vertical {v!r} declares no filter_anchors — "
+                      "--filter keeps documents intact.", file=sys.stderr)
+                _warned.add(v)
+            _pat_cache[v] = _MATCH_NOTHING
+    return _pat_cache[v]
 _SECTION_HEADER = re.compile(r"^\s*§\s*\d+")
 GAP = "[…]"
 
@@ -48,9 +63,10 @@ def _fold(s: str) -> str:
 
 
 def _window(lines: list[str], context: int) -> list[str]:
+    pat = _pat()
     keep = [False] * len(lines)
     for i, ln in enumerate(lines):
-        if _PAT.search(_fold(ln)):
+        if pat.search(_fold(ln)):
             for j in range(max(0, i - context), min(len(lines), i + context + 1)):
                 keep[j] = True
     out: list[str] = []
@@ -78,8 +94,9 @@ def _sections(lines: list[str]) -> list[str]:
     if cur:
         blocks.append(cur)
     out: list[str] = []
+    pat = _pat()
     for b in blocks:
-        if _PAT.search(_fold("\n".join(b))):
+        if pat.search(_fold("\n".join(b))):
             out.extend(b)
         elif not (out and out[-1] == GAP):
             out.append(GAP)
@@ -123,7 +140,7 @@ def filter_text(text: str, context: int = 4, min_fraction: float = 0.15,
             # anchor, a sub-floor trim still beats handing a small/local model an
             # oversized AVB it cannot fit — return the smallest candidate and say so.
             # Only a genuinely anchor-free doc (nothing to trim toward) keeps the original.
-            if _PAT.search(_fold(text)):
+            if _pat().search(_fold(text)):
                 best = min(rendered, key=len)
                 print(f"_filter: both strategies fell below the {min_fraction:.0%} "
                       f"keep-floor; returning the {len(best)}-char trim of {len(text)} "

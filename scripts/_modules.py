@@ -50,18 +50,16 @@ def _load_module_keys() -> tuple[str, ...]:
 
 MODULE_KEYS: tuple[str, ...] = _load_module_keys()
 
-# Canonical German labels (presentation only). Keys mirror MODULE_KEYS; the fuller
-# 'Wohnen/Immobilien' / 'Verwaltungsrecht' / 'Internet/Web' forms are authoritative
-# (render.py and the TUI had drifted to shorter variants). Every label fits the fixed
-# 30-char Vergleich label column and the 22-char detail band, so no short override is
-# needed.
-MODULE_LABELS: dict[str, str] = {
-    "privat": "Privat",
-    "beruf": "Beruf",
-    "verkehr": "Verkehr",
-    "wohnen_immobilien": "Wohnen/Immobilien",
-    "internet_web": "Internet/Web",
-    "steuer": "Steuer",
-    "sozialgericht": "Sozialgericht",
-    "verwaltungsrecht": "Verwaltungsrecht",
-}
+
+def _load_module_labels(keys: tuple[str, ...]) -> dict[str, str]:
+    """Canonical presentation labels, from the vertical's config data
+    (config/verticals/<v>/vertical.json, key `module_labels`). Labels are
+    per-vertical DATA, not code; an un-curated vertical (no labels yet) falls
+    back to the raw schema keys so nothing crashes while scaffolding."""
+    labels = _vertical.vertical_config().get("module_labels")
+    if not isinstance(labels, dict):
+        labels = {}
+    return {k: str(labels.get(k) or k) for k in keys}
+
+
+MODULE_LABELS: dict[str, str] = _load_module_labels(MODULE_KEYS)

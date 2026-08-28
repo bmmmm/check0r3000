@@ -44,11 +44,17 @@ SCHEMA = _vertical.tariff_schema_path()
 TARIFFS = _vertical.tariffs_dir()
 
 # Tokens that carry no product identity — they appear in nearly every document
-# filename and would make the attribution check below pass on noise alone.
-_GENERIC_TOKENS = {
-    "rechtsschutz", "versicherung", "versicherungsbedingungen", "allgemeine",
+# filename and would make the attribution check below pass on noise alone. The
+# universal core (legal forms, document nouns, German stopwords) lives here;
+# vertical-specific noise tokens ("rechtsschutz", "privat", ...) are DATA in
+# config/verticals/<v>/vertical.json under `regression_generic_tokens`.
+_CORE_GENERIC_TOKENS = {
+    "versicherung", "versicherungsbedingungen", "allgemeine",
     "produktinformationsblatt", "weitere", "unterlagen", "ag", "se", "gmbh",
-    "und", "mit", "der", "die", "das", "fuer", "von", "privat",
+    "und", "mit", "der", "die", "das", "fuer", "von",
+}
+_GENERIC_TOKENS = _CORE_GENERIC_TOKENS | {
+    str(t) for t in _vertical.vertical_config().get("regression_generic_tokens", [])
 }
 # A manifest entry passes when at least this share of its tariff-name tokens shows up
 # in its own document filenames. Calibrated over the 26 tracked entries: the known

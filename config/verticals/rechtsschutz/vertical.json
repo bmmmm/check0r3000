@@ -1,4 +1,61 @@
 {
-  "_comment": "Per-vertical configuration data for rechtsschutz. Filled step by step: the constants that used to live in code (module labels, filter anchors, extraction instruction, query-param map, regression tokens) migrate here in the constants-to-data commit.",
-  "label": "Rechtsschutz"
+  "_comment": "Per-vertical configuration data for rechtsschutz — the constants that used to live in code, migrated 1:1 (behavior byte-identical). module_labels: presentation labels per schema module key. filter_anchors: _filter topic regexes (lowercase). extract_instruction: the extraction prompt's domain text. query.pin_keys/module_labels: check24_query lever map. regression_generic_tokens: vertical-specific no-identity tokens ADDED to regression.py's universal core set.",
+  "label": "Rechtsschutz",
+  "module_labels": {
+    "privat": "Privat",
+    "beruf": "Beruf",
+    "verkehr": "Verkehr",
+    "wohnen_immobilien": "Wohnen/Immobilien",
+    "internet_web": "Internet/Web",
+    "steuer": "Steuer",
+    "sozialgericht": "Sozialgericht",
+    "verwaltungsrecht": "Verwaltungsrecht"
+  },
+  "filter_anchors": [
+    "selbstbeteiligung",
+    "versicherungssumme",
+    "warte ?zeit",
+    "geltungsbereich",
+    "leistungsart",
+    "privat-?rechtsschutz",
+    "rechtsschutz für privat",
+    "verkehrs-?rechtsschutz",
+    "berufs-?rechtsschutz",
+    "selbstständige",
+    "immobilie",
+    "wohnungs",
+    "internet",
+    "web@ktiv",
+    "steuer-?rechtsschutz",
+    "sozialgericht",
+    "verwaltungs-?rechtsschutz",
+    "mediation",
+    "kaution",
+    "schadenfreiheitsrabatt",
+    "nicht versichert",
+    "ausgeschlossen",
+    "ausschluss",
+    "vertragsdauer",
+    "laufzeit",
+    "selbstbehalt"
+  ],
+  "extract_instruction": "You are extracting structured, comparable facts from a German legal-protection-insurance (Rechtsschutzversicherung) document set.\n\nThe stdin input contains:\n  1. A JSON Schema describing the exact output shape.\n  2. One or more documents (AVB, Produktinformationsblatt, weitere Unterlagen, Leistungsübersicht), each prefixed with a `===== <doctype> =====` header.\n\nRules:\n- Output ONLY one JSON object that validates against the schema. No prose, no code fences.\n- Facts only. Do NOT copy verbatim policy text into the output.\n- Use null / empty arrays where the documents do not state a value. NEVER guess a number.\n- For module `level`, use Basis/Komfort/Premium ONLY if the documents state which variant THIS tariff actually has. If they merely list the variants as selectable options without naming the chosen one (typical for AVB/PIB), use null — never guess a level.\n- For `coverage.selbstbeteiligung`: if the documents establish that a deductible applies (a 'vereinbarte Selbstbeteiligung', a per-scenario amount, or a waiver clause) but state no single fixed tariff amount, describe the arrangement qualitatively (e.g. 'vereinbart, Höhe im Versicherungsschein') instead of null. Describing a stated arrangement is not guessing a number.\n- Keep array entries short (a few words each), in German.\n- Omit the `sources` field entirely — the pipeline adds provenance; never invent content hashes.",
+  "query": {
+    "pin_keys": [
+      "provider_filter",
+      "tariff_package",
+      "tariff_position"
+    ],
+    "module_labels": {
+      "module_priv": "Privat",
+      "module_job": "Beruf",
+      "module_traffic": "Verkehr",
+      "module_living": "Wohnen",
+      "module_rental": "Vermietung"
+    }
+  },
+  "regression_generic_tokens": [
+    "privat",
+    "rechtsschutz"
+  ]
 }
