@@ -1,0 +1,13 @@
+{
+  "_comment": "Personal Bedarf weighting per Baustein (neutral 1.0 = objective ranking). Edited via the TUI [W] editor or by hand.",
+  "privat": 1,
+  "haushalt": 1,
+  "ehrenamt": 1,
+  "immobilien": 1,
+  "mietsache": 1,
+  "tiere": 1,
+  "verkehr": 1,
+  "daten": 1,
+  "ausland": 1,
+  "umwelt": 1
+}

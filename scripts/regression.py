@@ -51,7 +51,8 @@ TARIFFS = _vertical.tariffs_dir()
 _CORE_GENERIC_TOKENS = {
     "versicherung", "versicherungsbedingungen", "allgemeine",
     "produktinformationsblatt", "weitere", "unterlagen", "ag", "se", "gmbh",
-    "und", "mit", "der", "die", "das", "fuer", "von",
+    "und", "mit", "der", "die", "das", "fuer", "von", "als", "pdf", "kombiniert",
+    "besondere",
 }
 _GENERIC_TOKENS = _CORE_GENERIC_TOKENS | {
     str(t) for t in _vertical.vertical_config().get("regression_generic_tokens", [])
@@ -192,6 +193,13 @@ def check_attribution(entry: dict) -> str:
     if not wanted:
         return ""
     have = set(_identity_tokens(" ".join(d.get("file", "") for d in entry.get("docs", []))))
+    if not have:
+        # Every filename is fully generic ("Produktinformationsblatt",
+        # "Allgemeine_Versicherungsbedingungen" — how the PHV/Hausrat filestore
+        # names its documents): there is no product identity in the names at all,
+        # so no filename heuristic can attribute or mis-attribute the bundle.
+        # Un-checkable is a pass, mirroring the no-token tariff-name case above.
+        return ""
     hits = [t for t in wanted if t in have]
     share = len(hits) / len(wanted)
     if share >= _ATTRIBUTION_MIN:
@@ -265,9 +273,32 @@ def main() -> int:
     ap.add_argument("--since", metavar="DATE",
                     help="only check stems whose out/tariffs/ file was modified on or "
                          "after DATE (YYYY-MM-DD) — useful as a post-extract CI filter")
+    ap.add_argument("--all-verticals", action="store_true",
+                    help="run the checks once per non-disabled registry vertical "
+                         "(each in a subprocess with CHECK0R_VERTICAL set); the "
+                         "worst return code wins")
     args = ap.parse_args()
 
-    golden_doc = json.loads(Path(args.golden).read_text(encoding="utf-8"))
+    if args.all_verticals:
+        import os
+        import subprocess
+        rc = 0
+        for v in _vertical.selectable():
+            print(f"\n===== vertical: {v} =====", flush=True)
+            res = subprocess.run(
+                [sys.executable, __file__],
+                env={**os.environ, "CHECK0R_VERTICAL": v})
+            rc = max(rc, res.returncode)
+        return rc
+
+    # A vertical without a curated golden.json (freshly scaffolded) still gets the
+    # market-wide sweep — golden-less means "no pinned invariants yet", not "skip".
+    golden_file = Path(args.golden)
+    if golden_file.exists():
+        golden_doc = json.loads(golden_file.read_text(encoding="utf-8"))
+    else:
+        print(f"(no golden invariants at {golden_file} — market sweep only)")
+        golden_doc = {"tariffs": {}}
     schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
     tariffs = golden_doc["tariffs"]
 
@@ -356,7 +387,12 @@ def main() -> int:
     # perfectly schema-valid record, it just describes the wrong product.
     attribution_failed = 0
     n_entries = 0
-    if not args.record:
+    if not args.record and not _vertical.manifest_path().exists():
+        # A freshly scaffolded vertical has no doc manifest yet; load_manifest()
+        # would sys.exit. Nothing to attribute — skip with a note.
+        print()
+        print("(manifest attribution skipped: no doc manifest for this vertical yet)")
+    elif not args.record:
         entries = load_manifest()["tariffs"]
         n_entries = len(entries)
         print()

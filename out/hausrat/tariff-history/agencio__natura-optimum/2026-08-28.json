@@ -1,0 +1,127 @@
+{
+  "stand": "01.03.2023",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null
+    },
+    "naturgefahren": {
+      "included": null,
+      "level": null,
+      "note": "optional (Elementarversicherung)"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Schäden durch wild lebende Tiere bis 10.000 EUR"
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": "Anprall von Schienen-, Wasser- und Straßenfahrzeugen"
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": "Einfacher Diebstahl in vielen Formen (Arbeitsplatz, Trick, etc.)"
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": "Cyber-Schutz: Phishing, Pharming, Skimming, Online-Handel-Betrug"
+    },
+    "wohnungsschutzbrief": {
+      "included": null,
+      "level": null
+    },
+    "glasschutz": {
+      "included": null,
+      "level": null,
+      "note": "optional"
+    },
+    "fahrradschutz": {
+      "included": true,
+      "level": null,
+      "note": "1 % der Versicherungssumme beitragsfrei mitversichert"
+    },
+    "ueberschwemmung_rueckstau": {
+      "included": null,
+      "level": null,
+      "note": "optional (Elementarversicherung); in optimum+ Überschwemmung durch Starkregen beitragsfrei"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Elementarschäden: 1 Monat Wartezeit"
+    ],
+    "geltungsbereich": "Deutschland; Außenversicherung weltweit bis zu 12 Monaten",
+    "vertragslaufzeit": "1 oder mehr Jahre"
+  },
+  "leistungen": [
+    "Schlossänderungskosten",
+    "Schlüsseldienst bis 150 EUR",
+    "Umzugskosten nach Schaden",
+    "Hotelkosten ohne zeitliche Begrenzung",
+    "Reparaturkosten für provisorische Maßnahmen",
+    "Bewachungskosten bis 10 Tage",
+    "Psychologische Betreuung nach Einbruch, Raub, Brand bis 500 EUR",
+    "Tierarztkosten und Tierunterbringung",
+    "Kinderbetreuung im Notfall bis 350 EUR",
+    "Rückreisekosten bei Reiseabbruch",
+    "Datenrettungskosten nach versichertem Schaden",
+    "Telefonmissbrauch nach Einbruch bis 500 EUR",
+    "Scheck- und Kreditkartenmissbrauch bis 5.000 EUR",
+    "Online-Handel-Betrug bis 3.500 EUR (Cyber)",
+    "Phishing/Pharming Schadensersatz bis 3.500 EUR",
+    "Fahrraddiebstahl rund um die Uhr",
+    "Wallbox (Ladestation) bis 3.500 EUR",
+    "Nachhaltige Reparatur mit 30 % Neuwert-Zuschuss",
+    "Kompensation von CO2-Emissionen bei Brandschaden",
+    "Besitzstandsgarantie",
+    "Erweiterte Leistungsgarantie"
+  ],
+  "ausschluesse": [
+    "Krieg und kriegsähnliche Ereignisse",
+    "Kernenergie und nukleare Strahlung",
+    "Schwamm und Fäulnis",
+    "Sturmflut",
+    "Vorsätzlich herbeigeführte Schäden",
+    "Vom Gebäudeeigentümer eingebrachte Sachen",
+    "Kraftfahrzeuge aller Art",
+    "Luft- und Wasserfahrzeuge",
+    "Elektronisch gespeicherte Daten (mit Ausnahmen)",
+    "Erdbeben, Erdfall, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch (außer optional)",
+    "Abnutzung, Verschleiß, Alterung",
+    "Schäden durch Bedienungsfehler und mangelnde Wartung"
+  ],
+  "besonderheiten": [
+    "Mehrschichtiges Tarifwerk: Base, Fair, Ideal, Optimum, Optimum+",
+    "Umfangreiche Cyber-Schutz-Module",
+    "Weltweite Außenversicherung bis 12 Monate für optimum",
+    "Erweiterte Diebstahlabdeckung (Arbeitsplatz, Trick, Haushaltshilfen, etc.)",
+    "Fahrraddiebstahl ohne Einstellpflicht bereits mitversichert",
+    "Psychologische und soziale Unterstützung nach Schaden",
+    "Nachhaltigkeit-Features (CO2-Kompensation, grüne Investitionen)",
+    "Besitzstandsgarantie bei Versichererwechsel",
+    "Unterversicherungsverzicht für Kleinschäden",
+    "Erweiterter Unterversicherungsverzicht bei Wohnungswechsel"
+  ],
+  "beitrag": null,
+  "insurer": "agencio (Ammerländer Versicherung)",
+  "tariff": "natura optimum",
+  "stem": "agencio__natura-optimum",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "da5ade7a9cc848ce3e7c3b6bb2759d9baef41ec31a8b393861f987146c2446e1",
+  "_supersedes": null
+}

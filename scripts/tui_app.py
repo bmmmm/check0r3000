@@ -1090,7 +1090,12 @@ class CheckApp(App):
 
         key = self.sort_col
         if key == "position":
-            rows.sort(key=lambda r: r.position, reverse=not self.sort_asc)
+            # position can be None (a scraper heuristic that couldn't parse the
+            # card's list index — real PHV data does this); sentinel it to the
+            # tail instead of letting int<None crash the whole market tab.
+            pos_sentinel = 10 ** 9 if self.sort_asc else -(10 ** 9)
+            rows.sort(key=lambda r: r.position if r.position is not None
+                      else pos_sentinel, reverse=not self.sort_asc)
         elif key == "insurer":
             rows.sort(key=lambda r: r.insurer.lower(), reverse=not self.sort_asc)
         elif key == "note":
@@ -2151,6 +2156,11 @@ class CheckApp(App):
             f"{blind_note}"
         ))
 
+        # Denominators are per-vertical: the module count comes from the vertical's
+        # schema, the category count from its coverage taxonomy (RS: 8 and 24).
+        n_module_keys = len(_modules.module_keys())
+        n_benefit_cats = len(ctax.load_taxonomy().get("benefit_categories") or [])
+
         for i, s in enumerate(scores):
             rank_no = i + 1
             marker = "[bright_green]▶[/bright_green]" if rank_no == 1 else str(rank_no)
@@ -2172,7 +2182,7 @@ class CheckApp(App):
             )
             price = f"{s.monatlich_eur:.0f}" if s.monatlich_eur is not None else "—"
             deckung = f"{s.dims.get('coverage_gen', 0.0) * 100:.0f}%"
-            leist_cell = f"{s.n_leistung_cats}/24"
+            leist_cell = f"{s.n_leistung_cats}/{n_benefit_cats}"
             if s.leistung_low_confidence:
                 leist_cell = f"[yellow]{leist_cell} ⚠[/yellow]"
             qpe = s.quality_per_eur()
@@ -2192,7 +2202,7 @@ class CheckApp(App):
                     magic_score_cell(s.total),
                     note_col,
                     bew_cell,
-                    f"{s.n_modules}/8",
+                    f"{s.n_modules}/{n_module_keys}",
                     leist_cell,
                     deckung,
                     ext_cell,

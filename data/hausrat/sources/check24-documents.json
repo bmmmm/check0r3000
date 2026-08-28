@@ -1,0 +1,76 @@
+{
+  "quelle": "check24 hausrat vergleichsergebnis — mini_harvest.py (probe profile, invented personal values)",
+  "host": "https://hausratversicherungen.check24.de",
+  "note": "Source-PDF URLs only (PDFs are third-party/copyright -> the vertical's raw/ is gitignored). fetch_docs.py downloads on demand.",
+  "tariffs": [
+    {
+      "stem": "allianz-direct__direct",
+      "insurer": "Allianz Direct",
+      "tariff": "DIRECT",
+      "position": 1,
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/dca5f95916f495db1a69f0fc7b6195ed1622cafb/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/c8d93f87cb48716007064d3dd0580e88ce19dea1/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/3a9205cb7ce2ad7924d5df8b7ec7a52ea011a82c/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "agencio__natura-optimum",
+      "insurer": "agencio",
+      "tariff": "natura optimum",
+      "position": 2,
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/7370458cbba8b24b7fae2ee5fcd904366a132877/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/ed9ec41b6eae0c285bceb1d82a30762b8a39eb02/Allgemeine+Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "agencio__natura-base",
+      "insurer": "agencio",
+      "tariff": "natura base",
+      "position": 3,
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/5ea16f6fa57cc6531a9f325593df96674026d640/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/ad9b023445d6e855a692fa3db5c926a350d74208/Allgemeine+Versicherungsbedingungen.pdf"
+        }
+      ]
+    }
+  ]
+}

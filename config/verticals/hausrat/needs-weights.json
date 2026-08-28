@@ -1,0 +1,15 @@
+{
+  "_comment": "Personal Bedarf weighting per Baustein (neutral 1.0 = objective ranking). Edited via the TUI [W] editor or by hand.",
+  "feuer": 1,
+  "einbruchdiebstahl": 1,
+  "wasserschaeden": 1,
+  "naturgefahren": 1,
+  "tiere": 1,
+  "fahrzeuganprall": 1,
+  "diebstahl_erweitert": 1,
+  "internet": 1,
+  "wohnungsschutzbrief": 1,
+  "glasschutz": 1,
+  "fahrradschutz": 1,
+  "ueberschwemmung_rueckstau": 1
+}

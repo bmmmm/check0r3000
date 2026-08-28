@@ -399,7 +399,9 @@ def _representative_rows(rows: list[tui_data.SnapshotRow]) -> dict[str, tui_data
             pool,
             key=lambda r: (
                 r.monatlich_eur if r.monatlich_eur is not None else float("inf"),
-                r.position,
+                # position can be None (scraper heuristic on non-RS verticals) —
+                # sentinel to the tail instead of crashing the int<None compare.
+                r.position if r.position is not None else 10 ** 9,
             ),
         )
     return out
@@ -514,7 +516,8 @@ def prescore(rows: list[tui_data.SnapshotRow]) -> list[PreScore]:
                 position=r.position,
             )
     out = list(best.values())
-    out.sort(key=lambda p: (-p.score, p.position))
+    out.sort(key=lambda p: (-p.score,
+                            p.position if p.position is not None else 10 ** 9))
     return out
 
 
@@ -783,6 +786,8 @@ def _selftest() -> int:
         print(f"  FAIL: {f}")
 
     if real_ranked:
+        n_keys = len(_modules.module_keys())
+        n_cats = len(ctax.load_taxonomy().get("benefit_categories") or [])
         print(f"\nTop {min(10, len(real_ranked))} by quality "
               f"(of {len(real_ranked)} analyzed):")
         for i, s in enumerate(real_ranked[:10], 1):
@@ -790,8 +795,8 @@ def _selftest() -> int:
             bew = f"{s.bewertung:.1f}" if s.bewertung is not None else "—"
             price = f"{s.monatlich_eur:.0f}€" if s.monatlich_eur is not None else "—"
             print(f"  {i:>2}. {s.total:.3f}  {s.stem:<48} "
-                  f"note {note}  bew {bew}  mod {s.n_modules}/8  "
-                  f"leist {s.n_leistung_cats}/24  {price}")
+                  f"note {note}  bew {bew}  mod {s.n_modules}/{n_keys}  "
+                  f"leist {s.n_leistung_cats}/{n_cats}  {price}")
 
     if real_rows:
         pre_real = prescore(real_rows)

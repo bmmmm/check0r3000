@@ -1,0 +1,100 @@
+{
+  "quelle": "check24 privathaftpflicht vergleichsergebnis — mini_harvest.py (probe profile, invented personal values)",
+  "host": "https://privathaftpflicht.check24.de",
+  "note": "Source-PDF URLs only (PDFs are third-party/copyright -> the vertical's raw/ is gitignored). fetch_docs.py downloads on demand.",
+  "tariffs": [
+    {
+      "stem": "ao-now__balance-2025",
+      "insurer": "AO NOW",
+      "tariff": "Balance 2025",
+      "position": 1,
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/17035/1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17035/1/Versicherungsbedingungen_kombiniert.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17035/1/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "bavariadirekt__komfort-l",
+      "insurer": "BavariaDirekt",
+      "tariff": "Komfort L",
+      "position": 2,
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/16908/3/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/16908/2/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms",
+          "file": "Allgemeine_Versicherungsbedingungen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms/16908/2/Allgemeine_Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "terms_extra",
+          "file": "Besondere_Versicherungsbedingungen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_extra/16908/3/Besondere_Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "bavariadirekt__komfort-s",
+      "insurer": "BavariaDirekt",
+      "tariff": "Komfort S",
+      "position": 3,
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/16647/3/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/16647/2/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms",
+          "file": "Allgemeine_Versicherungsbedingungen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms/16647/3/Allgemeine_Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "terms_extra",
+          "file": "Besondere_Versicherungsbedingungen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_extra/16647/2/Besondere_Versicherungsbedingungen.pdf"
+        }
+      ]
+    }
+  ]
+}

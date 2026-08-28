@@ -7,6 +7,18 @@
       "host": "https://rechtsschutz.check24.de",
       "funnel_path": "/rsv/vergleichsergebnis/",
       "status": "production"
+    },
+    "hausrat": {
+      "label": "Hausrat",
+      "host": "https://hausratversicherungen.check24.de",
+      "funnel_path": "/hausrat/vergleichsergebnis/",
+      "status": "experimental"
+    },
+    "privathaftpflicht": {
+      "label": "Privathaftpflicht",
+      "host": "https://privathaftpflicht.check24.de",
+      "funnel_path": "/privathaftpflicht/vergleichsergebnis/",
+      "status": "experimental"
     }
   }
 }

@@ -1,0 +1,371 @@
+{
+  "version": 1,
+  "_draft": true,
+  "_doc": "DRAFT taxonomy for Hausrat, model-derived from example AVBs. Category order is match precedence; extend/curate by hand.",
+  "benefit_categories": [
+    {
+      "key": "fahrlässigkeit_versichert",
+      "label_de": "Grobe Fahrlässigkeit versichert",
+      "kind": "leistung",
+      "synonyms": [
+        "grobe fahrlässigkeit",
+        "fahrlässigkeit versichert",
+        "fahrlässigkeit leistung",
+        "fahrlässiger schaden",
+        "fahrlässigkeitsschutz"
+      ]
+    },
+    {
+      "key": "unterversicherungsverzicht",
+      "label_de": "Unterversicherungsverzicht",
+      "kind": "leistung",
+      "synonyms": [
+        "unterversicherungsverzicht",
+        "keine unterversicherung",
+        "unterversicherung verzeiht",
+        "unterversicherung ausgeschlossen",
+        "progressiver deckungsschutz"
+      ]
+    },
+    {
+      "key": "schlüsseldienst",
+      "label_de": "Schlüsseldienst",
+      "kind": "leistung",
+      "synonyms": [
+        "schlüsseldienst",
+        "schlüsseldiensteinsatz",
+        "türöffnung",
+        "nottüröffnung",
+        "schlüsselverlust"
+      ]
+    },
+    {
+      "key": "rohrreinigung",
+      "label_de": "Rohrreinigung",
+      "kind": "leistung",
+      "synonyms": [
+        "rohrreinigung",
+        "rohrreinigungsdienst",
+        "rohrfrei",
+        "abflussreinigung",
+        "rohrreinigungseinsatz"
+      ]
+    },
+    {
+      "key": "sanitär_notfalldienst",
+      "label_de": "Sanitär-Notfalldienst",
+      "kind": "leistung",
+      "synonyms": [
+        "sanitär",
+        "sanitärinstallateur",
+        "wasserfehler",
+        "wasserleitung defekt",
+        "wasserschaden notfalldienst"
+      ]
+    },
+    {
+      "key": "elektro_notfalldienst",
+      "label_de": "Elektro-Notfalldienst",
+      "kind": "leistung",
+      "synonyms": [
+        "elektro",
+        "elektroinstallateur",
+        "stromausfall",
+        "stromleitungsschaden",
+        "stromleitungsschaden einsatz"
+      ]
+    },
+    {
+      "key": "schädlingsbekämpfung",
+      "label_de": "Schädlingsbekämpfung",
+      "kind": "leistung",
+      "synonyms": [
+        "schädlingsbekämpfung",
+        "schädlinge",
+        "ungeziefer",
+        "ungeziefer-bekämpfung",
+        "schädlingsbefall"
+      ]
+    },
+    {
+      "key": "wespennest_entfernung",
+      "label_de": "Wespen-/Hornissennest-Entfernung",
+      "kind": "leistung",
+      "synonyms": [
+        "wespen",
+        "hornissen",
+        "wespennest",
+        "hornissennest",
+        "nestentfernung",
+        "wespennest-beseitigung"
+      ]
+    },
+    {
+      "key": "schlossänderung",
+      "label_de": "Schlossänderungskosten",
+      "kind": "leistung",
+      "synonyms": [
+        "schlossänderung",
+        "schlossänderungskosten",
+        "neuer schlüssel",
+        "schlosswechsel",
+        "schloss-austausch"
+      ]
+    },
+    {
+      "key": "datenrettung",
+      "label_de": "Datenrettung",
+      "kind": "leistung",
+      "synonyms": [
+        "datenrettung",
+        "datenwiederherstellung",
+        "dateirettung",
+        "datensicherung",
+        "festplatte rettung"
+      ]
+    },
+    {
+      "key": "phishing_schutz",
+      "label_de": "Phishing-Schutz",
+      "kind": "leistung",
+      "synonyms": [
+        "phishing",
+        "phishing-schutz",
+        "phishing-versicherung",
+        "internet-betrug",
+        "datenlecks"
+      ]
+    },
+    {
+      "key": "onlinezahlungsverkehr",
+      "label_de": "Onlinezahlungsverkehr-Schutz",
+      "kind": "leistung",
+      "synonyms": [
+        "onlinezahlungsverkehr",
+        "online-zahlungsverkehr",
+        "zahlungsverkehr-schutz",
+        "zahlungsverkehrschutz",
+        "online-zahlung"
+      ]
+    },
+    {
+      "key": "bankmissbrauch_schutz",
+      "label_de": "Bankmissbrauch-/Kartenmissbrauch-Schutz",
+      "kind": "leistung",
+      "synonyms": [
+        "bankmissbrauch",
+        "kartenmissbrauch",
+        "kontenklau",
+        "kontomissbrauch",
+        "kartenklau"
+      ]
+    },
+    {
+      "key": "telefonische_beratung",
+      "label_de": "Telefonische Rechtsberatung",
+      "kind": "leistung",
+      "synonyms": [
+        "telefonische beratung",
+        "telefon-beratung",
+        "beratungshotline",
+        "anwaltshotline",
+        "versicherungshotline"
+      ]
+    },
+    {
+      "key": "online_beratung",
+      "label_de": "Online-/Chat-Rechtsberatung",
+      "kind": "leistung",
+      "synonyms": [
+        "online-beratung",
+        "chat-beratung",
+        "online beratung",
+        "dokumenten-center",
+        "online-rechtsberatung"
+      ]
+    }
+  ],
+  "exclusion_categories": [
+    {
+      "key": "ausschluss_handelswaren",
+      "label_de": "Handelswaren/Geschäftsbestände",
+      "kind": "ausschluss",
+      "synonyms": [
+        "handelswaren",
+        "geschäftsbestände",
+        "warenlager",
+        "geschäftsbetrieb",
+        "handelsware"
+      ]
+    },
+    {
+      "key": "ausschluss_fahrräder",
+      "label_de": "Fahrräder ausgeschlossen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "fahrräder",
+        "fahrrad",
+        "pedelec",
+        "fahrradanteile",
+        "fahrradanhänger"
+      ]
+    },
+    {
+      "key": "ausschluss_haustiere",
+      "label_de": "Haustiere nicht versichert",
+      "kind": "ausschluss",
+      "synonyms": [
+        "haustiere",
+        "tiere gehörend",
+        "eigene tiere",
+        "haustier-schäden",
+        "tiere des versicherungsnehmers"
+      ]
+    },
+    {
+      "key": "ausschluss_motorfahrzeuge",
+      "label_de": "Motorfahrzeuge mit Kennzeichen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "motorfahrzeuge",
+        "kraftfahrzeuge",
+        "fahrzeuge mit kennzeichen",
+        "auto",
+        "pkw",
+        "motorrad"
+      ]
+    },
+    {
+      "key": "ausschluss_wasserfahrzeuge",
+      "label_de": "Große Wasserfahrzeuge",
+      "kind": "ausschluss",
+      "synonyms": [
+        "wasserfahrzeuge",
+        "boote",
+        "schiffe",
+        "yachten",
+        "motorboote",
+        "wassersportgeräte"
+      ]
+    },
+    {
+      "key": "ausschluss_luftfahrzeuge",
+      "label_de": "Versicherungspflichtige Luftfahrzeuge",
+      "kind": "ausschluss",
+      "synonyms": [
+        "luftfahrzeuge",
+        "flugzeuge",
+        "drohnen",
+        "hubschrauber",
+        "fluggeräte"
+      ]
+    },
+    {
+      "key": "ausschluss_vorsatz",
+      "label_de": "Schäden durch Vorsatz",
+      "kind": "ausschluss",
+      "synonyms": [
+        "vorsätzlich",
+        "vorsatz",
+        "absicht",
+        "vorsätzliche schadenverursachung",
+        "absichtliche beschädigung"
+      ]
+    },
+    {
+      "key": "ausschluss_kriegsereignisse",
+      "label_de": "Kriegsereignisse/Kriegsschäden",
+      "kind": "ausschluss",
+      "synonyms": [
+        "kriegsereignisse",
+        "krieg",
+        "unruhen",
+        "militärische maßnahmen",
+        "innere unruhen"
+      ]
+    },
+    {
+      "key": "ausschluss_kernenergie",
+      "label_de": "Kernenergie/Atomenergie",
+      "kind": "ausschluss",
+      "synonyms": [
+        "kernenergie",
+        "atomenergie",
+        "kernreaktor",
+        "nuklear",
+        "radioaktivität"
+      ]
+    },
+    {
+      "key": "ausschluss_schwamm",
+      "label_de": "Schwamm",
+      "kind": "ausschluss",
+      "synonyms": [
+        "schwamm",
+        "holzschwamm",
+        "befall durch schwamm",
+        "schwammbefall",
+        "schwammbefall nicht versichert"
+      ]
+    },
+    {
+      "key": "ausschluss_kanal_rückstau",
+      "label_de": "Rückstau aus öffentlicher Abwasserkanalisation",
+      "kind": "ausschluss",
+      "synonyms": [
+        "rückstau",
+        "kanalrückstau",
+        "abwasserrückstau",
+        "rückstau aus kanal",
+        "kanalisationsprobleme"
+      ]
+    },
+    {
+      "key": "ausschluss_kratzer_glas",
+      "label_de": "Kratzer und Schrammen (bei Glas)",
+      "kind": "ausschluss",
+      "synonyms": [
+        "kratzer",
+        "schrammen",
+        "oberflächenschäden",
+        "kratzer bei glas",
+        "kratzer und schrammen"
+      ]
+    },
+    {
+      "key": "ausschluss_optische_gläser",
+      "label_de": "Optische Gläser",
+      "kind": "ausschluss",
+      "synonyms": [
+        "optische gläser",
+        "brillengläser",
+        "linsen",
+        "optik",
+        "kontaktlinsen"
+      ]
+    },
+    {
+      "key": "ausschluss_elektronik_glas",
+      "label_de": "Glas in elektronischen Geräten",
+      "kind": "ausschluss",
+      "synonyms": [
+        "glas elektronischer geräte",
+        "glas in elektronik",
+        "display",
+        "bildschirm glas",
+        "photovoltaik"
+      ]
+    },
+    {
+      "key": "ausschluss_grundwasser",
+      "label_de": "Grundwasser nicht an Erdoberfläche",
+      "kind": "ausschluss",
+      "synonyms": [
+        "grundwasser",
+        "grundwasser nicht oberfläche",
+        "tiefenwasser",
+        "grundwasserschäden"
+      ]
+    }
+  ]
+}

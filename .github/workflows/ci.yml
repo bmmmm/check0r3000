@@ -26,8 +26,9 @@ jobs:
       - run: uv run scripts/scorecard.py
       - run: uv run scripts/feature_history.py
       - run: uv run scripts/coverage_taxonomy.py --selftest
-      # Regression guard: out/tariffs/*.json vs benchmarks/golden.json invariants.
-      - run: uv run scripts/regression.py
+      # Regression guard, once per registry vertical: out/<v>/tariffs/*.json vs
+      # benchmarks/<v>/golden.json invariants (golden-less vertical = market sweep only).
+      - run: uv run scripts/regression.py --all-verticals
 
   lint:
     runs-on: ubuntu-latest

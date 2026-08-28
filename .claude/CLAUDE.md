@@ -15,7 +15,15 @@ status production|experimental|disabled). **Alle Pfade laufen über
 Sparten-Spezifika sind DATEN in `config/verticals/<v>/vertical.json` (module_labels,
 filter_anchors, extract_instruction, query.pin_keys/module_labels,
 regression_generic_tokens), nicht Code. Gitignorte lokale Artefakte migriert
-`scripts/migrate_layout.py --apply` einmalig je Checkout.
+`scripts/migrate_layout.py --apply` einmalig je Checkout. Neue Sparte:
+`scripts/new_vertical.py` scaffoldet aus Probe-Evidenz (Beispiel-AVB + Result-Rows)
+LLM-Drafts mit `"_draft": true` + Registry-Eintrag `experimental`; Kuration
+(Taxonomy, golden.json, external-ratings) ist der Weg zu `production`.
+`regression.py --all-verticals` loopt die Registry (golden-los = Markt-Sweep, CI
+macht das). Harvest für PHV/Hausrat: Docs liegen im Tarifdetails-Panel unter
+`/file/…`-URLs (sessionfrei; „weiter" ist Login-Wall) — Panel-Harvest bisher via
+`tmp/vertical-probe/mini_harvest.py` (Probe-Grade), Generalisierung von
+harvest_docs.py ist offene Folgearbeit.
 
 ## Dateistruktur (was wohin gehört; <v> = Sparte)
 

@@ -1,0 +1,5 @@
+{
+  "_note": "Tracked placeholder from the feasibility probe (deliberately fake personal values). Copy to check24-profile.json (gitignored) and adjust the levers.",
+  "base_url": "https://hausratversicherungen.check24.de/hausrat/vergleichsergebnis/",
+  "query": "squaremeter=80&zipcode=10115&birthdate=1985-05-15&insurancesum=52000&paymentperiod=year&module_glass=no&building_type=3&module_elementary=no&module_elementary_city=Berlin&module_elementary_street=&module_elementary_street_number=&bike_insurance_sum=0&activity_source=input1"
+}

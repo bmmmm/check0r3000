@@ -1,0 +1,5 @@
+{
+  "_note": "Tracked placeholder from the feasibility probe (deliberately fake personal values). Copy to check24-profile.json (gitignored) and adjust the levers.",
+  "base_url": "https://privathaftpflicht.check24.de/privathaftpflicht/vergleichsergebnis/",
+  "query": "coinsured=1&birthdate=15.05.1985&zipcode=10115&city=&protection_level=none&amountinsuredchildren=-1&childrenunder7or10=no&public_service=no&sortorder=asc&min_insure_sum=5&max_costsharing=0&paymentperiod=year&insure_date=29.08.2026&grade=4&min_stars=0&costsharing=no&from_ipss=yes"
+}

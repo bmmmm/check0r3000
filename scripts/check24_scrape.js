@@ -109,6 +109,47 @@
   }
   rows.sort((a, b) => (a.position || 0) - (b.position || 0));
 
+  // Structured fallback for verticals whose result page uses the BEM `result_tile`
+  // component (e.g. Hausrat: prices labeled "pro Monat", no Selbstbeteiligung on the
+  // card) instead of the RS-style result_box cards the text heuristic above targets.
+  // Runs ONLY when the heuristic pass found nothing, so the RS path stays untouched.
+  if (!rows.length) {
+    for (const tile of document.querySelectorAll(".result_tile")) {
+      const pick = (sel) => {
+        const e = tile.querySelector(sel);
+        return e ? norm(e.innerText).replace(/\s+/g, " ").trim() : "";
+      };
+      const position = parseInt(pick(".result_tile__position"), 10) || null;
+      const img = tile.querySelector(".result_tile__provider_logo img[alt], img[alt]");
+      const insurer = (img && img.alt.trim()) || pick(".result_tile__provider_logo") || null;
+      const product = pick(".result_tile__tariff_name") || null;
+      const priceText = pick(".result_tile__price");
+      const pm = priceText.match(/pro Monat\s*([\d.]+,\d{2})\s*€/)
+        || priceText.match(/([\d.]+,\d{2})\s*€/);
+      const monatlich_eur = pm ? eur(pm[1]) : null;
+      const tarifnote = (pick(".result_tile__grade").match(/([\d],[\d])/) || [])[1] || null;
+      const features = pick(".result_tile__features");
+      const grabf = (re) => { const m = features.match(re); return m ? m[1].trim() : null; };
+      if (!product || monatlich_eur == null) continue;
+      const row = {
+        position,
+        insurer,
+        product,
+        tarifnote,
+        bewertung: null,
+        bewertung_anzahl: null,
+        monatlich_eur,
+        selbstbeteiligung: grabf(/Selbstbeteiligung[:\s]*([^|]+?)(?=\s{2}|$)/),
+        deckungssumme: grabf(/(?:Versicherungssumme|Deckungssumme)[:\s]*([\d.,]+\s*(?:Mio\.?\s*)?€)/),
+        wartezeit: null,
+        wartezeit_per_modul: null,
+      };
+      rows.push(row);
+      cardOf.set(row, tile);
+    }
+    rows.sort((a, b) => (a.position || 0) - (b.position || 0));
+  }
+
   // Sanity check: a silent under-count is the main failure mode if CHECK24 shifts its
   // markup (relabelled fields, a card pushed past the 800-char ceiling, a price moved
   // out of the innermost element). Compare against an independent signal — the count

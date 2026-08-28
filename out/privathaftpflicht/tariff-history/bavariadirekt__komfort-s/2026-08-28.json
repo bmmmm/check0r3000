@@ -1,0 +1,104 @@
+{
+  "stand": "02.12.2025",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "nicht-hoheitliche ehrenamtliche Tätigkeiten"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungen, Häuser bis 4 Einheiten, Ferien-/Wochenendhäuser"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Vermietung von Wohnräumen und Ferienwohnungen"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "zahme Haustiere, Kleinvieh, Bienen; Hund, Rind, Pferd ausgeschlossen außer Assistenzhund"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Radfahrer versichert; Versicherungspflichtige Kraftfahrzeuge ausgeschlossen"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "Elektronischer Datenaustausch, Internetnutzung"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "Europa und EU-Gebiete unbegrenzt; außereuropäisch temporär"
+    },
+    "umwelt": {
+      "included": false,
+      "level": null,
+      "note": "Gewässerschaden-Haftpflicht als optionale Erweiterung"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein)",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein",
+    "vertragslaufzeit": "1 Jahr (automatische Verlängerung um weitere Jahre)"
+  },
+  "leistungen": [
+    "Ehrenamtliche Tätigkeiten/Freiwilligenarbeit",
+    "Elektronischer Datenaustausch/Internetnutzung",
+    "Auslandsschutz weltweit",
+    "Schlüsselverlust (optional)",
+    "Kautionsleistung im Ausland bis 200.000 EUR (optional)",
+    "Schadenersatzausfallversicherung (optional)",
+    "Neuwertentschädigung (optional)",
+    "Tagesmutter/Babysitter",
+    "Haftung bei Schäden durch deliktsunfähige Personen"
+  ],
+  "ausschluesse": [
+    "Vorsatz",
+    "Grobe Fahrlässigkeit mit Kenntnis",
+    "Familienmitglieder",
+    "Eigenschäden des Versicherungsnehmers",
+    "Berufliche/gewerbliche Tätigkeiten",
+    "Versicherungspflichtige Kraftfahrzeuge",
+    "Hunde, Rinder, Pferde (außer Assistenzhund)",
+    "Umweltschäden nach USchadG",
+    "Asbestschäden",
+    "Strahlenschäden",
+    "Abwässer, Senkungen, Überschwemmungen",
+    "Jagd und Rennveranstaltungen"
+  ],
+  "besonderheiten": [
+    "Garantie: keine Schlechterstellung gegenüber GDV-Musterbedingungen (Stand 2020)",
+    "Leistungs-Update-Garantie für zukünftige Verbesserungen kostenfrei",
+    "Best-Bedingungs-Zusage (erweiterter Vorsorgeschutz optional)",
+    "Nebenberufliche Tätigkeiten bis 12.000 EUR Jahresumsatz versicherbar",
+    "Beitragsgarantie 36 Monate optional",
+    "Mallorca-Deckung (Differenzdeckung im EU-Ausland optional)",
+    "Besitzstandsgarantie bei Tarifwechsel optional",
+    "Smartphone-Reparaturmehrleistung bis 20 %",
+    "Nachhaltigkeitsmehrleistungen optional bis 1.000 EUR"
+  ],
+  "beitrag": null,
+  "insurer": "BavariaDirekt Versicherung AG",
+  "tariff": "Privathaftpflichtversicherung",
+  "stem": "bavariadirekt__komfort-s",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "b09d164c984821a81f56b9300880b0c3a28e4d8106efe2a9da0d73e18b9eac9b",
+  "_supersedes": null
+}

@@ -1,0 +1,121 @@
+{
+  "insurer": "BavariaDirekt Versicherung AG",
+  "tariff": "Privathaftpflichtversicherung",
+  "stand": "02.12.2025",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "nicht-hoheitliche ehrenamtliche Tätigkeiten"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungen, Häuser bis 4 Einheiten, Ferien-/Wochenendhäuser"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Vermietung von Wohnräumen und Ferienwohnungen"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "zahme Haustiere, Kleinvieh, Bienen; Hund, Rind, Pferd ausgeschlossen außer Assistenzhund"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Radfahrer versichert; Versicherungspflichtige Kraftfahrzeuge ausgeschlossen"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "Elektronischer Datenaustausch, Internetnutzung"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "Europa und EU-Gebiete unbegrenzt; außereuropäisch temporär"
+    },
+    "umwelt": {
+      "included": false,
+      "level": null,
+      "note": "Gewässerschaden-Haftpflicht als optionale Erweiterung"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein)",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein",
+    "vertragslaufzeit": "1 Jahr (automatische Verlängerung um weitere Jahre)"
+  },
+  "leistungen": [
+    "Ehrenamtliche Tätigkeiten/Freiwilligenarbeit",
+    "Elektronischer Datenaustausch/Internetnutzung",
+    "Auslandsschutz weltweit",
+    "Schlüsselverlust (optional)",
+    "Kautionsleistung im Ausland bis 200.000 EUR (optional)",
+    "Schadenersatzausfallversicherung (optional)",
+    "Neuwertentschädigung (optional)",
+    "Tagesmutter/Babysitter",
+    "Haftung bei Schäden durch deliktsunfähige Personen"
+  ],
+  "ausschluesse": [
+    "Vorsatz",
+    "Grobe Fahrlässigkeit mit Kenntnis",
+    "Familienmitglieder",
+    "Eigenschäden des Versicherungsnehmers",
+    "Berufliche/gewerbliche Tätigkeiten",
+    "Versicherungspflichtige Kraftfahrzeuge",
+    "Hunde, Rinder, Pferde (außer Assistenzhund)",
+    "Umweltschäden nach USchadG",
+    "Asbestschäden",
+    "Strahlenschäden",
+    "Abwässer, Senkungen, Überschwemmungen",
+    "Jagd und Rennveranstaltungen"
+  ],
+  "besonderheiten": [
+    "Garantie: keine Schlechterstellung gegenüber GDV-Musterbedingungen (Stand 2020)",
+    "Leistungs-Update-Garantie für zukünftige Verbesserungen kostenfrei",
+    "Best-Bedingungs-Zusage (erweiterter Vorsorgeschutz optional)",
+    "Nebenberufliche Tätigkeiten bis 12.000 EUR Jahresumsatz versicherbar",
+    "Beitragsgarantie 36 Monate optional",
+    "Mallorca-Deckung (Differenzdeckung im EU-Ausland optional)",
+    "Besitzstandsgarantie bei Tarifwechsel optional",
+    "Smartphone-Reparaturmehrleistung bis 20 %",
+    "Nachhaltigkeitsmehrleistungen optional bis 1.000 EUR"
+  ],
+  "beitrag": null,
+  "_input_hash": "9d2fc3cb8987f475e26f4df0c45a6689a73154cc15dd4d91f9b0b935a59a11d8",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "9b491faaf8330a6dee43689c5dfcf7fd2eb051966ac907b8fd1403723262861b"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "059d356dadfe4e039406058680f8e27d968f9112dd6a6dc69f2c621500522e3e"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "85231704fa8e8fe63bd77dafe5935a8e9aa7ff624411a77b4d3efd3197e70404"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "988f9f50e3f64a30cf353efa766535c31c08f480caaa37331c99fd5024f1cdaa"
+    }
+  ]
+}

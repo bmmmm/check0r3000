@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "_draft": true,
+  "_doc": "DRAFT taxonomy for Privathaftpflicht, model-derived from example AVBs. Category order is match precedence; extend/curate by hand.",
+  "benefit_categories": [
+    {
+      "key": "haushalt_haftung",
+      "label_de": "Haushalt & Familie",
+      "kind": "leistung",
+      "synonyms": [
+        "haushalt",
+        "familienvorstand",
+        "haushaltsvorstand",
+        "aufsichtspflicht",
+        "haushaltshaftung",
+        "familie"
+      ]
+    },
+    {
+      "key": "ehrenamt_haftung",
+      "label_de": "Ehrenamtliche Tätigkeit",
+      "kind": "leistung",
+      "synonyms": [
+        "ehrenamtliche tätigkeit",
+        "ehrenamt",
+        "freiwilligenarbeit",
+        "freiwillig",
+        "volunteer",
+        "soziales engagement"
+      ]
+    },
+    {
+      "key": "immobilien_haftung",
+      "label_de": "Haus- & Grundbesitz",
+      "kind": "leistung",
+      "synonyms": [
+        "immobilien",
+        "grundbesitz",
+        "hausbesitz",
+        "wohnung",
+        "wohnhaus",
+        "einfamilienhaus",
+        "ferienhaus",
+        "wohnwagen"
+      ]
+    },
+    {
+      "key": "mietsache_haftung",
+      "label_de": "Mietsachschäden",
+      "kind": "leistung",
+      "synonyms": [
+        "mietsachschäden",
+        "mietsache",
+        "mietwohnung",
+        "mietschaden",
+        "gemietete sachen",
+        "geliehene sachen",
+        "gepachtete sachen"
+      ]
+    },
+    {
+      "key": "tiere_haftung",
+      "label_de": "Tierhalterhaftung",
+      "kind": "leistung",
+      "synonyms": [
+        "tiere",
+        "tierhalter",
+        "haustiere",
+        "hund",
+        "hunde",
+        "pferd",
+        "pferde",
+        "katze",
+        "bienen"
+      ]
+    },
+    {
+      "key": "fahrrad_haftung",
+      "label_de": "Fahrräder & Leichtfahrzeuge",
+      "kind": "leistung",
+      "synonyms": [
+        "fahrrad",
+        "fahrräder",
+        "pedelec",
+        "elektrorad",
+        "tretroller",
+        "skateboard",
+        "kickboard",
+        "rollerblades",
+        "laufrad"
+      ]
+    },
+    {
+      "key": "sport_haftung",
+      "label_de": "Sportaktivitäten",
+      "kind": "leistung",
+      "synonyms": [
+        "sport",
+        "sportausübung",
+        "sportaktivität",
+        "segeln",
+        "surfen",
+        "kite-sport",
+        "modellflug",
+        "drohne",
+        "radrennen"
+      ]
+    },
+    {
+      "key": "daten_haftung",
+      "label_de": "Elektronische Daten & Internet",
+      "kind": "leistung",
+      "synonyms": [
+        "elektronische daten",
+        "daten",
+        "internet",
+        "email",
+        "datenaustausch",
+        "datenübermittlung",
+        "datenverlust",
+        "datenschaden",
+        "web",
+        "online"
+      ]
+    },
+    {
+      "key": "ausland_haftung",
+      "label_de": "Auslandsdeckung",
+      "kind": "leistung",
+      "synonyms": [
+        "ausland",
+        "auslandsdeckung",
+        "europa",
+        "europäisch",
+        "auslandsaufenthalt",
+        "temporär",
+        "kaution"
+      ]
+    },
+    {
+      "key": "umwelt_haftung",
+      "label_de": "Umwelthaftung",
+      "kind": "leistung",
+      "synonyms": [
+        "umwelt",
+        "umwelthaftung",
+        "umweltschaden",
+        "gewässer",
+        "gewässerschaden",
+        "abwässer",
+        "umweltschadensgesetz"
+      ]
+    },
+    {
+      "key": "forderungsausfall",
+      "label_de": "Forderungsausfalldeckung",
+      "kind": "leistung",
+      "synonyms": [
+        "forderungsausfallrisiko",
+        "forderungsausfalldeckung",
+        "forderungsausfall",
+        "schadensersatzunfähigkeit",
+        "insolvenz"
+      ]
+    },
+    {
+      "key": "schluesselversicherung",
+      "label_de": "Schlüsselverlust",
+      "kind": "leistung",
+      "synonyms": [
+        "schlüsselverlust",
+        "schlüssel",
+        "schloss",
+        "schließanlage",
+        "codekarten",
+        "schlüsseltranspondern"
+      ]
+    }
+  ],
+  "exclusion_categories": [
+    {
+      "key": "ausschluss_vorsatz",
+      "label_de": "Vorsätzliche Schäden",
+      "kind": "ausschluss",
+      "synonyms": [
+        "vorsätzlich",
+        "vorsatz",
+        "absichtlich",
+        "bewusst",
+        "dolos"
+      ]
+    },
+    {
+      "key": "ausschluss_kraftfahrzeuge",
+      "label_de": "Kraftfahrzeuge",
+      "kind": "ausschluss",
+      "synonyms": [
+        "kraftfahrzeug",
+        "motor",
+        "kfz",
+        "auto",
+        "pkw",
+        "motorrad",
+        "wohnmobil",
+        "nutzfahrzeug"
+      ]
+    },
+    {
+      "key": "ausschluss_luftfahrzeuge",
+      "label_de": "Luftfahrzeuge",
+      "kind": "ausschluss",
+      "synonyms": [
+        "luftfahrzeug",
+        "flugzeug",
+        "hubschrauber",
+        "ballon"
+      ]
+    },
+    {
+      "key": "ausschluss_wasserfahrzeuge",
+      "label_de": "Wasserfahrzeuge",
+      "kind": "ausschluss",
+      "synonyms": [
+        "wasserfahrzeug",
+        "boot",
+        "schiff",
+        "motorboot",
+        "segelboot",
+        "jacht"
+      ]
+    },
+    {
+      "key": "ausschluss_hochwasser",
+      "label_de": "Hochwasser & Naturgewalten",
+      "kind": "ausschluss",
+      "synonyms": [
+        "hochwasser",
+        "überschwemmung",
+        "erdrutsch",
+        "senkung",
+        "erdbeben",
+        "höhere gewalt",
+        "naturgewalten"
+      ]
+    },
+    {
+      "key": "ausschluss_asbest",
+      "label_de": "Asbestschäden",
+      "kind": "ausschluss",
+      "synonyms": [
+        "asbest",
+        "asbesthaltig",
+        "asbestfaser"
+      ]
+    },
+    {
+      "key": "ausschluss_gentechnik",
+      "label_de": "Gentechnik",
+      "kind": "ausschluss",
+      "synonyms": [
+        "gentechnik",
+        "gentechnologie",
+        "gvo",
+        "genmodifiziert",
+        "gen-verändert"
+      ]
+    },
+    {
+      "key": "ausschluss_strahlung",
+      "label_de": "Ionisierende Strahlung",
+      "kind": "ausschluss",
+      "synonyms": [
+        "strahlung",
+        "ionisierend",
+        "radioaktiv",
+        "röntgen",
+        "kernenergie"
+      ]
+    },
+    {
+      "key": "ausschluss_familienangehoerige",
+      "label_de": "Ansprüche zwischen Versicherten",
+      "kind": "ausschluss",
+      "synonyms": [
+        "familienangehörige",
+        "ehegatte",
+        "ehegattin",
+        "angehörige",
+        "ansprüche untereinander",
+        "untereinander"
+      ]
+    }
+  ]
+}
