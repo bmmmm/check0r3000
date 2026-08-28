@@ -19,8 +19,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-RESULTS_JSON = REPO_ROOT / "benchmarks" / "results.json"
+import _vertical
+
+RESULTS_JSON = _vertical.results_json_path()
 
 # Faithful 50 / Schema 20 / Hallucination-free 15 / Module coverage 15 = 100.
 WEIGHTS = {"faithful": 50, "schema": 20, "halluc": 15, "modules": 15}

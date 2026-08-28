@@ -43,15 +43,16 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import extract  # noqa: E402  — reuse INSTRUCTION / build_payload / coerce_json / avb_transform
 import _providers  # noqa: E402
+import _vertical  # noqa: E402
 from _modules import MODULE_KEYS as _MODULE_KEYS  # noqa: E402  — schema-derived Baustein keys
 from scorecard import scored_by_tariff as _scored_by_tariff  # noqa: E402  — shared scoring
 
-EXTRACTED = ROOT / "data" / "extracted"
-SCHEMA = ROOT / "schema" / "tariff.schema.json"
-EVAL_OUT = ROOT / "tmp" / "eval"
+EXTRACTED = _vertical.extracted_dir()
+SCHEMA = _vertical.tariff_schema_path()
+EVAL_OUT = _vertical.TMP / "eval"
 # Durable, committable benchmark digest (correctness is reproducible; cost/latency
 # are indicative snapshots). The full per-run records stay in tmp/eval (gitignored).
-BENCH_OUT = ROOT / "benchmarks"
+BENCH_OUT = _vertical.benchmarks_dir()
 
 # --- Ground truth from the Produktinformationsblätter (the consumer summary) ----
 # Sum insured, deductible and premium are explicitly NOT stated as values in the

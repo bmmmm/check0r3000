@@ -42,13 +42,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _filter  # noqa: E402
 import _jsonio  # noqa: E402
 import _providers  # noqa: E402
+import _vertical  # noqa: E402
 import coverage_taxonomy  # noqa: E402
 import feature_history  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
-EXTRACTED = ROOT / "data" / "extracted"
-SCHEMA = ROOT / "schema" / "tariff.schema.json"
-OUT = ROOT / "out" / "tariffs"
+ROOT = _vertical.ROOT
+EXTRACTED = _vertical.extracted_dir()
+SCHEMA = _vertical.tariff_schema_path()
+OUT = _vertical.tariffs_dir()
 
 # Bump when the prompt/schema semantics change to invalidate all caches.
 PROMPT_VERSION = "4"
@@ -571,7 +572,7 @@ def main() -> int:
     # invocation, while tmp/update-runs.jsonl (written by the report) accumulates.
     stats = dict(_RUN_STATS)
     stats["cost_usd"] = round(stats["cost_usd"], 6)
-    cost_path = ROOT / "tmp" / "extract-cost.json"
+    cost_path = _vertical.TMP / "extract-cost.json"
     cost_path.parent.mkdir(parents=True, exist_ok=True)
     _jsonio.atomic_write_json(cost_path, {
         "ts": datetime.datetime.now().isoformat(timespec="seconds"),

@@ -26,6 +26,7 @@ import scorecard  # noqa: E402  — shared benchmark scoring (eval.py + Benchmar
 import magic  # noqa: E402  — Magic Find quality-scoring core (rank / prescore)
 import tui_anim  # noqa: E402  — boot-splash frames + pipeline loader bar
 from _jsonio import atomic_write_json, load_json_or  # noqa: E402  — shared atomic JSON IO
+import _vertical
 from _modules import MODULE_LABELS  # noqa: E402  — single source of truth for Baustein labels
 
 from tui_data import (  # noqa: E402
@@ -614,7 +615,7 @@ class CheckApp(App):
         if self._snapshot_path is not None:
             path = self._snapshot_path
         else:
-            path = _find_latest_snapshot(REPO_ROOT / "data" / "snapshots")
+            path = _find_latest_snapshot(_vertical.snapshots_dir())
 
         if path is not None:
             self._snapshot = load_snapshot(path)
@@ -2816,8 +2817,8 @@ class CheckApp(App):
 
             Prefers the real (gitignored) profile and falls back to the tracked example
             with is_example=True, mirroring check24_query.load_profile()."""
-        ppath = REPO_ROOT / "config" / "check24-profile.json"
-        epath = REPO_ROOT / "config" / "check24-profile.example.json"
+        ppath = _vertical.profile_path()
+        epath = _vertical.profile_example_path()
         is_example = False
         try:
             if ppath.is_file():
@@ -2871,7 +2872,7 @@ class CheckApp(App):
         except Exception:  # noqa: BLE001 — the decode is best-effort context only
             levers = ""
 
-        out = REPO_ROOT / "tmp" / "check24-query.txt"
+        out = _vertical.TMP / "check24-query.txt"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(
             f"# saved query\n{saved_url}\n\n# all insurers (provider/package pins dropped)\n"
@@ -2947,7 +2948,7 @@ class CheckApp(App):
                 new_query = urlencode(new_pairs) if changes else query
                 out_profile = dict(profile)
                 out_profile["query"] = new_query
-                ppath = REPO_ROOT / "config" / "check24-profile.json"
+                ppath = _vertical.profile_path()
                 try:
                     # Atomic write (temp twin on the same dir + os.replace), like
                     # snapshot.build() / _save_favorites: a crash mid-write must not
@@ -2972,7 +2973,7 @@ class CheckApp(App):
                 # Show the resulting URL so the user can paste it into the browser.
                 # is_example is now False — we just wrote the real profile.
                 new_url = base + "?" + new_query
-                out = REPO_ROOT / "tmp" / "check24-query.txt"
+                out = _vertical.TMP / "check24-query.txt"
                 out.parent.mkdir(parents=True, exist_ok=True)
                 out.write_text(f"# saved query\n{new_url}\n", encoding="utf-8")
                 self.notify("Suche gespeichert (config/check24-profile.json).",
@@ -2997,7 +2998,7 @@ class CheckApp(App):
             Atomic write: this is the only copy of a hand-curated file, and a crash /
             full disk mid-write would truncate it (load_favorites then silently returns
             {} — the shortlist would vanish). Write a temp file, then os.replace()."""
-        path = REPO_ROOT / "config" / "favorites.json"
+        path = _vertical.favorites_path()
         tmp = path.with_suffix(".json.tmp")
         tmp.write_text(
             json.dumps(self._favorites, indent=2, ensure_ascii=False) + "\n",
@@ -3009,7 +3010,7 @@ class CheckApp(App):
         """Persist the per-stem notes to the gitignored sidecar config/favorite-notes.json
         (atomic). Kept out of favorites.json so a typed personal note is never tracked."""
         atomic_write_json(
-            REPO_ROOT / "config" / "favorite-notes.json", self._favorite_notes
+            _vertical.favorite_notes_path(), self._favorite_notes
         )
 
     def _migrate_favorite_notes(self) -> None:
@@ -3484,7 +3485,7 @@ class CheckApp(App):
     def _prune_ingest_manifest(self, insurer_part: str, tariff_part: str) -> None:
         """Drop a tariff's documents from data/extracted/manifest.json so a future
             extract run does not resurrect a deleted tariff from a dangling entry."""
-        mp = REPO_ROOT / "data" / "extracted" / "manifest.json"
+        mp = _vertical.extracted_dir() / "manifest.json"
         if not mp.is_file():
             return
         try:
@@ -3510,7 +3511,7 @@ class CheckApp(App):
 
         removed: list[str] = []
         for sub in ("tariffs", "enriched"):
-            p = REPO_ROOT / "out" / sub / f"{stem}.json"
+            p = _vertical.out_dir() / sub / f"{stem}.json"
             if p.exists():
                 p.unlink()
                 removed.append(f"out/{sub}/{stem}.json")
@@ -3533,7 +3534,7 @@ class CheckApp(App):
                 )
             else:
                 for base in ("raw", "extracted"):
-                    root = (REPO_ROOT / "data" / base).resolve()
+                    root = (_vertical.data_dir() / base).resolve()
                     d = root / insurer_part / tariff_part
                     # Defense in depth: never rmtree at/above data/<base>/.
                     rd = d.resolve()
@@ -3952,7 +3953,7 @@ class CheckApp(App):
         prov_model, filter_on, repeat = dominant_provenance()
         model = (ANALYZE_MODEL if "CHECK0R_ANALYZE_MODEL" in os.environ
                  else (prov_model or ANALYZE_MODEL))
-        n_records = len(list((REPO_ROOT / "out" / "tariffs").glob("*.json")))
+        n_records = len(list(_vertical.tariffs_dir().glob("*.json")))
 
         def _go(confirmed: bool | None) -> None:
             if confirmed and self._claim_pipeline():
@@ -4116,7 +4117,7 @@ class CheckApp(App):
         # tmp/ (gitignored), so ONE Playwright session harvests all of them. Guarded
         # like the subprocess steps below — a write failure (tmp/ is a file, read-only
         # FS, disk full) must surface a notify, not escape the worker thread silently.
-        sel_dir = REPO_ROOT / "tmp"
+        sel_dir = _vertical.TMP
         sel_path = sel_dir / "magic-scan-select.json"
         try:
             sel_dir.mkdir(exist_ok=True)
@@ -4221,7 +4222,7 @@ class CheckApp(App):
             # at repeat×cost, and a cold local model is slowest.
             ("Extract", extract_cmd, 5400 if local_model else 3600, True),
         ]
-        log_path = REPO_ROOT / "tmp" / "update-all.log"
+        log_path = _vertical.TMP / "update-all.log"
         try:
             log_path.parent.mkdir(exist_ok=True)
             log_path.write_text("", encoding="utf-8")
@@ -4360,7 +4361,7 @@ class CheckApp(App):
         self.call_from_thread(
             self.notify, f"Pipeline gestartet: {_esc(label)} …", timeout=4
         )
-        log_path = REPO_ROOT / "tmp" / "pipeline.log"
+        log_path = _vertical.TMP / "pipeline.log"
         try:
             log_path.parent.mkdir(exist_ok=True)
             log_path.write_text("", encoding="utf-8")

@@ -22,14 +22,27 @@ import statistics
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
+import _vertical
 import coverage_taxonomy as ctax
 import tui_data
 from _jsonio import atomic_write_json, load_json_or
 from _modules import MODULE_KEYS as _MODULE_KEYS
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-WEIGHTS_PATH = REPO_ROOT / "config" / "magic-weights.json"
-NEEDS_PATH = REPO_ROOT / "config" / "needs-weights.json"
+REPO_ROOT = _vertical.ROOT
+
+# Test seams (tui_test monkey-patches NEEDS_PATH): None means "resolve from the
+# active vertical at call time" (the normal case); a Path overrides it.
+WEIGHTS_PATH: Path | None = None
+NEEDS_PATH: Path | None = None
+
+
+def _weights_path() -> Path:
+    return WEIGHTS_PATH if WEIGHTS_PATH is not None else _vertical.magic_weights_path()
+
+
+def _needs_path() -> Path:
+    return NEEDS_PATH if NEEDS_PATH is not None else _vertical.needs_weights_path()
+
 
 # The eight canonical Bausteine (from _modules, derived from the tariff schema). A
 # fixed denominator (not len(record.modules)) so a record that drops a key still scores
@@ -93,7 +106,7 @@ def load_weights(path: Path | None = None) -> MagicWeights:
     (override just `note`) is valid and a future field can't break an old config.
     """
     w = MagicWeights()
-    data = load_json_or(path or WEIGHTS_PATH, None)
+    data = load_json_or(path or _weights_path(), None)
     if not isinstance(data, dict):
         return w
     valid = w.dim_weights().keys()
@@ -112,7 +125,7 @@ def load_needs(path: Path | None = None) -> dict[str, float]:
     all-neutral file ranks identically to the objective view). Negative weights are
     clamped to 0 at use-site (_module_stats); here we just reject non-numbers."""
     base = {k: 1.0 for k in _MODULE_KEYS}
-    data = load_json_or(path or NEEDS_PATH, None)
+    data = load_json_or(path or _needs_path(), None)
     if not isinstance(data, dict):
         return base
     for k in _MODULE_KEYS:
@@ -126,7 +139,7 @@ def save_needs(weights: dict[str, float], path: Path | None = None) -> None:
     """Persist the personal Bedarf weighting to config/needs-weights.json, preserving the
     explanatory _comment and any unrelated keys already in the file. Only the eight
     canonical Baustein keys are written/updated, as plain numbers."""
-    p = path or NEEDS_PATH
+    p = path or _needs_path()
     data = load_json_or(p, {})
     if not isinstance(data, dict):
         data = {}
@@ -750,7 +763,7 @@ def _selftest() -> int:
 
     # 16. Real-data smoke: rank loads and scores every record without raising.
     real_rows: list[tui_data.SnapshotRow] = []
-    snap_dir = REPO_ROOT / "data" / "snapshots"
+    snap_dir = _vertical.snapshots_dir()
     latest = tui_data._find_latest_snapshot(snap_dir)
     if latest is not None:
         snap = tui_data.load_snapshot(latest)

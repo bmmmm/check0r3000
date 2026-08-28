@@ -28,8 +28,10 @@ import re
 import sys
 from pathlib import Path
 
+import _vertical
+
 ROOT = Path(__file__).resolve().parent.parent
-SNAPDIR = ROOT / "data" / "snapshots"
+SNAPDIR = _vertical.snapshots_dir()
 # tarifnote = CHECK24 expert grade; bewertung/_anzahl = customer rating (stars + count).
 # wartezeit_per_modul = per-Baustein wait time dict, JSON scrape only (None in PSV path).
 # The PSV path carries only the first six scalar fields; JSON rows may add the others.

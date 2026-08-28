@@ -29,12 +29,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import feature_history  # noqa: E402
+import _vertical  # noqa: E402
 from _jsonio import atomic_write_json, load_json_or  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
-GOLDEN = ROOT / "benchmarks" / "golden.json"
-TARIFFS = ROOT / "out" / "tariffs"
-SIDECAR = ROOT / "tmp" / "golden-pin-repairs.json"
+GOLDEN = _vertical.golden_path()
+TARIFFS = _vertical.tariffs_dir()
+SIDECAR = _vertical.TMP / "golden-pin-repairs.json"
 
 
 def _get_path(obj, path: str):

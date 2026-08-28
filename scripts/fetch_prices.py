@@ -43,8 +43,10 @@ import urllib.request
 from html import unescape
 from pathlib import Path
 
+import _vertical
+
 ROOT = Path(__file__).resolve().parent.parent
-SNAPDIR = ROOT / "data" / "snapshots"
+SNAPDIR = _vertical.snapshots_dir()
 
 # Same UA as the Playwright path: CHECK24 serves a stripped page to unknown agents.
 USER_AGENT = (
@@ -261,7 +263,7 @@ def main() -> int:
         print("No ratings carried forward — bewertung stays null "
               "(run scripts/fetch_ratings.py for a full scan)")
 
-    tmp = ROOT / "tmp"
+    tmp = _vertical.TMP
     tmp.mkdir(exist_ok=True)
     out = Path(args.out) if args.out else tmp / f"rows_{args.date}.json"
     out.write_text(json.dumps(rows, indent=2, ensure_ascii=False), encoding="utf-8")

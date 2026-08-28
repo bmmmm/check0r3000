@@ -26,8 +26,10 @@ import sys
 import urllib.request
 from pathlib import Path
 
+import _vertical
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RATINGS_PATH = REPO_ROOT / "data" / "sources" / "external-ratings.json"
+RATINGS_PATH = _vertical.external_ratings_path()
 
 GERMAN_MONTHS = [
     "Januar", "Februar", "März", "April", "Mai", "Juni",

@@ -29,10 +29,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import price_history  # noqa: E402
 import regression as regr  # noqa: E402
 import tui_data  # noqa: E402
+import _vertical  # noqa: E402
 from _jsonio import load_json_or  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-TMP = ROOT / "tmp"
+TMP = _vertical.TMP
 REPORT_MD = TMP / "update-report.md"
 RUN_LOG = TMP / "update-runs.jsonl"
 COST_SIDECAR = TMP / "extract-cost.json"

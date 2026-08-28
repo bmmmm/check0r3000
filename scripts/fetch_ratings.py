@@ -29,6 +29,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import _vertical
+
 ROOT = Path(__file__).resolve().parent.parent
 SCRAPE_JS = ROOT / "scripts" / "check24_scrape.js"
 
@@ -110,7 +112,7 @@ def main() -> int:
                     help="output JSON path (default: tmp/rows_DATE.json)")
     args = ap.parse_args()
 
-    tmp = ROOT / "tmp"
+    tmp = _vertical.TMP
     tmp.mkdir(exist_ok=True)
     out = Path(args.out) if args.out else tmp / f"rows_{args.date}.json"
 

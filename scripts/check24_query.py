@@ -25,10 +25,12 @@ import sys
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode
 
-ROOT = Path(__file__).resolve().parent.parent
-PROFILE = ROOT / "config" / "check24-profile.json"
-EXAMPLE = ROOT / "config" / "check24-profile.example.json"
-PROVIDERS = ROOT / "config" / "check24-providers.json"
+import _vertical
+
+ROOT = _vertical.ROOT
+PROFILE = _vertical.profile_path()
+EXAMPLE = _vertical.profile_example_path()
+PROVIDERS = _vertical.providers_path()
 
 # Params that pin the result list to one insurer / package. --all-insurers drops them.
 PIN_KEYS = ("provider_filter", "tariff_package", "tariff_position")

@@ -18,6 +18,7 @@ from typing import Any, Callable
 
 # Sibling leaves (stdlib-only, no Textual): the coverage taxonomy is lru_cached and
 # must be invalidated on reload, and _jsonio carries the shared JSON read helper.
+import _vertical
 import coverage_taxonomy
 from _jsonio import load_json_or
 
@@ -175,7 +176,7 @@ def _record_from_data(
 def _detail_path_for_stem(stem: str) -> tuple[Path, bool] | None:
     """Locate the analyzed record for a canonical stem (enriched preferred)."""
     for sub, is_enriched in (("enriched", True), ("tariffs", False)):
-        path = REPO_ROOT / "out" / sub / f"{stem}.json"
+        path = _vertical.out_dir() / sub / f"{stem}.json"
         if path.is_file():
             return path, is_enriched
     return None
@@ -208,7 +209,7 @@ def _load_detail(insurer: str, product: str) -> DetailRecord | None:
 
     slug = _slug(insurer, product)
     for sub, is_enriched in (("enriched", True), ("tariffs", False)):
-        path = REPO_ROOT / "out" / sub / f"{slug}.json"
+        path = _vertical.out_dir() / sub / f"{slug}.json"
         if path.is_file():
             try:
                 return _record_from_data(json.loads(path.read_text()), is_enriched, insurer, product)
@@ -227,7 +228,7 @@ def load_all_details() -> list[tuple[str, DetailRecord]]:
     """
     out: dict[str, DetailRecord] = {}
     for sub, is_enriched in (("enriched", True), ("tariffs", False)):
-        directory = REPO_ROOT / "out" / sub
+        directory = _vertical.out_dir() / sub
         if not directory.is_dir():
             continue
         for path in sorted(directory.glob("*.json")):
@@ -248,9 +249,9 @@ def _tracked_keys() -> set[str]:
     """Return set of slugs present in out/tariffs/, out/enriched/, or data/offers/."""
     keys: set[str] = set()
     for directory in [
-        REPO_ROOT / "out" / "tariffs",
-        REPO_ROOT / "out" / "enriched",
-        REPO_ROOT / "data" / "offers",
+        _vertical.tariffs_dir(),
+        _vertical.enriched_dir(),
+        _vertical.offers_dir(),
     ]:
         if directory.is_dir():
             for p in directory.glob("*.json"):
@@ -324,8 +325,8 @@ def load_snapshot(path: Path) -> Snapshot | None:
             # not the loose DOM slug (arag__premium) — check the stem first so the
             # indicator isn't always False; fall back to the slug for manifest-less rows.
             has_offer=(bool(stem)
-                       and (REPO_ROOT / "data" / "offers" / f"{stem}.json").is_file())
-            or (REPO_ROOT / "data" / "offers" / f"{slug}.json").is_file(),
+                       and (_vertical.offers_dir() / f"{stem}.json").is_file())
+            or (_vertical.offers_dir() / f"{slug}.json").is_file(),
         )
         rows.append(row)
 
@@ -352,7 +353,7 @@ def load_all_snapshots() -> list[tuple[str, Path]]:
     tariff look removed in the Verlauf diff."""
     import re
 
-    snap_dir = REPO_ROOT / "data" / "snapshots"
+    snap_dir = _vertical.snapshots_dir()
     if not snap_dir.is_dir():
         return []
     pairs = []
@@ -366,7 +367,7 @@ def load_all_snapshots() -> list[tuple[str, Path]]:
 
 def load_favorites() -> dict[str, Any]:
     """Load the curated shortlist from config/favorites.json (PII-free), or {}."""
-    path = REPO_ROOT / "config" / "favorites.json"
+    path = _vertical.favorites_path()
     if not path.is_file():
         return {}
     try:
@@ -383,7 +384,7 @@ def load_favorite_notes() -> dict[str, str]:
     Notes are free text a user types via [N] — personal, not shareable — so they
     live OUT of the tracked (stem/tag/SB-only, PII-free) favorites.json. Keyed by the
     canonical tariff stem, merged over the favorites at render time."""
-    data = load_json_or(REPO_ROOT / "config" / "favorite-notes.json", {})
+    data = load_json_or(_vertical.favorite_notes_path(), {})
     if not isinstance(data, dict):
         return {}
     return {str(k): str(v) for k, v in data.items() if v}
@@ -392,7 +393,7 @@ def load_favorite_notes() -> dict[str, str]:
 def load_doc_index() -> dict[str, list[dict]]:
     """Map a tariff stem → its persisted source-document descriptors (from the
     manifest), so the Favorites view can show which AVB/PIB URLs we have on file."""
-    path = REPO_ROOT / "data" / "sources" / "check24-documents.json"
+    path = _vertical.manifest_path()
     if not path.is_file():
         return {}
     try:
@@ -418,7 +419,7 @@ def load_doc_by_tariff() -> dict[tuple[str, str], dict]:
     PDFs. The stems are hand-curated (e.g. "…-oerag") and not reproducible from a
     slug, so we match on the insurer/tariff strings the manifest itself records —
     they come from the same CHECK24 DOM as the snapshot rows."""
-    path = REPO_ROOT / "data" / "sources" / "check24-documents.json"
+    path = _vertical.manifest_path()
     if not path.is_file():
         return {}
     try:
@@ -485,7 +486,7 @@ def resolve_stem(insurer: str, product: str) -> str | None:
 def _raw_dir_for_stem(stem: str) -> Path:
     """The canonical local-PDF directory for a stem (insurer__tariff -> insurer/tariff)."""
     insurer_part, _, tariff_part = stem.partition("__")
-    return REPO_ROOT / "data" / "raw" / insurer_part / tariff_part
+    return _vertical.raw_dir() / insurer_part / tariff_part
 
 
 # Short doctype labels for the Favorites "Docs" column.
@@ -550,7 +551,7 @@ def load_change_summary() -> dict[str, ChangeInfo]:
 
     # 1. Feature history — one sub-dir per stem. Wrapped like the price half so an
     #    unexpected error (e.g. an iterdir permission failure) can't abort _load_data.
-    hist_dir = REPO_ROOT / "out" / "tariff-history"
+    hist_dir = _vertical.history_dir()
     if hist_dir.is_dir():
         try:
             for stem_dir in sorted(hist_dir.iterdir()):
@@ -625,7 +626,7 @@ def dominant_provenance() -> tuple[str | None, bool, int]:
     from collections import Counter
 
     combos: Counter = Counter()
-    tdir = REPO_ROOT / "out" / "tariffs"
+    tdir = _vertical.tariffs_dir()
     if tdir.is_dir():
         for p in sorted(tdir.glob("*.json")):
             d = load_json_or(p, None)
@@ -667,7 +668,7 @@ def load_external_ratings() -> dict[str, Any]:
 
     Sparse by nature (external tests cover a fraction of the market), so these
     are DISPLAY-ONLY — never a score input, same rule as price in Magic Find."""
-    data = load_json_or(REPO_ROOT / "data" / "sources" / "external-ratings.json", {})
+    data = load_json_or(_vertical.external_ratings_path(), {})
     return data if isinstance(data, dict) else {}
 
 
@@ -935,7 +936,7 @@ def run_selftest(snapshot_path: Path | None) -> int:
 
     # 1. Resolve snapshot
     if snapshot_path is None:
-        snap_dir = REPO_ROOT / "data" / "snapshots"
+        snap_dir = _vertical.snapshots_dir()
         latest = _find_latest_snapshot(snap_dir)
         if latest is None:
             print(f"[snapshots] directory missing or empty: {snap_dir}")
@@ -963,14 +964,14 @@ def run_selftest(snapshot_path: Path | None) -> int:
         print("[snapshot] (none loaded)")
 
     # 2. Detail records
-    tariff_dir = REPO_ROOT / "out" / "tariffs"
-    enriched_dir = REPO_ROOT / "out" / "enriched"
+    tariff_dir = _vertical.tariffs_dir()
+    enriched_dir = _vertical.enriched_dir()
     n_tariffs = len(list(tariff_dir.glob("*.json"))) if tariff_dir.is_dir() else 0
     n_enriched = len(list(enriched_dir.glob("*.json"))) if enriched_dir.is_dir() else 0
     print(f"[tariffs]  out/tariffs/: {n_tariffs} files   out/enriched/: {n_enriched} files")
 
     # 3. Offers
-    offer_dir = REPO_ROOT / "data" / "offers"
+    offer_dir = _vertical.offers_dir()
     n_offers = 0
     if offer_dir.is_dir():
         n_offers = len([p for p in offer_dir.glob("*.json") if not p.name.startswith("_")])

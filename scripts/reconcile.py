@@ -30,11 +30,13 @@ from pathlib import Path
 REPO_ROOT = Path(
     subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
 )
-OUT = REPO_ROOT / "out" / "tariffs"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import coverage_taxonomy  # noqa: E402
 import feature_history  # noqa: E402
+import _vertical  # noqa: E402
 from _jsonio import atomic_write_json  # noqa: E402
+
+OUT = _vertical.tariffs_dir()
 
 # Primary guard is the "_curated": true marker in the record itself (extract.py refuses
 # to re-extract a curated stem without --force); this hardcoded set is a second,
@@ -127,7 +129,7 @@ def main():
         stem = f.stem
         if stem in SKIP:
             continue
-        rel = f"out/tariffs/{stem}.json"
+        rel = (OUT / f"{stem}.json").relative_to(REPO_ROOT).as_posix()
         head = head_version(rel)
         if head is None:
             continue

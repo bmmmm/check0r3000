@@ -34,9 +34,11 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
+import _vertical
+
 ROOT = Path(__file__).resolve().parent.parent
-RAW = ROOT / "data" / "raw"
-OUT = ROOT / "data" / "extracted"
+RAW = _vertical.raw_dir()
+OUT = _vertical.extracted_dir()
 
 
 def extract_text(pdf: Path) -> tuple[str, int]:

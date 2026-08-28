@@ -18,9 +18,16 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-HISTORY_DIR = ROOT / "out" / "tariff-history"
-TARIFFS_DIR = ROOT / "out" / "tariffs"
+import _vertical
+
+ROOT = _vertical.ROOT
+# Test seam: the selftest overrides HISTORY_DIR with a temp dir. None means
+# "resolve from the active vertical at call time" (the normal case).
+HISTORY_DIR: Path | None = None
+
+
+def _history_dir() -> Path:
+    return HISTORY_DIR if HISTORY_DIR is not None else _vertical.history_dir()
 
 # Fields that define "comparable content" — pipeline metadata and PII premiums excluded
 # so that re-extracting with a different model/prompt never generates phantom diffs.
@@ -69,7 +76,7 @@ def archive_version(stem: str, record: dict, date: str | None = None) -> bool:
     date = date or _today()
     h = content_sha256(record)
 
-    stem_dir = HISTORY_DIR / stem
+    stem_dir = _history_dir() / stem
     latest = _newest_version(stem_dir)
 
     if latest is not None and latest.get("_content_sha256") == h:
@@ -102,7 +109,7 @@ def state_as_of(stem: str, date: str) -> dict | None:
 
     Returns None if the tariff has no history or was not yet analyzed by `date`.
     """
-    stem_dir = HISTORY_DIR / stem
+    stem_dir = _history_dir() / stem
     if not stem_dir.is_dir():
         return None
     candidates = sorted(
@@ -183,9 +190,9 @@ def backfill(date: str) -> int:
     Returns the number of entries written.
     """
     written = 0
-    for p in sorted(TARIFFS_DIR.glob("*.json")):
+    for p in sorted(_vertical.tariffs_dir().glob("*.json")):
         stem = p.stem
-        if _newest_version(HISTORY_DIR / stem) is not None:
+        if _newest_version(_history_dir() / stem) is not None:
             continue  # already has history
         try:
             record = json.loads(p.read_text(encoding="utf-8"))
@@ -200,7 +207,7 @@ def backfill(date: str) -> int:
 
 def last_analysis_date(stem: str) -> str | None:
     """Date of the most-recent history entry (any re-analysis, changed or not)."""
-    newest = _newest_version(HISTORY_DIR / stem)
+    newest = _newest_version(_history_dir() / stem)
     return newest.get("_history_date") if newest else None
 
 
@@ -223,7 +230,7 @@ def last_change_date(stem: str) -> str | None:
 
 def first_seen_date(stem: str) -> str | None:
     """Date of the first (baseline) history entry, or None."""
-    stem_dir = HISTORY_DIR / stem
+    stem_dir = _history_dir() / stem
     if not stem_dir.is_dir():
         return None
     files = sorted(p for p in stem_dir.glob("*.json") if _DATE_RE.match(p.stem))
@@ -232,7 +239,7 @@ def first_seen_date(stem: str) -> str | None:
 
 def full_changelog(stem: str) -> list:
     """Return [(old_date, new_date, diff), ...] for all consecutive version pairs that changed."""
-    stem_dir = HISTORY_DIR / stem
+    stem_dir = _history_dir() / stem
     if not stem_dir.is_dir():
         return []
     files = sorted(p for p in stem_dir.glob("*.json") if _DATE_RE.match(p.stem))

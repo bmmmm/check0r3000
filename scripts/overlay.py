@@ -41,12 +41,14 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
+import _vertical
+
 ROOT = Path(__file__).resolve().parent.parent
-TARIFFS = ROOT / "out" / "tariffs"
-ENRICHED = ROOT / "out" / "enriched"
-OFFERS = ROOT / "data" / "offers"
-OFFER_SCHEMA = ROOT / "schema" / "offer.schema.json"
-TARIFF_SCHEMA = ROOT / "schema" / "tariff.schema.json"
+TARIFFS = _vertical.tariffs_dir()
+ENRICHED = _vertical.enriched_dir()
+OFFERS = _vertical.offers_dir()
+OFFER_SCHEMA = _vertical.offer_schema_path()
+TARIFF_SCHEMA = _vertical.tariff_schema_path()
 
 _MISSING = object()
 

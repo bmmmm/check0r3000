@@ -35,12 +35,13 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _vertical  # noqa: E402
 from _manifest import load_manifest  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
-GOLDEN = ROOT / "benchmarks" / "golden.json"
-SCHEMA = ROOT / "schema" / "tariff.schema.json"
-TARIFFS = ROOT / "out" / "tariffs"
+ROOT = _vertical.ROOT
+GOLDEN = _vertical.golden_path()
+SCHEMA = _vertical.tariff_schema_path()
+TARIFFS = _vertical.tariffs_dir()
 
 # Tokens that carry no product identity — they appear in nearly every document
 # filename and would make the attribution check below pass on noise alone.
@@ -203,7 +204,7 @@ def current_document_hashes() -> dict[str, dict[str, str]] | None:
     texts are derived from third-party PDFs), so CI and fresh clones legitimately lack
     it and the staleness check below simply does not run there.
     """
-    path = ROOT / "data" / "extracted" / "manifest.json"
+    path = _vertical.extracted_dir() / "manifest.json"
     try:
         docs = json.loads(path.read_text(encoding="utf-8"))["documents"]
     except (OSError, json.JSONDecodeError, KeyError, TypeError):

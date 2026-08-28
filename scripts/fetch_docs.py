@@ -36,10 +36,11 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from _manifest import load_manifest
+import _vertical
 
 ROOT = Path(__file__).resolve().parent.parent
-INBOX = ROOT / "data" / "inbox"
-RAW = ROOT / "data" / "raw"
+INBOX = _vertical.inbox_dir()
+RAW = _vertical.raw_dir()
 UA = "Mozilla/5.0 (check0r3000 fetch_docs; personal RSV comparison)"
 
 # CHECK24 filestore "kind" -> a UNIQUE canonical doctype per tariff. tariff_terms and

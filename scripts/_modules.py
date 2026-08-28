@@ -13,9 +13,10 @@ is the canonical presentation dict.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schema" / "tariff.schema.json"
+import _vertical
+
+_SCHEMA_PATH = _vertical.tariff_schema_path()
 
 
 def _load_module_keys() -> tuple[str, ...]:

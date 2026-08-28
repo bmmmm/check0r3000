@@ -13,8 +13,9 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-SNAPSHOT_DIR = ROOT / "data" / "snapshots"
+import _vertical
+
+ROOT = _vertical.ROOT
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -37,11 +38,12 @@ def load_all_price_history(resolve_stem_fn) -> dict[str, list[dict]]:
     isolated to a non-pinned band is not surfaced — acceptable because a real rate
     change moves all bands together, so the pinned band reflects it too.
     """
-    if not SNAPSHOT_DIR.is_dir():
+    snapshot_dir = _vertical.snapshots_dir()
+    if not snapshot_dir.is_dir():
         return {}
 
     snap_files = sorted(
-        p for p in SNAPSHOT_DIR.glob("*.json") if _DATE_RE.match(p.stem)
+        p for p in snapshot_dir.glob("*.json") if _DATE_RE.match(p.stem)
     )
 
     # stem -> date -> sb_band -> price  (price-bearing variants only)
@@ -106,11 +108,12 @@ def market_stats() -> list[dict]:
     """
     import statistics
 
-    if not SNAPSHOT_DIR.is_dir():
+    snapshot_dir = _vertical.snapshots_dir()
+    if not snapshot_dir.is_dir():
         return []
     out: list[dict] = []
     for snap_path in sorted(
-        p for p in SNAPSHOT_DIR.glob("*.json") if _DATE_RE.match(p.stem)
+        p for p in snapshot_dir.glob("*.json") if _DATE_RE.match(p.stem)
     ):
         try:
             data = json.loads(snap_path.read_text(encoding="utf-8"))

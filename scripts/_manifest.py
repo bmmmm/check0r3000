@@ -11,10 +11,11 @@ from __future__ import annotations
 
 import json
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-MANIFEST = ROOT / "data" / "sources" / "check24-documents.json"
+import _vertical
+
+ROOT = _vertical.ROOT
+MANIFEST = _vertical.manifest_path()
 
 DEFAULT_MANIFEST: dict = {
     "quelle": "check24 rsv vergleichsergebnis (all insurers) — harvest_docs.py",

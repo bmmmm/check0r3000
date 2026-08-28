@@ -25,8 +25,9 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-TAXONOMY_PATH = ROOT / "config" / "coverage_taxonomy.json"
+import _vertical
+
+ROOT = _vertical.ROOT
 
 # Leading list/status glyphs the TUI or source data may prepend to an item.
 _LEADING_GLYPHS = "✓✗★•·–— -"
@@ -44,7 +45,7 @@ _LIST_FOR_KIND = {
 @lru_cache(maxsize=4)
 def load_taxonomy(path: str | None = None) -> dict:
     """Load and cache the taxonomy JSON. `path` overrides the default (used by tests)."""
-    p = Path(path) if path else TAXONOMY_PATH
+    p = Path(path) if path else _vertical.taxonomy_path()
     return json.loads(p.read_text(encoding="utf-8"))
 
 
@@ -182,7 +183,7 @@ def _selftest() -> int:
     # Coverage report over the real records (no hard floor — unmatched items are
     # legitimate and surface as 'Sonstige' in the TUI; we just want visibility and
     # a guarantee that classify() never raises on real data).
-    tariffs_dir = ROOT / "out" / "tariffs"
+    tariffs_dir = _vertical.tariffs_dir()
     records = sorted(tariffs_dir.glob("*.json")) if tariffs_dir.is_dir() else []
     total = matched = 0
     sonstige = []
