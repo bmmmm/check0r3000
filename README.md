@@ -7,17 +7,19 @@
  ██     ██  ██ ██     ██     ██ ██  ██  ██ ██ ██      ██ ██  ██ ██  ██ ██  ██
   ▀████ ██  ██ ██████  ▀████ ██  ██  ████  ██  ██ █████   ████   ████   ████
 
-                          » RECHTSSCHUTZ-VERGLEICH «
+                          » VERSICHERUNGS-VERGLEICH «
 ```
 
 **Versicherungsbedingungen rein, vergleichbare Fakten raus — für ~20 Cent pro
 Tarif.** check0r3000 liest die Original-AVB der Versicherer, extrahiert per LLM
-schema-valide, regressionsgetestete Leistungsdaten und rankt den ganzen
-deutschen Rechtsschutz-Markt nach Qualität — mit Preisverlauf, Feature-Diffs
+schema-valide, regressionsgetestete Leistungsdaten und rankt ganze
+Versicherungs-Märkte nach Qualität — mit Preisverlauf, Feature-Diffs
 über die Zeit („was hat der Versicherer still gestrichen?") und externen
-Testurteilen. Kein DB-Engine, keine schweren Frameworks: **Dateien +
-Python-stdlib + `uv`**, Modell-Backend frei wählbar (Claude-Cloud oder lokal via
-Ollama/oMLX/mlx).
+Testurteilen. Multi-Vertical: Start-Sparte **Rechtsschutz** (production),
+**Hausrat** und **Privathaftpflicht** laufen als experimental mit; `[S]`
+wechselt die Sparte zur Laufzeit. Kein DB-Engine, keine schweren Frameworks:
+**Dateien + Python-stdlib + `uv`**, Modell-Backend frei wählbar (Claude-Cloud
+oder lokal via Ollama/oMLX/mlx).
 
 `Python + uv` · `Textual-TUI` · `modellfrei wo immer möglich` · `GPL-3.0`
 
@@ -33,6 +35,12 @@ Ollama/oMLX/mlx).
 
 ## ✨ Highlights
 
+- 🧭 **Multi-Vertical** — jede Sparte lebt in einem eigenen Namespace
+  (`data/<sparte>/`, `out/<sparte>/`, `schema/<sparte>/`,
+  `config/verticals/<sparte>/`), Registry in `config/verticals.json`;
+  Sparten-Spezifika (Module, Filter-Anker, Extraktions-Prompt, Harvest-Flow)
+  sind **Daten**, nicht Code. `[S]` wechselt zur Laufzeit;
+  `scripts/new_vertical.py` scaffoldet eine neue Sparte aus Probe-Evidenz.
 - 🎬 **Boot-Splash mit Stil** — drei prozedurale Logo-Animationen (Implosion,
   Big Bang, Slam), zufällig pro Start. `CHECK0R_SPLASH=1|2|3|random|off`.
   Standalone-Demo: `python3 scripts/tui_anim.py 2`.
@@ -84,7 +92,7 @@ zentrierter Loader mit Statuszeile.
 | **Market** | `[x]` | Alle Tarife des Snapshots, sortier-/filterbar, Status je Zeile (`✓ analysiert · ↓ PDF lokal · ○ URLs`) |
 | **Vergleich** | `[v]` | Coverage-Matrix nebeneinander: Module, Deckung, Leistungen/Ausschlüsse taxonomie-normalisiert |
 | **Verlauf** | `[l]` | Snapshot-Diff + „Markt über Zeit"-Statistik + Preis-Sparkline + Leistungsänderungen je Tarif |
-| **Benchmark** | `[B]` | Modell-Scorecard aus `benchmarks/results.json` — welches Modell extrahiert am treuesten? |
+| **Benchmark** | `[B]` | Modell-Scorecard aus `benchmarks/<sparte>/results.json` — welches Modell extrahiert am treuesten? |
 | ✨ **Magic Find** | `[M]` | Qualitäts-Ranking über den ganzen analysierten Markt, Preis zählt nicht |
 
 Die wichtigsten Aktionen (`[?]` zeigt alle):
@@ -97,12 +105,14 @@ Die wichtigsten Aktionen (`[?]` zeigt alle):
 | `[U]` | **Update-All**: Scan+Snapshot → Docs → volle Re-Analyse (Zwilling von `update-all.sh`) |
 | `[a]` / `[u]` | Tarif zum Vergleich hinzufügen/entfernen / Favorit an-aus |
 | `[P]` / `[W]` | Bedarf-Modus an/aus / Bedarf-Gewichte-Editor (0–3 je Baustein) |
+| `[S]` | Sparte wechseln (Registry-basiert; experimental-Sparten tragen ein Badge) |
 | `[d]` | Detail-Band ein/aus (voller Record, Score-Breakdown, externe Bewertungen, Preisverlauf) |
 | `[R]` / `[D]` / `[o]` / `[O]` | Δ-Referenz setzen / lokale Daten löschen / Quelldokumente öffnen / Auf CHECK24 öffnen |
 
 **Identität über den `stem`:** jeder Tarif hat eine kanonische ID
-`<versicherer>__<tarif>` (aus `data/sources/check24-documents.json`). TUI,
-Pipeline-Output, Doc-Manifest und Tarif-History hängen alle daran.
+`<versicherer>__<tarif>` (aus `data/<sparte>/sources/check24-documents.json`).
+TUI, Pipeline-Output, Doc-Manifest und Tarif-History hängen alle daran; Stems
+sind innerhalb ihrer Sparte eindeutig.
 
 **Architektur:** `tui.py` ist ein ~270-Zeilen-Entry-Point über fünf
 sibling-Modulen — `tui_data.py` (Textual-freie Datenschicht, `--selftest`),
@@ -113,16 +123,17 @@ Pilot-Testsuite (Tab-Wechsel, Cross-Tab-State, Markup-feindliche Daten, Modals).
 
 ## ✨ Magic Find — Qualität ranken, nicht den Preis
 
-`scripts/magic.py` ist reine Arithmetik über `out/tariffs/` (kein Modell-Call,
-read-only). Fünf gewichtete Dimensionen (`config/magic-weights.json`):
+`scripts/magic.py` ist reine Arithmetik über `out/<sparte>/tariffs/` (kein
+Modell-Call, read-only). Fünf gewichtete Dimensionen
+(`config/verticals/<sparte>/magic-weights.json`):
 CHECK24-Tarifnote, Leistungs-Abdeckung (distinkte Taxonomie-Kategorien),
 Modul-Breite, Deckungs-Generosität, Kundenbewertung. **Der Beitrag ist nie ein
 Score-Input** — er erscheint nur als Anzeige und in der P/L-Spalte
 (Preis-Leistung, ebenfalls nur Anzeige).
 
 - `[P]` gewichtet die Modul-Breite nach persönlichem Bedarf
-  (`config/needs-weights.json`, neutral = identisch zum objektiven Ranking);
-  `[W]` öffnet den Editor dafür.
+  (`config/verticals/<sparte>/needs-weights.json`, neutral = identisch zum
+  objektiven Ranking); `[W]` öffnet den Editor dafür.
 - ⚠ markiert Tarife, deren Extraktion dünn aussieht (Recall-Lücke, kein
   schlechter Tarif) — der Score bleibt unangetastet.
 - `[F]` schließt Lücken: bewertet alle **nicht** analysierten Markt-Tarife vor
@@ -130,8 +141,8 @@ Score-Input** — er erscheint nur als Anzeige und in der P/L-Spalte
 
 ## 🏆 Externe Testurteile (display-only)
 
-`data/sources/external-ratings.json` (getrackt, handkuratiert mit Quelle +
-Stand) hängt Finanztip-/Franke&Bornberg-/Finanztest-Urteile als Badges an
+`data/<sparte>/sources/external-ratings.json` (getrackt, handkuratiert mit
+Quelle + Stand) hängt Finanztip-/Franke&Bornberg-/Finanztest-Urteile als Badges an
 Tarife und Versicherer: `FT ✓` Empfehlung, `FFF+` Top-Rating, `FT ✗` keine
 Empfehlung. Sichtbar im Detail-Band („Externe Bewertungen") und als
 **Ext**-Spalte im Magic-Find-Tab.
@@ -175,34 +186,36 @@ Der Verlauf-Tab zeigt beides: die „Markt über Zeit"-Headerzeile mit
 Median-Sparkline und im Detail-Band den Preisverlauf des Tarifs plus
 **Leistungsänderungen** zwischen zwei Zeitpunkten — via
 `scripts/feature_history.py`, das jede extrahierte Tarif-Version
-content-hash-basiert in `out/tariff-history/<stem>/YYYY-MM-DD.json` archiviert
+content-hash-basiert in `out/<sparte>/tariff-history/<stem>/YYYY-MM-DD.json` archiviert
 (Hash exkludiert Pipeline-Metadaten → ein Re-Extract mit anderem Modell erzeugt
 keine Phantom-Diffs).
 
 ## 🔬 Die Analyse-Pipeline
 
+Alle Pfade je aktiver Sparte (`CHECK0R_VERTICAL`, Default aus der Registry):
+
 ```
-data/inbox/*.pdf                          (Sammelordner: alle Downloads hier rein)
+data/<sparte>/inbox/*.pdf                 (Sammelordner: alle Downloads hier rein)
         │  scripts/intake.py   (stdlib)       Dateiname → Versicherer/Tarif/Doctype,
         ▼                                     URL-decode, Dry-Run + --apply
-data/raw/<versicherer>/<tarif>/*.pdf      (lokal, gitignored)
+data/<sparte>/raw/<versicherer>/<tarif>/*.pdf   (lokal, gitignored)
         │  scripts/ingest.py   (uv + pypdf)   PDF → Text, Content-Hash-Dedup
         ▼
-data/extracted/…txt + manifest.json       (lokal, gitignored)
+data/<sparte>/extracted/…txt + manifest.json    (lokal, gitignored)
         │  scripts/extract.py  (Modell)       je Tarif → strukturiertes JSON
         │    --filter   AVB auf Vergleichs-§§ trimmen (passt dann in kleine Modelle)
         │    --model    claude:opus | haiku | ollama:llama3.1:8b | mlx:…@http://…
         │    --repeat 3 Leistungen/Ausschlüsse über N Läufe unionieren
         │    --jobs 3   Tarife parallel extrahieren
         ▼
-out/tariffs/*.json                         (getrackt: reine LLM-Fakten; Beitrag/Stufe = null)
+out/<sparte>/tariffs/*.json                (getrackt: reine LLM-Fakten; Beitrag/Stufe = null)
         │  scripts/regression.py (stdlib)     golden.json-Invarianten, exit≠0 bei Drift
-        │  scripts/overlay.py   (stdlib)      Beitrag/Stufe/SB aus data/offers/ einmischen
-        ▼                                       (kein Modell) → out/enriched/*.json (gitignored)
-out/enriched/*.json  bzw.  out/tariffs/*.json
+        │  scripts/overlay.py   (stdlib)      Beitrag/Stufe/SB aus data/<sparte>/offers/ einmischen
+        ▼                                       (kein Modell) → out/<sparte>/enriched/*.json (gitignored)
+out/<sparte>/enriched/*.json  bzw.  out/<sparte>/tariffs/*.json
         │  scripts/render.py   (Modell)       Matrix + Vor/Nachteile (nimmt enriched, sonst pur)
         ▼
-out/vergleich.md  +  out/index.html        (getrackt: Ergebnis)
+out/<sparte>/vergleich.md  +  out/<sparte>/index.html   (getrackt: Ergebnis)
 ```
 
 - `ingest.py` hasht den **extrahierten Text**, nicht die Datei-Bytes — neu
@@ -216,15 +229,17 @@ out/vergleich.md  +  out/index.html        (getrackt: Ergebnis)
 Und der modellfreie Markt-Zweig daneben:
 
 ```
-config/check24-profile.json     (gitignored, PII)   dein Query verbatim
+config/verticals/<sparte>/check24-profile.json  (gitignored, PII)  dein Query verbatim
         │  scripts/check24_query.py                  Result-URL aus dem Profil bauen
         ▼
 [CHECK24-Ergebnisseite]
         │  scripts/fetch_ratings.py --snapshot (Playwright)  ganze Liste scrapen
-        │  scripts/harvest_docs.py <stem>      (Playwright)  Doc-URLs live ernten
+        │  scripts/harvest_docs.py --match …   (Playwright)  Doc-URLs live ernten
+        │       Flow je Sparte aus vertical.json: RS = filestore-Bundles,
+        │       hausrat/phv = Tarifdetails-Panel mit /file/-Links (flow=panel)
         ▼
-data/snapshots/<datum>.json         (gitignored)     die Verlauf-Datenbank
-data/sources/check24-documents.json (getrackt)       nur AVB/PIB-URLs, nie die PDFs
+data/<sparte>/snapshots/<datum>.json         (gitignored)  die Verlauf-Datenbank
+data/<sparte>/sources/check24-documents.json (getrackt)    nur AVB/PIB-URLs, nie die PDFs
         │  scripts/fetch_docs.py --check              URLs erreichbar? (lädt nichts)
         │  scripts/fetch_docs.py <stem> --apply       on demand ziehen (parallelisiert)
         ▼
@@ -307,22 +322,28 @@ uv run scripts/eval.py --models haiku,sonnet --filter --repeat 3 --save-summary
 uv run scripts/eval.py --rescore              # Records offline neu bewerten (kostenlos)
 ```
 
-`--save-summary` schreibt einen getrackten Digest nach `benchmarks/results.md`
-(+`.json`) — den rendert der `[B]`-Tab als Scorecard. **Das zentrale Ergebnis
+`--save-summary` schreibt einen getrackten Digest nach
+`benchmarks/<sparte>/results.md` (+`.json`) — den rendert der `[B]`-Tab als
+Scorecard. **Das zentrale Ergebnis
 hier:** der Input-Umfang schlägt die Modellwahl. Mit getrimmter AVB extrahieren
 auch kleine lokale Modelle treu; die volle 174-Seiten-AVB sprengt jedes
 200k-Fenster.
 
 ## 🛡️ Regression: merken wir, wenn die Extraktion bricht?
 
-Ja. `benchmarks/golden.json` pinnt pro Golden-Tarif die **dokument-gegroundeten
+Ja. `benchmarks/<sparte>/golden.json` pinnt pro Golden-Tarif die **dokument-gegroundeten
 Invarianten** — Fakten, die in den Unterlagen wirklich stehen, **und** Felder,
 die bewusst `null` bleiben müssen (Beitrag, gewählte Stufe). Zusätzlich läuft
 ein marktweiter Check über **alle** Records (Schema + beitrag-null).
 
 ```sh
-uv run scripts/regression.py   # exit≠0 bei Drift; pipeline.sh ruft es automatisch
+uv run scripts/regression.py                   # aktive Sparte; pipeline.sh ruft es automatisch
+uv run scripts/regression.py --all-verticals   # einmal je Registry-Sparte (CI)
 ```
+
+Eine frisch gescaffoldete Sparte ohne `golden.json` bekommt trotzdem den
+marktweiten Sweep — golden-los heißt „noch keine gepinnten Invarianten",
+nicht „übersprungen".
 
 So fällt ein Modell-/Prompt-Wechsel auf, der Felder fallen lässt, eine Stufe
 halluziniert oder einen Beitrag erfindet — statt still schlechtere Records
@@ -335,25 +356,25 @@ Die Original-PDFs der Versicherer sind **fremdes Urheberrecht** und werden
 Ergebnisse** (Fakten-JSON + Vergleichsprosa), die Tarif-History, der Benchmark
 und die URL-Manifeste (Links, nie Inhalte).
 
-| Bleibt lokal (gitignored) | Warum |
+| Bleibt lokal (gitignored; `<v>` = Sparte) | Warum |
 |---|---|
-| `data/raw/`, `data/inbox/`, `data/extracted/` | fremdes Urheberrecht (PDFs + Extrakte) |
-| `data/snapshots/` | Scrape-Rohdaten |
-| `config/check24-profile.json` | PII (Geburtsdatum, PLZ) |
-| `data/offers/*`, `out/enriched/` | persönliche Beiträge/Stufen |
-| `config/favorite-notes.json` | persönliche Notizen |
+| `data/<v>/raw/`, `data/<v>/inbox/`, `data/<v>/extracted/` | fremdes Urheberrecht (PDFs + Extrakte) |
+| `data/<v>/snapshots/` | Scrape-Rohdaten |
+| `config/verticals/<v>/check24-profile.json` | PII (Geburtsdatum, PLZ) |
+| `data/<v>/offers/*`, `out/<v>/enriched/` | persönliche Beiträge/Stufen |
+| `config/verticals/<v>/favorite-notes.json` | persönliche Notizen |
 
 Keine Secrets, keine absoluten Pfade — API-Keys nur aus der Umgebung.
 
-## 📎 Nebenpfad: persönliche Angebotsdaten (`data/offers/`)
+## 📎 Nebenpfad: persönliche Angebotsdaten (`data/<sparte>/offers/`)
 
 AVB + Produktinfoblatt beschreiben die generische Produktlinie — **nicht** den
 konkret gewählten Tarif. Beitrag, gewählte Stufe und SB kommen deshalb über
-einen **modellfreien** Nebenpfad: `data/offers/<key>.json`
-(`schema/offer.schema.json`, Doku: `data/offers/README.md`) →
-`scripts/overlay.py` mischt sie **verbatim** ein → `out/enriched/`.
+einen **modellfreien** Nebenpfad: `data/<sparte>/offers/<key>.json`
+(`schema/<sparte>/offer.schema.json`, Doku: `data/<sparte>/offers/README.md`) →
+`scripts/overlay.py` mischt sie **verbatim** ein → `out/<sparte>/enriched/`.
 
-Die reinen Records bleiben eingefroren: `out/tariffs/` und `regression.py`
+Die reinen Records bleiben eingefroren: `out/<sparte>/tariffs/` und `regression.py`
 sehen den Offer nie — die Garantie „das Modell erfindet keinen Preis" bleibt
 intakt. Overlay hat einen Containment-Self-Check (der Merge darf nur die
 benannten Felder ändern) und validiert gegen das Schema.
@@ -375,9 +396,11 @@ mit menschlicher Freigabe, nie als stiller Loop.
 
 ## 📐 Schema
 
-`schema/tariff.schema.json` ist die Source-of-Truth dafür, welche Merkmale
-verglichen werden. Schema erweitern → `PROMPT_VERSION` in `scripts/extract.py`
-erhöhen (invalidiert den Cache), Invarianten in `golden.json` nachziehen.
+`schema/<sparte>/tariff.schema.json` ist die Source-of-Truth dafür, welche
+Merkmale in einer Sparte verglichen werden. Schema erweitern → `PROMPT_VERSION`
+in `scripts/extract.py` erhöhen (invalidiert den Cache), Invarianten in
+`benchmarks/<sparte>/golden.json` nachziehen. Eine ganz neue Sparte scaffoldet
+`scripts/new_vertical.py` aus Probe-Evidenz (Beispiel-AVB + Result-Rows).
 
 ## ❤️ Support
 
