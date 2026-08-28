@@ -38,6 +38,28 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# Same provenance derivation as update-all.sh: a BARE ./pipeline.sh used to run
+# extract with its CLI default (model "claude", no filter) — on a vertical whose
+# records carry haiku+filter that is a cache-signature mismatch, i.e. a silent
+# paid re-extract of every tariff (this fired for real on 2026-08-28). When none
+# of --model/--filter/--repeat are given, match the existing records instead;
+# passing ANY of the three keeps fully explicit mode.
+if [ -z "$MODEL_ARGS" ] && [ -z "$FILTER_ARGS" ] && [ -z "$REPEAT_ARGS" ]; then
+  PROV="$($PYRUN scripts/tui_data.py --provenance 2>/dev/null || true)"
+  PROV_MODEL="${PROV%%|*}"
+  rest="${PROV#*|}"
+  PROV_FILTER="${rest%%|*}"
+  PROV_REPEAT="${rest#*|}"
+  if [ -n "$PROV_MODEL" ]; then
+    MODEL_ARGS="--model $PROV_MODEL"
+    [ "$PROV_FILTER" = "1" ] && FILTER_ARGS="--filter"
+    [ "${PROV_REPEAT:-1}" -gt 1 ] 2>/dev/null && REPEAT_ARGS="--repeat $PROV_REPEAT"
+    echo "==> extract flags from record provenance: $MODEL_ARGS ${FILTER_ARGS:-} ${REPEAT_ARGS:-}"
+  else
+    echo "==> no existing records — extract runs with its CLI defaults"
+  fi
+fi
+
 echo "==> ingest (PDF -> text, dedup)"
 $PYRUN scripts/ingest.py
 
