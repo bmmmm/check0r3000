@@ -123,6 +123,286 @@
           "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17083/1/Versicherungsbedingungen_kombiniert.pdf"
         }
       ]
+    },
+    {
+      "stem": "adam-riese__xl",
+      "insurer": "Adam Riese",
+      "tariff": "XL",
+      "position": 13,
+      "hash": "panel:864d55d034281000",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/17079/1/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/17079/1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17079/1/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "wecoya-ehem-conceptif__cif4all-best-advice",
+      "insurer": "WECOYA (ehem. ConceptIF)",
+      "tariff": "CIF4All best advice",
+      "position": 19,
+      "hash": "panel:95b3d929a97ed065",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/17561/2/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17561/2/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "barmeniadirekt__topdirekt",
+      "insurer": "BarmeniaDirekt",
+      "tariff": "TopDirekt",
+      "position": 22,
+      "hash": "panel:5e336369c505b263",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/17162/2/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/17162/1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17162/1/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "neodigital__neo-m",
+      "insurer": "Neodigital",
+      "tariff": "Neo M",
+      "position": 23,
+      "hash": "panel:7540427a4266c66f",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/17515/1/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/17515/1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms",
+          "file": "Allgemeine_Versicherungsbedingungen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms/17515/1/Allgemeine_Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "interlloyd__eurosecureplus",
+      "insurer": "Interlloyd",
+      "tariff": "EurosecurePlus",
+      "position": 28,
+      "hash": "panel:b93d53b324561987",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/17645/1/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/17645/1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17645/1/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "vhv__exklusiv",
+      "insurer": "VHV",
+      "tariff": "Exklusiv",
+      "position": 33,
+      "hash": "panel:73fa71a356f385b8",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/15879/2/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/15879/3/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/15879/2/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "barmeniadirekt__topdirekt-mit-baustein-fuer-nebenberufliche-taetigkeit",
+      "insurer": "BarmeniaDirekt",
+      "tariff": "TopDirekt mit Baustein für nebenberufliche Tätigkeit",
+      "position": 38,
+      "hash": "panel:dbdc71b12c5d878c",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/17157/2/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/17157/1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17157/1/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "vhv__exklusiv-mit-best-leistungs-garantie",
+      "insurer": "VHV",
+      "tariff": "Exklusiv mit Best-Leistungs-Garantie",
+      "position": 44,
+      "hash": "panel:42ff254bac3bc35e",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/15874/2/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/15874/3/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/15874/2/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "janitos__onlinemax-mit-multi-garantie",
+      "insurer": "Janitos",
+      "tariff": "OnlineMax mit Multi-Garantie",
+      "position": 48,
+      "hash": "panel:f9c76ffb6038795c",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/12816/2/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/12816/2/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/12816/2/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "docura__protect",
+      "insurer": "DOCURA",
+      "tariff": "PROTECT",
+      "position": 52,
+      "hash": "panel:dc1e7af8ad8d5874",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/16306/1/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/16306/1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms",
+          "file": "Allgemeine_Versicherungsbedingungen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms/16306/1/Allgemeine_Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "terms_extra",
+          "file": "Besondere_Versicherungsbedingungen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_extra/16306/1/Besondere_Versicherungsbedingungen.pdf"
+        }
+      ]
     }
   ]
 }

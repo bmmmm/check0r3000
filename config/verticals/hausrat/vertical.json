@@ -1,6 +1,5 @@
 {
-  "_draft": true,
-  "_comment": "Scaffolded by new_vertical.py from probe evidence — curate before production.",
+  "_comment": "Scaffolded by new_vertical.py from probe evidence; curated to production 2026-08-28 (modules strict-boolean, taxonomy 100% mapped, golden invariants, external ratings).",
   "label": "Hausrat",
   "module_labels": {
     "feuer": "Feuer",

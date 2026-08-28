@@ -1,0 +1,123 @@
+{
+  "insurer": "Neodigital Versicherung AG",
+  "tariff": "NEO M 2025",
+  "stand": "2025",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null,
+      "note": "Familien- und Haushaltsvorstand, Dienstherr"
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "Nicht verantwortliche ehrenamtliche Tätigkeit"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungen, Einfamilienhäuser, Ferienhauser, Nebengebäude, Garagen, Pools, Anlagen erneuerbarer Energien"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Beschädigung gemieteter, geliehener, gepachteter Sachen in Wohnräumen"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Zahme Haustiere, gezähmte Kleintiere, Bienen, Signal-/Behindertenbegleithunde; nicht Hunde, Pferde, Rinder als Halter"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Fahrräder, Elektroräder, Modellfahrzeuge, begrenzt Segelboote, Motorboote; versicherungspflichtige Kraftfahrzeuge ausgeschlossen"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "Schäden aus Austausch, Übermittlung elektronischer Daten, Computerviren, Datenveränderung"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "Unbegrenzt innerhalb EU, bis 5 Jahre weltweit bei vorübergehendem Aufenthalt"
+    },
+    "umwelt": {
+      "included": true,
+      "level": null,
+      "note": "Umwelteinwirkungen, Gewässerschäden, Umweltschadengesetz, Heizöltank"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Unbegrenzt innerhalb EU; weltweit bis 5 Jahre bei vorübergehendem Auslandsaufenthalt",
+    "vertragslaufzeit": "Mindestens 1 Jahr; stillschweigende Verlängerung um jeweils 1 Jahr, täglich kündbar"
+  },
+  "leistungen": [
+    "Prüfung der Haftpflichtfrage",
+    "Abwehr unberechtigter Schadensersatzansprüche",
+    "Freistellung von berechtigten Schadensersatzverpflichtungen",
+    "Übernahme Anwaltskosten bei Gerichtsverfahren",
+    "Übernahme Verteidigungskosten bei Strafverfahren",
+    "Schlüsselverlust und Schlosswechselkosten",
+    "Kautionsleistung im Ausland bis 100.000 EUR",
+    "Beschädigung gemieteter Gegenstände bis 10.000 EUR",
+    "Gefälligkeitsverhältnis bis 10.000 EUR",
+    "Tagesmutter-/Babysitter-Haftung",
+    "Forderungsausfalldeckung (optional)"
+  ],
+  "ausschluesse": [
+    "Vorsätzlich herbeigeführte Schäden",
+    "Schäden aus Kenntnis von Mängeln",
+    "Ansprüche der Versicherten untereinander",
+    "Ansprüche gegen im gleichen Haushalt lebende Angehörige",
+    "Schäden an Leasingobjekten, gepachteten und geliehenem Eigentum",
+    "Schäden an hergestellten oder gelieferten Sachen",
+    "Gentechnik",
+    "Persönlichkeits- und Namensrechtsverletzungen",
+    "Anfeindung, Schikane, Belästigung, Diskriminierung",
+    "Übertragung von Krankheiten ohne Fahrlässigkeitsnachweis",
+    "Senkungen, Erdrutschungen, Überschwemmungen",
+    "Ionisierende Strahlen",
+    "Versicherungspflichtige Kraftfahrzeuge",
+    "Ungewöhnliche und gefährliche Beschäftigung",
+    "Verantwortliche Tätigkeit in Vereinigungen",
+    "Baufinanzierung, Patent-/Markenrecht"
+  ],
+  "besonderheiten": [
+    "Mehrere Tarif-Varianten (NEO S, M, L, Switch, XXL) mit unterschiedlichen Leistungen",
+    "Tägliches Kündigungsrecht für Versicherungsnehmer",
+    "Teilkündigungsrecht für einzelne Bausteine möglich",
+    "Zahlreiche optionale Leistungserweiterungen (Flugmodelle, Segelboote, Motorboote, Wildhaltung, Ferienhausvermietung)",
+    "Leistungsgarantie gegenüber GDV-Musterbedingungen (Stand April 2016)",
+    "Digitale Vertragsabwicklung über App",
+    "Erweiterte Vorsorgeversicherung für neue Risiken"
+  ],
+  "beitrag": null,
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "8e27ccb63dc7c32d9d1e762ecaa3af389540171dc13c2cff8c09ed991e214bdd"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "2fa36ef405f21c862951b2aa036be153ce26e3898c9420177f8b3e10103f057e"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "1100f67055f06cf1ca7359f835ac6c4f4a732508ac92d0500e623d63888bda9c"
+    }
+  ],
+  "_input_hash": "c996e13bdf69a54fbc6b6bc27de5e4256deb653818bf0d6fdae98a91fe3e8c18",
+  "_model": "haiku",
+  "_filter": "avb-filter"
+}

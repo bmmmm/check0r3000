@@ -1,0 +1,109 @@
+{
+  "insurer": "VHV Allgemeine Versicherung AG",
+  "tariff": "KLASSIK-GARANT EXKLUSIV",
+  "stand": "09.2024",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null
+    },
+    "immobilien": {
+      "included": true,
+      "level": null
+    },
+    "mietsache": {
+      "included": true,
+      "level": null
+    },
+    "tiere": {
+      "included": true,
+      "level": null
+    },
+    "verkehr": {
+      "included": true,
+      "level": null
+    },
+    "daten": {
+      "included": true,
+      "level": null
+    },
+    "ausland": {
+      "included": true,
+      "level": null
+    },
+    "umwelt": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "30 Mio. EUR oder 50 Mio. EUR (bei Personenschäden max. 15 Mio. EUR je Person)",
+    "selbstbeteiligung": "150 EUR bei Sachschäden",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Europa (Kontinent einschließlich außereuropäische Mittelmeer-Anrainer, Kanarische Inseln, Azoren, Madeira) ohne zeitliche Begrenzung; außerhalb Europas bis 5 Jahre",
+    "vertragslaufzeit": "1 Jahr mit automatischer jährlicher Verlängerung; Kündigung 3 Monate vor Ende"
+  },
+  "leistungen": [
+    "Prüfung der Haftpflichtfrage",
+    "Abwehr unberechtigter Schadensersatzansprüche",
+    "Freistellung von berechtigten Schadenersatzverpflichtungen",
+    "Summen- und Konditionsdifferenzdeckung (Sofortschutz) bis 12 Monate",
+    "Beitragsbefreiung bei Arbeitslosigkeit (max. 12 Monate)",
+    "Forderungsausfalldeckung bei gerichtlicher Geltendmachung",
+    "Rechtsschutz bei Forderungsausfall ab 2.500 EUR",
+    "Schlüsselverlust und Schlüsselfolgekosten",
+    "Kautionsleistung bei Schäden im Ausland bis 100.000 EUR"
+  ],
+  "ausschluesse": [
+    "vorsätzlich verursachte Schäden",
+    "Ansprüche zwischen Mitversicherten",
+    "berufliche und gewerbliche Tätigkeiten",
+    "versicherungspflichtige Kfz",
+    "versicherungspflichtige Luftfahrzeuge",
+    "ungewöhnliche und gefährliche Beschäftigung",
+    "Asbest und asbesthaltige Substanzen",
+    "Gentechnik",
+    "Krankheitsübertragung",
+    "Senkungen, Erdrutschungen und Überschwemmungen",
+    "ionisierende Strahlung",
+    "Produkthaftung"
+  ],
+  "besonderheiten": [
+    "LEISTUNGS-UPDATE-GARANTIE: zukünftige Leistungsverbesserungen automatisch gültig",
+    "Summen- und Konditionsdifferenzdeckung als Sofortschutz bis 12 Monate",
+    "Nebenberufliche Tätigkeiten bis 12.000 EUR Jahresumsatz versichert",
+    "Erweiterte Schlüsselverlust-Abdeckung einschließlich Folgekosten",
+    "Baumaßnahmen ohne Bausummenbegrenzung an selbstbewohnten Immobilien",
+    "Segelboote bis 25 qm und Motorboote bis 15 PS versichert",
+    "Kein Einwand wegen Deliktunfähigkeit bei Mitversicherten",
+    "Gegenseitige Ansprüche mitversicherter Personen versichert (Sachschäden bis 10.000 EUR bei gerichtlicher Geltendmachung)",
+    "Nachversicherungsschutz bei Entfall von Mitversicherungsvoraussetzungen (mind. 12 Monate)"
+  ],
+  "beitrag": null,
+  "_input_hash": "618bd1d0e3a8646879025f527c3c270644c6fe5b1b22164f7980f4cf7f76e0af",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "cc43618a33f9fb37f42bf01916c758669fdac0ab6dff9467f4812c5562b5308d"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "8dfb52003365a7e2aee34265011989d9c937623b6b1a3b96e49ec580148986df"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "09dc60ce915027c79e71694ba07e6b857c48468a0735cd57fe4b8e3106b2fccd"
+    }
+  ]
+}

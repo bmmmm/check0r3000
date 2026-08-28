@@ -1,6 +1,5 @@
 {
-  "_draft": true,
-  "_comment": "Scaffolded by new_vertical.py from probe evidence — curate before production. Module descriptions from the draft: privat: Private Haftung (Grundversicherung); haushalt: Haushalt & Familie; ehrenamt: Ehrenamtliche Tätigkeiten; immobilien: Haus- und Grundbesitz; mietsache: Mietsachschäden; tiere: Tierhalterhaftung; verkehr: Nicht-KFZ Verkehr; daten: Elektronische Daten; ausland: Auslandsdeckung; umwelt: Umwelthaftung",
+  "_comment": "Scaffolded by new_vertical.py from probe evidence; curated to production 2026-08-28 (modules strict-boolean, taxonomy 100% mapped, golden invariants, external ratings). Module descriptions: privat: Private Haftung (Grundversicherung); haushalt: Haushalt & Familie; ehrenamt: Ehrenamtliche Tätigkeiten; immobilien: Haus- und Grundbesitz; mietsache: Mietsachschäden; tiere: Tierhalterhaftung; verkehr: Nicht-KFZ Verkehr; daten: Elektronische Daten; ausland: Auslandsdeckung; umwelt: Umwelthaftung",
   "label": "Privathaftpflicht",
   "module_labels": {
     "privat": "Privat",

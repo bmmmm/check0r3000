@@ -1,0 +1,108 @@
+{
+  "insurer": "Interlloyd Versicherungs-AG",
+  "tariff": "Eurosecure Plus",
+  "stand": "07.2025",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Haftung aus Verantwortung für Familie und Haushalt mitversichert"
+    },
+    "haushalt": {
+      "included": true,
+      "level": null,
+      "note": "Aufsichtspflicht über Minderjährige mitversichert"
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "Nicht-verantwortliche ehrenamtliche Tätigkeit oder Freiwilligenarbeit"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Ein selbstgenutztes Einfamilienhaus inklusive Einliegerwohnung; Wohnungen; Grundstücke bis 5.000 qm in Deutschland"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Mietsachschäden an gemieteten privaten Räumlichkeiten; Inventar von Ferienwohnungen"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Zahme Haustiere, Nutztiere zu eigenwirtschaftlichen Zwecken; Hunde ausgeschlossen (außer Assistenzhunde)"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Radfahrer (auch E-Bikes); Mallorca-Deckung für Mietwagen; Fußgänger"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "Internetnutzung; Schäden durch elektronischen Datenaustausch"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "Unbegrenzt innerhalb Europa; weltweit bis zu 5 Jahren bei vorübergehendem Aufenthalt"
+    },
+    "umwelt": {
+      "included": true,
+      "level": null,
+      "note": "Allgemeine Umweltrisiken und häusliche Abwässer mitversichert"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "40 Mio. EUR",
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein)",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Europa und Anrainerstaaten des Mittelmeers; weltweit temporär bis 5 Jahre",
+    "vertragslaufzeit": "1 oder 3 Jahre"
+  },
+  "leistungen": [
+    "Prüfung der Haftpflichtfrage",
+    "Abwehr unberechtigter Ansprüche",
+    "Zahlung berechtigter Schadensersatzansprüche",
+    "Kautionsstellung zur Sicherstellung von Leistungen (bis 200.000 EUR innerhalb Europa)",
+    "Kautionsstellung zur einstweiligen Verschonung von Strafverfolgungsmaßnahmen",
+    "Kosten der Verteidigung bei Strafverfahren"
+  ],
+  "ausschluesse": [
+    "Vorsätzlich herbeigeführte Schäden",
+    "Ansprüche zwischen mitversicherten Personen",
+    "Schäden durch Kraftfahrzeuggebrauch (versicherungspflichte Fahrzeuge)",
+    "Halten von Hunden und Pferden (ausgenommen Assistenzhunde)",
+    "Berufliche oder gewerbliche Tätigkeiten (soweit nicht ausdrücklich mitversichert)",
+    "Asbest-bedingte Schäden",
+    "Senkungen, Erdrutschungen, Überschwemmungen",
+    "Strahlung (ionisierende Strahlen)"
+  ],
+  "besonderheiten": [
+    "Leistungsgarantie gegenüber GDV-Musterbedingungen",
+    "Bestleistungsgarantie (Versicherer zahlt Leistungen anderer Versicherer, falls diese besser sind)",
+    "Beitragsgarantie für maximal 5 Versicherungsjahre",
+    "Vorsorgeversicherung für neu hinzukommende Risiken",
+    "Versicherungsschutz beginnt nach Zahlung des Erstbeitrags"
+  ],
+  "beitrag": null,
+  "_input_hash": "be725a135910fe4b8eb42726875958a60a2db15ea500dfdbe67b074acf93ca8e",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "c060c70165136eebf6bc34b9b4298627e6dfee70f3a00bd747b88544de53db7a"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "1cae236f8a0fa5388a20e0c478517c14ede8ec909b87086d6222cf4b0fd34e0b"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "9c813b55cb6ed0baab63b5e5e3f31785bc7f4208c415d46b94371cf7e1a1755d"
+    }
+  ]
+}

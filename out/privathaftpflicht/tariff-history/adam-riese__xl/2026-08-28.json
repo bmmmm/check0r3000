@@ -1,0 +1,108 @@
+{
+  "stand": "01.05.2023",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null,
+      "note": "Familienvorstand, Haushaltsvorstand, Aufsichtspflicht"
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "ehrenamtliche Tätigkeiten, Freiwilligenarbeit, Vereinsarbeit"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungen, Einfamilienhaus, Ferienwohnungen, bis 3 Mietwohnungen, Bauvorhaben bis 200.000 EUR"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Mietsachschäden Wohnräume, Ferienwohnungen, Möbel; 250 EUR Selbstbeteiligung"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "zahme Haustiere, Kleintiere, Bienen; ausgeschlossen Hunde, Pferde, Rinder, Wildtiere, gewerbliche Tiere"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Radfahren, Fahrräder, Pedelecs bis 25 km/h, Sportausübung, Mietwagen-Mallorca-Deckung EU/EFTA"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "elektronischer Datenaustausch, Datenveränderung durch Viren/Schadprogramme; weltweit außer USA/Kanada"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "weltweiter Schutz bis 5 Jahre, EU/EFTA ohne zeitliche Begrenzung; Kaution bis 200.000 EUR"
+    },
+    "umwelt": {
+      "included": true,
+      "level": null,
+      "note": "Allgemeines Umweltrisiko, Gewässerschäden, USchadG-Sanierung; Kleingebinde bis 1.000 l/kg"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein); Mietsachschäden Ferienwohnungen/fremde Sachen: 250 EUR",
+    "wartezeit_monate": null,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "weltweit; EU/EFTA ohne zeitliche Begrenzung; temporär weltweit bis 5 Jahre; USA/Kanada teilweise ausgeschlossen",
+    "vertragslaufzeit": "1 Jahr, danach automatische jährliche Verlängerung"
+  },
+  "leistungen": [
+    "Haftungsprüfung und Abwehr unberechtigter Ansprüche",
+    "Freistellung von berechtigten Schadensersatzforderungen",
+    "Rechtsbeistand und Prozessführung",
+    "Übernahme strafrechtlicher Verteidigungskosten",
+    "Forderungsausfalldeckung bei Zahlungsunfähigkeit des Schädigers",
+    "Kautionsleistung im Ausland bis 200.000 EUR",
+    "Schlüsselverlust mit Objektschutz bis 14 Tage",
+    "Kostenersatz für Notfallhelfer",
+    "Umweltschadens-Sanierung nach USchadG",
+    "Benachteiligungshaftung bis 2.000.000 EUR"
+  ],
+  "ausschluesse": [
+    "Vorsätzlich herbeigeführte Schäden",
+    "Berufliche, gewerbliche, dienstliche oder amtliche Tätigkeiten",
+    "Kraftfahrzeuge (außer nicht versicherungspflichtige und Mietwagen EU/EFTA)",
+    "Hunde, Pferde, Rinder, Wildtiere, gewerblich gehaltene Tiere",
+    "Ungewöhnliche und gefährliche Beschäftigungen",
+    "Verantwortliche Vereinstätigkeiten (außer genannte ehrenamtliche Arbeit)",
+    "Ansprüche zwischen Versicherten",
+    "Asbest und asbesthaltige Substanzen",
+    "Gentechnisch veränderte Organismen",
+    "Übertragung von Krankheiten",
+    "Senkungen, Erdrutschungen, Überschwemmungen",
+    "Ionisierende Strahlung",
+    "Kriegsereignisse, Terror, Streik, Aufruhr"
+  ],
+  "besonderheiten": [
+    "Umfangreiche ehrenamtliche Tätigkeits-Deckung inkl. Vereinsarbeit",
+    "Tageseltern, Babysitter und Au-Pair speziell versichert",
+    "Forderungsausfalldeckung mit 1.000 EUR Selbstbeteiligung",
+    "Schlüsselverlust-Leistung mit Objektschutz und Notschloss-Kosten",
+    "Benachteiligungshaftung für diskriminierungsbedingte Schäden",
+    "Umweltschadens-Haftung gemäß Umweltschadensgesetz",
+    "Beitragsfreistellung bei unverschuldeter Arbeitslosigkeit bis 12 Monate",
+    "Update-Garantie: automatische Verbesserungen ohne Aufpreis",
+    "Mallorca-Deckung für angemietete Fahrzeuge in EU/EFTA",
+    "Ersthelferschutz bei Notfallsituationen"
+  ],
+  "beitrag": null,
+  "insurer": "Württembergische Versicherung AG",
+  "tariff": "Adam Riese XL",
+  "stem": "adam-riese__xl",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "d11dddc2381fec90f268b466460bd708a4e4d7b9498f7f386fa71a17cd3250cd",
+  "_supersedes": null
+}

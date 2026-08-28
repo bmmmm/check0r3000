@@ -1,0 +1,97 @@
+{
+  "stand": "09/2021",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null
+    },
+    "immobilien": {
+      "included": true,
+      "level": null
+    },
+    "mietsache": {
+      "included": true,
+      "level": null
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Zahme Haustiere (z.B. Katzen) und Fremdhaltung versichert; Eigenhaltung Hunde/Pferde ausgeschlossen"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Radfahren inkl. Pedelecs bis 25 km/h versichert; Kraftfahrzeuge größtenteils ausgeschlossen"
+    },
+    "daten": {
+      "included": true,
+      "level": null
+    },
+    "ausland": {
+      "included": true,
+      "level": null
+    },
+    "umwelt": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "weltweit; temporär außerhalb Europas bis 5 Jahre; unbegrenzt innerhalb Europas",
+    "vertragslaufzeit": null
+  },
+  "leistungen": [
+    "Forderungsausfallschutz (bis 150.000 EUR)",
+    "Schadenersatzrechtsschutz",
+    "Ehrenamt",
+    "Mietsachschäden",
+    "Schlüsselverlust",
+    "Elektronische Daten und Internet",
+    "Tagesmutter/Babysitter",
+    "Sport und Radfahren",
+    "Wasserfahrzeuge",
+    "Drohnen bis 500g",
+    "Photovoltaikanlagen",
+    "Flächengeothermie"
+  ],
+  "ausschluesse": [
+    "Berufliche Tätigkeiten (mit Ausnahmen)",
+    "Kraftfahrzeuge (mit Ausnahmen)",
+    "Eigenhaltung Hunde und Pferde",
+    "Vorsätzlich verursachte Schäden",
+    "Ansprüche zwischen mitversicherten Personen",
+    "Geothermie-Anlagen mit Bohrung",
+    "Senkungen, Erdrutschungen, Überschwemmungen",
+    "Asbest",
+    "Gentechnik",
+    "Persönlichkeitsrechtsverletzungen"
+  ],
+  "besonderheiten": [
+    "Forderungsausfallschutz bis 150.000 EUR inklusive",
+    "Opferschutz bei vorsätzlicher Handlung des Schädigers",
+    "Spezial-Schadenersatzrechtsschutz via ROLAND",
+    "Vorsorgeversicherung für neu entstehende Risiken",
+    "Ansprüche gegen deliktsunfähige Personen bis 100.000 EUR",
+    "Heizöltank für Erstwohnsitz versichert",
+    "Erweiterte Mitversicherung bei Familie/Partnerschaft"
+  ],
+  "beitrag": null,
+  "insurer": "Barmenia Allgemeine Versicherungs-AG",
+  "tariff": "TopDirekt",
+  "stem": "barmeniadirekt__topdirekt",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "9f5f5f6d9dff8fa6a30feea65b488dfb95b652ccbb37541b84e836b1592aec6e",
+  "_supersedes": null
+}

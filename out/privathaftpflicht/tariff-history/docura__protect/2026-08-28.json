@@ -1,0 +1,103 @@
+{
+  "stand": "01/2021",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "Gesetzliche Haftpflicht aus Gefahren des täglichen Lebens als Privatperson"
+    },
+    "haushalt": {
+      "included": true,
+      "level": null,
+      "note": "Familie und Haushaltsvorstand, Dienstherr im Haushalt tätiger Personen"
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "Ehrenamtliche Tätigkeit und Freiwilligenarbeit, auch als Betreuer oder Vormund"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohneinheiten, Grundbesitz, Ferienhäuser, Vermietung bis Europa"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Mietsachschäden an Räumen, Gebäuden und beweglichen Sachen"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Zahme Haustiere, Kleintiere, auch wilde Kleintiere im Haushalt"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Nicht versicherungspflichtige Fahrzeuge, Boote bis 15 PS, Flugmodelle"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "Elektronischer Datenaustausch und Internetnutzung"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "Europa unbegrenzt, außerhalb bis 5 Jahre"
+    },
+    "umwelt": {
+      "included": true,
+      "level": null,
+      "note": "Allgemeines Umweltrisiko und Gewässerschäden"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "25000000 EUR oder 50000000 EUR",
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein)",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Europa ohne Begrenzung; außerhalb Europas vorübergehend bis 5 Jahre",
+    "vertragslaufzeit": "mindestens 1 Jahr, Verlängerung jeweils um 1 Jahr"
+  },
+  "leistungen": [
+    "Persönlichkeits- und Namensrechtsverletzungen bis 1 Mio. EUR",
+    "Neuwertentschädigung bis 10000 EUR",
+    "Beschädigung fremder Sachen bis 25000 EUR",
+    "Be- und Entladeschäden bis 10000 EUR",
+    "Betankungsschäden bis 10000 EUR",
+    "Forderungsausfalldeckung",
+    "Schäden bei Benachteiligung nach AGG",
+    "Abhandenkommen von Schlüsseln",
+    "Wilde Kleintiere mit Einfangkosten bis 10000 EUR",
+    "Vermietung von Immobilien",
+    "Motorboote bis 15 PS"
+  ],
+  "ausschluesse": [
+    "Vorsätzlich herbeigeführte Schäden",
+    "Versicherungspflichtige Kraftfahrzeuge",
+    "Luftfahrzeuge und Raumfahrzeuge",
+    "Schäden durch Asbest",
+    "Gentechnisch veränderte Organismen",
+    "Kriegsereignisse und höhere Gewalt",
+    "Senkungen, Erdrutschungen, Überschwemmungen",
+    "Schäden durch Krankheitsübertragung (außer Unverantwortlichkeit nachgewiesen)",
+    "Ansprüche der Versicherten untereinander (ausgenommen per A1-2.5)",
+    "Schäden aus Asbest, Strahlen, Gentechnik"
+  ],
+  "besonderheiten": [
+    "Besitzstandsgarantie bei Tarifwechsel",
+    "Innovationsgarantie für zukünftige Bedingungsverbesserungen ohne Mehrpreis",
+    "Leistungsversprechen entsprechend GDV-Musterbedingungen",
+    "Weltweit gültig",
+    "Kein Einwand fehlender Haftung bei Gefälligkeitsschäden bis 20000 EUR",
+    "Mitversicherung von Ehepartner, Kindern, Eltern und vorübergehenden Haushaltsmitgliedern"
+  ],
+  "beitrag": null,
+  "insurer": "DOCURA VVaG",
+  "tariff": "Privathaftpflicht PROTECT 2020",
+  "stem": "docura__protect",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "c1d141e67bfdd02edb868e76095d1c0aa6a4842cb64653170e7053438ab2164e",
+  "_supersedes": null
+}

@@ -1,0 +1,120 @@
+{
+  "insurer": "Janitos Versicherung AG",
+  "tariff": "onlineMax mit Multi-Garantie",
+  "stand": "01.07.2018",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null,
+      "note": "Haushaltsangestellte, Eigentümer- und Mieter-Haftpflicht"
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "Ehrenamtliche Tätigkeit und unentgeltliche Freiwilligenarbeit"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungen, Häuser, unbebaute Grundstücke (Vermieter/Eigentümer)"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Schäden an gemieteten unbeweglichen Sachen und beweglichem Inventar"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Haustiere, Hunde (nicht versicherungspflichtige), Kleintiere"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Fahrräder eingeschlossen; Kraftfahrzeuge auf öffentlichen Wegen ausgeschlossen"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "Elektronischer Datenaustausch, Internet-Haftpflicht"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "Europa + Mittelmeeranrainer; außereuropäisches Ausland bei vorübergehendem Aufenthalt"
+    },
+    "umwelt": {
+      "included": true,
+      "level": null,
+      "note": "Restrisiko-Gewässerschaden, USchadG-Pflichten (eingeschränkt)"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Inland und Europa; außereuropäisches Ausland bei vorübergehendem Aufenthalt",
+    "vertragslaufzeit": "mind. 1 Jahr, automatische Verlängerung um jeweils 1 Jahr"
+  },
+  "leistungen": [
+    "Kautionsstellung bis EUR 150.000",
+    "Schlüsselverlustrisiko bis EUR 200.000",
+    "Forderungsausfallrisiko (Schutz bei nicht zahlungsfähigem Schädiger)",
+    "Mietsachschäden an unbeweglichen Sachen und Inventar",
+    "Neuwertentschädigung für beschädigte Sachen",
+    "Elektronischer Datenaustausch / Internetnutzung",
+    "Persönlichkeits- und Namensrechtsschutz",
+    "Schlüsselverlust privat und beruflich",
+    "Belade- und Entladeschäden am Kfz",
+    "Ehrenamtliche Tätigkeit und Freiwilligenarbeit",
+    "Vorsorgeversicherung für neue Risiken",
+    "Multi-Garantie (Marktgarantie, Vorversicherergarantie, Individualgarantie)"
+  ],
+  "ausschluesse": [
+    "Vorsätzlich herbeigeführte Schäden",
+    "Versicherungspflichtige Kraftfahrzeuge auf öffentlichen Wegen",
+    "Hauptberufliche oder gewerbliche Tätigkeit (ausgenommen spezifische BBR-Module)",
+    "Abnutzung, Verschleiß, übermäßige Beanspruchung",
+    "Asbestschäden",
+    "Schäden durch Radioaktivität",
+    "Gentechnische Arbeiten und Organismen",
+    "Abwässer (außer häusliche Abwässer)",
+    "Kriegsereignisse, höhere Gewalt",
+    "Umweltschäden nach USchadG (mit Ausnahmen Restrisiko)",
+    "Schimmelbildung (bei standardmäßigen Mietsachschäden, nicht bei Check24-Zusatzbedingungen)"
+  ],
+  "besonderheiten": [
+    "Umfassende Familienversicherung (Ehegatte, Partner Lebensgemeinschaft, Kinder bis 30, Angehörige)",
+    "Multi-Garantie-Paket mit Marktgarantie, Vorversicherergarantie, Individualgarantie",
+    "Neutarif-Garantie (bessere Leistungen neuer Generationen)",
+    "Leistungsgarantie vs. GDV-Musterbedingungen",
+    "Innovationsupdate (automatische Vorteils-Updates ohne Mehrprämie)",
+    "Check24-Zusatzbedingungen mit erweiterten Leistungen (z.B. Schimmelbildung bei Mietsachschäden)",
+    "Optional: Zusatzpaket Online-Schutz (Cyber-Mobbing, Datamissbrauch, Identitätsdiebstahl, Online-Handlerskonflikte)",
+    "Weltweiter Versicherungsschutz mit eingeschränkter ausländischer Geltung"
+  ],
+  "beitrag": null,
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "4f731b79e94d267ed5d07989fc351615e592a868d77f24b755122abceb102888"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "55f05455947b4af5b20947cf9222e7c4724f8ea780cdd4a92f53cf7e7dd5d6e4"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "8a843823018caa06a5ec3c9db9d731ed8425c531405f5f8c63bcd7010e94d5dc"
+    }
+  ],
+  "_input_hash": "55ec99e0c867dae839a15f27a8539af0f2eae577189fb1ba5168c4247522f9ba",
+  "_model": "haiku",
+  "_filter": "avb-filter"
+}

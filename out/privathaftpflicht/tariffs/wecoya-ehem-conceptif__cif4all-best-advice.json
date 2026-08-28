@@ -1,0 +1,107 @@
+{
+  "insurer": "WECOYA PRIVATE & COMMERCIAL Underwriting GmbH",
+  "tariff": "CIF4ALL best advice",
+  "stand": "01.01.2023",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null
+    },
+    "immobilien": {
+      "included": true,
+      "level": null
+    },
+    "mietsache": {
+      "included": true,
+      "level": null
+    },
+    "tiere": {
+      "included": true,
+      "level": null
+    },
+    "verkehr": {
+      "included": true,
+      "level": null
+    },
+    "daten": {
+      "included": true,
+      "level": null
+    },
+    "ausland": {
+      "included": true,
+      "level": null
+    },
+    "umwelt": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "1.000.000 EUR Personenschäden / 300.000 EUR Sachschäden",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "weltweit; unbegrenzt für vorübergehende Auslandsaufenthalte",
+    "vertragslaufzeit": "mindestens 1 Jahr mit automatischer Verlängerung"
+  },
+  "leistungen": [
+    "Haftungsprüfung und Rechtsschutz bei unberechtigten Ansprüchen",
+    "Abwehr unbegründeter Schadensersatzforderungen",
+    "Prozessführung durch Versicherer",
+    "Schlüsselverlust (Schlossauswechselung)",
+    "Kautionsleistung bis 250.000 EUR",
+    "Neuwertentschädigung bis 3.000 EUR pro Fall",
+    "Forderungsausfalldeckung",
+    "Elektronischer Datenaustausch versichert",
+    "Umweltschadendeckung",
+    "Persönlichkeits-/Namensrechtsverletzungen",
+    "Diskriminierungsschutz"
+  ],
+  "ausschluesse": [
+    "Berufliche und gewerbliche Tätigkeiten",
+    "Versicherungspflichtige Kraft-/Luft-/Wasserfahrzeuge",
+    "Hunde und Pferde",
+    "Vertragliche Haftung über gesetzliche Haftung hinaus",
+    "Ansprüche zwischen Mitversicherten und Angehörigen",
+    "Bestimmte Vermögensschäden",
+    "Auslandschadenersatz mit Ausnahmen",
+    "Umweltschäden nach UmweltschadensG mit Ausnahmen",
+    "Asbestschäden",
+    "Ionisierende Strahlung",
+    "Gentechnische Arbeiten und GVO",
+    "Hochwasserschäden",
+    "Krankheitsübertragung"
+  ],
+  "besonderheiten": [
+    "Best-Leistungsgarantie bei besseren Angeboten anderer Versicherer",
+    "Tarifvarianten: Single, Senioren, Familie mit/ohne Kinder",
+    "Beitragsbefreiung bei Arbeitslosigkeit (max. 3x während Laufzeit)",
+    "Besitzstandsgarantie bei Versicherungswechsel",
+    "Rabattrückstufung bei Schäden mit Fremdfahrzeugen versichert",
+    "Betankungsschäden bei Leihfahrzeugen versichert",
+    "Gewässerschadendeckung mit separaten Bedingungen",
+    "Dienst-/Amtshaftpflicht als Zusatzdeckung optional"
+  ],
+  "beitrag": null,
+  "_input_hash": "5dea6ced65c3076776c8e3a10e52857e7d873bfd523cee57d658f3ee6f674236",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "6dd6aa71a9b608e3dc2cb147fe8b9a8e5ada6c174a23a027cf57623ff47cc025"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "e3c89d179f150963240e9b7434b005a7895ee1908535d03782fbd2b6dfee9008"
+    }
+  ]
+}

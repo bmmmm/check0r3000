@@ -1,0 +1,110 @@
+{
+  "insurer": "Barmenia Allgemeine Versicherungs-AG",
+  "tariff": "TopDirekt",
+  "stand": "09/2021",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null
+    },
+    "immobilien": {
+      "included": true,
+      "level": null
+    },
+    "mietsache": {
+      "included": true,
+      "level": null
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Zahme Haustiere (z.B. Katzen) und Fremdhaltung versichert; Eigenhaltung Hunde/Pferde ausgeschlossen"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Radfahren inkl. Pedelecs bis 25 km/h versichert; Kraftfahrzeuge größtenteils ausgeschlossen"
+    },
+    "daten": {
+      "included": true,
+      "level": null
+    },
+    "ausland": {
+      "included": true,
+      "level": null
+    },
+    "umwelt": {
+      "included": true,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "weltweit; temporär außerhalb Europas bis 5 Jahre; unbegrenzt innerhalb Europas",
+    "vertragslaufzeit": null
+  },
+  "leistungen": [
+    "Forderungsausfallschutz (bis 150.000 EUR)",
+    "Schadenersatzrechtsschutz",
+    "Ehrenamt",
+    "Mietsachschäden",
+    "Schlüsselverlust",
+    "Elektronische Daten und Internet",
+    "Tagesmutter/Babysitter",
+    "Sport und Radfahren",
+    "Wasserfahrzeuge",
+    "Drohnen bis 500g",
+    "Photovoltaikanlagen",
+    "Flächengeothermie"
+  ],
+  "ausschluesse": [
+    "Berufliche Tätigkeiten (mit Ausnahmen)",
+    "Kraftfahrzeuge (mit Ausnahmen)",
+    "Eigenhaltung Hunde und Pferde",
+    "Vorsätzlich verursachte Schäden",
+    "Ansprüche zwischen mitversicherten Personen",
+    "Geothermie-Anlagen mit Bohrung",
+    "Senkungen, Erdrutschungen, Überschwemmungen",
+    "Asbest",
+    "Gentechnik",
+    "Persönlichkeitsrechtsverletzungen"
+  ],
+  "besonderheiten": [
+    "Forderungsausfallschutz bis 150.000 EUR inklusive",
+    "Opferschutz bei vorsätzlicher Handlung des Schädigers",
+    "Spezial-Schadenersatzrechtsschutz via ROLAND",
+    "Vorsorgeversicherung für neu entstehende Risiken",
+    "Ansprüche gegen deliktsunfähige Personen bis 100.000 EUR",
+    "Heizöltank für Erstwohnsitz versichert",
+    "Erweiterte Mitversicherung bei Familie/Partnerschaft"
+  ],
+  "beitrag": null,
+  "_input_hash": "7b4824ceb9b9cdba83ed0917bf7d4f2c0b0fcfb792cb9372d010f2aa4cb63859",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "3c1a30fc2c26bf0c165b94a554c7b770b908b5588ca5348aa3d1c397d0f81fcf"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "a9901f20890e446c8a5f9f0acbf49dff6bb10333b4864cc85f75f82c8c338f3c"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "c61e67157e708a3a868802005296d7888dc84106741e74a41260003ee6aaf9a4"
+    }
+  ]
+}

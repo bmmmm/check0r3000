@@ -12,13 +12,13 @@
       "label": "Hausrat",
       "host": "https://hausratversicherungen.check24.de",
       "funnel_path": "/hausrat/vergleichsergebnis/",
-      "status": "experimental"
+      "status": "production"
     },
     "privathaftpflicht": {
       "label": "Privathaftpflicht",
       "host": "https://privathaftpflicht.check24.de",
       "funnel_path": "/privathaftpflicht/vergleichsergebnis/",
-      "status": "experimental"
+      "status": "production"
     }
   }
 }

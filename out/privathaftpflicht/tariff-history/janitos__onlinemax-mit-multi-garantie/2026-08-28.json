@@ -1,0 +1,107 @@
+{
+  "stand": "01.07.2018",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "haushalt": {
+      "included": true,
+      "level": null,
+      "note": "Haushaltsangestellte, Eigentümer- und Mieter-Haftpflicht"
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "Ehrenamtliche Tätigkeit und unentgeltliche Freiwilligenarbeit"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungen, Häuser, unbebaute Grundstücke (Vermieter/Eigentümer)"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Schäden an gemieteten unbeweglichen Sachen und beweglichem Inventar"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Haustiere, Hunde (nicht versicherungspflichtige), Kleintiere"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Fahrräder eingeschlossen; Kraftfahrzeuge auf öffentlichen Wegen ausgeschlossen"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "Elektronischer Datenaustausch, Internet-Haftpflicht"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "Europa + Mittelmeeranrainer; außereuropäisches Ausland bei vorübergehendem Aufenthalt"
+    },
+    "umwelt": {
+      "included": true,
+      "level": null,
+      "note": "Restrisiko-Gewässerschaden, USchadG-Pflichten (eingeschränkt)"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Inland und Europa; außereuropäisches Ausland bei vorübergehendem Aufenthalt",
+    "vertragslaufzeit": "mind. 1 Jahr, automatische Verlängerung um jeweils 1 Jahr"
+  },
+  "leistungen": [
+    "Kautionsstellung bis EUR 150.000",
+    "Schlüsselverlustrisiko bis EUR 200.000",
+    "Forderungsausfallrisiko (Schutz bei nicht zahlungsfähigem Schädiger)",
+    "Mietsachschäden an unbeweglichen Sachen und Inventar",
+    "Neuwertentschädigung für beschädigte Sachen",
+    "Elektronischer Datenaustausch / Internetnutzung",
+    "Persönlichkeits- und Namensrechtsschutz",
+    "Schlüsselverlust privat und beruflich",
+    "Belade- und Entladeschäden am Kfz",
+    "Ehrenamtliche Tätigkeit und Freiwilligenarbeit",
+    "Vorsorgeversicherung für neue Risiken",
+    "Multi-Garantie (Marktgarantie, Vorversicherergarantie, Individualgarantie)"
+  ],
+  "ausschluesse": [
+    "Vorsätzlich herbeigeführte Schäden",
+    "Versicherungspflichtige Kraftfahrzeuge auf öffentlichen Wegen",
+    "Hauptberufliche oder gewerbliche Tätigkeit (ausgenommen spezifische BBR-Module)",
+    "Abnutzung, Verschleiß, übermäßige Beanspruchung",
+    "Asbestschäden",
+    "Schäden durch Radioaktivität",
+    "Gentechnische Arbeiten und Organismen",
+    "Abwässer (außer häusliche Abwässer)",
+    "Kriegsereignisse, höhere Gewalt",
+    "Umweltschäden nach USchadG (mit Ausnahmen Restrisiko)",
+    "Schimmelbildung (bei standardmäßigen Mietsachschäden, nicht bei Check24-Zusatzbedingungen)"
+  ],
+  "besonderheiten": [
+    "Umfassende Familienversicherung (Ehegatte, Partner Lebensgemeinschaft, Kinder bis 30, Angehörige)",
+    "Multi-Garantie-Paket mit Marktgarantie, Vorversicherergarantie, Individualgarantie",
+    "Neutarif-Garantie (bessere Leistungen neuer Generationen)",
+    "Leistungsgarantie vs. GDV-Musterbedingungen",
+    "Innovationsupdate (automatische Vorteils-Updates ohne Mehrprämie)",
+    "Check24-Zusatzbedingungen mit erweiterten Leistungen (z.B. Schimmelbildung bei Mietsachschäden)",
+    "Optional: Zusatzpaket Online-Schutz (Cyber-Mobbing, Datamissbrauch, Identitätsdiebstahl, Online-Handlerskonflikte)",
+    "Weltweiter Versicherungsschutz mit eingeschränkter ausländischer Geltung"
+  ],
+  "beitrag": null,
+  "insurer": "Janitos Versicherung AG",
+  "tariff": "onlineMax mit Multi-Garantie",
+  "stem": "janitos__onlinemax-mit-multi-garantie",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "4f67808b8c80e4a6d85398b1d9cc68b827259644d4558118be2d6eda525ecbe7",
+  "_supersedes": "2026-08-28"
+}
