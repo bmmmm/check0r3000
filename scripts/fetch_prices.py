@@ -238,6 +238,15 @@ def main() -> int:
                     help="parse this saved HTML instead of fetching (offline testing)")
     args = ap.parse_args()
 
+    # flow=panel verticals (hausrat, phv) render their result list entirely
+    # client-side — the SSR HTML carries ZERO tariff cards (measured 2026-08-28:
+    # 3.4 MB of HTML, 0 result_tile markers), so a browserless price scan is
+    # structurally impossible there, not merely flaky. Refuse with the actual
+    # alternative instead of retrying into IncompleteRead noise.
+    if (_vertical.vertical_config().get("harvest") or {}).get("flow") == "panel":
+        sys.exit(f"vertical {_vertical.active()!r} serves no SSR tariff list — "
+                 "prices need the browser scan: scripts/fetch_ratings.py --snapshot")
+
     if args.html:
         html = Path(args.html).read_text(encoding="utf-8", errors="ignore")
     else:

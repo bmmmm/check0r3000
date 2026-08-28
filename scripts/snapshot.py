@@ -229,8 +229,10 @@ def main() -> int:
     ap.add_argument("rows", nargs="?", help="scraped rows (.json array or .psv) to snapshot")
     ap.add_argument("--date", help="snapshot date YYYY-MM-DD (default: today)")
     ap.add_argument("--label", help="profile label stored in the snapshot")
-    ap.add_argument("--source", default="check24 rsv vergleichsergebnis (all insurers)",
-                    help="provenance label")
+    ap.add_argument("--source",
+                    default=(f"check24 {_vertical.active()} vergleichsergebnis "
+                             "(all insurers)"),
+                    help="provenance label (default names the active vertical)")
     ap.add_argument("--force", action="store_true",
                     help="write the snapshot even when it is identical to the previous one")
     ap.add_argument("--diff", nargs=2, metavar=("OLD", "NEW"), help="diff two snapshot files")

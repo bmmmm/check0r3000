@@ -67,6 +67,7 @@ SCRAPE_JS = SCRIPTS / "check24_scrape.js"
 # doctype agrees with how fetch_docs --into-raw names the file (tariff_terms_extra ->
 # avb_besondere, not the JS's lossy "avb"). Both modules are stdlib-only, no side effects.
 sys.path.insert(0, str(SCRIPTS))
+import _scan  # noqa: E402  — shared virtualized-list scan helpers (panel flow)
 import _vertical  # noqa: E402  — active vertical's harvest spec (vertical.json)
 from tui_data import _slug  # noqa: E402
 from fetch_docs import KIND_TO_DOCTYPE  # noqa: E402
@@ -510,19 +511,8 @@ async def harvest_panel(url: str, args, existing_by_hash: dict, existing_by_stem
                                       viewport={"width": 1366, "height": 950})
         await page.goto(url, wait_until="domcontentloaded", timeout=60_000)
         await page.wait_for_timeout(3500)
-        # Overlay dismissal, best effort (absent once accepted / on some loads):
-        # the cookie consent, then the "OK, Infos erhalten" info layer some
-        # verticals (phv) put over the fresh result list — either can block
-        # scroll-driven lazy-mounting below.
-        for click in (
-            lambda: page.locator(".c24-cookie-consent-functional").click(timeout=3000),
-            lambda: page.get_by_text("OK, Infos erhalten").first.click(timeout=4000),
-        ):
-            try:
-                await click()
-                await page.wait_for_timeout(1200)
-            except Exception:
-                pass
+        # Consent/info layers can block scroll-driven lazy-mounting below.
+        await _scan.dismiss_overlays(page)
         # An incomplete query profile can bounce the GET back to the input funnel —
         # say so explicitly instead of scraping the wrong page.
         landed = urlsplit(page.url)
@@ -535,38 +525,8 @@ async def harvest_panel(url: str, args, existing_by_hash: dict, existing_by_stem
             print(f"  ! no {card_sel!r} card appeared — result list did not load",
                   file=sys.stderr)
 
-        # The result list is VIRTUALIZED: cards mount (and unmount again) with
-        # real scroll progress, so no single DOM snapshot holds every row — and
-        # mouse.wheel does not trigger the lazy-mount in headless Chromium here
-        # at all (measured: stuck at 3 cards; window.scrollBy mounts them).
-        # Walk the list downward and ACCUMULATE scraped rows; positions come
-        # from the card markup, so they are stable across mount windows. Stop
-        # when a round at the bottom adds nothing, twice in a row.
-        acc: dict[int, dict] = {}
-
-        async def _scrape_round() -> None:
-            await page.evaluate(js)
-            for r in await page.evaluate("() => window.check24Rows || []"):
-                pos = r.get("position")
-                if pos is not None and pos not in acc:
-                    acc[pos] = r
-
-        async def _at_bottom() -> bool:
-            return await page.evaluate(
-                "() => window.scrollY + window.innerHeight "
-                ">= document.body.scrollHeight - 50")
-
-        await _scrape_round()
-        stable = 0
-        for _ in range(60):
-            await page.evaluate("() => window.scrollBy(0, 2200)")
-            await page.wait_for_timeout(1100)
-            before = len(acc)
-            await _scrape_round()
-            stable = stable + 1 if (len(acc) == before and await _at_bottom()) else 0
-            if stable >= 2:
-                break
-        rows: list[dict] = [acc[p] for p in sorted(acc)]
+        # Virtualized list: walk down and accumulate rows (see _scan.py).
+        rows: list[dict] = await _scan.accumulate_rows(page, js)
         print(f"Scraped {len(rows)} rows.")
 
         selected = resolve_rows(rows, args)
@@ -591,7 +551,7 @@ async def harvest_panel(url: str, args, existing_by_hash: dict, existing_by_stem
                            (c.get("product") or "").casefold())
                     if key == want:
                         return c["idx"]
-                if await _at_bottom():
+                if await _scan.at_bottom(page):
                     return None
                 await page.evaluate("() => window.scrollBy(0, 1800)")
                 await page.wait_for_timeout(900)

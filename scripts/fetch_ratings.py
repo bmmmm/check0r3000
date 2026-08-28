@@ -25,10 +25,12 @@ import argparse
 import asyncio
 import datetime
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
+import _scan
 import _vertical
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -49,9 +51,18 @@ USER_AGENT = (
 )
 
 
+def _pyrun_cmd(script: Path, *args: str) -> list[str]:
+    """Prefer the checked-out venv for sibling-script subprocesses (same
+    selection as update-all.sh/pipeline.sh), fall back to uv run."""
+    venv_py = ROOT / ".venv" / "bin" / "python"
+    if os.access(venv_py, os.X_OK):
+        return [str(venv_py), str(script), *args]
+    return ["uv", "run", str(script), *args]
+
+
 def build_url() -> str:
     result = subprocess.run(
-        ["uv", "run", str(ROOT / "scripts" / "check24_query.py"), "--all-insurers"],
+        _pyrun_cmd(ROOT / "scripts" / "check24_query.py", "--all-insurers"),
         capture_output=True, text=True, cwd=ROOT,
     )
     url = result.stdout.strip()
@@ -64,6 +75,13 @@ async def scrape(url: str) -> list[dict]:
     from playwright.async_api import async_playwright, TimeoutError as PwTimeout
 
     js = SCRAPE_JS.read_text(encoding="utf-8")
+    # flow=panel verticals (hausrat, phv): their result list uses result_tile /
+    # panel cards and is VIRTUALIZED, so readiness comes from the spec's card
+    # selector and the rows must be accumulated while scrolling (_scan.py). The
+    # Rechtsschutz path (no spec) stays the classic one-shot SSR scrape.
+    spec = _vertical.vertical_config().get("harvest") or {}
+    panel = spec.get("flow") == "panel"
+    ready = spec.get("card_sel") or READY_SELECTOR
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
@@ -73,27 +91,34 @@ async def scrape(url: str) -> list[dict]:
         # wait_until="domcontentloaded", NOT "networkidle": CHECK24 keeps a steady stream
         # of tracking/ad traffic, so the network never goes idle and networkidle
         # deadlocks until its timeout fires (same fix as harvest_docs.py). The result
-        # list is SSR'd, so READY_SELECTOR below is the actual readiness signal.
+        # list is SSR'd, so the ready selector below is the actual readiness signal.
         try:
             await page.goto(url, wait_until="domcontentloaded", timeout=60_000)
         except PwTimeout:
             sys.exit(f"page.goto timed out after 60s loading {url[:90]} — "
                       "check network connectivity or whether CHECK24 changed its response.")
 
+        if panel:
+            await page.wait_for_timeout(3500)
+            await _scan.dismiss_overlays(page)
+
         # Wait for the SSR tariff list to be in the DOM (always present).
-        await page.wait_for_selector(READY_SELECTOR, timeout=15_000)
+        await page.wait_for_selector(ready, timeout=15_000)
 
-        # Wait for Vue.js to hydrate the rating widgets (soft: warn if absent).
-        try:
-            print(f"Waiting for Vue.js hydration ({HYDRATION_SELECTOR})...")
-            await page.wait_for_selector(HYDRATION_SELECTOR, timeout=15_000)
-            print("Vue hydrated — ratings should be present.")
-        except PwTimeout:
-            print(f"Warning: {HYDRATION_SELECTOR} did not appear — "
-                  "bewertung fields will be null (headless detection or layout change).")
+        if panel:
+            rows: list[dict] = await _scan.accumulate_rows(page, js)
+        else:
+            # Wait for Vue.js to hydrate the rating widgets (soft: warn if absent).
+            try:
+                print(f"Waiting for Vue.js hydration ({HYDRATION_SELECTOR})...")
+                await page.wait_for_selector(HYDRATION_SELECTOR, timeout=15_000)
+                print("Vue hydrated — ratings should be present.")
+            except PwTimeout:
+                print(f"Warning: {HYDRATION_SELECTOR} did not appear — "
+                      "bewertung fields will be null (headless detection or layout change).")
 
-        await page.evaluate(js)
-        rows: list[dict] = await page.evaluate("() => window.check24Rows || []")
+            await page.evaluate(js)
+            rows = await page.evaluate("() => window.check24Rows || []")
 
         await browser.close()
 
@@ -127,8 +152,8 @@ def main() -> int:
 
     if args.snapshot:
         res = subprocess.run(
-            ["uv", "run", str(ROOT / "scripts" / "snapshot.py"),
-             str(out), "--date", args.date],
+            _pyrun_cmd(ROOT / "scripts" / "snapshot.py",
+                       str(out), "--date", args.date),
             cwd=ROOT,
         )
         return res.returncode
