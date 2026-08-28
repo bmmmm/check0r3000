@@ -1,0 +1,4 @@
+{
+  "_comment": "Per-vertical configuration data for rechtsschutz. Filled step by step: the constants that used to live in code (module labels, filter anchors, extraction instruction, query-param map, regression tokens) migrate here in the constants-to-data commit.",
+  "label": "Rechtsschutz"
+}

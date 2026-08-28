@@ -1,31 +1,32 @@
 # --- Source documents: third-party copyright (ARAG/check24 etc.) ---
 # Never publish the raw insurer PDFs or their verbatim extracted text.
-data/inbox/
-data/raw/
-data/extracted/
+# Paths are per-vertical: data/<vertical>/... (see config/verticals.json).
+data/*/inbox/
+data/*/raw/
+data/*/extracted/
 
 # --- Market snapshots: dated price scans tied to a personal quote profile ---
 # The change-tracking DB (scripts/snapshot.py). Keep local; not a shareable artifact.
-data/snapshots/
+data/*/snapshots/
 
 # --- Personal offer data: per-user premium / chosen Stufe (not copyright, but personal) ---
-# Use '/*' (NOT a trailing slash 'data/offers/'): git will not descend into an
+# Use '/*' (NOT a trailing slash '.../offers/'): git will not descend into an
 # ignored directory, so a trailing-slash rule would also hide the tracked template
 # and README below. Only the example + README are tracked; real offers are ignored.
-data/offers/*
-!data/offers/_example.json
-!data/offers/README.md
+data/*/offers/*
+!data/*/offers/_example.json
+!data/*/offers/README.md
 
 # --- Personal quote profile: birthdate / zipcode (PII) ---
-# The tracked twin config/check24-profile.example.json carries fake values; the real
+# The tracked twin check24-profile.example.json carries fake values; the real
 # profile with your birthdate + zipcode stays out of git.
-config/check24-profile.json
+config/verticals/*/check24-profile.json
 
 # --- Favorite notes: free-text typed via [N] (personal, not shareable) ---
 # favorites.json stays PII-free (stem/tag/SB only); typed notes live in this sidecar.
-config/favorite-notes.json
+config/verticals/*/favorite-notes.json
 
-# --- Personal UI preferences (theme picked via [T]) ---
+# --- Personal UI preferences (theme picked via [T]; global, not per-vertical) ---
 config/tui-prefs.json
 
 # --- Local scratch ---
@@ -53,15 +54,15 @@ __pycache__/
 *.p12
 *.pfx
 
-# --- Tracked deliverables live in out/ (see .gitignore exception below) ---
+# --- Tracked deliverables live in out/<vertical>/ (see the exceptions below) ---
 # out/ is intentionally NOT ignored: it holds our own factual comparison
 # (tariffs/*.json) and synthesized overview (vergleich.md, index.html).
 
-# Exception: out/enriched/ carries the personal premium/Stufe merged in from
-# data/offers/ — a per-user, machine-regenerable artifact, never a shareable
-# deliverable. Keep it out of git even though the rest of out/ is tracked.
-out/enriched/
+# Exception: out/<vertical>/enriched/ carries the personal premium/Stufe merged in
+# from data/<vertical>/offers/ — a per-user, machine-regenerable artifact, never a
+# shareable deliverable. Keep it out of git even though the rest of out/ is tracked.
+out/*/enriched/
 
 # TUI screenshots embed the snapshot prices (tied to the personal profile) —
 # regenerable via `tui.py --screenshot`, kept local.
-out/screenshots/
+out/*/screenshots/

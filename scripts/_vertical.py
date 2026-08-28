@@ -30,12 +30,12 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_PATH = ROOT / "config" / "verticals.json"
 TMP = ROOT / "tmp"  # run artifacts (logs, reports, eval) are global, not per-vertical
 
-# Layout flag: True = the historical single-vertical tree (data/raw, out/tariffs,
-# schema/tariff.schema.json, ...). Flipped to False in the same commit that
-# `git mv`s the tree into the vertical namespace (data/<v>/raw, out/<v>/tariffs,
-# ...), so the rewiring of the consumers and the physical move stay two separately
-# verifiable steps.
-_FLAT = True
+# Layout flag: False = the vertical namespace (data/<v>/raw, out/<v>/tariffs,
+# schema/<v>/tariff.schema.json, config/verticals/<v>/...). True was the
+# historical single-vertical tree; the flip happened in the same commit as the
+# git-mv migration, keeping consumer rewiring and the physical move two
+# separately verifiable steps.
+_FLAT = False
 
 _registry_cache: dict | None = None
 _config_cache: dict[str, dict] = {}

@@ -71,7 +71,7 @@ fi
 if [ -n "$NO_SCAN" ]; then
   echo "==> scan (skipped: --no-scan)"
 else
-  echo "==> scan (headless Chromium -> dated snapshot in data/snapshots/)"
+  echo "==> scan (headless Chromium -> dated snapshot in data/<vertical>/snapshots/)"
   # Non-fatal: this needs a real Chromium — fails loudly inside sandboxes/CI
   # without headed-browser support, but the rest of the refresh still runs.
   if $PYRUN scripts/fetch_ratings.py --snapshot; then :; else
@@ -87,11 +87,11 @@ if [ -z "$NO_SCAN" ]; then
   echo "==> external ratings staleness (warn-only)"
   if $PYRUN scripts/check_external_ratings.py; then :; else
     echo "WARNING: external test verdicts may be stale — review" >&2
-    echo "  data/sources/external-ratings.json (see the check output above)." >&2
+    echo "  data/<vertical>/sources/external-ratings.json (see the check output above)." >&2
   fi
 fi
 
-echo "==> docs (download manifest PDFs into data/raw/, re-fetching what changed)"
+echo "==> docs (download manifest PDFs into data/<vertical>/raw/, re-fetching what changed)"
 # --refresh is what makes this a REFRESH rather than a resume: without it an already
 # present file is skipped unconditionally, so an insurer re-issuing its AVB under the
 # same URL would stay invisible (file exists -> skipped -> extract hashes stale text).

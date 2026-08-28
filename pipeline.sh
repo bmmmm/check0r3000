@@ -39,7 +39,7 @@ echo "==> extract (structured facts via model)"
 # surface the failure loudly but don't abort the rest of the pipeline.
 # shellcheck disable=SC2086
 if uv run scripts/extract.py $MODEL_ARGS $FILTER_ARGS $JOBS_ARGS $REPEAT_ARGS; then :; else
-  echo "WARNING: extract.py reported failed tariff(s) — see out/tariffs/ and the log above." >&2
+  echo "WARNING: extract.py reported failed tariff(s) — see out/<vertical>/tariffs/ and the log above." >&2
 fi
 
 echo "==> golden pins (auto-repair hallucinated isnull fields on golden stems)"
@@ -55,7 +55,7 @@ echo "==> overlay (structured price/Stufe from data/offers/, no model)"
 # files yet) is normal and exits 0. Run scripts/overlay.py --check standalone
 # (e.g. in CI) for a hard re-validation gate over existing enriched records.
 if uv run scripts/overlay.py; then :; else
-  echo "WARNING: overlay self-check failed — see out/enriched/ and data/offers/." >&2
+  echo "WARNING: overlay self-check failed — see out/<vertical>/enriched/ and data/<vertical>/offers/." >&2
 fi
 
 echo "==> render (matrix + pros/cons -> out/)"
@@ -63,14 +63,14 @@ echo "==> render (matrix + pros/cons -> out/)"
 # not stop the regression gate below — the extracted records are already on disk.
 # shellcheck disable=SC2086
 if uv run scripts/render.py $MODEL_ARGS; then :; else
-  echo "WARNING: render.py failed — out/vergleich.md / index.html may be stale." >&2
+  echo "WARNING: render.py failed — out/<vertical>/vergleich.md / index.html may be stale." >&2
 fi
 
 echo "==> regression check (document-grounded golden invariants)"
 # Non-fatal: the output is already written; surface drift loudly but don't abort.
 # (Run scripts/regression.py standalone for a hard pass/fail gate, e.g. in CI.)
 if uv run scripts/regression.py; then :; else
-  echo "WARNING: extraction no longer matches benchmarks/golden.json — review out/tariffs." >&2
+  echo "WARNING: extraction no longer matches the golden invariants — review out/<vertical>/tariffs." >&2
 fi
 
-echo "==> done. See out/vergleich.md and out/index.html"
+echo "==> done. See out/<vertical>/vergleich.md and out/<vertical>/index.html"
