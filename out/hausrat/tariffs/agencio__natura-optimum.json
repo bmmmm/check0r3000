@@ -1,109 +1,113 @@
 {
   "insurer": "agencio",
-  "tariff": "natura Optimum",
+  "tariff": "natura optimum",
   "stand": "01.03.2023",
   "modules": {
     "feuer": {
       "included": true,
       "level": null,
-      "note": "Brand, Explosion, Blitzschlag, Überspannung, Nutzwärmeschäden"
+      "note": null
     },
     "einbruchdiebstahl": {
       "included": true,
       "level": null,
-      "note": "Einbruchdiebstahl, Raub, Vandalismus nach Einbruch"
+      "note": null
     },
     "wasserschaeden": {
       "included": true,
       "level": null,
-      "note": "Leitungswasser, innenliegende Regenfallrohre, Wassersäulen"
+      "note": null
     },
     "naturgefahren": {
-      "included": null,
+      "included": false,
       "level": null,
-      "note": "Optional: Elementarversicherung (Überschwemmung, Erdbeben, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch)"
+      "note": "optional als Elementarschadenversicherung (BWE)"
     },
     "tiere": {
       "included": true,
       "level": null,
-      "note": "Schäden durch wild lebende Tiere bis 10.000€"
+      "note": null
     },
     "fahrzeuganprall": {
       "included": true,
       "level": null,
-      "note": "Anprall von Schienen-, Wasser- und Straßenfahrzeugen"
+      "note": null
     },
     "diebstahl_erweitert": {
       "included": true,
       "level": null,
-      "note": "Einfacher Diebstahl (Wäsche, Gartenmöbel, Arbeitsplatz), Trickdiebstahl bis 10.000€, Seniorenschutz"
+      "note": null
     },
     "internet": {
       "included": true,
       "level": null,
-      "note": "Cyber-Schutz: Online-Handel-Betrug, Phishing, Pharming, Datenrettung"
+      "note": null
     },
     "wohnungsschutzbrief": {
-      "included": null,
-      "level": null
+      "included": false,
+      "level": null,
+      "note": null
     },
     "glasschutz": {
-      "included": null,
+      "included": false,
       "level": null,
-      "note": "Optional: Glasversicherung sofern vereinbart"
+      "note": "optional versicherbar"
     },
     "fahrradschutz": {
       "included": true,
       "level": null,
-      "note": "1% mitversichert, keine Einstellpflicht erforderlich"
-    },
-    "ueberschwemmung_rueckstau": {
-      "included": true,
-      "level": null,
-      "note": "Rückstauschäden bis 5% der VS (Voraussetzung: Rückstausicherung, SB 250€); Überschwemmung optional"
+      "note": null
     }
   },
   "coverage": {
     "versicherungssumme": null,
-    "selbstbeteiligung": "0 EUR für Grunddeckungen, 50–250 EUR für Leistungseinschlüsse (vereinbar)",
+    "selbstbeteiligung": "gestaffelt nach Risikobereichen (z.B. 150 EUR Blitz, 250 EUR Rückstau, 100-250 EUR einfacher Diebstahl); Einzelheiten im Versicherungsschein",
     "wartezeit_monate": 0,
     "wartezeit_ausnahmen": [],
-    "geltungsbereich": "Deutschland; Außenversicherung weltweit bis 12 Monate",
-    "vertragslaufzeit": "1 oder 3 Jahre"
+    "geltungsbereich": "Deutschland Versicherungsort; weltweit bis zu 3 Monate vorübergehend",
+    "vertragslaufzeit": "flexibel, mindestens 1 Jahr Laufzeit"
   },
   "leistungen": [
-    "Fahrraddiebstahl ohne Einstellpflicht",
+    "Hotelkosten ohne Begrenzung bei Unbewohnbarkeit",
+    "Schlüsseldienst bis 150 EUR",
     "Psychologische Betreuung nach Einbruch, Raub, Brand",
-    "Schlüsseldienst",
-    "Cyber-Schutz (Phishing, Online-Handel, Datenrettung)",
-    "Hotelkosten bei Unbewohnbarkeit",
-    "Rückreisekosten bei Schadenfall",
-    "Tierarztkosten für Haustiere",
-    "Nachhaltige Reparatur mit Mehrkosten",
-    "Ladestation (Wallbox) bis 3.500€",
-    "Trickdiebstahl bis 10.000€",
-    "Seniorenschutz (Hörhilfen, Sehhilfen, Taschendiebstahl)",
-    "Rückstauschäden bis 5% der VS"
+    "Datenrettungskosten nach Versicherungsfall",
+    "Rückfahrtkosten bei Fahrraddiebstahl während Fahrt",
+    "Kinderbetreuung im Notfall nach Schaden",
+    "Tierarzt- und Unterbringungskosten für Haustiere",
+    "Mehrkosten nachhaltige Reparatur bis 30 % Aufpreis",
+    "Wallbox-Versicherung bis 3.500 EUR",
+    "CO2-Kompensation bei Brandschaden",
+    "Umzugskosten nach versichertem Schaden",
+    "Transport- und Lagerkosten bis 12 Monate",
+    "Schadenabwendungs- und Minderungskosten",
+    "Ersatzgeräte bei Defekt (z.B. Waschmaschine)"
   ],
   "ausschluesse": [
-    "Krieg, kriegsähnliche Ereignisse, Kernenergie",
+    "Krieg, kriegsähnliche Ereignisse, Bürgerkrieg, Revolution",
+    "Kernenergie, nukleare Strahlung, radioaktive Substanzen",
+    "Innere Unruhen, Streik, Aussperrung",
     "Schwamm",
     "Sturmflut",
-    "Vorsätzlich verursachte Schäden",
-    "Kraftfahrzeuge aller Art",
+    "Schäden durch vorsätzliches Verhalten des Versicherten",
+    "Gebäudebestandteile außer Mieter-Einbauten",
+    "Kraftfahrzeuge aller Art und Anhänger",
     "Luft- und Wasserfahrzeuge",
-    "Elektronisch gespeicherte Daten",
-    "Erdbeben (außer optionale Elementarversicherung)",
-    "Abnutzung, Verschleiß, Alterung"
+    "Elektronisch gespeicherte Daten und Programme",
+    "Vom Gebäudeeigentümer bereitgestellter Hausrat",
+    "Elementargefahren ohne optionale Versicherung"
   ],
   "besonderheiten": [
-    "TOP-Schutz mit Nachhaltigkeitsleistungen",
-    "Fahrraddiebstahl ohne Einstellpflicht",
-    "Umfangreiches Cyber-Schutz-Paket",
-    "Weltweite Außenversicherung bis 12 Monate",
-    "Seniorenschutz",
-    "Erweiterte Hotelkosten ohne zeitliche Begrenzung",
-    "Besitzstandsgarantie bei Tarifwechsel"
+    "Verzicht auf Anrechnung grober Fahrlässigkeit",
+    "Besitzstandsgarantie gegenüber Vorversicherung",
+    "Erweiterte Leistungsgarantie bei besseren Konkurrenzprodukten",
+    "Fahrraddiebstahl ohne Einstellpflicht (1 % VS beitragsfrei)",
+    "Umfassende Cyber-Versicherung (Phishing, Pharming, Skimming, Online-Handel-Betrug bis 3.500 EUR)",
+    "Vorsorgeversicherung für Kinder mit Übergabe bis 50 % VS",
+    "Beitragsbefreiung bei unverschuldeter Arbeitslosigkeit bis 12 Monate",
+    "Seniorenrabatt (25 %) bei Umzug in Pflegeheim nach 3 Jahren",
+    "Nachhaltigkeit: CO2-Kompensation, Ökostrom, grüne Kapitalanlage",
+    "Mehrkosten durch Preissteigerungen kompensiert"
   ],
   "beitrag": null,
   "_input_hash": "1beffe6a40a36c3a04d247b055553cea13904bcfdc4bf688e4b87514fcb7a301",

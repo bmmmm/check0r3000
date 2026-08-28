@@ -30,7 +30,7 @@
     },
     "modules": {
       "type": "object",
-      "description": "Which legal areas are covered, and at which service level (Basis/Komfort/Premium or null if not graded).",
+      "description": "Which perils / add-on modules THIS tariff covers (included strictly boolean: an optional add-on that is not part of this tariff is false). naturgefahren covers the extended natural-perils package incl. Überschwemmung/Rückstau. Level Basis/Komfort/Premium or null if not graded.",
       "additionalProperties": false,
       "properties": {
         "feuer": {
@@ -64,9 +64,6 @@
           "$ref": "#/$defs/module"
         },
         "fahrradschutz": {
-          "$ref": "#/$defs/module"
-        },
-        "ueberschwemmung_rueckstau": {
           "$ref": "#/$defs/module"
         }
       }
@@ -201,10 +198,7 @@
       ],
       "properties": {
         "included": {
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": "boolean"
         },
         "level": {
           "type": [
@@ -227,6 +221,5 @@
         }
       }
     }
-  },
-  "_draft": true
+  }
 }

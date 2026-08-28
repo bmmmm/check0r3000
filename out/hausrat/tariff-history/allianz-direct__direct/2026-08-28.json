@@ -3,102 +3,86 @@
   "modules": {
     "feuer": {
       "included": true,
-      "level": null,
-      "note": "Feuer, Explosion, Sengschäden, Rauch und Ruß"
+      "level": null
     },
     "einbruchdiebstahl": {
       "included": true,
-      "level": null,
-      "note": "Einbruchdiebstahl, Vandalismus, Raub, Diebstahl aus Kfz bis 2.000 EUR"
+      "level": null
     },
     "wasserschaeden": {
       "included": true,
-      "level": null,
-      "note": "Leitungswasserschäden, Rohrbruch, Betriebsflüssigkeiten aus Heizung/Klima"
+      "level": null
     },
     "naturgefahren": {
       "included": true,
-      "level": null,
-      "note": "Sturm (ab Windstärke 7), Hagel, Blitzschlag, Erdbeben, Schneedruck, Lawinen, Vulkan"
+      "level": null
     },
     "tiere": {
       "included": true,
-      "level": null,
-      "note": "Schäden durch fremde Tiere; nicht durch Haustiere des Versicherten"
+      "level": null
     },
     "fahrzeuganprall": {
       "included": true,
-      "level": null,
-      "note": "Meteoriten, Anprall von Fahrzeugen und deren Teile"
+      "level": null
     },
     "diebstahl_erweitert": {
-      "included": null,
-      "level": null,
-      "note": "Einfacher Diebstahl nur in Direct Plus verfügbar"
+      "included": false,
+      "level": null
     },
     "internet": {
-      "included": null,
-      "level": null,
-      "note": "Internetschutz nur in Direct Plus enthalten"
+      "included": false,
+      "level": null
     },
     "wohnungsschutzbrief": {
-      "included": null,
-      "level": null,
-      "note": "Haus- und Wohnungsschutzbrief nur in Direct Plus"
+      "included": false,
+      "level": null
     },
     "glasschutz": {
-      "included": null,
-      "level": null,
-      "note": "Zusatzbaustein, optional wählbar"
+      "included": false,
+      "level": null
     },
     "fahrradschutz": {
-      "included": null,
-      "level": null,
-      "note": "Zusatzbaustein, optional wählbar"
-    },
-    "ueberschwemmung_rueckstau": {
-      "included": null,
-      "level": null,
-      "note": "Zusatzbaustein, optional wählbar"
+      "included": false,
+      "level": null
     }
   },
   "coverage": {
     "versicherungssumme": null,
-    "selbstbeteiligung": null,
-    "wartezeit_monate": 0,
+    "selbstbeteiligung": "wählbar (Höhe im Versicherungsschein)",
+    "wartezeit_monate": null,
     "wartezeit_ausnahmen": [],
-    "geltungsbereich": "Deutschland (versicherte Wohnung); weltweit temporär bis 12 Monate",
-    "vertragslaufzeit": "1 Jahr, automatische Verlängerung jährlich"
+    "geltungsbereich": "Deutschland (Wohnort); weltweit bis 12 Monate temporär",
+    "vertragslaufzeit": null
   },
   "leistungen": [
-    "Neuwertentschädigung bei Zerstörung",
-    "Reparaturkosten und Wertminderung bei Beschädigung",
-    "Reparaturkosten nach Einbruch",
-    "Aufräum-, Transport-, Lager- und Entsorgungskosten",
-    "Rückreisekosten bei verfrühter Rückkehr",
-    "Unterkunfts- und Umzugskosten bei Unbewohnbarkeit",
-    "Grobe Fahrlässigkeit versichert"
+    "Schadenminderungs- und Ermittlungskosten",
+    "Aufräum-, Transport-, Lagerkosten",
+    "Rückreisekosten aus Urlaub",
+    "Unterbringungskosten (unbewohnbare Wohnung)",
+    "Umzugs- und Einlagerungskosten",
+    "Gebäudereparaturen nach Einbruch"
   ],
   "ausschluesse": [
     "Vorsätzlich verursachte Schäden",
-    "Schäden durch Kriegsereignisse, innere Unruhen",
-    "Schäden durch Kernenergie",
-    "Hausstoff und Schwammschäden",
-    "Rückstau aus öffentlicher Abwasserkanalisation",
-    "Schäden durch Insekten oder Haustiere des Versicherten",
-    "Schäden durch Fahrzeuge des Versicherungsnehmers selbst"
+    "Kriegsereignisse und innere Unruhen",
+    "Kernenergie",
+    "Hauschwamm",
+    "Rückstau aus Abwasserkanalisation",
+    "Wertsachen/Bargeld aus Kraftfahrzeugen begrenzt",
+    "Haustiere als Schadensursache"
   ],
   "besonderheiten": [
     "Grobe Fahrlässigkeit versichert",
-    "Unterversicherungsverzicht üblicherweise vereinbart",
-    "Jährliche Anpassung der Versicherungssumme an Verbraucherpreisindex",
-    "Weltweiter Schutz für temporär verlagerten Hausrat"
+    "Unterversicherungsverzicht möglich",
+    "Jährliche Preissteigerungs-Anpassung",
+    "Digitales Produkt mit Online-Verwaltung",
+    "Tägliche Kündigungsmöglichkeit"
   ],
   "beitrag": null,
   "insurer": "Allianz Direct Versicherungs-AG",
-  "tariff": "Hausratversicherung Direct",
+  "tariff": "Hausratversicherung",
   "stem": "allianz-direct__direct",
   "_history_date": "2026-08-28",
-  "_content_sha256": "44bfe4750ba0029f99d8999da947d21b59a81ba7a97d431371a2822ab52ab598",
+  "_content_sha256": "cd1b4cdb669b3a8b3a59f8268f2f3da1096f4e82e84c14e541e842d44481d91f",
   "_supersedes": "2026-08-28"
 }

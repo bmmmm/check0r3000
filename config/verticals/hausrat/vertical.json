@@ -6,15 +6,14 @@
     "feuer": "Feuer",
     "einbruchdiebstahl": "Einbruch/Diebstahl",
     "wasserschaeden": "Wasserschäden",
-    "naturgefahren": "Naturgefahren",
+    "naturgefahren": "Naturgefahren/Elementar",
     "tiere": "Tiere",
     "fahrzeuganprall": "Fahrzeuganprall",
     "diebstahl_erweitert": "Erw. Diebstahl",
     "internet": "Internetschutz",
     "wohnungsschutzbrief": "Notfalldienste",
     "glasschutz": "Glas-Schutz",
-    "fahrradschutz": "Fahrrad-Schutz",
-    "ueberschwemmung_rueckstau": "Überschwemmung"
+    "fahrradschutz": "Fahrrad-Schutz"
   },
   "filter_anchors": [
     "selbstbeteiligung",
@@ -77,7 +76,7 @@
     "laufzeit",
     "vertragsdauer"
   ],
-  "extract_instruction": "You are extracting structured, comparable facts from a German household-contents-insurance (Hausratversicherung) document set.\n\nThe stdin input contains:\n  1. A JSON Schema describing the exact output shape.\n  2. One or more documents (AVB, Produktinformationsblatt, Leistungsübersicht, weitere Unterlagen), each prefixed with a `===== <doctype> =====` header.\n\nRules:\n- Output ONLY one JSON object that validates against the schema. No prose, no code fences.\n- Facts only. Do NOT copy verbatim policy text into the output.\n- Use null / empty arrays where the documents do not state a value. NEVER guess a number.\n- For module coverage (feuer, einbruchdiebstahl, wasserschaeden, etc.): use true/false/null to indicate whether THIS tariff includes that coverage. If the document lists modules only as selectable options without naming the chosen ones in THIS contract, use null — never guess coverage inclusion.\n- For `coverage.selbstbeteiligung`: if the documents establish that a deductible applies (e.g. 'vereinbarte Selbstbeteiligung') but state no single fixed tariff amount, describe the arrangement qualitatively (e.g. 'vereinbart, Höhe im Versicherungsschein') instead of null. Describing a stated arrangement is not guessing a number.\n- For `coverage.deckungssumme`: extract the stated coverage amount in EUR as an integer, or null if unstated. Do NOT infer from context (e.g., inquiry form parameters).\n- For `coverage.wartezeit`: extract the waiting period in days if stated (e.g. 7 Tage) and convert to integer, or null if none.\n- Keep array entries short (a few words each), in German.\n- Omit the `sources` field entirely — the pipeline adds provenance; never invent content hashes.",
+  "extract_instruction": "You are extracting structured, comparable facts from a German household-contents-insurance (Hausratversicherung) document set.\n\nThe stdin input contains:\n  1. A JSON Schema describing the exact output shape.\n  2. One or more documents (AVB, Produktinformationsblatt, Leistungsübersicht, weitere Unterlagen), each prefixed with a `===== <doctype> =====` header.\n\nRules:\n- Output ONLY one JSON object that validates against the schema. No prose, no code fences.\n- Facts only. Do NOT copy verbatim policy text into the output.\n- Use null / empty arrays where the documents do not state a value. NEVER guess a number.\n- For module coverage (feuer, einbruchdiebstahl, wasserschaeden, etc.): included is strictly true or false, never null. true only when the documents state the coverage as part of THIS tariff. false when they do not — an add-on the documents list only as a selectable option that is not named part of this tariff counts as false (that is the market default, not a guess). naturgefahren means the extended natural-perils package (Überschwemmung, Rückstau, Erdbeben, Schneedruck, ...).\n- For `coverage.selbstbeteiligung`: if the documents establish that a deductible applies (e.g. 'vereinbarte Selbstbeteiligung') but state no single fixed tariff amount, describe the arrangement qualitatively (e.g. 'vereinbart, Höhe im Versicherungsschein') instead of null. Describing a stated arrangement is not guessing a number.\n- For `coverage.deckungssumme`: extract the stated coverage amount in EUR as an integer, or null if unstated. Do NOT infer from context (e.g., inquiry form parameters).\n- For `coverage.wartezeit`: extract the waiting period in days if stated (e.g. 7 Tage) and convert to integer, or null if none.\n- Keep array entries short (a few words each), in German.\n- Omit the `sources` field entirely — the pipeline adds provenance; never invent content hashes.",
   "query": {
     "pin_keys": [],
     "module_labels": {

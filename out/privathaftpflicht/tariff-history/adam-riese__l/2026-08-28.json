@@ -3,107 +3,98 @@
   "modules": {
     "privat": {
       "included": true,
-      "level": null,
-      "note": "als Familienvorstand (z.B. Aufsichtspflicht)"
+      "level": null
     },
     "haushalt": {
       "included": true,
-      "level": null,
-      "note": "Familie, Haushalt, Tagesmutter, Babysitter, Au-Pair"
+      "level": null
     },
     "ehrenamt": {
       "included": true,
-      "level": null,
-      "note": "ehrenamtliche Tätigkeit und Freiwilligenarbeit; ausgenommen Vorstandstätigkeit und hoheitliche Ehrenämter"
+      "level": null
     },
     "immobilien": {
       "included": true,
-      "level": null,
-      "note": "Wohnungen, Ein-/Zweifamilienhäuser, Ferien-/Wochenendhäuser im Inland"
+      "level": null
     },
     "mietsache": {
       "included": true,
-      "level": null,
-      "note": "Mietsachschäden an Wohnräumen, Garagen, Möbeln; auch Leih-/Mietsachen"
+      "level": null
     },
     "tiere": {
       "included": true,
       "level": null,
-      "note": "zahme Haustiere, gezähmte Kleintiere, Bienen; ausgenommen: Hunde, Rinder, Pferde, Wildtiere"
+      "note": "Ausschluss: Hunde, Pferde, Reit-/Zugtiere, Wildtiere, gewerblich gehaltene Tiere"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": "Radfahren, Sportausübung, nicht-versicherungspflichtige Kfz; ausgenommen: versicherungspflichtige Kraftfahrzeuge"
+      "note": "Fahrrad und nicht versicherungspflichtige Fahrzeuge (bis 20 km/h, Pedelecs bis 25 km/h); Ausschluss: versicherungspflichtige Kraftfahrzeuge"
     },
     "daten": {
       "included": true,
-      "level": null,
-      "note": "elektronische Datenübertragung (Internet, Email, Datenträger) mit Obliegenheit zur Datensicherung"
+      "level": null
     },
     "ausland": {
       "included": true,
-      "level": null,
-      "note": "temporärer weltweiter Aufenthalt bis 2 Jahre oder in EU/EFTA-Ländern unbegrenzt; Datenschäden nur europäische Staaten"
+      "level": null
     },
     "umwelt": {
       "included": true,
-      "level": null,
-      "note": "Umwelteinwirkungen, Gewässerschäden, USchadG-Sanierung, Geothermie (unter bestimmten Bedingungen)"
+      "level": null
     }
   },
   "coverage": {
-    "versicherungssumme": "vereinbart (Höhe im Versicherungsschein); Spezifisch: Mietsachschäden 10.000 EUR, Schlüsselverlust 10.000 EUR, Flugmodelle 3.000.000 EUR",
-    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein); Mietsachschäden Ferienunterkunft/Leih-Sachen: 250 EUR",
+    "versicherungssumme": "vereinbart, Höhe im Versicherungsschein",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein; Mietsachschäden standardmäßig 250 EUR",
     "wartezeit_monate": null,
     "wartezeit_ausnahmen": [],
-    "geltungsbereich": "weltweit (mit Bedingungen: Auslandsaufenthalt bis 2 Jahre, EU/EFTA unbegrenzt, Datenschäden nur Europa)",
-    "vertragslaufzeit": "1 Jahr mit automatischer jährlicher Verlängerung"
+    "geltungsbereich": "Deutschland + EU/EFTA-Staaten; weltweit bei Auslandsaufenthalt bis 2 Jahre",
+    "vertragslaufzeit": "1 Jahr"
   },
   "leistungen": [
-    "Forderungsausfalldeckung (Ausfallrisiko)",
-    "Schlüsselverlust-Kostendeckung (Auswechslung, Notschloss, Objektschutz bis 14 Tage)",
-    "Kaution im Ausland (bis 10.000 EUR bei behördlicher Anordnung)",
-    "Waiver der Deliktsunfähigkeit für Minderjährige (bis 10.000 EUR pro Jahr)",
-    "Rettungs- und Gutachterkosten (bei Umweltschäden/Gewässerschäden)"
+    "Prüfung der Haftpflichtfrage und Abwehr unberechtigter Ansprüche",
+    "Übernahme von Rechtsanwaltskosten",
+    "Strafverteidigungskosten im Strafverfahren",
+    "Schlüssel- und Keycardverlust mit Sicherungsmaßnahmen",
+    "Kautionsleistung bei Behördenanordnung im Ausland (bis 10.000 EUR)",
+    "Forderungsausfalldeckung",
+    "Umweltschadensanierung nach Umweltschadensgesetz",
+    "Schutz für Schäden durch minderjährige Enkel und Tageskinder (bis 10.000 EUR/Jahr)"
   ],
   "ausschluesse": [
-    "vorsätzlich herbeigeführte Schäden",
-    "gewerbliche und berufliche Tätigkeiten",
-    "versicherungspflichtige Kraftfahrzeuge",
-    "Jagd und jagdlicher Waffengebrauch",
-    "Hunde, Rinder, Pferde, Wildtiere",
-    "Senkungen, Erdrutschungen, Überschwemmungen",
-    "Asbest",
-    "Gentechnische Schäden",
+    "Vorsätzlich verursachte Schäden",
+    "Mangelhafte oder schädliche Produkte/Arbeiten (bei Kenntnis)",
+    "Ansprüche zwischen Versicherten",
+    "Schadenfälle von in häuslicher Gemeinschaft lebenden Familienangehörigen",
+    "Leasing, Pacht, verbotene Eigenmacht, Verwahrungsverträge",
+    "Schäden an von Versichertem hergestellten oder gelieferten Sachen/Arbeiten",
+    "Asbest und asbesthaltige Stoffe",
+    "Gentechnik und genetisch veränderte Organismen",
     "Persönlichkeits- und Namensrechtsverletzungen",
     "Anfeindung, Schikane, Belästigung, Diskriminierung",
     "Krankheitsübertragung",
-    "ionisierende Strahlung",
-    "ungewöhnliche und gefährliche Beschäftigungen",
-    "verantwortliche Betätigung in Vereinigungen",
-    "Tätigkeitsschäden (Bearbeitung fremder Sachen)",
-    "Schäden an hergestellten oder gelieferten Sachen",
-    "Schäden zwischen Versicherten und Angehörigen in häuslicher Gemeinschaft",
-    "Leasing, Pacht, verbotene Eigenmacht",
-    "Folgeschäden von Schlüsselverlust"
+    "Grundsenkungen, Erdrutschungen, Überschwemmungen",
+    "Ionisierende Strahlung",
+    "Versicherungspflichtige Kraftfahrzeuge und Anhänger",
+    "Ungewöhnliche und gefährliche Beschäftigung",
+    "Verantwortliche Betätigung in Vereinigungen",
+    "Bearbeitung/Reparatur fremder Sachen (Tätigkeitsschäden)",
+    "Planung und Errichtung von Geothermieanlagen"
   ],
   "besonderheiten": [
-    "Ausfalldeckung (Forderungsausfallrisiko) bei Zahlungsunfähigkeit des Schädigers",
-    "weltweite Geltung mit Einschränkungen",
-    "Mitversicherung Ehegatte/Lebenspartner, Kinder, im Haushalt beschäftigte Personen",
-    "ehrenamtliche Tätigkeiten mitversichert",
-    "Sport und Radfahren mitversichert",
-    "Umweltrisiken und Gewässerschäden mitversichert",
-    "elektronischer Datentransfer mitversichert",
-    "Schlüsselverlust-Kostendeckung mit Notfallschutz",
-    "Kaution im Ausland bis 10.000 EUR"
+    "Beitragsfreistellung bei Arbeitslosigkeit bis 12 Monate",
+    "Automatische Versicherung neu hinzukommender privater Risiken",
+    "Umweltschadensanierung (USchadG) enthalten",
+    "Forderungsausfalldeckung für Insolvenz des Haftpflichtigen",
+    "Kostenübernahme für gerichtlich angeordnete Kaution im Ausland",
+    "Garantie nicht schlechter als GDV-Musterbedingungen (Mai 2020)"
   ],
   "beitrag": null,
   "insurer": "Württembergische Versicherung AG",
-  "tariff": "Adam Riese L",
+  "tariff": "Privathaftpflichtversicherung Adam Riese L",
   "stem": "adam-riese__l",
   "_history_date": "2026-08-28",
-  "_content_sha256": "41288a06a2b596946b5ffb1d30a479d6d604c3a2cb4f2f8dce05991f39d7659b",
-  "_supersedes": null
+  "_content_sha256": "9dd33a567f38cc86f920462819a592f4e36c6a17ba5d76295a539f6aed496035",
+  "_supersedes": "2026-08-28"
 }

@@ -1,6 +1,6 @@
 {
   "insurer": "BavariaDirekt Versicherung AG",
-  "tariff": "Privathaftpflichtversicherung",
+  "tariff": "Privat-Haftpflichtversicherung RBHPrivat",
   "stand": "02.12.2025",
   "modules": {
     "privat": {
@@ -14,87 +14,102 @@
     "ehrenamt": {
       "included": true,
       "level": null,
-      "note": "nicht-hoheitliche ehrenamtliche Tätigkeiten"
+      "note": "nicht hoheitliche Tätigkeiten; ausgeschlossen öffentliche Ehrenämter"
     },
     "immobilien": {
       "included": true,
-      "level": null,
-      "note": "Wohnungen, Häuser bis 4 Einheiten, Ferien-/Wochenendhäuser"
+      "level": null
     },
     "mietsache": {
       "included": true,
-      "level": null,
-      "note": "Vermietung von Wohnräumen und Ferienwohnungen"
+      "level": null
     },
     "tiere": {
       "included": true,
       "level": null,
-      "note": "zahme Haustiere, Kleinvieh, Bienen; Hund, Rind, Pferd ausgeschlossen außer Assistenzhund"
+      "note": "kleine Haustiere, gezähmte Kleintiere; Hunde/Pferde/Rinder ausgeschlossen"
     },
     "verkehr": {
       "included": true,
       "level": null,
-      "note": "Radfahrer versichert; Versicherungspflichtige Kraftfahrzeuge ausgeschlossen"
+      "note": "Radfahrer, Windsurfbretter, unbemannte Drohnen bis 250g; versicherungspflichtige Kraftfahrzeuge ausgeschlossen"
     },
     "daten": {
       "included": true,
-      "level": null,
-      "note": "Elektronischer Datenaustausch, Internetnutzung"
+      "level": null
     },
     "ausland": {
       "included": true,
       "level": null,
-      "note": "Europa und EU-Gebiete unbegrenzt; außereuropäisch temporär"
+      "note": "Europa + EU-Außengebiete standard; sonstige Länder begrenzt"
     },
     "umwelt": {
-      "included": false,
+      "included": true,
       "level": null,
-      "note": "Gewässerschaden-Haftpflicht als optionale Erweiterung"
+      "note": "Gewässerschäden begrenzt; extensive Gewässerschaden-Haftpflicht für Anlagen optional"
     }
   },
   "coverage": {
     "versicherungssumme": null,
-    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein)",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
     "wartezeit_monate": 0,
     "wartezeit_ausnahmen": [],
-    "geltungsbereich": "Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein",
-    "vertragslaufzeit": "1 Jahr (automatische Verlängerung um weitere Jahre)"
+    "geltungsbereich": "weltweit mit regionalen Einschränkungen; Leistungen in Euro",
+    "vertragslaufzeit": "1 Jahr mit automatischer Verlängerung um jeweils 1 Jahr"
   },
   "leistungen": [
-    "Ehrenamtliche Tätigkeiten/Freiwilligenarbeit",
-    "Elektronischer Datenaustausch/Internetnutzung",
-    "Auslandsschutz weltweit",
-    "Schlüsselverlust (optional)",
-    "Kautionsleistung im Ausland bis 200.000 EUR (optional)",
-    "Schadenersatzausfallversicherung (optional)",
-    "Neuwertentschädigung (optional)",
-    "Tagesmutter/Babysitter",
-    "Haftung bei Schäden durch deliktsunfähige Personen"
+    "Gefälligkeitshandlungen",
+    "Elektronischer Datenaustausch inkl. Schadensersatz und Wiederherstellungskosten",
+    "Schlüsselverlust mit Schloss-/Schließanlagenwechsel bis 200.000 EUR (falls vereinbart)",
+    "Neuwertentschädigung für Sachschäden bis Kaufdatum 12 Monate (falls vereinbart)",
+    "Forderungsausfallversicherung bis 500.000 EUR (falls vereinbart)",
+    "Kautionshilfe Ausland bis 200.000 EUR (falls vereinbart)",
+    "Mehrleistung Smartphone-Reparatur bis 20% Zusatz (falls vereinbart)",
+    "Schäden durch deliktsunfähige Personen zweimal jährlich bis zur Versicherungssumme",
+    "Leistungs-Update-Garantie für künftige Verbesserungen",
+    "Best-Bedingungs-Zusage für Konkurrenzleistungen (falls vereinbart)",
+    "Beitragsgarantie 36 Monate (falls vereinbart)",
+    "Mallorca-Deckung Mietfahrzeuge Europa (falls vereinbart)",
+    "Besitzstandsgarantie zum Vorversicherer (falls vereinbart)",
+    "Falschbetankung gemieteter Fahrzeuge bis 500 EUR (falls vereinbart)",
+    "Mehrleistungen Nachhaltigkeit bis 1.000 EUR (falls vereinbart)",
+    "Mitversicherung Arbeitsunfälle Schwarzarbeit-Ausnahme §110 Abs.1a SGB VII"
   ],
   "ausschluesse": [
-    "Vorsatz",
-    "Grobe Fahrlässigkeit mit Kenntnis",
-    "Familienmitglieder",
-    "Eigenschäden des Versicherungsnehmers",
-    "Berufliche/gewerbliche Tätigkeiten",
-    "Versicherungspflichtige Kraftfahrzeuge",
-    "Hunde, Rinder, Pferde (außer Assistenzhund)",
-    "Umweltschäden nach USchadG",
-    "Asbestschäden",
-    "Strahlenschäden",
-    "Abwässer, Senkungen, Überschwemmungen",
-    "Jagd und Rennveranstaltungen"
+    "Vorsätzlich herbeigeführte Schäden",
+    "Gewerbliche oder berufliche Tätigkeiten",
+    "Gebrauch versicherungspflichtiger Kraft-, Luft-, Wasserfahrzeuge",
+    "Jagd",
+    "Patent- und Markenrecht",
+    "Abnutzung und Verschleiß",
+    "Kriegsereignisse, höhere Gewalt",
+    "Umweltschadensgesetz mit teilweisen Ausnahmen",
+    "Asbest und asbesthaltige Substanzen",
+    "Schäden durch GVO",
+    "Nicht-häusliche Abwässer, Grundstückssenkungen, Überschwemmungen",
+    "Elektronischer Datenaustausch: Hacker-Attacken, bewusstete Vireneinsatz",
+    "Spam, Cookies-Missbrauch",
+    "Persönlichkeits- und Namensrechtsverletzungen (mit Ausnahmen)",
+    "Erkrankungsübertragung ohne Fahrlässigkeitsnachweis",
+    "Arbeitsunfälle und Berufskrankheiten SGB VII",
+    "Eigenschäden versicherter Personen untereinander",
+    "Abhandenkommen von Sachen ohne spezielle Vereinbarung"
   ],
   "besonderheiten": [
-    "Garantie: keine Schlechterstellung gegenüber GDV-Musterbedingungen (Stand 2020)",
-    "Leistungs-Update-Garantie für zukünftige Verbesserungen kostenfrei",
-    "Best-Bedingungs-Zusage (erweiterter Vorsorgeschutz optional)",
-    "Nebenberufliche Tätigkeiten bis 12.000 EUR Jahresumsatz versicherbar",
-    "Beitragsgarantie 36 Monate optional",
-    "Mallorca-Deckung (Differenzdeckung im EU-Ausland optional)",
-    "Besitzstandsgarantie bei Tarifwechsel optional",
-    "Smartphone-Reparaturmehrleistung bis 20 %",
-    "Nachhaltigkeitsmehrleistungen optional bis 1.000 EUR"
+    "Mitversicherung Ehepartner/Lebenspartner und Kinder bis 21 Jahre (Ausbildung bis 25)",
+    "Mitversicherung Familienangehörige in häuslicher Gemeinschaft",
+    "Versicherungsschutz deliktsunfähige Personen mit eigenem Anspruch",
+    "Kleine Benzinklausel: begrenzte Fahrzeugabdeckung",
+    "Kleine Wassersportfahrzeuge versichert (ohne Motor, Segelboote bis 25 m², Windsurfbretter)",
+    "Garantie besser als GDV-Musterbedingungen (Stand 2020)",
+    "Elektronische Datensicherheit erforderlich (Virenscanner, Firewall, WEP)",
+    "Haushaltsangestellte mitversichert (Putzkraft, Gartenbetreuer, Au-Pair)",
+    "Tagesmutter-/Babysitter-Tätigkeit versichert bis Geringfügigkeitsgrenze",
+    "Betriebspraktika und Ferienjobs Schüler/Studenten versichert",
+    "Nachversicherungsschutz 3 Monate nach Ende Mitversicherung",
+    "Nebenberufliche Tätigkeiten begrenzt auf 12.000 EUR Jahresumsatz (falls vereinbart)",
+    "Vorsorgeversicherung für neu entstehende Risiken nach Vertragsschluss",
+    "Beitragsbefreiung bei Arbeitslosigkeit 12 Monate nach 6 Monaten Wartezeit (falls vereinbart)"
   ],
   "beitrag": null,
   "_input_hash": "9d2fc3cb8987f475e26f4df0c45a6689a73154cc15dd4d91f9b0b935a59a11d8",

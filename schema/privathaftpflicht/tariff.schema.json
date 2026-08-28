@@ -30,7 +30,7 @@
     },
     "modules": {
       "type": "object",
-      "description": "Which legal areas are covered, and at which service level (Basis/Komfort/Premium or null if not graded).",
+      "description": "Which liability coverage areas THIS tariff includes (included strictly boolean: an area the documents do not include for this tariff is false). Level Basis/Komfort/Premium or null if not graded.",
       "additionalProperties": false,
       "properties": {
         "privat": {
@@ -195,10 +195,7 @@
       ],
       "properties": {
         "included": {
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": "boolean"
         },
         "level": {
           "type": [
@@ -221,6 +218,5 @@
         }
       }
     }
-  },
-  "_draft": true
+  }
 }

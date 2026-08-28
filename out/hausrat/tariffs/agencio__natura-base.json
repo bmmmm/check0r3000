@@ -4,114 +4,80 @@
   "stand": "01.03.2023",
   "modules": {
     "feuer": {
-      "included": true,
-      "level": null
+      "included": true
     },
     "einbruchdiebstahl": {
-      "included": true,
-      "level": null
+      "included": true
     },
     "wasserschaeden": {
-      "included": true,
-      "level": null
+      "included": true
     },
     "naturgefahren": {
-      "included": false,
-      "level": null,
-      "note": "optional via Elementarschadenversicherung"
+      "included": false
     },
     "tiere": {
-      "included": true,
-      "level": null,
-      "note": "Haustiere mitversichert"
+      "included": true
     },
     "fahrzeuganprall": {
-      "included": true,
-      "level": null,
-      "note": "Anprall von Schienen-, Wasser- und Straßenfahrzeugen"
+      "included": true
     },
     "diebstahl_erweitert": {
-      "included": true,
-      "level": null,
-      "note": "einfacher Diebstahl, Diebstahl am Arbeitsplatz, begrenzte Höchstentschädigungen"
+      "included": true
     },
     "internet": {
-      "included": false,
-      "level": null,
-      "note": "Cyber-Schutz nur in Fair+ Tarifen"
+      "included": true
     },
     "wohnungsschutzbrief": {
-      "included": null,
-      "level": null
+      "included": false
     },
     "glasschutz": {
-      "included": false,
-      "level": null,
-      "note": "Glasversicherung optional"
+      "included": false
     },
     "fahrradschutz": {
-      "included": false,
-      "level": null,
-      "note": "Fahrraddiebstahl kann vereinbart werden"
-    },
-    "ueberschwemmung_rueckstau": {
-      "included": false,
-      "level": null,
-      "note": "optional via Elementarschadenversicherung"
+      "included": false
     }
   },
   "coverage": {
     "versicherungssumme": null,
-    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein; beispielsweise 150 EUR bei Blitzschäden mit Überspannung, 250 EUR bei Eindringen von Niederschlägen (in höheren Tarifen)",
-    "wartezeit_monate": null,
+    "selbstbeteiligung": "gestaffelt nach Schadensart (50–250 EUR); optional Schadenfreiheitsregelung",
+    "wartezeit_monate": 0,
     "wartezeit_ausnahmen": [],
-    "geltungsbereich": "Deutschland; Außenversicherung weltweit bis 3 Monate vorübergehend",
-    "vertragslaufzeit": "mindestens 1 Jahr mit automatischer Verlängerung; oder ab 3 Jahre mit Kündigungsmöglichkeit nach dem 3. Jahr"
+    "geltungsbereich": "Deutschland; weltweit bis 3 Monate Außenversicherung",
+    "vertragslaufzeit": "1 oder 3 Jahre"
   },
   "leistungen": [
-    "Schlossänderungskosten",
-    "Schadenabwendungs- und Schadenminerungskosten",
+    "Schadenabwendungs- und Minderungskosten",
     "Bewachungskosten",
-    "Reparaturkosten für provisorische Maßnahmen",
-    "Hotelkosten bei unbewohnbarer Wohnung",
-    "Umzugskosten",
+    "Schlossänderungskosten",
+    "Reparaturkosten nach Einbruch",
+    "Hotelkosten wenn Wohnung unbewohnbar",
     "Transport- und Lagerkosten",
-    "Reparaturkosten für Gebäudeschäden nach Einbruch",
-    "Aufräumungskosten",
-    "Bewegungs- und Schutzkosten",
-    "Kosten für Leitungswasser und Gas bei Rohrbruch",
-    "Reparaturkosten an Tapeten und Bodenbelägen nach Wasserschaden",
-    "Reparaturkosten an behindertengerechten Einbauten",
-    "Mehrkosten durch Preissteigerungen (in höheren Tarifen)"
+    "Rückreisekosten bei Urlaubsabbruch",
+    "Psychologische Betreuung nach Einbruch",
+    "Umzugskosten nach Schaden",
+    "Cyber-Schutz (Phishing, Online-Betrug, Datenrettung)",
+    "Haustier-Betreuungskosten nach Schaden",
+    "Reparaturkosten für provisorische Maßnahmen"
   ],
   "ausschluesse": [
-    "Krieg, kriegsähnliche Ereignisse, Bürgerkrieg, Revolution, Rebellion, Aufstand",
-    "Kernenergie, nukleare Strahlung, radioaktive Substanzen",
-    "Schwamm",
-    "Sturmflut",
-    "Schäden vorsätzlich herbeigeführt",
-    "Gebäudebestandteile (außer Einbauten des Versicherungsnehmers)",
-    "Kraftfahrzeuge aller Art und Anhänger",
+    "Krieg, Kernenergie, innere Unruhen",
+    "Schwamm, Sturmflut",
+    "Vorsätzlich herbeigeführte Schäden",
+    "Kraftfahrzeuge und Anhänger aller Art",
     "Luft- und Wasserfahrzeuge",
-    "Hausrat von Untermietern (mit Ausnahmen)",
-    "Elektronisch gespeicherte Daten und Programme",
-    "Schäden durch Erdbeben",
-    "Sengschäden",
-    "Plansch- oder Reinigungswasser",
-    "Grundwasser und stehende oder fließende Gewässer",
-    "Überschwemmung und Witterungsniederschläge",
-    "Erdsenkung oder Erdrutsch (sofern nicht durch Leitungswasser verursacht)"
+    "Gebäudebestandteile",
+    "Grundwasserschäden",
+    "Überschwemmung durch Starkregen (im Base-Tariff)"
   ],
   "besonderheiten": [
-    "Kompensation von Treibhausgasen bei Feuerschäden",
-    "Nachhaltigkeit als zentrales Merkmal der agencio-Versicherung",
-    "Ökostrom und Investitionen in Klimaschutzprojekte",
-    "Schadenfrei-Rabatt mit Einstufung in Schadenfreiheitsklassen (SF 0–3)",
-    "Unterversicherungsverzicht bei angemessener Deckungssumme pro Quadratmeter",
-    "Erweiterte Sicherungsrichtlinien für hohe Wertsachen ab 75.000 EUR",
-    "Fahrraddiebstahl kann optional vereinbart werden",
-    "Psychologische Betreuung nach Einbruch (in Optimum+ Tarif)",
-    "Trägervereins ist Ammerländer Versicherung VVaG"
+    "Schadenfreiheitsregelung mit progressiver SB-Reduktion (bis 0 EUR)",
+    "Umfassender Cyber-Schutz-Katalog",
+    "Mitversicherung von Haustieren",
+    "Schutz für Pflegekräfte und Au-Pairs",
+    "CO2-Kompensation bei versicherten Brandschäden",
+    "Optionale Elementarschadenversicherung (BWE 2022)",
+    "Optionale Glasversicherung",
+    "Fahrraddiebstahl optional vereinbar"
   ],
   "beitrag": null,
   "_input_hash": "137d899aba5141099c941cff4ac5a3fe547cfda62ec56bb76df8cc1e9e5c3019",
