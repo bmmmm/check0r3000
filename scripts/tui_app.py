@@ -138,6 +138,28 @@ from tui_screens import (  # noqa: E402
 # code via CHECK0R_ANALYZE_MODEL (e.g. a local mlx:/ollama: spec).
 ANALYZE_MODEL = os.environ.get("CHECK0R_ANALYZE_MODEL", "claude")
 
+
+def _pyrun(*args: str) -> list[str]:
+    """Subprocess command for a scripts/*.py pipeline step: prefer the checked-out
+    venv (same selection as update-all.sh/pipeline.sh — works where uv's cache
+    dir is unavailable, e.g. sandboxes), fall back to uv run."""
+    venv_py = REPO_ROOT / ".venv" / "bin" / "python"
+    if os.access(venv_py, os.X_OK):
+        return [str(venv_py), *args]
+    return ["uv", "run", *args]
+
+
+def _extract_flags() -> tuple[str, bool, int]:
+    """Effective (model, filter, repeat) for every analyze funnel's extract stage,
+    derived from the dominant record provenance of the ACTIVE vertical so the
+    cache signature matches the existing records — an off-provenance run would
+    silently re-extract the whole vertical at cost. An explicitly set
+    CHECK0R_ANALYZE_MODEL still wins for the model."""
+    prov_model, filter_on, repeat = dominant_provenance()
+    model = (ANALYZE_MODEL if "CHECK0R_ANALYZE_MODEL" in os.environ
+             else (prov_model or ANALYZE_MODEL))
+    return model, filter_on, repeat
+
 # ---------------------------------------------------------------------------
 # Markup containment choke point
 # ---------------------------------------------------------------------------
@@ -3818,11 +3840,14 @@ class CheckApp(App):
             )
             return
 
+        model, filter_on, repeat = _extract_flags()
+
         def _go(confirmed: bool | None) -> None:
             if confirmed and self._claim_pipeline():
-                self._run_pipeline(entry, row)
+                self._run_pipeline(entry, row, model=model,
+                                   filter_on=filter_on, repeat=repeat)
 
-        self.push_screen(ConfirmFetchScreen(entry, ANALYZE_MODEL), _go)
+        self.push_screen(ConfirmFetchScreen(entry, model), _go)
 
     def action_analyze_local(self) -> None:
         """Analyze a tariff whose source PDFs are ALREADY on disk: ingest →
@@ -3857,13 +3882,15 @@ class CheckApp(App):
             )
             return
         entry = {"stem": stem, "insurer": row.insurer, "tariff": row.product}
+        model, filter_on, repeat = _extract_flags()
 
         def _go(confirmed: bool | None) -> None:
             if confirmed and self._claim_pipeline():
-                self._run_pipeline(entry, row, skip_download=True)
+                self._run_pipeline(entry, row, skip_download=True, model=model,
+                                   filter_on=filter_on, repeat=repeat)
 
         self.push_screen(
-            ConfirmFetchScreen(entry, ANALYZE_MODEL, skip_download=True), _go
+            ConfirmFetchScreen(entry, model, skip_download=True), _go
         )
 
     def action_harvest(self) -> None:
@@ -3899,12 +3926,14 @@ class CheckApp(App):
         # No stem yet — harvest_docs derives it from (insurer, product); the confirm
         # and the start notify use the row label instead.
         pseudo = {"insurer": row.insurer, "tariff": row.product}
+        model, filter_on, repeat = _extract_flags()
 
         def _go(confirmed: bool | None) -> None:
             if confirmed and self._claim_pipeline():
-                self._run_pipeline(pseudo, row, harvest=True)
+                self._run_pipeline(pseudo, row, harvest=True, model=model,
+                                   filter_on=filter_on, repeat=repeat)
 
-        self.push_screen(ConfirmFetchScreen(pseudo, ANALYZE_MODEL, harvest=True), _go)
+        self.push_screen(ConfirmFetchScreen(pseudo, model, harvest=True), _go)
 
     # --- Magic deep-scan funnel ([F]) ---
 
@@ -3998,7 +4027,8 @@ class CheckApp(App):
                 self._run_magic_scan(candidates, len(dropped), len(selected))
 
         self.push_screen(
-            MagicScanScreen(candidates, len(dropped), len(selected), ANALYZE_MODEL),
+            MagicScanScreen(candidates, len(dropped), len(selected),
+                            _extract_flags()[0]),
             _go,
         )
 
@@ -4011,9 +4041,7 @@ class CheckApp(App):
             an explicitly set CHECK0R_ANALYZE_MODEL still wins for the model."""
         if self._pipeline_busy():
             return
-        prov_model, filter_on, repeat = dominant_provenance()
-        model = (ANALYZE_MODEL if "CHECK0R_ANALYZE_MODEL" in os.environ
-                 else (prov_model or ANALYZE_MODEL))
+        model, filter_on, repeat = _extract_flags()
         n_records = len(list(_vertical.tariffs_dir().glob("*.json")))
 
         def _go(confirmed: bool | None) -> None:
@@ -4123,7 +4151,7 @@ class CheckApp(App):
         return False, reason
 
     def _run_pipeline_tail(self, log_path: Path, *, base_idx: int, total: int,
-                           local_model: bool) -> None:
+                           local_model: bool, model: str = ANALYZE_MODEL) -> None:
         """Run the post-extract tail (Golden-Pins → Overlay → Render → Regression)
             that pipeline.sh runs after extract, so a TUI-started analysis reaches the
             same on-disk state (out/enriched, out/vergleich.md, the golden gate) instead
@@ -4136,12 +4164,12 @@ class CheckApp(App):
             (same --model + local-cold timeout); golden-pins/overlay/regression are
             model-free and fast, so they get a modest ceiling."""
         tail = [
-            ("Golden-Pins", ["uv", "run", "scripts/golden_pins.py"], 60),
-            ("Overlay", ["uv", "run", "scripts/overlay.py"], 300),
+            ("Golden-Pins", _pyrun("scripts/golden_pins.py"), 60),
+            ("Overlay", _pyrun("scripts/overlay.py"), 300),
             ("Render",
-             ["uv", "run", "scripts/render.py", "--model", ANALYZE_MODEL],
+             _pyrun("scripts/render.py", "--model", model),
              1200 if local_model else 600),
-            ("Regression", ["uv", "run", "scripts/regression.py"], 300),
+            ("Regression", _pyrun("scripts/regression.py"), 300),
         ]
         for offset, (name, cmd, step_timeout) in enumerate(tail):
             ok, reason = self._stream_step(
@@ -4206,18 +4234,26 @@ class CheckApp(App):
                 severity="information",
                 timeout=7,
             )
-        local_model = _providers.parse_spec(ANALYZE_MODEL)[0] != "claude"
+        # Provenance-derived extract flags (see _extract_flags): the K freshly
+        # harvested tariffs extract with the SAME signature as the existing records,
+        # so the rest of the vertical stays cached instead of silently re-extracting.
+        model, filter_on, repeat = _extract_flags()
+        local_model = _providers.parse_spec(model)[0] != "claude"
+        extract_cmd = _pyrun("scripts/extract.py", "--model", model)
+        if filter_on:
+            extract_cmd.append("--filter")
+        if repeat > 1:
+            extract_cmd += ["--repeat", str(repeat)]
         # The harvest pulls K panels in one headless pass; extract then analyzes all K
         # pending records. Both scale with K, so give them generous ceilings (a local
         # cold model is slowest) — this is a long, user-initiated batch.
         steps = [
             ("Harvest+Download",
-             ["uv", "run", "scripts/harvest_docs.py",
-              "--select-file", str(sel_path), "--download", "--jobs", "6"], 1800),
-            ("Ingest", ["uv", "run", "scripts/ingest.py"], 600),
-            ("Extract",
-             ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL],
-             3600 if local_model else 2400),
+             _pyrun("scripts/harvest_docs.py",
+                    "--select-file", str(sel_path), "--download", "--jobs", "6"),
+             1800),
+            ("Ingest", _pyrun("scripts/ingest.py"), 600),
+            ("Extract", extract_cmd, 3600 if local_model else 2400),
         ]
         # One combined log per scan run; truncate so a previous run's output can't be
         # mistaken for this one's. _stream_step appends each step under a header.
@@ -4234,7 +4270,7 @@ class CheckApp(App):
             if not ok:
                 return
         self._run_pipeline_tail(log_path, base_idx=len(steps) + 1, total=total,
-                                local_model=local_model)
+                                local_model=local_model, model=model)
         self.call_from_thread(self._after_magic_scan, len(candidates))
 
     def _after_magic_scan(self, n: int) -> None:
@@ -4266,18 +4302,18 @@ class CheckApp(App):
         # like the other funnels. Extract carries the provenance flags so the
         # cache signature matches the existing records.
         local_model = _providers.parse_spec(model)[0] != "claude"
-        extract_cmd = ["uv", "run", "scripts/extract.py", "--model", model]
+        extract_cmd = _pyrun("scripts/extract.py", "--model", model)
         if filter_on:
             extract_cmd.append("--filter")
         if repeat > 1:
             extract_cmd += ["--repeat", str(repeat)]
         steps = [
             ("Scan+Snapshot",
-             ["uv", "run", "scripts/fetch_ratings.py", "--snapshot"], 600, False),
+             _pyrun("scripts/fetch_ratings.py", "--snapshot"), 600, False),
             ("Docs",
-             ["uv", "run", "scripts/fetch_docs.py", "--apply", "--into-raw"],
+             _pyrun("scripts/fetch_docs.py", "--apply", "--into-raw"),
              1800, False),
-            ("Ingest", ["uv", "run", "scripts/ingest.py"], 600, True),
+            ("Ingest", _pyrun("scripts/ingest.py"), 600, True),
             # Ceiling, not an estimate: cache-current tariffs are skipped, so the
             # common run is fast — but a doc-refresh wave re-extracts many stems
             # at repeat×cost, and a cold local model is slowest.
@@ -4305,13 +4341,13 @@ class CheckApp(App):
                     timeout=7,
                 )
         self._run_pipeline_tail(log_path, base_idx=len(steps) + 1, total=total,
-                                local_model=local_model)
+                                local_model=local_model, model=model)
         # Report only in the full-update funnels ([U] + update-all.sh): summarize
         # what changed, cost and regression state into tmp/update-report.md and
         # append one run-log line — non-fatal like the tail steps.
         ok, reason = self._stream_step(
-            "Report", ["uv", "run", "scripts/update_report.py",
-                       "--label", "tui-update-all"],
+            "Report", _pyrun("scripts/update_report.py",
+                             "--label", "tui-update-all"),
             120, log_path, idx=len(steps) + 5, total=total,
         )
         if not ok:
@@ -4370,12 +4406,16 @@ class CheckApp(App):
 
     @work(thread=True, group="pipeline")
     def _run_pipeline(self, entry: dict, row: SnapshotRow,
-                      *, skip_download: bool = False, harvest: bool = False) -> None:
+                      *, skip_download: bool = False, harvest: bool = False,
+                      model: str = ANALYZE_MODEL, filter_on: bool = False,
+                      repeat: int = 1) -> None:
         """Run the analyze pipeline for one tariff off the UI thread; status is
             posted back via call_from_thread. With harvest, a headless harvest_docs
             pass (--download) fetches the source URLs + PDFs first; with skip_download
             the PDFs are already in data/raw/<stem>/ and only ingest → extract run;
-            otherwise fetch_docs --into-raw downloads them first.
+            otherwise fetch_docs --into-raw downloads them first. model/filter_on/
+            repeat come from _extract_flags() at the action layer (provenance-derived
+            so the cache signature matches the vertical's existing records).
 
             Guarded by _pipeline_running (set here, cleared in finally) so a second
             invocation is refused at the action layer rather than racing the OS
@@ -4383,12 +4423,14 @@ class CheckApp(App):
         self._pipeline_running = True
         try:
             self._run_pipeline_steps(entry, row, skip_download=skip_download,
-                                     harvest=harvest)
+                                     harvest=harvest, model=model,
+                                     filter_on=filter_on, repeat=repeat)
         finally:
             self._pipeline_running = False
 
     def _run_pipeline_steps(self, entry: dict, row: SnapshotRow, *,
-                            skip_download: bool, harvest: bool) -> None:
+                            skip_download: bool, harvest: bool, model: str,
+                            filter_on: bool, repeat: int) -> None:
         stem = entry.get("stem", "")
         label = stem or f"{row.insurer} {row.product}"
         # Download straight into the canonical data/raw/<stem>/ layout (--into-raw),
@@ -4401,24 +4443,34 @@ class CheckApp(App):
             # headless pass; then ingest/extract pick the PDFs up by stem.
             steps.append((
                 "Harvest",
-                ["uv", "run", "scripts/harvest_docs.py",
-                 "--insurer", row.insurer, "--match", row.product, "--exact",
-                 "--download", "--jobs", "6"],
+                _pyrun("scripts/harvest_docs.py",
+                       "--insurer", row.insurer, "--match", row.product, "--exact",
+                       "--download", "--jobs", "6"),
             ))
         elif not skip_download:
             steps.append(
-                ("Download", ["uv", "run", "scripts/fetch_docs.py", stem, "--into-raw"])
+                ("Download", _pyrun("scripts/fetch_docs.py", stem, "--into-raw"))
             )
+        # Extract carries the provenance flags (see _extract_flags) and — when the
+        # stem is known — an --only pin, so a single-tariff funnel can never touch
+        # the rest of the vertical even if the signature were off.
+        extract_cmd = _pyrun("scripts/extract.py", "--model", model)
+        if filter_on:
+            extract_cmd.append("--filter")
+        if repeat > 1:
+            extract_cmd += ["--repeat", str(repeat)]
+        if stem:
+            extract_cmd += ["--only", stem]
         steps += [
-            ("Ingest", ["uv", "run", "scripts/ingest.py"]),
-            ("Extract", ["uv", "run", "scripts/extract.py", "--model", ANALYZE_MODEL]),
+            ("Ingest", _pyrun("scripts/ingest.py")),
+            ("Extract", extract_cmd),
         ]
         # A local model that is not yet resident pays a one-time cold-load (minutes)
         # on top of inference, which can exceed the default 600s step budget. Give the
         # Extract step the same 1200s ceiling _providers.run() already allows for the
         # model call, so a cold-start race (analyze fired before the mount prewarm
         # finished) doesn't get killed mid-load.
-        local_model = _providers.parse_spec(ANALYZE_MODEL)[0] != "claude"
+        local_model = _providers.parse_spec(model)[0] != "claude"
         self.call_from_thread(
             self.notify, f"Pipeline gestartet: {_esc(label)} …", timeout=4
         )
@@ -4437,7 +4489,7 @@ class CheckApp(App):
             if not ok:
                 return
         self._run_pipeline_tail(log_path, base_idx=len(steps) + 1, total=total,
-                                local_model=local_model)
+                                local_model=local_model, model=model)
         self.call_from_thread(self._after_pipeline, row)
 
     def _after_pipeline(self, row: SnapshotRow) -> None:

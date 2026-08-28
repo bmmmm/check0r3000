@@ -37,6 +37,7 @@ from textual.widgets import (  # noqa: E402
 )
 from textual.widgets.option_list import Option  # noqa: E402
 
+import _vertical  # noqa: E402  — active vertical's registry entry (download host)
 from tui_data import _DOCTYPE_SHORT  # noqa: E402
 from tui_format import _esc, link_url  # noqa: E402
 
@@ -132,10 +133,12 @@ class ConfirmFetchScreen(ModalScreen[bool]):
                 "[bold]\\[↵/y][/bold] Analysieren     [bold]\\[Esc/n][/bold] Abbrechen",
             ]
         else:
+            host = (_vertical.entry().get("host", "")
+                    .removeprefix("https://").removeprefix("http://"))
             lines = [
                 f"[bold]{_esc(e.get('insurer', ''))} — {_esc(e.get('tariff', ''))}[/bold]",
                 "",
-                f"Download von [cyan]rechtsschutz.check24.de[/cyan]: "
+                f"Download von [cyan]{_esc(host)}[/cyan]: "
                 f"[bold]{len(docs)}[/bold] PDF(s)",
             ]
             for dd in docs:

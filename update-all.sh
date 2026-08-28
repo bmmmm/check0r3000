@@ -110,9 +110,9 @@ PIPELINE_RC=0
 ./pipeline.sh $MODEL_ARGS $FILTER_ARGS $JOBS_ARGS $REPEAT_ARGS || PIPELINE_RC=$?
 
 echo "==> update report (what changed + cost + regression -> tmp/update-report.md)"
-# uv run (not $PYRUN): the report imports regression.py and thus needs the
-# jsonschema dep from its script header. Non-fatal — a report bug must never
-# mask the pipeline result.
-uv run scripts/update_report.py --label update-all || true
+# Non-fatal — a report bug must never mask the pipeline result. $PYRUN: the
+# venv (when present) carries jsonschema for regression.py just like the
+# pipeline's own regression step; otherwise uv run resolves the script header.
+$PYRUN scripts/update_report.py --label update-all || true
 
 exit $PIPELINE_RC

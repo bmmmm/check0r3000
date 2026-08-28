@@ -38,6 +38,8 @@ pitch/
 
 # --- Python / uv ---
 .venv/
+# worktree sessions symlink the main checkout's venv (a symlink does not match ".venv/")
+.venv
 __pycache__/
 *.pyc
 .uv-cache/
