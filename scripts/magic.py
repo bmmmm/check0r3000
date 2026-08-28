@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import statistics
+import sys
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
@@ -554,10 +555,13 @@ def _mk_row(insurer, product, note, bew=None, price=None, pos=0, stem=None):
     )
 
 
-def _mk_detail(insurer, product, n_modules=8, levels=None, leistungen=None,
+def _mk_detail(insurer, product, n_modules=None, levels=None, leistungen=None,
                coverage=None):
     mods = {}
-    for i, k in enumerate(_modules.module_keys()):
+    all_keys = _modules.module_keys()
+    if n_modules is None:  # default: every module of the active vertical included
+        n_modules = len(all_keys)
+    for i, k in enumerate(all_keys):
         inc = i < n_modules
         lvl = (levels or {}).get(k)
         mods[k] = {"included": inc, "level": lvl}
@@ -574,6 +578,22 @@ def _approx(a: float, b: float, eps: float = 1e-6) -> bool:
     return abs(a - b) <= eps
 
 
+def _taxonomy_phrases(tax: dict, n: int) -> list[str]:
+    """First-synonym phrases from up to n DISTINCT benefit categories of the
+    ACTIVE vertical's taxonomy — vertical-neutral fixture benefits. Each pick is
+    verified through classify() so file-order precedence cannot fold two picks
+    into one category (which would silently weaken the coverage fixtures)."""
+    picked: list[str] = []
+    for cat in tax.get("benefit_categories", []):
+        for syn in cat["synonyms"]:
+            if ctax.classify(syn, "leistung", tax) == cat["key"]:
+                picked.append(syn)
+                break
+        if len(picked) >= n:
+            break
+    return picked
+
+
 def _selftest() -> int:
     failures: list[str] = []
 
@@ -582,6 +602,17 @@ def _selftest() -> int:
             failures.append(msg)
 
     w = MagicWeights()
+
+    # Vertical-derived fixture parameters: module count from the active vertical's
+    # schema/config, benefit phrases from its taxonomy — no per-vertical hardcodes.
+    keys = _modules.module_keys()
+    n_keys = len(keys)
+    n_half = n_keys // 2
+    tax = ctax.load_taxonomy()
+    bench = _taxonomy_phrases(tax, 6)
+    check(n_keys >= 2, f"vertical needs >= 2 module keys for the selftest, got {n_keys}")
+    check(len(bench) >= 3,
+          f"taxonomy needs >= 3 matchable benefit categories, got {len(bench)}")
 
     # 1. Default weights sum to 1.0 (clean [0,1] total).
     check(_approx(sum(w.dim_weights().values()), 1.0),
@@ -606,14 +637,16 @@ def _selftest() -> int:
           "parse_note of empty/junk -> None")
 
     # 5. Module breadth + tier.
-    full = _mk_detail("X", "full", n_modules=8)
-    half = _mk_detail("X", "half", n_modules=4)
+    full = _mk_detail("X", "full", n_modules=n_keys)
+    half = _mk_detail("X", "half", n_modules=n_half)
     _, br_full, _ = _module_stats(full)
     _, br_half, _ = _module_stats(half)
-    check(_approx(br_full, 1.0), f"8/8 modules breadth should be 1.0, got {br_full}")
-    check(_approx(br_half, 0.5), f"4/8 modules breadth should be 0.5, got {br_half}")
-    tiered = _mk_detail("X", "tiered", n_modules=8,
-                        levels={k: "Premium" for k in _modules.module_keys()})
+    check(_approx(br_full, 1.0),
+          f"{n_keys}/{n_keys} modules breadth should be 1.0, got {br_full}")
+    check(_approx(br_half, n_half / n_keys),
+          f"{n_half}/{n_keys} modules breadth should be {n_half / n_keys}, got {br_half}")
+    tiered = _mk_detail("X", "tiered", n_modules=n_keys,
+                        levels={k: "Premium" for k in keys})
     _, _, tier_full = _module_stats(tiered)
     check(_approx(tier_full, 1.0), f"all-Premium tier should be 1.0, got {tier_full}")
     _, _, tier_none = _module_stats(full)
@@ -627,12 +660,13 @@ def _selftest() -> int:
     gen_unknown = _coverage_generosity(_mk_detail("X", "g", coverage={}))
     check(_approx(gen_unknown, 0.5), f"empty coverage should be neutral 0.5, got {gen_unknown}")
 
-    # 7. Distinct-category coverage (dedup verbose listings).
-    tax = ctax.load_taxonomy()
+    # 7. Distinct-category coverage (dedup verbose listings): three phrasings of
+    # the SAME taxonomy synonym (bare, brand-suffixed, glyph-prefixed) must fold
+    # into one category.
     verbose = _mk_detail("X", "v", leistungen=[
-        "telefonische Rechtsberatung",
-        "telefonische Rechtsberatung (ARAG JuraTel®)",
-        "telefonische Rechtsberatung (DMB-Hotline)",
+        bench[0],
+        f"{bench[0]} (Anbieter-Branding®)",
+        f"✓ {bench[0]}",
     ])
     n_cats, cov = _leistung_coverage(verbose, tax)
     check(n_cats == 1, f"three phrasings of one benefit should be 1 category, got {n_cats}")
@@ -642,11 +676,9 @@ def _selftest() -> int:
         _mk_row("Alpha", "Top", "1,0", bew=4.2, price=40.0, pos=1),
         _mk_row("Beta", "Weak", "2,4", bew=3.8, price=20.0, pos=2),
     ]
-    good = _mk_detail("Alpha", "Top", n_modules=8, leistungen=[
-        "telefonische Rechtsberatung", "Mediation", "Strafkaution als Darlehen",
-        "Mobiler Anwalt (Hausbesuch)", "freie Anwaltswahl",
-    ], coverage={"versicherungssumme": "unbegrenzt", "wartezeit_monate": 0,
-                 "geltungsbereich": "weltweit"})
+    good = _mk_detail("Alpha", "Top", n_modules=n_keys, leistungen=bench[:5],
+                      coverage={"versicherungssumme": "unbegrenzt", "wartezeit_monate": 0,
+                                "geltungsbereich": "weltweit"})
     weak = _mk_detail("Beta", "Weak", n_modules=2, leistungen=[],
                       coverage={"wartezeit_monate": 6, "geltungsbereich": "Deutschland"})
     details = {"alpha__top": good, "beta__weak": weak}
@@ -708,10 +740,8 @@ def _selftest() -> int:
         _mk_row("R", "rich", "1,0", bew=4.1, price=50.0, pos=1, stem="r__rich"),
         _mk_row("P", "poor", "1,0", bew=4.1, price=50.0, pos=2, stem="p__poor"),
     ]
-    rich = _mk_detail("R", "rich", n_modules=8, leistungen=[
-        "telefonische Rechtsberatung", "Mediation", "Strafkaution als Darlehen",
-        "Mobiler Anwalt (Hausbesuch)", "freie Anwaltswahl", "Ehe- und Familienrecht"])
-    poor = _mk_detail("P", "poor", n_modules=8, leistungen=[])
+    rich = _mk_detail("R", "rich", n_modules=n_keys, leistungen=bench)
+    poor = _mk_detail("P", "poor", n_modules=n_keys, leistungen=[])
     lc = rank(lc_rows, {"r__rich": rich, "p__poor": poor}, w, tax)
     by_stem = {s.stem: s for s in lc}
     check(by_stem["p__poor"].leistung_low_confidence,
@@ -731,38 +761,42 @@ def _selftest() -> int:
     check(zero.quality_per_eur() is None, "quality_per_eur is None at price 0")
 
     # 15. Need-weighting: neutral == objective, skewed shifts module_breadth.
-    neutral = {k: 1.0 for k in _modules.module_keys()}
+    # k_a/k_b stand in for any two module keys of the active vertical.
+    k_a, k_b = keys[0], keys[1]
+    neutral = {k: 1.0 for k in keys}
     check(needs_are_neutral(neutral), "all-equal needs should read as neutral")
-    skewed = {k: 0.0 for k in _modules.module_keys()}
-    skewed["privat"] = 1.0  # only privat matters
+    skewed = {k: 0.0 for k in keys}
+    skewed[k_a] = 1.0  # only k_a matters
     check(not needs_are_neutral(skewed), "skewed needs should not read as neutral")
     rec_priv = _mk_detail("X", "p", n_modules=0)
-    rec_priv.modules["privat"] = {"included": True, "level": None}
-    rec_priv.modules["verkehr"] = {"included": True, "level": None}
-    _, br_obj, _ = _module_stats(rec_priv)            # 2/8 objective
-    check(_approx(br_obj, 2 / 8), f"objective breadth should be 2/8, got {br_obj}")
-    _, br_need, _ = _module_stats(rec_priv, skewed)   # only privat weighted, privat covered
+    rec_priv.modules[k_a] = {"included": True, "level": None}
+    rec_priv.modules[k_b] = {"included": True, "level": None}
+    _, br_obj, _ = _module_stats(rec_priv)            # 2/n objective
+    check(_approx(br_obj, 2 / n_keys),
+          f"objective breadth should be 2/{n_keys}, got {br_obj}")
+    _, br_need, _ = _module_stats(rec_priv, skewed)   # only k_a weighted, k_a covered
     check(_approx(br_need, 1.0),
-          f"need-weighted breadth (only privat matters, privat covered) should be 1.0, "
+          f"need-weighted breadth (only {k_a} matters, {k_a} covered) should be 1.0, "
           f"got {br_need}")
     _, br_neutral, _ = _module_stats(rec_priv, neutral)
     check(_approx(br_neutral, br_obj), "neutral needs must reproduce objective breadth")
     nd = load_needs()
-    check(set(nd.keys()) == set(_modules.module_keys()), "load_needs returns all 8 Baustein keys")
+    check(set(nd.keys()) == set(keys),
+          f"load_needs returns all {n_keys} Baustein keys")
     # save_needs roundtrip (to a temp file; never touches the real config)
     import tempfile
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td) / "needs.json"
-        want = {k: 1.0 for k in _modules.module_keys()}
-        want["privat"] = 3.0
-        want["verkehr"] = 0.0
+        want = {k: 1.0 for k in keys}
+        want[k_a] = 3.0
+        want[k_b] = 0.0
         save_needs(want, tmp)
         got = load_needs(tmp)
         check(got == want, f"save/load_needs roundtrip mismatch: {got}")
         # whole numbers persist as ints (1 not 1.0) but load back as floats
         raw = json.loads(tmp.read_text(encoding="utf-8"))
-        check(raw["privat"] == 3 and isinstance(raw["privat"], int),
-              f"whole weights should persist as int, got {raw['privat']!r}")
+        check(raw[k_a] == 3 and isinstance(raw[k_a], int),
+              f"whole weights should persist as int, got {raw[k_a]!r}")
 
     # 16. Real-data smoke: rank loads and scores every record without raising.
     real_rows: list[tui_data.SnapshotRow] = []
@@ -821,5 +855,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Magic Find scoring core + self-test.")
     ap.add_argument("--selftest", action="store_true",
                     help="assert scoring invariants and rank the real records")
-    ap.parse_args()
+    ap.add_argument("--all-verticals", action="store_true",
+                    help="run the selftest once per non-disabled registry vertical "
+                         "(each in a subprocess with CHECK0R_VERTICAL set); the "
+                         "worst return code wins")
+    args = ap.parse_args()
+    if args.all_verticals:
+        raise SystemExit(_vertical.run_per_vertical(
+            [sys.executable, __file__, "--selftest"]))
     raise SystemExit(_selftest())

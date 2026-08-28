@@ -104,6 +104,20 @@ def selectable(include_disabled: bool = False) -> list[str]:
             if include_disabled or (e.get("status") != "disabled")]
 
 
+def run_per_vertical(argv: list[str]) -> int:
+    """Run `argv` once per non-disabled registry vertical, each in a subprocess
+    with CHECK0R_VERTICAL set; the worst return code wins. Shared by every
+    script's --all-verticals flag (regression, selftests) so CI sweeps the whole
+    registry with one line per gate."""
+    import subprocess
+    rc = 0
+    for v in selectable():
+        print(f"\n===== vertical: {v} =====", flush=True)
+        res = subprocess.run(argv, env={**os.environ, "CHECK0R_VERTICAL": v})
+        rc = max(rc, res.returncode)
+    return rc
+
+
 def vertical_config(vertical: str | None = None) -> dict:
     """config/verticals/<v>/vertical.json — per-vertical configuration data
     (module labels, filter anchors, instruction text, query-param map, ...).

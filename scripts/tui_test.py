@@ -985,6 +985,68 @@ async def t_vertical_switch(app, pilot) -> None:
         shutil.rmtree(schema_dir, ignore_errors=True)
 
 
+async def t_vertical_switch_real(app, pilot) -> None:
+    """Local-only: [S]-switch to a REAL scaffolded vertical (hausrat) with its
+    real on-disk data — snapshot rows load, at least one row resolves a detail
+    record, the module keys swap to the hausrat schema, and switching back
+    restores the Rechtsschutz rows. Skips (as a pass, with a notice) when the
+    local checkout has no hausrat snapshot — data/ is gitignored, so CI and
+    fresh clones have none."""
+    import os
+
+    import _modules
+    import _vertical
+    from textual.widgets import OptionList
+
+    real = "hausrat"
+    if real not in _vertical.registry()["verticals"]:
+        print(f"      (skip: no {real!r} registry entry)")
+        return
+    snap_dir = _vertical.snapshots_dir(real)
+    if not (snap_dir.is_dir() and any(snap_dir.glob("*.json"))):
+        print(f"      (skip: no local {real} snapshot — gitignored data/)")
+        return
+
+    async def pick(name: str) -> None:
+        base = len(app.screen_stack)
+        await pilot.press("S")
+        assert await _wait_until(pilot, lambda: len(app.screen_stack) > base), (
+            "[S] did not open the vertical selector")
+        lst = app.screen_stack[-1].query_one("#vertical-list", OptionList)
+        idx = next(i for i in range(lst.option_count)
+                   if lst.get_option_at_index(i).id == name)
+        lst.highlighted = idx
+        await pilot.press("enter")
+        assert await _wait_until(pilot, lambda: _vertical.active() == name), (
+            f"switch to {name} did not apply")
+        await pilot.pause()
+
+    try:
+        assert _vertical.active() == "rechtsschutz"
+        rs_keys = _modules.module_keys()
+        base_rows = len(app._market_rows)
+        assert base_rows > 0, "no RS market rows to begin with"
+
+        await pick(real)
+        assert len(app._market_rows) > 0, "real hausrat snapshot loaded no rows"
+        assert "Hausrat" in str(app.sub_title), app.sub_title
+        hr_keys = _modules.module_keys()
+        assert hr_keys and hr_keys != rs_keys, (
+            f"module keys did not swap to the {real} schema: {hr_keys}")
+        with_detail = sum(
+            1 for r in app._snapshot.rows if app._detail_for_row(r) is not None)
+        assert with_detail > 0, (
+            "no market row resolves a detail record despite real extracts on disk")
+
+        await pick("rechtsschutz")
+        assert len(app._market_rows) == base_rows, (
+            f"RS rows not restored: {len(app._market_rows)} != {base_rows}")
+        assert _modules.module_keys() == rs_keys, "RS module keys not restored"
+    finally:
+        os.environ.pop("CHECK0R_VERTICAL", None)
+        _modules.reset_cache()
+
+
 CASES = [
     ("boot_and_tables", t_boot_and_tables),
     ("pipeline_single_flight", t_pipeline_single_flight),
@@ -1013,6 +1075,7 @@ CASES = [
     ("verlauf_stats", t_verlauf_stats),
     ("splash_and_loader", t_splash_and_loader),
     ("vertical_switch", t_vertical_switch),
+    ("vertical_switch_real", t_vertical_switch_real),
 ]
 
 

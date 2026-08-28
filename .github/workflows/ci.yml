@@ -20,12 +20,14 @@ jobs:
       - run: uv sync --locked
       # Textual-free data smoke test: loads config/out fixtures, exercises the
       # subprocess-streaming core. Gracefully skips the gitignored snapshot.
-      - run: uv run scripts/tui_data.py
+      # --all-verticals = once per registry vertical (worst rc wins), like the
+      # regression gate below.
+      - run: uv run scripts/tui_data.py --all-verticals
       # Magic Find scoring invariants + a real-data smoke rank over out/tariffs/.
-      - run: uv run scripts/magic.py --selftest
+      - run: uv run scripts/magic.py --all-verticals
       - run: uv run scripts/scorecard.py
       - run: uv run scripts/feature_history.py
-      - run: uv run scripts/coverage_taxonomy.py --selftest
+      - run: uv run scripts/coverage_taxonomy.py --all-verticals
       # Regression guard, once per registry vertical: out/<v>/tariffs/*.json vs
       # benchmarks/<v>/golden.json invariants (golden-less vertical = market sweep only).
       - run: uv run scripts/regression.py --all-verticals

@@ -1038,5 +1038,9 @@ if __name__ == "__main__":
         print(f"{m or ''}|{1 if f else 0}|{r}")
         sys.exit(0)
 
+    if "--all-verticals" in sys.argv[1:]:
+        # Selftest once per non-disabled registry vertical (CI sweep).
+        sys.exit(_vertical.run_per_vertical([sys.executable, __file__]))
+
     # Textual-free data smoke test (replaces `python3 tui.py --selftest`).
     sys.exit(run_selftest(None))

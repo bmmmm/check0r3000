@@ -280,16 +280,7 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.all_verticals:
-        import os
-        import subprocess
-        rc = 0
-        for v in _vertical.selectable():
-            print(f"\n===== vertical: {v} =====", flush=True)
-            res = subprocess.run(
-                [sys.executable, __file__],
-                env={**os.environ, "CHECK0R_VERTICAL": v})
-            rc = max(rc, res.returncode)
-        return rc
+        return _vertical.run_per_vertical([sys.executable, __file__])
 
     # A vertical without a curated golden.json (freshly scaffolded) still gets the
     # market-wide sweep — golden-less means "no pinned invariants yet", not "skip".

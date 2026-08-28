@@ -109,62 +109,10 @@ def category_label(key: str, tax: dict | None = None) -> str:
 # coverage_taxonomy.py --selftest
 # ---------------------------------------------------------------------------
 
-# (text, kind, expected_key). Same-benefit items worded differently by three
-# insurers MUST collapse to one key — that is the whole point of the feature.
-# Includes a precedence guard (Mobiler Anwalt must not be eaten by freie Anwaltswahl).
-_ALIGNMENT_CASES = [
-    # telefonische Rechtsberatung — identical service, three brandings
-    ("telefonische Rechtsberatung", "leistung", "telefonische_rechtsberatung"),
-    ("telefonische Rechtsberatung (ARAG JuraTel®)", "leistung", "telefonische_rechtsberatung"),
-    ("telefonische Rechtsberatung (DMB-Hotline)", "leistung", "telefonische_rechtsberatung"),
-    # Mediation — three different limit phrasings
-    ("Mediation (max. 180 €/Std.)", "leistung", "mediation"),
-    ("Mediation bis 3.000 €/Fall, 6.000 €/Jahr", "leistung", "mediation"),
-    ("Mediation bis 3.000 EUR/Verfahren", "leistung", "mediation"),
-    # Strafkaution
-    ("Strafkaution als zinsloses Darlehen", "leistung", "strafkaution_darlehen"),
-    ("Strafkaution als Darlehen bis 1 Mio EUR", "leistung", "strafkaution_darlehen"),
-    # precedence guard + neighbour
-    ("Mobiler Anwalt (Hausbesuch)", "leistung", "mobiler_anwalt_hausbesuch"),
-    ("freie Anwaltswahl", "leistung", "freie_anwaltswahl"),
-    # Übersetzung/Dolmetscher
-    ("Übersetzung und Dolmetscher im Ausland", "leistung", "uebersetzung_dolmetscher"),
-    ("Übersetzungskosten im Ausland", "leistung", "uebersetzung_dolmetscher"),
-    ("Gebärdendolmetscher", "leistung", "uebersetzung_dolmetscher"),
-    # PV / renewables, two namings
-    ("erneuerbare Energien/E-Ladestation (bis 25.000 €)", "leistung", "erneuerbare_energien_pv"),
-    ("Solar-/PV-Anlagen-Rechtsschutz bis 25.000 EUR", "leistung", "erneuerbare_energien_pv"),
-    # Beratung Familien-/Erbrecht (hyphen vs space vs compound)
-    ("Erstberatung Familien-/Erbrecht (bis 1.000 €)", "leistung", "beratung_familien_erbrecht"),
-    ("erweiterter Familien-/Erbrecht-Beratungsschutz bis 1.500 EUR", "leistung", "beratung_familien_erbrecht"),
-    # ROLAND digital extras — online-safety + digital-estate variants that previously
-    # fell out of the taxonomy (undercounting leistung_cov). Map to the existing
-    # online-monitoring / Vorsorge categories.
-    ("Online-Schutz-Radar", "leistung", "identity_protection"),
-    ("Webseiten-Prüfung", "leistung", "identity_protection"),
-    ("Digital-Nachlass", "leistung", "vorsorge_testaments_assistent"),
-    # --- exclusions ---
-    ("Baufinanzierung / Kauf bebaubarer Grundstücke", "ausschluss", "ausschluss_baufinanzierung"),
-    ("Baufinanzierung und Errichtung/Kauf bebaubarer Grundstücke", "ausschluss", "ausschluss_baufinanzierung"),
-    ("Baurisiko (Bau/Erwerb/Finanzierung von Gebäuden)", "ausschluss", "ausschluss_baufinanzierung"),
-    ("Kapitalanlagen (Erwerb/Verwaltung/Finanzierung)", "ausschluss", "ausschluss_kapitalanlage"),
-    ("Kapitalanlagegeschäfte", "ausschluss", "ausschluss_kapitalanlage"),
-    ("Kapitalanlagen (nur eingeschränkt gedeckt)", "ausschluss", "ausschluss_kapitalanlage"),
-    ("Patent-/Marken-/Urheberrecht / geistiges Eigentum", "ausschluss", "ausschluss_geistiges_eigentum"),
-    ("Patent-, Marken-, Urheber-, Designrecht (geistiges Eigentum)", "ausschluss", "ausschluss_geistiges_eigentum"),
-    ("Patent-/Marken-/Urheberrecht", "ausschluss", "ausschluss_geistiges_eigentum"),
-    ("Asyl- und Ausländerrecht", "ausschluss", "ausschluss_asyl_auslaenderrecht"),
-    ("Asyl-/Ausländerrecht", "ausschluss", "ausschluss_asyl_auslaenderrecht"),
-    ("Familien-/Erbrecht (außer § 2k Beratung/Scheidung begrenzt)", "ausschluss", "ausschluss_familien_erbrecht"),
-    ("Familien-/Lebenspartnerschafts-/Erbrecht (nur Beratungs-Rechtsschutz)", "ausschluss", "ausschluss_familien_erbrecht"),
-    ("Verfassungs- und internationale Gerichte", "ausschluss", "ausschluss_verfassung_internationale_gerichte"),
-    ("Verfassungsgerichte und internationale Gerichtshöfe", "ausschluss", "ausschluss_verfassung_internationale_gerichte"),
-    ("Spiel-/Wett-/Spekulationsgeschäfte", "ausschluss", "ausschluss_spiel_wett_spekulation"),
-    ("Spiel-/Wettverträge, Gewinnzusagen", "ausschluss", "ausschluss_spiel_wett_spekulation"),
-    ("Kartell- und Wettbewerbsrecht", "ausschluss", "ausschluss_kartell_wettbewerb"),
-    ("Enteignung/Planfeststellung/Baurecht (BauGB)", "ausschluss", "ausschluss_baurecht_enteignung"),
-    ("Kryptowährungen", "ausschluss", "ausschluss_krypto"),
-]
+# The alignment cases live in the per-vertical taxonomy JSON (alignment_cases:
+# [text, kind, expected_key] triples) — they pin vertical-specific naming
+# alignments, so they are curated DATA, not code. A freshly scaffolded
+# vertical has none yet; the selftest then runs the coverage report only.
 
 
 def _selftest() -> int:
@@ -172,11 +120,16 @@ def _selftest() -> int:
 
     tax = load_taxonomy()
     failures = []
-    for text, kind, expected in _ALIGNMENT_CASES:
+    cases = tax.get("alignment_cases") or []
+    for text, kind, expected in cases:
         got = classify(text, kind, tax)
         if got != expected:
             failures.append(f"  {kind:<9} {text!r}\n      expected {expected!r}, got {got!r}")
-    print(f"alignment cases: {len(_ALIGNMENT_CASES) - len(failures)}/{len(_ALIGNMENT_CASES)} pass")
+    if cases:
+        print(f"alignment cases: {len(cases) - len(failures)}/{len(cases)} pass")
+    else:
+        print("(no pinned alignment_cases in this vertical's taxonomy yet "
+              "— coverage report only)")
     for f in failures:
         print("FAIL\n" + f)
 
@@ -218,11 +171,19 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Coverage taxonomy matcher + self-test.")
     ap.add_argument("--selftest", action="store_true",
                     help="assert cross-tariff alignments and report match coverage")
+    ap.add_argument("--all-verticals", action="store_true",
+                    help="run the selftest once per non-disabled registry vertical "
+                         "(each in a subprocess with CHECK0R_VERTICAL set); the "
+                         "worst return code wins")
     ap.add_argument("--classify", nargs=2, metavar=("KIND", "TEXT"),
                     help="classify one item: KIND is 'leistung' or 'ausschluss'")
     a = ap.parse_args()
     if a.classify:
         print(classify(a.classify[1], a.classify[0]) or "(Sonstige)")
         raise SystemExit(0)
+    if a.all_verticals:
+        import sys
+        raise SystemExit(_vertical.run_per_vertical(
+            [sys.executable, __file__, "--selftest"]))
     raise SystemExit(_selftest())
 
