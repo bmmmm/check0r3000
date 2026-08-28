@@ -1,0 +1,57 @@
+{
+  "_comment": "External test/rating verdicts for Privathaftpflicht, hand-curated with attribution (no scraped content). Same contract as the RS file: tariffs = stem-keyed tariff-level claims, insurers = insurer-level claims (whole-word matched), _market_notes = verdicts about tariffs NOT on the CHECK24 list (the structural blind spot). Display-only in the TUI — NEVER a score input. Curated 2026-08-28 from a source-cited research pass; Stiftung-Warentest per-tariff grades are paywalled and therefore not recorded.",
+  "tariff_aliases": {},
+  "tariffs": {
+    "bavariadirekt__komfort-l": [
+      {
+        "source": "Finanztip",
+        "badge": "FT ✓",
+        "sentiment": "pos",
+        "scope": "tarif",
+        "verdict": "Empfehlung (Komfort L) im Privathaftpflicht-Vergleich",
+        "evidence": [
+          "Komfort L",
+          "BavariaDirekt"
+        ],
+        "stand": "2026-07-25",
+        "url": "https://www.finanztip.de/daily/private-haftpflicht-das-aendert-sich-bei-unseren-empfehlungen/"
+      }
+    ],
+    "ao-now__premium-2025": [
+      {
+        "source": "Finanztip",
+        "badge": "FT ✓",
+        "sentiment": "pos",
+        "scope": "tarif",
+        "verdict": "Empfehlung (Premiumtarif von AO Now) im Privathaftpflicht-Vergleich",
+        "evidence": [
+          "AO Now",
+          "Premium"
+        ],
+        "stand": "2026-07-25",
+        "url": "https://www.finanztip.de/daily/private-haftpflicht-das-aendert-sich-bei-unseren-empfehlungen/"
+      }
+    ],
+    "adam-riese__xxl": [
+      {
+        "source": "Finanztip",
+        "badge": "FT ✓",
+        "sentiment": "pos",
+        "scope": "tarif",
+        "verdict": "Empfehlung (XXL) für über 55-Jährige im Privathaftpflicht-Vergleich",
+        "evidence": [
+          "XXL",
+          "Adam Riese"
+        ],
+        "stand": "2026-07-25",
+        "url": "https://www.finanztip.de/daily/private-haftpflicht-das-aendert-sich-bei-unseren-empfehlungen/"
+      }
+    ]
+  },
+  "insurers": {},
+  "_market_notes": [
+    "Finanztip (25.07.2026) empfiehlt außerdem die Premiumtarife von Getsafe und Phönix sowie 'Einfach Besser' (Die Haftpflichtkasse, Familien) — keiner davon steht auf der aktuellen CHECK24-Ergebnisliste (Direkt-/Maklervertrieb).",
+    "Finanztip (25.07.2026): die frühere Neodigital-Empfehlung entfällt — Neodigital ist seit Juni 2026 in Adam Riese/Württembergische aufgegangen (Neodigital bleibt Risikoträger einiger gelisteter Tarife, u.a. AO NOW).",
+    "Stiftung Warentest Finanztest (Stand 20.05.2026): 401 Tarife von 92 Versicherern geprüft, 154 mit 'Sehr gut' (ab 48 €/Jahr) — Einzelnoten hinter der Bezahlschranke, daher hier nicht je Tarif erfasst (test.de/Vergleich-Haftpflichtversicherung-4775777-0/)."
+  ]
+}

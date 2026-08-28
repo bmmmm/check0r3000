@@ -1,3 +1,4 @@
 {
-  "_comment": "Scaffolded neutral placeholder — code defaults apply; see MagicWeights in scripts/magic.py for the knobs."
+  "_comment": "Scaffolded neutral placeholder — code defaults apply; see MagicWeights in scripts/magic.py for the knobs. pool_k lowered from the RS default 25: a small vertical grows its analyzed set in batches of 10 per [F] deep-scan.",
+  "pool_k": 10
 }

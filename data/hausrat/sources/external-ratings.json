@@ -1,0 +1,10 @@
+{
+  "_comment": "External test/rating verdicts for Hausrat, hand-curated with attribution (no scraped content). Same contract as the RS file: tariffs = stem-keyed tariff-level claims, insurers = insurer-level claims (whole-word matched), _market_notes = verdicts about tariffs NOT on the CHECK24 list (the structural blind spot). Display-only in the TUI — NEVER a score input. Curated 2026-08-28 from a source-cited research pass; per-tariff grades of Stiftung Warentest are paywalled, Finanztip recommends no individual hausrat tariffs — hence no stem-keyed entries yet.",
+  "tariff_aliases": {},
+  "tariffs": {},
+  "insurers": {},
+  "_market_notes": [
+    "Franke & Bornberg Hausrat-Rating 2026 (laut Handelsblatt, 04.02.2026): Höchstnote 'exzellent' u.a. für Baloise 'Ambiente Top' und Waldenburger 'Premium' — beide Versicherer stehen nicht auf der aktuellen CHECK24-Ergebnisliste (handelsblatt.com/finanzen/steuern-recht/recht/ranking-2026-das-sind-die-besten-hausratversicherungen/100192202.html).",
+    "Stiftung Warentest Finanztest (Tarifstand 01.01.2026, Artikel 20.04.2026): 237 Tarife von 89 Anbietern geprüft, Top-Schutz ab 61 €/Jahr, 52 Policen durchgefallen — Einzelnoten hinter der Bezahlschranke, daher hier nicht je Tarif erfasst (test.de/Hausratversicherung-Vergleich-5069958-0/)."
+  ]
+}
