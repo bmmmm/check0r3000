@@ -27,7 +27,7 @@ import magic  # noqa: E402  — Magic Find quality-scoring core (rank / prescore
 import tui_anim  # noqa: E402  — boot-splash frames + pipeline loader bar
 from _jsonio import atomic_write_json, load_json_or  # noqa: E402  — shared atomic JSON IO
 import _vertical
-from _modules import MODULE_LABELS  # noqa: E402  — single source of truth for Baustein labels
+import _modules  # noqa: E402  — canonical Baustein keys/labels (per-vertical)
 
 from tui_data import (  # noqa: E402
     ChangeInfo,
@@ -130,6 +130,7 @@ from tui_screens import (  # noqa: E402
     QueryUrlScreen,
     SplashScreen,
     UpdateAllScreen,
+    VerticalSelectScreen,
 )
 
 # Model spec for the [g] "download + analyze" pipeline's extract stage. Matches
@@ -433,10 +434,10 @@ class MagicPane(TabPane):
 # ---------------------------------------------------------------------------
 
 class CheckApp(App):
-    """check0r3000 — Rechtsschutz-Vergleich TUI."""
+    """check0r3000 — Versicherungs-Vergleich TUI (Sparte via [S])."""
 
     CSS_PATH = Path(__file__).resolve().parent / "tui.tcss"  # resolve: survives symlink launch
-    TITLE = "check0r3000 — Rechtsschutz-Vergleich"
+    TITLE = "check0r3000 — Versicherungs-Vergleich"
 
     BINDINGS = [
         # Tab-switch keys stay bound but OUT of the footer (show=False): the tab
@@ -488,6 +489,7 @@ class CheckApp(App):
         Binding("comma", "verlauf_prev_snap", "Älterer Snap", show=False),
         Binding("period", "verlauf_next_snap", "Neuerer Snap", show=False),
         Binding("T", "next_theme", "Theme", show=False),
+        Binding("S", "select_vertical", "Sparte wechseln", show=False),
     ]
 
     # reactive state
@@ -710,13 +712,18 @@ class CheckApp(App):
     # --- Header update ---
 
     def _update_header(self) -> None:
+        entry = _vertical.entry()
+        label = entry.get("label") or _vertical.active()
+        badge = " (experimental)" if entry.get("status") == "experimental" else ""
+        prefix = f"{label}{badge}  |  "
         if self._snapshot:
             self.sub_title = (
-                f"{self._snapshot.date}  |  {self._snapshot.profile}"
+                f"{prefix}{self._snapshot.date}  |  {self._snapshot.profile}"
                 f"  |  {len(self._snapshot.rows)} Tarife"
             )
         else:
-            self.sub_title = "Kein Snapshot geladen — [U] Update-All erstellt einen"
+            self.sub_title = (f"{prefix}Kein Snapshot geladen — "
+                              "[U] Update-All erstellt einen")
 
     def _update_status_bar(self) -> None:
         t = datetime.datetime.now().strftime("%H:%M:%S")
@@ -1345,7 +1352,7 @@ class CheckApp(App):
                         parts.append(f"[bright_red]−{_esc(r[:38])}[/bright_red]")
                 if diff.get("modules"):
                     for ch in diff["modules"][:2]:
-                        lbl = MODULE_LABELS.get(ch["key"], ch["key"])
+                        lbl = _modules.module_labels().get(ch["key"], ch["key"])
                         if ch["old_included"] != ch["new_included"]:
                             col = "bright_green" if ch["new_included"] else "bright_red"
                             gl = "+" if ch["new_included"] else "−"
@@ -1666,7 +1673,7 @@ class CheckApp(App):
 
     def _render_module_matrix(self, cols, col_w) -> str:
         lines = [self._col_header(cols, col_w, "MODULE (Lebensbereiche)")]
-        for key, label in MODULE_LABELS.items():
+        for key, label in _modules.module_labels().items():
             row = _pad_label(label)
             for stem, rec in cols:
                 plain, color = _module_cell(rec.modules.get(key, {}))
@@ -2002,7 +2009,7 @@ class CheckApp(App):
         if diff.get("modules"):
             lines.append("  [bold]Module[/bold]")
             for ch in diff["modules"]:
-                lbl = MODULE_LABELS.get(ch["key"], ch["key"])
+                lbl = _modules.module_labels().get(ch["key"], ch["key"])
                 oi, ni = ch["old_included"], ch["new_included"]
                 ol, nl = ch["old_level"], ch["new_level"]
                 if oi != ni:
@@ -2742,6 +2749,50 @@ class CheckApp(App):
     def action_refresh_data(self) -> None:
         self._reload_all()
         self.notify("Daten neu geladen.", timeout=3)
+
+    # --- Vertical (Sparte) selection ---
+
+    def action_select_vertical(self) -> None:
+        """[S] — switch the active insurance vertical (Sparte). Refused while a
+        pipeline runs: the running subprocesses inherited the OLD vertical's env,
+        and a mid-run switch would mix two verticals' data in one UI session."""
+        if self._pipeline_running:
+            self.notify("Pipeline läuft — Sparten-Wechsel erst nach Abschluss.",
+                        severity="warning", timeout=5)
+            return
+        reg = _vertical.registry()["verticals"]
+        entries = [(name, str(e.get("label") or name), str(e.get("status") or ""))
+                   for name, e in reg.items()
+                   if isinstance(e, dict) and e.get("status") != "disabled"]
+        self.push_screen(VerticalSelectScreen(entries, _vertical.active()),
+                         self._apply_vertical)
+
+    def _apply_vertical(self, vertical: str | None) -> None:
+        if not vertical or vertical == _vertical.active():
+            return
+        # A selectable vertical without a scaffolded schema would crash the module
+        # key derivation — refuse with an actionable message instead.
+        if not _vertical.tariff_schema_path(vertical).exists():
+            self.notify(f"Sparte {_esc(vertical)} hat noch kein Schema "
+                        f"(schema/{_esc(vertical)}/tariff.schema.json) — erst "
+                        "scaffolden.", severity="error", timeout=8)
+            return
+        _vertical.set_active(vertical)  # env: child pipelines inherit the choice
+        _modules.reset_cache()
+        # Drop every cross-vertical view state; _reload_all re-reads from disk
+        # (reset_doc_cache inside _load_data clears the stem/taxonomy caches).
+        self._snapshot_path = None
+        self._snapshot = None
+        self._all_snapshots = []
+        self._detail = None
+        self._held_ident = None
+        self._active_row = None
+        self._active_fav = None
+        self._change_summary = {}
+        self._verlauf_old_idx = 0
+        self._reload_all()
+        label = _vertical.entry().get("label") or vertical
+        self.notify(f"Sparte gewechselt: {_esc(str(label))}", timeout=4)
 
     def _verlauf_tab_active(self) -> bool:
         """Scope guard for the Verlauf-only keys ([m], [,], [.]): pressed anywhere
@@ -3880,7 +3931,7 @@ class CheckApp(App):
             relevance level per Baustein. On save it persists, switches the Magic tab to
             Bedarf mode if the weights are non-neutral, and re-ranks. Works from anywhere
             but the result only shows on the Magic tab."""
-        keys_labels = list(MODULE_LABELS.items())
+        keys_labels = list(_modules.module_labels().items())
         current = magic.load_needs()
 
         def _apply(new_weights: dict | None) -> None:

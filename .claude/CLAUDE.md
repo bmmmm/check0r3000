@@ -170,6 +170,7 @@ URLs in `[link="…"]` immer durch `tui_format.link_url()` (percent-encoded `"`/
 | `[M]` | Magic-Find-Tab (markt-weites Qualitäts-Ranking; Preis fließt NIE in den Score) |
 | `[P]` | Bedarf-Modus an/aus (Module nach `config/verticals/<v>/needs-weights.json` gewichten) |
 | `[W]` | Bedarf-Gewichte bearbeiten (Editor: Relevanz je Baustein 0–3) |
+| `[S]` | Sparte wechseln (VerticalSelectScreen; Registry-basiert, Guard bei laufender Pipeline) |
 | `[d]` | Detail-Band ein/aus |
 | `Tab` / `⇧Tab` | Nächster / voriger Tab (zyklisch) |
 | `[?]` | Alle Shortcuts |

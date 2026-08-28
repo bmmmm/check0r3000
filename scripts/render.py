@@ -161,7 +161,7 @@ def md_to_html(md: str) -> str:
     return (
         "<!doctype html><html lang=de><head><meta charset=utf-8>"
         "<meta name=viewport content='width=device-width,initial-scale=1'>"
-        "<title>Rechtsschutz-Vergleich</title>"
+        f"<title>{_vertical.entry().get('label') or _vertical.active()}-Vergleich</title>"
         "<style>body{font:15px/1.5 system-ui,sans-serif;max-width:60rem;margin:2rem auto;padding:0 1rem;color:#1a1a1a}"
         "pre{white-space:pre-wrap}</style></head><body><pre>" + body + "</pre></body></html>"
     )

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from _modules import MODULE_LABELS  # stdlib-only leaf: canonical Baustein keys/labels
+import _modules  # stdlib-only leaf: canonical Baustein keys/labels (per-vertical)
 
 if TYPE_CHECKING:  # annotations only; never imported at runtime (keeps this leaf
     from tui_data import DetailRecord, SnapshotRow  # Textual-free, data-model-free)
@@ -405,7 +405,7 @@ def record_body_lines(detail: "DetailRecord") -> list[str]:
 
     # Modules
     lines.append("[bold underline]Module[/bold underline]")
-    for mod_key, label in MODULE_LABELS.items():
+    for mod_key, label in _modules.module_labels().items():
         mod = detail.modules.get(mod_key, {})
         included = mod.get("included", False)
         badge_str = _module_badge(mod)

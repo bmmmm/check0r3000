@@ -549,6 +549,29 @@ CompareManagerScreen {
     background: $surface-darken-2;
 }
 
+#vertical-box {
+    width: 52;
+    height: auto;
+    max-height: 80%;
+    padding: 1 2;
+    border: thick $primary;
+    background: $surface-darken-1;
+    color: $text;
+}
+
+#vertical-head {
+    width: 1fr;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#vertical-list {
+    width: 1fr;
+    height: auto;
+    border: round $surface-lighten-2;
+    background: $surface-darken-2;
+}
+
 /* ── Scrollbars ─────────────────────────────────────────────────────────── */
 
 ScrollableContainer {

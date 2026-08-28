@@ -922,6 +922,69 @@ async def t_splash_and_loader(app, pilot) -> None:
     assert not app.query_one("#loader-layer").display, "overlay not hidden after run"
 
 
+async def t_vertical_switch(app, pilot) -> None:
+    """[S] opens the vertical selector; switching to an empty fixture vertical swaps
+    the Market tab to the new vertical's (empty) data and the header label; switching
+    back restores the Rechtsschutz rows unchanged. Fixture: a minimal schema plus a
+    registry entry injected into the cached registry, removed afterwards."""
+    import json
+    import os
+    import shutil
+
+    import _modules
+    import _vertical
+    from textual.widgets import OptionList
+
+    fixture = "probesparte"
+    schema_dir = _vertical.ROOT / "schema" / fixture
+    assert not schema_dir.exists(), f"fixture dir {schema_dir} already exists"
+    schema_dir.mkdir(parents=True)
+    (schema_dir / "tariff.schema.json").write_text(json.dumps(
+        {"properties": {"modules": {"properties": {"grundschutz": {}}}}}
+    ), encoding="utf-8")
+    reg = _vertical.registry()
+    assert fixture not in reg["verticals"]
+    reg["verticals"][fixture] = {"label": "Probesparte", "host": "https://example.invalid",
+                                 "funnel_path": "/", "status": "experimental"}
+
+    async def pick(name: str) -> None:
+        base = len(app.screen_stack)
+        await pilot.press("S")
+        assert await _wait_until(pilot, lambda: len(app.screen_stack) > base), (
+            "[S] did not open the vertical selector")
+        lst = app.screen_stack[-1].query_one("#vertical-list", OptionList)
+        idx = next(i for i in range(lst.option_count)
+                   if lst.get_option_at_index(i).id == name)
+        lst.highlighted = idx
+        await pilot.press("enter")
+        assert await _wait_until(pilot, lambda: _vertical.active() == name), (
+            f"switch to {name} did not apply")
+        await pilot.pause()
+
+    try:
+        assert _vertical.active() == "rechtsschutz"
+        base_rows = len(app._market_rows)
+        assert base_rows > 0, "no RS market rows to begin with"
+
+        await pick(fixture)
+        assert len(app._market_rows) == 0, (
+            f"fixture market should be empty, got {len(app._market_rows)}")
+        assert "Probesparte" in str(app.sub_title), app.sub_title
+        assert app._snapshot is None, "RS snapshot leaked into the fixture vertical"
+        assert _modules.module_keys() == ("grundschutz",), _modules.module_keys()
+
+        await pick("rechtsschutz")
+        assert len(app._market_rows) == base_rows, (
+            f"RS rows not restored: {len(app._market_rows)} != {base_rows}")
+        assert "Rechtsschutz" in str(app.sub_title), app.sub_title
+        assert len(_modules.module_keys()) == 8, _modules.module_keys()
+    finally:
+        reg["verticals"].pop(fixture, None)
+        os.environ.pop("CHECK0R_VERTICAL", None)
+        _modules.reset_cache()
+        shutil.rmtree(schema_dir, ignore_errors=True)
+
+
 CASES = [
     ("boot_and_tables", t_boot_and_tables),
     ("pipeline_single_flight", t_pipeline_single_flight),
@@ -949,6 +1012,7 @@ CASES = [
     ("hostile_data_sweep", t_hostile_data_sweep),
     ("verlauf_stats", t_verlauf_stats),
     ("splash_and_loader", t_splash_and_loader),
+    ("vertical_switch", t_vertical_switch),
 ]
 
 

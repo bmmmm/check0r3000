@@ -905,6 +905,51 @@ class NeedsEditorScreen(ModalScreen["dict[str, float] | None"]):
         self.dismiss(None)
 
 
+class VerticalSelectScreen(ModalScreen["str | None"]):
+    """Pick the active insurance vertical (Sparte) from the registry
+        (config/verticals.json). Modeled on NeedsEditorScreen: an OptionList in a
+        modal box, Enter selects, Esc cancels. Returns the vertical name on select,
+        None on cancel. Experimental verticals carry a badge; the active one a dot."""
+
+    BINDINGS = [
+        Binding("escape", "cancel", "Abbrechen"),
+        Binding("q", "cancel", "Abbrechen"),
+    ]
+
+    def __init__(self, entries: list[tuple[str, str, str]], active: str) -> None:
+        # entries: (name, label, status) in registry order; active: current vertical.
+        super().__init__()
+        self._entries = list(entries)
+        self._active = active
+
+    def compose(self) -> ComposeResult:
+        with Container(id="vertical-box"):
+            yield Static(
+                "[bold]🗂  Sparte wählen[/bold]\n"
+                "[dim]↑↓ wählen · ↵ übernehmen · \\[Esc] abbrechen[/dim]",
+                id="vertical-head",
+            )
+            yield OptionList(id="vertical-list")
+
+    def on_mount(self) -> None:
+        lst = self.query_one("#vertical-list", OptionList)
+        highlight = 0
+        for i, (name, label, status) in enumerate(self._entries):
+            marker = "[green]●[/green]" if name == self._active else "[dim]○[/dim]"
+            badge = "  [yellow](experimental)[/yellow]" if status == "experimental" else ""
+            lst.add_option(Option(f"{marker} {label}{badge}", id=name))
+            if name == self._active:
+                highlight = i
+        if self._entries:
+            lst.highlighted = highlight
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        self.dismiss(str(event.option.id))
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
+
+
 class HelpScreen(ModalScreen[None]):
     """Full keyboard reference, grouped. The footer shows only the essentials."""
 
@@ -956,6 +1001,7 @@ class HelpScreen(ModalScreen[None]):
             (", / .", "älteren / neueren Vergleichs-Snapshot wählen (ab 3 Snapshots)"),
         ]),
         ("Werkzeuge", [
+            ("S", "Sparte wechseln (Rechtsschutz / Hausrat / … — config/verticals.json)"),
             ("b", "CHECK24-Query-URL bauen (nur Ansicht)"),
             ("e", "CHECK24-Suche bearbeiten (Levers ändern + speichern)"),
             ("r", "Daten neu laden"),

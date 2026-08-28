@@ -22,11 +22,11 @@ import statistics
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
+import _modules
 import _vertical
 import coverage_taxonomy as ctax
 import tui_data
 from _jsonio import atomic_write_json, load_json_or
-from _modules import MODULE_KEYS as _MODULE_KEYS
 
 REPO_ROOT = _vertical.ROOT
 
@@ -124,11 +124,11 @@ def load_needs(path: Path | None = None) -> dict[str, float]:
     missing/invalid key falls back to the neutral 1.0 (so a partial file is valid and an
     all-neutral file ranks identically to the objective view). Negative weights are
     clamped to 0 at use-site (_module_stats); here we just reject non-numbers."""
-    base = {k: 1.0 for k in _MODULE_KEYS}
+    base = {k: 1.0 for k in _modules.module_keys()}
     data = load_json_or(path or _needs_path(), None)
     if not isinstance(data, dict):
         return base
-    for k in _MODULE_KEYS:
+    for k in _modules.module_keys():
         v = data.get(k)
         if isinstance(v, (int, float)) and not isinstance(v, bool):
             base[k] = float(v)
@@ -143,7 +143,7 @@ def save_needs(weights: dict[str, float], path: Path | None = None) -> None:
     data = load_json_or(p, {})
     if not isinstance(data, dict):
         data = {}
-    for k in _MODULE_KEYS:
+    for k in _modules.module_keys():
         if k in weights:
             v = weights[k]
             # store ints cleanly (1 not 1.0) when the value is whole
@@ -154,7 +154,7 @@ def save_needs(weights: dict[str, float], path: Path | None = None) -> None:
 def needs_are_neutral(needs: dict[str, float], eps: float = 1e-9) -> bool:
     """True when every Baustein weight is equal (so the Bedarf view == objective view).
     Lets the UI tell the user 'edit needs-weights.json to make this do something'."""
-    vals = [max(0.0, needs.get(k, 1.0)) for k in _MODULE_KEYS]
+    vals = [max(0.0, needs.get(k, 1.0)) for k in _modules.module_keys()]
     return max(vals) - min(vals) < eps
 
 
@@ -265,7 +265,7 @@ def _module_stats(
     included = 0
     tier_sum = 0
     inc_keys: list[str] = []
-    for key in _MODULE_KEYS:
+    for key in _modules.module_keys():
         mod = rec.modules.get(key)
         if isinstance(mod, dict) and mod.get("included"):
             included += 1
@@ -274,12 +274,12 @@ def _module_stats(
             if rank is not None:
                 tier_sum += rank
     if needs:
-        total_w = sum(max(0.0, needs.get(k, 1.0)) for k in _MODULE_KEYS)
+        total_w = sum(max(0.0, needs.get(k, 1.0)) for k in _modules.module_keys())
         got_w = sum(max(0.0, needs.get(k, 1.0)) for k in inc_keys)
         breadth = (got_w / total_w) if total_w > 0 else 0.0
     else:
-        breadth = included / len(_MODULE_KEYS)
-    tier = tier_sum / (_MAX_TIER * len(_MODULE_KEYS))
+        breadth = included / len(_modules.module_keys())
+    tier = tier_sum / (_MAX_TIER * len(_modules.module_keys()))
     return included, breadth, tier
 
 
@@ -554,7 +554,7 @@ def _mk_row(insurer, product, note, bew=None, price=None, pos=0, stem=None):
 def _mk_detail(insurer, product, n_modules=8, levels=None, leistungen=None,
                coverage=None):
     mods = {}
-    for i, k in enumerate(_MODULE_KEYS):
+    for i, k in enumerate(_modules.module_keys()):
         inc = i < n_modules
         lvl = (levels or {}).get(k)
         mods[k] = {"included": inc, "level": lvl}
@@ -610,7 +610,7 @@ def _selftest() -> int:
     check(_approx(br_full, 1.0), f"8/8 modules breadth should be 1.0, got {br_full}")
     check(_approx(br_half, 0.5), f"4/8 modules breadth should be 0.5, got {br_half}")
     tiered = _mk_detail("X", "tiered", n_modules=8,
-                        levels={k: "Premium" for k in _MODULE_KEYS})
+                        levels={k: "Premium" for k in _modules.module_keys()})
     _, _, tier_full = _module_stats(tiered)
     check(_approx(tier_full, 1.0), f"all-Premium tier should be 1.0, got {tier_full}")
     _, _, tier_none = _module_stats(full)
@@ -728,9 +728,9 @@ def _selftest() -> int:
     check(zero.quality_per_eur() is None, "quality_per_eur is None at price 0")
 
     # 15. Need-weighting: neutral == objective, skewed shifts module_breadth.
-    neutral = {k: 1.0 for k in _MODULE_KEYS}
+    neutral = {k: 1.0 for k in _modules.module_keys()}
     check(needs_are_neutral(neutral), "all-equal needs should read as neutral")
-    skewed = {k: 0.0 for k in _MODULE_KEYS}
+    skewed = {k: 0.0 for k in _modules.module_keys()}
     skewed["privat"] = 1.0  # only privat matters
     check(not needs_are_neutral(skewed), "skewed needs should not read as neutral")
     rec_priv = _mk_detail("X", "p", n_modules=0)
@@ -745,12 +745,12 @@ def _selftest() -> int:
     _, br_neutral, _ = _module_stats(rec_priv, neutral)
     check(_approx(br_neutral, br_obj), "neutral needs must reproduce objective breadth")
     nd = load_needs()
-    check(set(nd.keys()) == set(_MODULE_KEYS), "load_needs returns all 8 Baustein keys")
+    check(set(nd.keys()) == set(_modules.module_keys()), "load_needs returns all 8 Baustein keys")
     # save_needs roundtrip (to a temp file; never touches the real config)
     import tempfile
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td) / "needs.json"
-        want = {k: 1.0 for k in _MODULE_KEYS}
+        want = {k: 1.0 for k in _modules.module_keys()}
         want["privat"] = 3.0
         want["verkehr"] = 0.0
         save_needs(want, tmp)
