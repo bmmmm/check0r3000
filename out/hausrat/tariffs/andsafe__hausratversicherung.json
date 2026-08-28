@@ -1,0 +1,131 @@
+{
+  "insurer": "andsafe Aktiengesellschaft",
+  "tariff": "Hausratversicherung",
+  "stand": "03.2024",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": "Inkl. Vandalismus nach Einbruch, Trickdiebstahl, Gartenmöbel, Kinderwagen, Diebstahl aus Kfz"
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": "Leitungswasser und Bruchschäden"
+    },
+    "naturgefahren": {
+      "included": true,
+      "level": null,
+      "note": "Sturm und Hagel; Überschwemmung, Rückstau, Erdbeben, Erdfall, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch nur im Elementarversicherungs-Zusatzvertrag"
+    },
+    "tiere": {
+      "included": false
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": "Phishing/Internetbetrug beim privaten Online-Banking"
+    },
+    "wohnungsschutzbrief": {
+      "included": false
+    },
+    "glasschutz": {
+      "included": false,
+      "note": "Nur sofern ausdrücklich vereinbart (separate Bedingungen)"
+    },
+    "fahrradschutz": {
+      "included": false,
+      "note": "Nur sofern vereinbart"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "vereinbart, entspricht Versicherungswert (Neuwert) + 10% Vorsorgebetrag",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Elementarversicherung (Zusatzvertrag): 14 Tage Wartezeit"
+    ],
+    "geltungsbereich": "Deutschland, versicherte Wohnung am Versicherungsort; Außenversicherung weltweit möglich",
+    "vertragslaufzeit": "Mindestens 1 Jahr, dann jährliche Verlängerung bei Nichterhebung von Kündigung"
+  },
+  "leistungen": [
+    "Aufräumungskosten",
+    "Bewegungs- und Schutzkosten",
+    "Hotelkosten (bis 120€/Tag, max 180 Tage)",
+    "Transport- und Lagerkosten",
+    "Schlossänderungskosten",
+    "Bewachungskosten",
+    "Reparaturkosten für Gebäudeschäden",
+    "Reparaturkosten für Leitungswasserschäden in Wohnungen",
+    "Kosten für provisorische Maßnahmen",
+    "Sachverständigenkosten",
+    "Mehrkosten durch Preissteigerungen",
+    "Umzugskosten",
+    "Datenrettungskosten (bis 1.000€)",
+    "Mehrkosten für nachhaltige Wiederbeschaffung/Reparatur",
+    "Schadenabwendungs- und Schadenminderungskosten",
+    "Best-Leistungsgarantie (Anpassung an bessere Konkurrenzangebote)"
+  ],
+  "ausschluesse": [
+    "Krieg, kriegsähnliche Ereignisse, Bürgerkrieg, Revolution, Aufstand",
+    "Kernenergie, nukleare Strahlung, radioaktive Substanzen",
+    "Innere Unruhen",
+    "Schwamm",
+    "Grundwasser (außer wenn durch Leitungswasser verursacht)",
+    "Sturmflut",
+    "Überschwemmung, Rückstau (außer im Zusatzvertrag)",
+    "Erdbeben, Erdfall, Erdrutsch (außer im Zusatzvertrag)",
+    "Schneedruck, Lawinen, Vulkanausbruch (außer im Zusatzvertrag)",
+    "Fahrzeuge aller Art und Anhänger",
+    "Luft- und Wasserfahrzeuge",
+    "Gebäudebestandteile (außer Einbaumöbel)",
+    "Allmähliche Raucheinwirkung (Fogging)",
+    "Dauernde Hitzeaussetzung",
+    "Schäden vorsätzlich herbeigeführt",
+    "Plansch-/Reinigungswasser"
+  ],
+  "besonderheiten": [
+    "Unterversicherungsverzicht vereinbart (Verzicht auf Einwand bei Unterversicherung)",
+    "Digitale Vertragsverwaltung via Kundenportal",
+    "Tägliche Kündbarkeit",
+    "Anschlussdeckung bei Vorvertrag mit anderem Versicherer",
+    "Summen- und Konditionsdifferenzdeckung möglich",
+    "Entschädigungsgrenzen für Wertsachen (z.B. Bargeld max 500€, Schmuck max 1.000€)",
+    "Diebstahlversicherung aus Kraftfahrzeugen bis 1.000€ pro Fall",
+    "Phishing-Versicherung bis 1% der Versicherungssumme"
+  ],
+  "beitrag": null,
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "7f8d4d5fc3818a490cb491d06e7db2e8f8f1eba23b45a8308fdd1caddc81234f"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "891025ed1e3714390a5a79d2f21640923f9097a827081033ef5d1063c2e27b1c"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "287dd73faa9789fcacdbd557b2254a63257b1d45b01f2ee62e6253a9a29f1b59"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "5733323a1a015987dee6527cfd0921ac7417f08e2c17efb95b32beae54cbe673"
+    }
+  ],
+  "_input_hash": "c5dceed0264bb80b81145bdb30208763e39cc8734c4227fa3331e3bf83a6f551",
+  "_model": "haiku",
+  "_filter": "avb-filter"
+}

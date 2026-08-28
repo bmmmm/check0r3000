@@ -1,0 +1,105 @@
+{
+  "stand": "01/2023",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null
+    },
+    "tiere": {
+      "included": true,
+      "level": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null
+    },
+    "internet": {
+      "included": true,
+      "level": null
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null
+    },
+    "fahrradschutz": {
+      "included": false,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Deutschland + weltweit für Außenversicherung",
+    "vertragslaufzeit": "mindestens 1 Jahr"
+  },
+  "leistungen": [
+    "SmartHome-Schutz bis 5.000€",
+    "Wildtier-Schäden bis 5.000€",
+    "Schädlingsbekämpfung bis 500€/Jahr",
+    "Fehlalarm Rauchmelder bis 1.000€",
+    "Wallbox bis 2.500€",
+    "Online-Kaufschutz bis 3.500€",
+    "Phishing-/Skimming-Schutz bis 3.500€",
+    "Hotelkosten bis 150€/Tag für 360 Tage",
+    "Schlossänderungskosten",
+    "Reparaturkosten für Gebäude- und Leitungswasserschäden",
+    "Psychologische Betreuung nach Einbruch/Raub/Brand",
+    "Datenrettungskosten",
+    "Sachverständigenkosten bis 2.500€",
+    "Mehrkosten durch Preissteigerung und Technologiefortschritt",
+    "Innovationsgarantie für künftige Bedingungsverbesserungen",
+    "Unterversicherungsverzicht verfügbar"
+  ],
+  "ausschluesse": [
+    "Krieg, kriegsähnliche Ereignisse, Bürgerkrieg, Aufstand",
+    "Kernenergie, radioaktive Stoffe",
+    "Einfacher Diebstahl (außer benannte Arten wie Trickdiebstahl, Gartenzubehör)",
+    "Kraftfahrzeuge aller Art",
+    "Luft- und Wasserfahrzeuge (mit Ausnahmen)",
+    "Hausrat von Mietern/Untermietern",
+    "Elektronisch gespeicherte Daten (außer durch zusätzliche Vereinbarung)",
+    "Gebäudebestandteile (außer aufgelistete wie Einbauküchen)",
+    "Abnutzung, Verschleiß, Alterung, Rost, Schimmel",
+    "Vorsätzlich verursachte Schäden",
+    "Bedienungsfehler, Reinigung, Wartung, bestimmungswidriger Gebrauch"
+  ],
+  "besonderheiten": [
+    "SmartHome-Komponenten und Sicherungsanlagen mitversichert",
+    "Neuwert-Entschädigung, nicht Zeitwert",
+    "30% Vorsorgebetrag zusätzlich zur Versicherungssumme",
+    "Jährliche Indexanpassung der Versicherungssumme",
+    "Erweiterte Naturgefahren (Überschwemmung, Erdbeben, etc.) optional",
+    "Glasbruch- und Fahrraddiebstahl optional wählbar",
+    "Verzicht auf Einrede der groben Fahrlässigkeit für Householder",
+    "Leistungsgarantie gegenüber GDV-Musterbedingungen"
+  ],
+  "beitrag": null,
+  "insurer": "DOCURA VVaG",
+  "tariff": "PROTECT-SmartHome",
+  "stem": "docura__protect-smarthome",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "24cda6e389109ea79e2fca2dabb116543320453c91ad57d6230aad5d7d6004c5",
+  "_supersedes": null
+}

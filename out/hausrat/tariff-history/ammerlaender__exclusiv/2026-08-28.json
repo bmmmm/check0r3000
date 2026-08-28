@@ -1,0 +1,113 @@
+{
+  "stand": "03.2026",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null,
+      "note": "Nur als optionaler Zusatzbaustein"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Schäden durch wild lebende Tiere bis 7.500 EUR"
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": "Umfangreiche einfache Diebstahldeckung"
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": "Cyber-Schutz: Phishing, Pharming, Datenrettung bis 3.500 EUR"
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null,
+      "note": "Nur als optionaler Zusatzbaustein"
+    },
+    "fahrradschutz": {
+      "included": true,
+      "level": null,
+      "note": "Fahrraddiebstahl 1 % der VS beitragsfrei mitversichert"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "vereinbart pro Quadratmeter Wohnfläche",
+    "selbstbeteiligung": "variable je Deckungsart: z.B. 250 EUR bei Wasserschäden/Rückstau, 100 EUR bei Gepäckdiebstahl, 250 EUR bei Seniorenschutz",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Deutschland; Hausrat vorübergehend außerhalb versichert bis 12 Monate und weltweit; beruflich bedingte Pendlerwohnung in Deutschland bis 20 % der VS/max. 2.500 EUR",
+    "vertragslaufzeit": "mindestens 1 Jahr, automatische Jahresverlängerung; bei Laufzeit über 3 Jahren Kündigung zum Ende des 3. Jahres mit 3 Monaten Frist möglich"
+  },
+  "leistungen": [
+    "Schlossänderungskosten bis 300 EUR",
+    "Hotelkosten ohne zeitliche Begrenzung",
+    "Umzugskosten nach Schaden",
+    "Schlüsseldienst",
+    "Reparaturkosten für provisorische Maßnahmen",
+    "Sachverständigenkosten",
+    "Psychologische Betreuung nach Einbruch/Raub/Brand bis 500 EUR",
+    "Kinderbetreuung im Notfall bis 350 EUR",
+    "Datenrettungskosten",
+    "Scheck- und Kreditkartenmissbrauch bis 5.000 EUR",
+    "Trickdiebstahl bis 10.000 EUR",
+    "Nachhaltigkeit: Mehrkosten durch Technologiefortschritt bis 20 % der VS/max. 2.500 EUR"
+  ],
+  "ausschluesse": [
+    "Krieg, kriegsähnliche Ereignisse, Bürgerkrieg, Revolution, Aufstand",
+    "Innere Unruhen",
+    "Kernenergie, nukleare Strahlung, radioaktive Substanzen",
+    "Schwamm",
+    "Sturmflut",
+    "Grundwasser (soweit nicht als Überflutung/Rückstau)",
+    "Schäden durch Vorsatz des Versicherten",
+    "Gebäudeeigentümer-Sachen (für die dieser die Gefahr trägt)",
+    "Kraftfahrzeuge aller Art und Anhänger",
+    "Luft- und Wasserfahrzeuge",
+    "Hausrat von Mietern ohne Überlassung"
+  ],
+  "besonderheiten": [
+    "Umfangreiche erweiterte Diebstahldeckung einschließlich Trickdiebstahl",
+    "Cyber-Schutz mit Phishing und Pharming",
+    "Seniorenschutz mit reduzierten Selbstbehalten",
+    "Fahrraddiebstahl 1 % beitragsfrei, optional Vollkasko",
+    "Hausrat in Wohngemeinschaften und Einliegerwohnungen",
+    "Beruflich bedingte Pendlerwohnung",
+    "Erweiterte Lagerkosten bis 12 Monate",
+    "Verzicht auf Einrede grober Fahrlässigkeit (mit Ausnahmen)",
+    "Nachhaltigkeit und Technologiefortschritt-Mehrkosten"
+  ],
+  "beitrag": null,
+  "insurer": "Ammerländer Versicherung VVaG",
+  "tariff": "Exclusiv-Schutz",
+  "stem": "ammerlaender__exclusiv",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "c5aa2edf2b5c88524b324b5bda127d7598608df316276e2bd20ae328ee0161a4",
+  "_supersedes": null
+}

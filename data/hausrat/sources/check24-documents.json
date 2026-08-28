@@ -93,6 +93,248 @@
           "url": "https://hausratversicherungen.check24.de/file/1b9110115c903346e526ced9184da659ef845367/Allgemeine+Versicherungsbedingungen.pdf"
         }
       ]
+    },
+    {
+      "stem": "ammerlaender__exclusiv",
+      "insurer": "Ammerländer",
+      "tariff": "Exclusiv",
+      "position": 10,
+      "hash": "panel:e7fa461179248801",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/997d447c8a6e7c8384d1116f2683b6eaa2777c09/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/6370a4ea6331a07f14cf8408fcee9dc13d362eff/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/3221fd038d752c9d44261c5283defbacd36fb0c5/Besondere+Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "bavariadirekt__komfort-l",
+      "insurer": "BavariaDirekt",
+      "tariff": "Komfort L",
+      "position": 17,
+      "hash": "panel:25306b34a8134ef0",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/6e3772ec0eb2d983e0339107ace1c4049cbc5786/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/d87c0a9975282b109ba4565c5cecfe9701205435/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/7e08241a0e8a4d582f5772403298019316043b7f/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "mvk-versicherung__premium-digital",
+      "insurer": "MVK Versicherung",
+      "tariff": "Premium-Digital",
+      "position": 18,
+      "hash": "panel:f8123260677acf02",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/5a1e96014ff6e6b3495b328face3f1e343bd0254/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/dd391899c3848e83e2a3b76ce6d2abc4956cf66a/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/b7f2606f6cef5cad8b5f78e9c1c63915d5605b53/Besondere+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/75e1fed496df5bed953cd161fb67f463ea28811f/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "docura__protect-unbenannte-gefahren",
+      "insurer": "DOCURA",
+      "tariff": "PROTECT + Unbenannte Gefahren",
+      "position": 20,
+      "hash": "panel:e71bd3cae320ef0a",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/ec95ac2c70446d0f6d9dee88a8de1a27355403bc/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/8d6dc6b44650659fba308c7d5df8e08f1794b08f/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/6c5ba03c7d026717b1625ae0a755e045f4cd9495/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "andsafe__hausratversicherung",
+      "insurer": "andsafe",
+      "tariff": "Hausratversicherung",
+      "position": 28,
+      "hash": "panel:60858716f49028bc",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/6ade97287970c3742e667d26146f216cb7645a0f/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/114f69861e717bbd88310b7354977ff886a8b3c3/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/d0822b06c2b7fa5aeb0a31a92086a167ea6af4ea/Besondere+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/47771d93f977657050362738388cecd3b670db74/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "docura__protect-smarthome",
+      "insurer": "DOCURA",
+      "tariff": "PROTECT-SmartHome",
+      "position": 38,
+      "hash": "panel:c8893aab2a7998ab",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/202cac47aa4b4692f5262fdf29f68d98f0ce95c1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/4d95fd5b9f39ae37b04667e4d9afbd28f69a4247/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/9c9fdede75ff94aef13b19744cea6e2880e47d8b/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "docura__protect-smarthome-unbenannte-gefahren",
+      "insurer": "DOCURA",
+      "tariff": "PROTECT-SmartHome + Unbenannte Gefahren",
+      "position": 66,
+      "hash": "panel:5e36b97641349e2f",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/f0b1e9d1c741069fd368d97ccd5f667bd39b37b2/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/4fdabbed4a97e8f6d53003a7452b3697a0aedd71/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/15b5c99d21232e98359f12deed6017219ff95d7f/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "interlloyd__infinitus-wf",
+      "insurer": "Interlloyd",
+      "tariff": "Infinitus (WF)",
+      "position": 69,
+      "hash": "panel:eff7e7a19b09d7a0",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/69d99a25c3773fab43c79701786176d104bcecae/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/586c2f2c66911265d15306f911890b5cbd80e18d/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/d5d576f9697c8c4c453653bae7a2b467e7f97668/Besondere+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/feaaaf236757d065a513e6cb2c1683d314b227f0/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
     }
   ]
 }

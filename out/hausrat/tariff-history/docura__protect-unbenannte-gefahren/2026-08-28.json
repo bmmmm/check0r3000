@@ -1,0 +1,113 @@
+{
+  "stand": "01/2023",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null
+    },
+    "tiere": {
+      "included": false,
+      "level": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null
+    },
+    "diebstahl_erweitert": {
+      "included": false,
+      "level": null
+    },
+    "internet": {
+      "included": true,
+      "level": null
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null
+    },
+    "fahrradschutz": {
+      "included": false,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "Vereinbart zwischen Versicherer und Versicherungsnehmer",
+    "selbstbeteiligung": "Variabel je Gefahrenart; z.B. 150€ (Zigarren/Zigaretten), 100€ (Gepäckdiebstahl), 1% VS min. 500€ max. 1.500€ (Naturgefahren), 250€ (Seniorendiebstahl)",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Versicherungsort + Außenversicherung weltweit (mit Einschränkungen); berufsbedingte Zweitwohnsitz in Deutschland",
+    "vertragslaufzeit": "1 Jahr oder länger; automatische jährliche Verlängerung"
+  },
+  "leistungen": [
+    "Aufräumungs-, Bewegungs- und Schutzkosten",
+    "Hotelkosten bis 360 Tage (max. 125€/Tag)",
+    "Schlossänderungskosten nach Einbruch",
+    "Transportkosten",
+    "Reparaturkosten für Gebäudeschäden nach Einbruch",
+    "Reparaturkosten für Wasserschäden an Bodenbelägen und Tapeten",
+    "Psychologische Betreuung nach Einbruch/Raub/Brand (bis 10 Sitzungen)",
+    "Datenrettungskosten",
+    "Tierarztkosten",
+    "Rückreisekosten und Reiserücktrittskosten",
+    "Sachverständigenkosten",
+    "Mehrkosten durch Preissteigerung und Technologiefortschritt",
+    "Bewachungskosten",
+    "Umzugskosten",
+    "Telefonmissbrauchkosten nach Einbruch",
+    "Schäden am Tiefkühlgut bei Stromausfall",
+    "Provisorische Maßnahmen nach Schadeneintritt",
+    "Wegegeld zur Dokumentenbeschaffung",
+    "Verpflegungskosten für helfende Privatpersonen"
+  ],
+  "ausschluesse": [
+    "Vorsätzlich verursachte Schäden",
+    "Einfacher Diebstahl (außer aufgeführte Spezialfälle)",
+    "Eigentum von Untermietern",
+    "Alle Arten von Kraftfahrzeugen",
+    "Luft- und Wasserfahrzeuge (außer bestimmte Boot-Typen)",
+    "Krieg, Bürgerkrieg, innere Unruhen, Kernenergie",
+    "Schäden an nicht bezugsfertigen Gebäuden",
+    "Natürliche Abnutzung, Verschleiß und Alterung",
+    "Schimmel, Holzfäulepilz, Schädlinge",
+    "Erdbeben, Erdsenkung, Erdrutsch (außer optional)",
+    "Grundwasser und Überschwemmung (außer optional)",
+    "Eindringen von Regen bei nicht ordnungsgemäß geschlossenen Öffnungen",
+    "Schäden durch allmähliche Einwirkung"
+  ],
+  "besonderheiten": [
+    "30% Vorsorgebetrag über Versicherungssumme hinaus",
+    "Leistungsgarantie gegen GDV-Musterbedingungen",
+    "Innovationsgarantie für zukünftige Bedingungsverbesserungen",
+    "Verzicht auf Einrede grober Fahrlässigkeit",
+    "Außenversicherung weltweit für vorübergehend auswärts befindlichen Hausrat",
+    "Weltweiter Schutz bei Kfz-Aufbruch",
+    "Berufsbedingte Zweitwohnsitz in Deutschland versichert",
+    "Fahrradschutz auch nachts (mit optionalem Zusatz)",
+    "Zahlreiche optionale Leistungserweiterungen verfügbar",
+    "Unterversicherungsverzicht optional",
+    "Vorsorgeversicherung für ersten eigenen Haushalt von Kindern"
+  ],
+  "beitrag": null,
+  "insurer": "DOCURA VVaG",
+  "tariff": "PROTECT+",
+  "stem": "docura__protect-unbenannte-gefahren",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "60e75884b1dd83bf36b0e68d33730f580c1c4ce1664144b2416157d5935db77c",
+  "_supersedes": null
+}

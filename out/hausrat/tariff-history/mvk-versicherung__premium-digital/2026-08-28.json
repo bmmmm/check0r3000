@@ -1,0 +1,121 @@
+{
+  "stand": "01.05.2026",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": "Erweitert: Überspannung, Stromschwankungen, Seng-/Schmorschäden, Feuernutzungswärme, Blindgängerschäden"
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": "Incl. Vandalismus nach Einbruch, Raub, Einschleichen, Missbrauch Kredit-/Scheckkarten"
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": "Leitungswasser, witterungsbedingter Rückstau (mit funktionsfähigem Ventil), Regen-/Schmelzwasser"
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null,
+      "note": "Optional (BWE 2008): Überschwemmung, Rückstau, Erdbeben, Erdsenkung, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Schalenwild-Schäden (Wildschweine, Rehe, Rothirsche) mit Reinigungs- und Reparaturkosten"
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": "Schienen-, Wasser-, Straßenfahrzeuge (nicht vom VN oder versicherter Person betrieben)"
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": "Einfacher Diebstahl: Trickdiebstahl, Taschendiebstahl, Fahrrad, Arbeitsplatz, Krankenhaus, Gartenmöbel, Kinderspielzeug, Waschmaschine, Gepäck, Kfz-Zubehör"
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": "Phishing beim Online-Banking bis 2.000€/Jahr; Vermögensschäden durch gefälschte E-Mails"
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null,
+      "note": "Optional (gegen Zusatzbeitrag): Gebäude- und Mobiliarverglasung, Glaskeramikkochfelder, Aquarien, Spiegel"
+    },
+    "fahrradschutz": {
+      "included": true,
+      "level": null,
+      "note": "24-Stunden-Schutz, eigenständiges Schloss erforderlich, bis 1% Versicherungssumme; E-Bikes/Pedelecs"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "0 EUR für Standard-Gefahren (Brand, Einbruch, Leitungswasser, Sturm, Hagel); Elementarschäden: 10% (Minimum 500€, Maximum 5.000€); Waiver Unterversicherung bis 6.000€",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Elementarschäden (BWE 2008): 10 Tage Wartezeit nach Versicherungsbeginn"
+    ],
+    "geltungsbereich": "Weltweite Außenversicherung bis 12 Monate; Hausrat in Kfz innerhalb Deutschlands, Benelux, Österreich, Schweiz, Frankreich, Italien, Spanien, Skandinavien",
+    "vertragslaufzeit": "1 Jahr mindestens; automatische jährliche Verlängerung"
+  },
+  "leistungen": [
+    "Psychologische Betreuung bis 1.000€ nach Einbruch/Raub/Brand",
+    "Umzugskosten bei unbewohnbar gewordener Wohnung",
+    "Datenrettung bis 5.000€ (4% der Versicherungssumme)",
+    "Haustierunterbringung in Pension bis 2% der Versicherungssumme",
+    "Hotelkosten bis 365 Tage (3‰ der Versicherungssumme pro Tag)",
+    "Transport- und Lagerkosten bis 360 Tage",
+    "Rückreisekosten aus Privaturlaub (ab 5.000€ Schaden)",
+    "Schlossänderung nach Einbruch/Raub",
+    "Grobe Fahrlässigkeit versichert bis Versicherungssumme",
+    "Waiver Unterversicherung bis 6.000€",
+    "Miet-/Ersatzgeräte bis 2.000€",
+    "Kostenersatz provisorische Maßnahmen bis Versicherungssumme"
+  ],
+  "ausschluesse": [
+    "Krieg, Bürgerkrieg, innere Unruhen, Streik, Aussperrung",
+    "Kernenergie, nukleare Strahlung, radioaktive Stoffe",
+    "Schwamm, Trockenfäule, allmähliche Abnutzung",
+    "Sturmflut",
+    "Vorsätzlich herbeigeführte Schäden",
+    "Grundwasser (außer Rückstau bei Rückstauventil)",
+    "Gebäude nicht bezugsfertig oder wegen Umbauarbeiten unnutzbar",
+    "Von Mietern/Untermietern mitgebrachter Hausrat",
+    "Kraftfahrzeuge aller Art und Teile/Zubehör",
+    "Luft- und Wasserfahrzeuge",
+    "Elektronisch gespeicherte Daten (außer Datenrettung)"
+  ],
+  "besonderheiten": [
+    "Umfassende Diebstahlabsicherung (Trickdiebstahl, Taschendiebstahl, Fahrrad, Arbeitsplatz, Krankenhaus, Gartenmöbel, Spielzeug)",
+    "Phishing-Schutz beim privaten Online-Banking",
+    "Wildschadenschutz für Schalenwild (Wildschweine, Rehe, Rothirsche)",
+    "Grobe Fahrlässigkeit nicht angerechnet (mit Ausnahmen für Obliegenheitsverletzungen)",
+    "Leistungs-Update-Garantie (automatische Verbesserungen)",
+    "Besitzstandsgarantie gegenüber Vorvertrag",
+    "Differenz-Deckung (Exzedenten-Deckung) bis 12 Monate nach Antrag",
+    "Erweiterte Außenversicherung bis 12 Monate weltweit",
+    "Wallbox (private Ladesäulen) versichert",
+    "Balkonkraftwerke/Stecker-Solaranlagen versichert",
+    "Beruflich bedingte Zweitwohnung (Pendlerwohnung) bis 20% der Versicherungssumme",
+    "Haushaltsneugründung von Kindern (30% Vorsorge für 12 Monate)",
+    "Kinderbetreuung im Notfall bis 500€",
+    "Erhöhter Vorsorgebetrag 30% (statt 10%)",
+    "Erhöhter Unbewohntsein-Schutz bis 365 Tage"
+  ],
+  "beitrag": null,
+  "insurer": "MVK Versicherung VVaG",
+  "tariff": "MVK Premium-Digital",
+  "stem": "mvk-versicherung__premium-digital",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "626bd52245a74edfec4660e65df8b0555643d5b01258ccfe7eabb17b6b15b61c",
+  "_supersedes": null
+}

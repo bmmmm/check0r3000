@@ -1,0 +1,97 @@
+{
+  "insurer": "BavariaDirekt Versicherung AG",
+  "tariff": "Verbundene Hausratversicherung",
+  "stand": "2026",
+  "modules": {
+    "feuer": {
+      "included": true
+    },
+    "einbruchdiebstahl": {
+      "included": true
+    },
+    "wasserschaeden": {
+      "included": true
+    },
+    "naturgefahren": {
+      "included": false
+    },
+    "tiere": {
+      "included": false
+    },
+    "fahrzeuganprall": {
+      "included": true
+    },
+    "diebstahl_erweitert": {
+      "included": false
+    },
+    "internet": {
+      "included": false
+    },
+    "wohnungsschutzbrief": {
+      "included": false
+    },
+    "glasschutz": {
+      "included": false
+    },
+    "fahrradschutz": {
+      "included": false
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "10.000–135.000 EUR (frei wählbar)",
+    "selbstbeteiligung": "wählbar: 0 EUR / 150 EUR / 250 EUR / 500 EUR",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Elementargefahren: 1 Monat"
+    ],
+    "geltungsbereich": "Wohnung + weltweite Außenversicherung (begrenzt)",
+    "vertragslaufzeit": "1 Jahr, dann automatische Verlängerung"
+  },
+  "leistungen": [
+    "Neuwertentschädigung",
+    "Hotelkosten im Versicherungsfall",
+    "Schlossänderungskosten",
+    "Aufräumungskosten",
+    "Transport- und Lagerkosten",
+    "Haustierbetreuungskosten",
+    "Rückreisekosten",
+    "Weltweite Außenversicherung"
+  ],
+  "ausschluesse": [
+    "Krieg und kriegsähnliche Ereignisse",
+    "Innere Unruhen",
+    "Kernenergie",
+    "Schwamm und Hausfäulepilze",
+    "Sturmflut",
+    "Trockenheit und Austrocknung",
+    "Erdbeben (ohne Elementar-Add-on)",
+    "Vorsätzlich herbeigeführte Versicherungsfälle"
+  ],
+  "besonderheiten": [
+    "Sturm, Hagel und Sondergefahren in Basis enthalten",
+    "Verfügbar in drei Komfort-Varianten (S, M, L)",
+    "Grobe Fahrlässigkeit versichert",
+    "Unterversicherungsverzicht ab 650 EUR/qm möglich",
+    "Leistungs-Update-Garantie",
+    "Best-Bedingungs-Zusage",
+    "Vorsorgeversicherung für Kinder bis 25% VSU (Komfort L)"
+  ],
+  "beitrag": null,
+  "_input_hash": "2a3e16ae134fdce1cc61fcd193a26d321653e692bdea1e989a6ce5d5b0135c8a",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "4a3422ec38bbb6c65335ea67b0259d51a6124a698d35df24adbc1658654e2e64"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "ba846db5fee87d2036f96498e759c36eaea4c6a84305bf46d248f3295ae15b3d"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "9fd389ae5a2c85906f753355b41dee37cd3ffc613e5346ca37db545675df9bcc"
+    }
+  ]
+}

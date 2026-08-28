@@ -1,0 +1,140 @@
+{
+  "insurer": "Interlloyd Versicherungs-AG",
+  "tariff": "Infinitus",
+  "stand": "01.2025",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": "Brand, Blitzschlag, Überspannung, Explosion, Implosion, Verpuffung, Luftfahrzeuganprall, Nutzfeuer/Wärmeschäden, Innere Unruhen/Streik/Aussperrung, radioaktive Isotope"
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": "Einbruch, Vandalismus nach Einbruch bis 10.000€, Raub, erweiterte Diebstahlformen, Smart-Home-Hacking bis 10.000€"
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": "Leitungswasser, Nässeschäden, Bruchschäden, Regen-/Schmelzwasser bis 10.000€"
+    },
+    "naturgefahren": {
+      "included": true,
+      "level": null,
+      "note": "Sturm, Hagel, erweiterte Naturgefahren bis 40.000€ (ZÜRS 1+2), Starkregen Plus optional"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Vandalismus durch wild lebende Tiere (Bundesjagdgesetz) bis 10.000€"
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": "Anprall Schienen-/Straßen-/Wasserfahrzeuge, Transportmittelunfälle bis 10.000€"
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": "Einfacher Diebstahl außerhalb Wohnung, Fahrraddiebstahl unbegrenzt, Trickdiebstahl bis 10.000€"
+    },
+    "internet": {
+      "included": false,
+      "level": null,
+      "note": "Verfügbar als optionaler Baustein web@ktiv"
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": "Verfügbar als optionaler Baustein mit 24-Stunden-Service"
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null,
+      "note": "Verfügbar als optionaler Baustein"
+    },
+    "fahrradschutz": {
+      "included": false,
+      "level": null,
+      "note": "Verfügbar als Fahrrad-Kaskoversicherung mit Fahrradassistance"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "unbegrenzt",
+    "selbstbeteiligung": "1000 EUR (Naturgefahren); nach Vereinbarung für andere Gefahren",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Weitere Naturgefahren (Elementargefahren): 4 Wochen"
+    ],
+    "geltungsbereich": "Deutschland, Wohnungen bis 250 qm, Hauptwohnsitz + bis 3 km Luftlinie",
+    "vertragslaufzeit": "Minimum 1 Jahr, stillschweigende Verlängerung um jeweils 1 Jahr"
+  },
+  "leistungen": [
+    "Entschädigung nach Neuwert",
+    "Kostenersatz bis 20% über Versicherungssumme hinaus",
+    "Aufräumungskosten",
+    "Hotelkosten bis 250 EUR/Tag (max. 200 Tage)",
+    "Haustierunterbringung bis 10 EUR/Tag (max. 200 Tage)",
+    "Umzugskosten nach Totalschaden",
+    "Schlossänderungskosten (inkl. Gemeinschaftstüren)",
+    "Reparaturkosten für Gebäudeschäden durch Rettungsmaßnahmen",
+    "Reparaturkosten für Armaturen",
+    "Wasser-/Gasverlust-Kosten",
+    "Energetische Modernisierung bis 25% Mehrkosten",
+    "Nachhaltige Schadenbehebung bis 115%/130%",
+    "Mietkosten Ersatzgeräte",
+    "Datenrettungskosten bis 3000 EUR",
+    "Telefonmissbrauch nach Einbruch bis 3000 EUR",
+    "Persönliche Auslagen bis 250 EUR (ab 10.000 EUR Gesamtschaden)",
+    "Fehlalarmkosten Rauch-/Gasmelder bis 1500 EUR",
+    "Psychologische Betreuung nach Einbruch",
+    "Kostenschutz für Wohnungsübergabeprotokolle"
+  ],
+  "ausschluesse": [
+    "Krieg, Bürgerkrieg, Revolution, Aufstand, Verfügung hoher Hand",
+    "Kernenergie, nukleare Strahlung",
+    "Schwamm",
+    "Sturmflut",
+    "Vorsätzliche Herbeiführung",
+    "Gebrauchsbedingte Abnutzung und Verschleiß",
+    "Allmähliche Einwirkung (Feuchtigkeit, Rost, Oxidation)",
+    "Witterungseinflüsse auf im Freien befindliche Sachen",
+    "Schäden durch Tiere, Insekten, Schädlinge",
+    "Nicht bestimmungsgemäße Nutzung",
+    "Schönheitsschäden (Kratzer, Schrammen, Lackmängel)"
+  ],
+  "besonderheiten": [
+    "Unterversicherungsverzicht bei korrekter Wohnflächenangabe (650€/m²)",
+    "Keine Leistungskürzung bei grober Fahrlässigkeit (Infinitus-exklusiv)",
+    "Bestleistungsgarantie (Best-Price-Matching)",
+    "Besitzstandsgarantie gegenüber Vorvertrag",
+    "Leistungsupdate-Garantie für künftige Verbesserungen",
+    "Beitragsfreistellung bei unverschuldeter Arbeitslosigkeit (max. 24 Monate)",
+    "Außenversicherung bis 50.000 EUR",
+    "Vorsorgeversicherung für Kinder-Hausstand (25.000 EUR Limite)",
+    "Wertsachenversicherung bis 100% VS (bis 100.000 EUR)",
+    "Pendlerwohnung-Versicherung möglich (25.000 EUR Limite)"
+  ],
+  "beitrag": null,
+  "_input_hash": "2c7013a4d88e79dc90b6c7926149a849d59bd342d176f2358de6225d71a47a76",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "e156a21791fc81785db2a2705edf8a65831c26ce6218455376807c4aabd10356"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "fe40d77a6f1ce14750c9135b0480c3fc000917a02572ed00671486436d6b6046"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "a3c72ac3d320d100c539bfaf3bb1249209e4eff6ae20776fba42dced0ef5d68c"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "f5c350c2c3e05bc844e81809a39bcb823d20e5f73268c8e82b4f96262baa3e49"
+    }
+  ]
+}

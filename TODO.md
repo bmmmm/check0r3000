@@ -1,59 +1,70 @@
 # TODO
 
-## Multi-Vertical — nächste Schritte (Stand 2026-08-28)
+## Multi-Vertical — nächste Schritte (Stand 2026-08-28, abgearbeitet am selben Tag)
 
-Grundlage: der gelandete Multi-Vertical-Umbau (`fc25545..696ea15` — Namespace via
-`_vertical.py`, Konstanten als Daten, `[S]`-Sparten-Auswahl, `new_vertical.py`,
-Hausrat + Privathaftpflicht als `experimental` mit echten Scans/AVB/Extracts).
-Reihenfolge-Empfehlung: A1+A4 → A2 → B → C → D.
+Grundlage: der gelandete Multi-Vertical-Umbau (`fc25545..696ea15`).
+Alle Punkte A–D am 2026-08-28 umgesetzt (Commits `7e6f21e..HEAD`).
 
 ### A. E2E & Test-Härtung
 
-- [ ] **A1 E2E je neuer Sparte lokal:** `CHECK0R_VERTICAL=<v> ./update-all.sh
-      --no-scan` für `hausrat` + `privathaftpflicht` (Hosts sind seit 2026-08-28 in
-      der Sandbox-Allowlist): beweist fetch_docs über die `/file/`-URLs, Zweitlauf =
-      alles cached / 0 USD, Report. Dazu TUI-`[g]` auf einem Hausrat-Tarif
-      (Manifest-Einträge liegen vor).
-- [ ] **A2 Selftests sparten-parametrisieren:** `magic.py --selftest` trägt
-      RS-Hardcodes (8/8-Breadth-Asserts Z. ~613/743, Baustein-Key `"privat"`
-      Z. ~764) — synthetische Fixtures aus `_modules.module_keys()` ableiten; danach
-      die CI-Selftest-Zeilen analog `regression.py --all-verticals` über die
-      Registry loopen (tui_data, magic, coverage_taxonomy je Sparte).
-- [ ] **A3 tui_test:** optionaler local-only Case „echte Sparte" (hausrat mit echten
-      Daten statt Fixture; Skip wenn kein Snapshot — CI-robust).
-- [ ] **A4 Ersten GitHub-CI-Lauf** mit `--all-verticals` kontrollieren
-      (Fresh-Clone-Pfade: kein data/extracted, keine Snapshots).
+- [x] **A1 E2E je neuer Sparte lokal:** beide Sparten via
+      `update-all.sh --no-scan` grün (fetch_docs verifizierte alle `/file/`-URLs
+      in-sandbox, alles cached, 0.0000 USD, Report); TUI-`[g]`-Livebeweis auf
+      Allianz Direct (Provenance-Modell im Confirm, `--only`-Pin, 7/7 grün).
+      Dabei gefixt: pipeline.sh/TUI-Funnels liefen hartes `uv run`
+      (Sandbox-tot) und `[g]/[F]` extrahierten off-provenance (Cache-Signatur-
+      Falle) — alle Funnels leiten die Flags jetzt selbst ab.
+- [x] **A2 Selftests sparten-parametrisiert:** Fixtures aus
+      `_modules.module_keys()` + Taxonomie der aktiven Sparte;
+      `--all-verticals` auf tui_data/magic/coverage_taxonomy via geteiltem
+      `_vertical.run_per_vertical()`; ci.yml sweept die Registry.
+      Alignment-Cases sind Sparten-DATEN in der Taxonomie-JSON.
+- [x] **A3 tui_test:** `vertical_switch_real` (hausrat mit echten Daten,
+      Skip ohne Snapshot — Skip-Pfad verifiziert). Suite 28/28.
+- [x] **A4 GitHub-CI-Lauf kontrolliert:** Run 33177066302 sweept alle drei
+      Sparten auf dem Fresh-Clone (RS 3 Golden + 26/26, hausrat 3/3, phv 3/3,
+      Staleness-Skip greift).
 
-### B. Harvest-Generalisierung (Voraussetzung für [F]/[H]/Scan in neuen Sparten)
+### B. Harvest-Generalisierung
 
-- [ ] **B1 `harvest_docs.py` auf Panel-Flows generalisieren:** Sparten-Spec nach
-      `vertical.json` (card_sel, Expander, Docs-Tab, doc_link_filter, kind-Mapping
-      `terms_combined`/`infos_static`/…); RS-`/filestore/`-Pfad byte-identisch
-      halten. Basis: `scripts/probe/mini_harvest.py` (Probe-Grade, dort gerettet).
-      Gotchas stehen im Docstring + Memory: PHV-Expander ist der
-      „Tarifdetails"-TEXT-Link (Wrap-Div togglet nichts), Links liegen nach
-      Expansion ohne Tab-Klick im DOM; Hausrat braucht den „Dokumente"-Tab als
-      Real-Click (JS-click feuert den Vue-Handler nicht); „weiter" = Login-Wall.
-- [ ] **B2 Scan produktiv je Sparte:** Profil aus `check24-profile.example.json`
-      kopieren, `fetch_ratings`/`fetch_prices` je Sparte prüfen, dann `[U]`-E2E.
+- [x] **B1 `harvest_docs.py` generalisiert:** `harvest`-Spec in vertical.json
+      (flow=panel: card_sel, Expander, Docs-Tab, doc_link_filter,
+      kind_to_doctype); RS-filestore-Pfad regression-bewiesen (JURPRIVAT-
+      Re-Harvest = identischer Bundle-Hash). Gelernt: Listen sind
+      VIRTUALISIERT (mouse.wheel mountet nichts — scrollBy/Akkumulation nach
+      Markup-Position, Card-Jagd je Tarif), PHV-Info-Layer blockt Scroll,
+      Expander exact+sichtbar matchen. Live bewiesen: hausrat natura ideal +
+      phv Adam Riese L geharvestet+extrahiert.
+- [x] **B2 Scan produktiv:** Profile kopiert, `fetch_ratings` spec-aware
+      (geteiltes `_scan.py`-Leaf), Snapshots 85 (hausrat) / 79 (phv),
+      TUI-`[U]`-E2E auf hausrat 9/9 grün. `fetch_prices` ist für
+      Panel-Sparten STRUKTURELL unmöglich (SSR trägt 0 Kacheln) und sagt das
+      jetzt statt IncompleteRead-Noise.
 
-### C. Kuration experimental → production (je Sparte)
+### C. Kuration experimental → production
 
-- [ ] **C1 Draft-Module reviewen** (hausrat 12 / phv 10 — mergen/umbenennen wo
-      sinnvoll), `included` wieder strict `boolean` im Schema.
-- [ ] **C2 Taxonomy verfeinern:** Hausrat-Records treffen aktuell nur ~5/15
-      Kategorien — Synonyme aus den extrahierten `leistungen` nachziehen.
-- [ ] **C3 `benchmarks/<v>/golden.json`:** 1–2 Tarife handverifizieren (Records für
-      AO NOW Balance 2025 / Allianz Direct DIRECT liegen vor) + golden_pins.
-- [ ] **C4 Mehr Tarife analysieren** (nach B1 via Markt-Scan `[F]`),
-      external-ratings kuratieren, dann Status-Flip auf `production` in
-      `config/verticals.json`.
+- [x] **C1 Module kuratiert:** hausrat merged `ueberschwemmung_rueckstau` →
+      `naturgefahren` (11 Module), phv-10 bestätigt; `included` strict
+      boolean in beiden Schemas (Instruction: optionaler Baustein ohne
+      Einschluss = false, Marktdefault statt Raten); alle 8 Records
+      force-re-extrahiert, 0 nulls.
+- [x] **C2 Taxonomien:** 39% → **100% Mapping** in beiden Sparten
+      (hausrat +15/+4, phv +15/+19 Kategorien), 24+30 gepinnte
+      Alignment-Cases inkl. Precedence-Guards.
+- [x] **C3 golden.json:** allianz-direct__direct (11 Invarianten) +
+      ao-now__balance-2025 (9) handverifiziert, jede `why` zitiert die
+      AVB-Stelle; Gates beidseitig bewiesen (grün + rot auf Fälschung).
+- [x] **C4:** `[F]`-Deep-Scan-Batches (pool_k=10) je Sparte,
+      external-ratings quellen-belegt kuratiert (Finanztip 25.07.2026,
+      F&B/Finanztest als _market_notes), Status-Flip → `production`.
 
 ### D. Doku & Hygiene
 
-- [ ] **D1 `README.md`:** 12 veraltete Pfad-Referenzen (data/raw, out/tariffs, …)
-      → `/readme-sync`.
-- [ ] **D2 Worktree `multi-vertical` entfernen** (gemergt; beim Sessionende).
+- [x] **D1 `README.md`:** 14 Pfadklassen auf den Vertical-Namespace gezogen,
+      Multi-Vertical-Features (Registry, `[S]`, Scaffolder, Panel-Flow,
+      `--all-verticals`) nachgetragen.
+- [ ] **D2 Worktree `multi-vertical` entfernen** (beim Sessionende; lokaler
+      `main` im Haupt-Checkout braucht danach `git merge --ff-only origin/main`).
 
 ---
 

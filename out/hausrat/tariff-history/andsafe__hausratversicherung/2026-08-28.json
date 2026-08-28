@@ -1,0 +1,114 @@
+{
+  "stand": "03.2024",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": "Inkl. Vandalismus nach Einbruch, Trickdiebstahl, Gartenmöbel, Kinderwagen, Diebstahl aus Kfz"
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": "Leitungswasser und Bruchschäden"
+    },
+    "naturgefahren": {
+      "included": true,
+      "level": null,
+      "note": "Sturm und Hagel; Überschwemmung, Rückstau, Erdbeben, Erdfall, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch nur im Elementarversicherungs-Zusatzvertrag"
+    },
+    "tiere": {
+      "included": false
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": "Phishing/Internetbetrug beim privaten Online-Banking"
+    },
+    "wohnungsschutzbrief": {
+      "included": false
+    },
+    "glasschutz": {
+      "included": false,
+      "note": "Nur sofern ausdrücklich vereinbart (separate Bedingungen)"
+    },
+    "fahrradschutz": {
+      "included": false,
+      "note": "Nur sofern vereinbart"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "vereinbart, entspricht Versicherungswert (Neuwert) + 10% Vorsorgebetrag",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Elementarversicherung (Zusatzvertrag): 14 Tage Wartezeit"
+    ],
+    "geltungsbereich": "Deutschland, versicherte Wohnung am Versicherungsort; Außenversicherung weltweit möglich",
+    "vertragslaufzeit": "Mindestens 1 Jahr, dann jährliche Verlängerung bei Nichterhebung von Kündigung"
+  },
+  "leistungen": [
+    "Aufräumungskosten",
+    "Bewegungs- und Schutzkosten",
+    "Hotelkosten (bis 120€/Tag, max 180 Tage)",
+    "Transport- und Lagerkosten",
+    "Schlossänderungskosten",
+    "Bewachungskosten",
+    "Reparaturkosten für Gebäudeschäden",
+    "Reparaturkosten für Leitungswasserschäden in Wohnungen",
+    "Kosten für provisorische Maßnahmen",
+    "Sachverständigenkosten",
+    "Mehrkosten durch Preissteigerungen",
+    "Umzugskosten",
+    "Datenrettungskosten (bis 1.000€)",
+    "Mehrkosten für nachhaltige Wiederbeschaffung/Reparatur",
+    "Schadenabwendungs- und Schadenminderungskosten",
+    "Best-Leistungsgarantie (Anpassung an bessere Konkurrenzangebote)"
+  ],
+  "ausschluesse": [
+    "Krieg, kriegsähnliche Ereignisse, Bürgerkrieg, Revolution, Aufstand",
+    "Kernenergie, nukleare Strahlung, radioaktive Substanzen",
+    "Innere Unruhen",
+    "Schwamm",
+    "Grundwasser (außer wenn durch Leitungswasser verursacht)",
+    "Sturmflut",
+    "Überschwemmung, Rückstau (außer im Zusatzvertrag)",
+    "Erdbeben, Erdfall, Erdrutsch (außer im Zusatzvertrag)",
+    "Schneedruck, Lawinen, Vulkanausbruch (außer im Zusatzvertrag)",
+    "Fahrzeuge aller Art und Anhänger",
+    "Luft- und Wasserfahrzeuge",
+    "Gebäudebestandteile (außer Einbaumöbel)",
+    "Allmähliche Raucheinwirkung (Fogging)",
+    "Dauernde Hitzeaussetzung",
+    "Schäden vorsätzlich herbeigeführt",
+    "Plansch-/Reinigungswasser"
+  ],
+  "besonderheiten": [
+    "Unterversicherungsverzicht vereinbart (Verzicht auf Einwand bei Unterversicherung)",
+    "Digitale Vertragsverwaltung via Kundenportal",
+    "Tägliche Kündbarkeit",
+    "Anschlussdeckung bei Vorvertrag mit anderem Versicherer",
+    "Summen- und Konditionsdifferenzdeckung möglich",
+    "Entschädigungsgrenzen für Wertsachen (z.B. Bargeld max 500€, Schmuck max 1.000€)",
+    "Diebstahlversicherung aus Kraftfahrzeugen bis 1.000€ pro Fall",
+    "Phishing-Versicherung bis 1% der Versicherungssumme"
+  ],
+  "beitrag": null,
+  "insurer": "andsafe Aktiengesellschaft",
+  "tariff": "Hausratversicherung",
+  "stem": "andsafe__hausratversicherung",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "9107464252222610321a86a04c2775d8899554bfbf345458f7d14745cd62e0b0",
+  "_supersedes": null
+}
