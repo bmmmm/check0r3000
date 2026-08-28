@@ -1,0 +1,12 @@
+{
+  "_comment": "Vertical registry — data source of the TUI's vertical selector. Per vertical: label (display name), host (CHECK24 subdomain serving the result list), funnel_path (path of the GET-query result page on that host), status: production | experimental | disabled. Only non-disabled verticals are selectable; experimental ones carry a badge. Per-vertical configuration data lives in config/verticals/<name>/vertical.json.",
+  "default": "rechtsschutz",
+  "verticals": {
+    "rechtsschutz": {
+      "label": "Rechtsschutz",
+      "host": "https://rechtsschutz.check24.de",
+      "funnel_path": "/rsv/vergleichsergebnis/",
+      "status": "production"
+    }
+  }
+}
