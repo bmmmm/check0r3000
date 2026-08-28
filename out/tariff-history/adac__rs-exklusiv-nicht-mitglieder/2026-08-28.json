@@ -1,6 +1,4 @@
 {
-  "insurer": "ADAC Versicherung AG",
-  "tariff": "ADAC Rechtsschutz",
   "stand": "01.03.2022",
   "modules": {
     "privat": {
@@ -126,23 +124,10 @@
     "Außerordentliche Kündigung nach rechtskräftiger Entscheidung möglich"
   ],
   "beitrag": null,
-  "_repeat": 3,
-  "_repeat_ok": 3,
-  "_input_hash": "07f50f8fc2a694edf03d5eddc8ae89892b7388e460d2a15c19cf7362a3044390",
-  "_model": "haiku",
-  "_filter": "avb-filter",
-  "sources": [
-    {
-      "doctype": "avb",
-      "content_sha256": "e0610959941297accd84ae7c5aa13667e2ae9bba80ee56057809c32d9a63646b"
-    },
-    {
-      "doctype": "produktinfoblatt",
-      "content_sha256": "2dd24f0e0ac5470d590288b147be2f4ba976783b79b88265b04b5caa9890407e"
-    },
-    {
-      "doctype": "weitere_unterlagen",
-      "content_sha256": "05ce3daa62f4243efcfef3c39a1f4b42c7d41c91c9d41dc98b4006fdfe7dcb2b"
-    }
-  ]
+  "insurer": "ADAC Versicherung AG",
+  "tariff": "ADAC Rechtsschutz",
+  "stem": "adac__rs-exklusiv-nicht-mitglieder",
+  "_history_date": "2026-08-28",
+  "_content_sha256": "3bf3a9f9ca993e0932e8bb9bd8a3d99f94b0fe73db832d8112b1e660bc1ec8e7",
+  "_supersedes": "2026-06-30"
 }
