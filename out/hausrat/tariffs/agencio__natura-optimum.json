@@ -1,29 +1,32 @@
 {
-  "insurer": "agencio (Ammerländer Versicherung)",
-  "tariff": "natura optimum",
+  "insurer": "agencio",
+  "tariff": "natura Optimum",
   "stand": "01.03.2023",
   "modules": {
     "feuer": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Brand, Explosion, Blitzschlag, Überspannung, Nutzwärmeschäden"
     },
     "einbruchdiebstahl": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Einbruchdiebstahl, Raub, Vandalismus nach Einbruch"
     },
     "wasserschaeden": {
       "included": true,
-      "level": null
+      "level": null,
+      "note": "Leitungswasser, innenliegende Regenfallrohre, Wassersäulen"
     },
     "naturgefahren": {
       "included": null,
       "level": null,
-      "note": "optional (Elementarversicherung)"
+      "note": "Optional: Elementarversicherung (Überschwemmung, Erdbeben, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch)"
     },
     "tiere": {
       "included": true,
       "level": null,
-      "note": "Schäden durch wild lebende Tiere bis 10.000 EUR"
+      "note": "Schäden durch wild lebende Tiere bis 10.000€"
     },
     "fahrzeuganprall": {
       "included": true,
@@ -33,12 +36,12 @@
     "diebstahl_erweitert": {
       "included": true,
       "level": null,
-      "note": "Einfacher Diebstahl in vielen Formen (Arbeitsplatz, Trick, etc.)"
+      "note": "Einfacher Diebstahl (Wäsche, Gartenmöbel, Arbeitsplatz), Trickdiebstahl bis 10.000€, Seniorenschutz"
     },
     "internet": {
       "included": true,
       "level": null,
-      "note": "Cyber-Schutz: Phishing, Pharming, Skimming, Online-Handel-Betrug"
+      "note": "Cyber-Schutz: Online-Handel-Betrug, Phishing, Pharming, Datenrettung"
     },
     "wohnungsschutzbrief": {
       "included": null,
@@ -47,77 +50,60 @@
     "glasschutz": {
       "included": null,
       "level": null,
-      "note": "optional"
+      "note": "Optional: Glasversicherung sofern vereinbart"
     },
     "fahrradschutz": {
       "included": true,
       "level": null,
-      "note": "1 % der Versicherungssumme beitragsfrei mitversichert"
+      "note": "1% mitversichert, keine Einstellpflicht erforderlich"
     },
     "ueberschwemmung_rueckstau": {
-      "included": null,
+      "included": true,
       "level": null,
-      "note": "optional (Elementarversicherung); in optimum+ Überschwemmung durch Starkregen beitragsfrei"
+      "note": "Rückstauschäden bis 5% der VS (Voraussetzung: Rückstausicherung, SB 250€); Überschwemmung optional"
     }
   },
   "coverage": {
     "versicherungssumme": null,
-    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "selbstbeteiligung": "0 EUR für Grunddeckungen, 50–250 EUR für Leistungseinschlüsse (vereinbar)",
     "wartezeit_monate": 0,
-    "wartezeit_ausnahmen": [
-      "Elementarschäden: 1 Monat Wartezeit"
-    ],
-    "geltungsbereich": "Deutschland; Außenversicherung weltweit bis zu 12 Monaten",
-    "vertragslaufzeit": "1 oder mehr Jahre"
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Deutschland; Außenversicherung weltweit bis 12 Monate",
+    "vertragslaufzeit": "1 oder 3 Jahre"
   },
   "leistungen": [
-    "Schlossänderungskosten",
-    "Schlüsseldienst bis 150 EUR",
-    "Umzugskosten nach Schaden",
-    "Hotelkosten ohne zeitliche Begrenzung",
-    "Reparaturkosten für provisorische Maßnahmen",
-    "Bewachungskosten bis 10 Tage",
-    "Psychologische Betreuung nach Einbruch, Raub, Brand bis 500 EUR",
-    "Tierarztkosten und Tierunterbringung",
-    "Kinderbetreuung im Notfall bis 350 EUR",
-    "Rückreisekosten bei Reiseabbruch",
-    "Datenrettungskosten nach versichertem Schaden",
-    "Telefonmissbrauch nach Einbruch bis 500 EUR",
-    "Scheck- und Kreditkartenmissbrauch bis 5.000 EUR",
-    "Online-Handel-Betrug bis 3.500 EUR (Cyber)",
-    "Phishing/Pharming Schadensersatz bis 3.500 EUR",
-    "Fahrraddiebstahl rund um die Uhr",
-    "Wallbox (Ladestation) bis 3.500 EUR",
-    "Nachhaltige Reparatur mit 30 % Neuwert-Zuschuss",
-    "Kompensation von CO2-Emissionen bei Brandschaden",
-    "Besitzstandsgarantie",
-    "Erweiterte Leistungsgarantie"
+    "Fahrraddiebstahl ohne Einstellpflicht",
+    "Psychologische Betreuung nach Einbruch, Raub, Brand",
+    "Schlüsseldienst",
+    "Cyber-Schutz (Phishing, Online-Handel, Datenrettung)",
+    "Hotelkosten bei Unbewohnbarkeit",
+    "Rückreisekosten bei Schadenfall",
+    "Tierarztkosten für Haustiere",
+    "Nachhaltige Reparatur mit Mehrkosten",
+    "Ladestation (Wallbox) bis 3.500€",
+    "Trickdiebstahl bis 10.000€",
+    "Seniorenschutz (Hörhilfen, Sehhilfen, Taschendiebstahl)",
+    "Rückstauschäden bis 5% der VS"
   ],
   "ausschluesse": [
-    "Krieg und kriegsähnliche Ereignisse",
-    "Kernenergie und nukleare Strahlung",
-    "Schwamm und Fäulnis",
+    "Krieg, kriegsähnliche Ereignisse, Kernenergie",
+    "Schwamm",
     "Sturmflut",
-    "Vorsätzlich herbeigeführte Schäden",
-    "Vom Gebäudeeigentümer eingebrachte Sachen",
+    "Vorsätzlich verursachte Schäden",
     "Kraftfahrzeuge aller Art",
     "Luft- und Wasserfahrzeuge",
-    "Elektronisch gespeicherte Daten (mit Ausnahmen)",
-    "Erdbeben, Erdfall, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch (außer optional)",
-    "Abnutzung, Verschleiß, Alterung",
-    "Schäden durch Bedienungsfehler und mangelnde Wartung"
+    "Elektronisch gespeicherte Daten",
+    "Erdbeben (außer optionale Elementarversicherung)",
+    "Abnutzung, Verschleiß, Alterung"
   ],
   "besonderheiten": [
-    "Mehrschichtiges Tarifwerk: Base, Fair, Ideal, Optimum, Optimum+",
-    "Umfangreiche Cyber-Schutz-Module",
-    "Weltweite Außenversicherung bis 12 Monate für optimum",
-    "Erweiterte Diebstahlabdeckung (Arbeitsplatz, Trick, Haushaltshilfen, etc.)",
-    "Fahrraddiebstahl ohne Einstellpflicht bereits mitversichert",
-    "Psychologische und soziale Unterstützung nach Schaden",
-    "Nachhaltigkeit-Features (CO2-Kompensation, grüne Investitionen)",
-    "Besitzstandsgarantie bei Versichererwechsel",
-    "Unterversicherungsverzicht für Kleinschäden",
-    "Erweiterter Unterversicherungsverzicht bei Wohnungswechsel"
+    "TOP-Schutz mit Nachhaltigkeitsleistungen",
+    "Fahrraddiebstahl ohne Einstellpflicht",
+    "Umfangreiches Cyber-Schutz-Paket",
+    "Weltweite Außenversicherung bis 12 Monate",
+    "Seniorenschutz",
+    "Erweiterte Hotelkosten ohne zeitliche Begrenzung",
+    "Besitzstandsgarantie bei Tarifwechsel"
   ],
   "beitrag": null,
   "_input_hash": "1beffe6a40a36c3a04d247b055553cea13904bcfdc4bf688e4b87514fcb7a301",

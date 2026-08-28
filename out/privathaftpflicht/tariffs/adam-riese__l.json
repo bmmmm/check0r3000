@@ -1,0 +1,122 @@
+{
+  "insurer": "Württembergische Versicherung AG",
+  "tariff": "Adam Riese L",
+  "stand": "01.05.2023",
+  "modules": {
+    "privat": {
+      "included": true,
+      "level": null,
+      "note": "als Familienvorstand (z.B. Aufsichtspflicht)"
+    },
+    "haushalt": {
+      "included": true,
+      "level": null,
+      "note": "Familie, Haushalt, Tagesmutter, Babysitter, Au-Pair"
+    },
+    "ehrenamt": {
+      "included": true,
+      "level": null,
+      "note": "ehrenamtliche Tätigkeit und Freiwilligenarbeit; ausgenommen Vorstandstätigkeit und hoheitliche Ehrenämter"
+    },
+    "immobilien": {
+      "included": true,
+      "level": null,
+      "note": "Wohnungen, Ein-/Zweifamilienhäuser, Ferien-/Wochenendhäuser im Inland"
+    },
+    "mietsache": {
+      "included": true,
+      "level": null,
+      "note": "Mietsachschäden an Wohnräumen, Garagen, Möbeln; auch Leih-/Mietsachen"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "zahme Haustiere, gezähmte Kleintiere, Bienen; ausgenommen: Hunde, Rinder, Pferde, Wildtiere"
+    },
+    "verkehr": {
+      "included": true,
+      "level": null,
+      "note": "Radfahren, Sportausübung, nicht-versicherungspflichtige Kfz; ausgenommen: versicherungspflichtige Kraftfahrzeuge"
+    },
+    "daten": {
+      "included": true,
+      "level": null,
+      "note": "elektronische Datenübertragung (Internet, Email, Datenträger) mit Obliegenheit zur Datensicherung"
+    },
+    "ausland": {
+      "included": true,
+      "level": null,
+      "note": "temporärer weltweiter Aufenthalt bis 2 Jahre oder in EU/EFTA-Ländern unbegrenzt; Datenschäden nur europäische Staaten"
+    },
+    "umwelt": {
+      "included": true,
+      "level": null,
+      "note": "Umwelteinwirkungen, Gewässerschäden, USchadG-Sanierung, Geothermie (unter bestimmten Bedingungen)"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "vereinbart (Höhe im Versicherungsschein); Spezifisch: Mietsachschäden 10.000 EUR, Schlüsselverlust 10.000 EUR, Flugmodelle 3.000.000 EUR",
+    "selbstbeteiligung": "vereinbart (Höhe im Versicherungsschein); Mietsachschäden Ferienunterkunft/Leih-Sachen: 250 EUR",
+    "wartezeit_monate": null,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "weltweit (mit Bedingungen: Auslandsaufenthalt bis 2 Jahre, EU/EFTA unbegrenzt, Datenschäden nur Europa)",
+    "vertragslaufzeit": "1 Jahr mit automatischer jährlicher Verlängerung"
+  },
+  "leistungen": [
+    "Forderungsausfalldeckung (Ausfallrisiko)",
+    "Schlüsselverlust-Kostendeckung (Auswechslung, Notschloss, Objektschutz bis 14 Tage)",
+    "Kaution im Ausland (bis 10.000 EUR bei behördlicher Anordnung)",
+    "Waiver der Deliktsunfähigkeit für Minderjährige (bis 10.000 EUR pro Jahr)",
+    "Rettungs- und Gutachterkosten (bei Umweltschäden/Gewässerschäden)"
+  ],
+  "ausschluesse": [
+    "vorsätzlich herbeigeführte Schäden",
+    "gewerbliche und berufliche Tätigkeiten",
+    "versicherungspflichtige Kraftfahrzeuge",
+    "Jagd und jagdlicher Waffengebrauch",
+    "Hunde, Rinder, Pferde, Wildtiere",
+    "Senkungen, Erdrutschungen, Überschwemmungen",
+    "Asbest",
+    "Gentechnische Schäden",
+    "Persönlichkeits- und Namensrechtsverletzungen",
+    "Anfeindung, Schikane, Belästigung, Diskriminierung",
+    "Krankheitsübertragung",
+    "ionisierende Strahlung",
+    "ungewöhnliche und gefährliche Beschäftigungen",
+    "verantwortliche Betätigung in Vereinigungen",
+    "Tätigkeitsschäden (Bearbeitung fremder Sachen)",
+    "Schäden an hergestellten oder gelieferten Sachen",
+    "Schäden zwischen Versicherten und Angehörigen in häuslicher Gemeinschaft",
+    "Leasing, Pacht, verbotene Eigenmacht",
+    "Folgeschäden von Schlüsselverlust"
+  ],
+  "besonderheiten": [
+    "Ausfalldeckung (Forderungsausfallrisiko) bei Zahlungsunfähigkeit des Schädigers",
+    "weltweite Geltung mit Einschränkungen",
+    "Mitversicherung Ehegatte/Lebenspartner, Kinder, im Haushalt beschäftigte Personen",
+    "ehrenamtliche Tätigkeiten mitversichert",
+    "Sport und Radfahren mitversichert",
+    "Umweltrisiken und Gewässerschäden mitversichert",
+    "elektronischer Datentransfer mitversichert",
+    "Schlüsselverlust-Kostendeckung mit Notfallschutz",
+    "Kaution im Ausland bis 10.000 EUR"
+  ],
+  "beitrag": null,
+  "_input_hash": "ec9e610c320fa4f27fa4b7ea41adf4f0fca9cf918e2f2990567e632a62310db4",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "bc0206ba88b7be8cf39d5ddaa937ab1556ed0fc2241d5b2516d6ef5243d8baae"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "0b6e318c81bb5041044171968e79af59e1b5b1f99cb320b6b0ad3fdec49b0dbb"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "9eef36aa7eabb8ab900373cccd77aa7eea466a2e3f27eb5789bf96ec03e50b96"
+    }
+  ]
+}

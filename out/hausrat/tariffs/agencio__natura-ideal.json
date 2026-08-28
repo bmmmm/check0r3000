@@ -1,0 +1,154 @@
+{
+  "insurer": "agencio (Ammerländer Versicherung)",
+  "tariff": "natura Ideal",
+  "stand": "01.03.2023",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": "Feuer, Explosion, Nutzwärmeschäden, Blitzschlag, Überspannungsschäden, Rauch-/Rußschäden"
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": "Einbruchdiebstahl, Raub, Vandalismus nach Einbruch, erweiterte Trickdiebstahl-Abdeckung"
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": "Leitungswasser, Schäden durch innen liegende Regenfallrohre, Wassersäulen, Rückstau mit Rückstausicherung (5% VS)"
+    },
+    "naturgefahren": {
+      "included": null,
+      "level": null,
+      "note": "Elementarschadenversicherung optional: Überschwemmung, Erdbeben, Erdsenkung, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": "Haustiere, Schäden durch wild lebende Tiere bis 5.000 EUR, Tierarztkosten bis VS"
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": "Anprall von Schienen-, Wasser- und Straßenfahrzeugen"
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": "Einfacher Diebstahl von Wäsche, Gartenzubehör, Grills, Waschmaschinen, Kinderspielzeug, am Arbeitsplatz (3% VS), Trickdiebstahl (5.000 EUR)"
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": "Cyber-Schutz: Phishing (3.000 EUR), Datenrettungskosten, Daten aus Internet (2.500 EUR)"
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "glasschutz": {
+      "included": null,
+      "level": null,
+      "note": "Optional gegen Zusatzprämie"
+    },
+    "fahrradschutz": {
+      "included": null,
+      "level": null,
+      "note": "Fahrraddiebstahl kann vereinbart werden; Rund-um-die-Uhr-Schutz, Keine Einstellpflicht (Ideal/Optimum+)"
+    },
+    "ueberschwemmung_rueckstau": {
+      "included": true,
+      "level": null,
+      "note": "Rückstau mit Rückstausicherung: bis 5% VS (SB 250 EUR); Überschwemmung nicht im Basis-Schutz (nur optional Elementar)"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "berechnet als vereinbarter Betrag pro m² Wohnfläche × tatsächliche Wohnfläche + 10% Vorsorgebetrag",
+    "selbstbeteiligung": "variabel nach Schadensart; z.B. 150 EUR Überspannung, 250 EUR Rückstau/Niederschläge; optional genereller Selbstbehalt mit Schadenfreiheitsregelung",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Elementarschadenversicherung (optional): 1 Monat"
+    ],
+    "geltungsbereich": "Deutschland Versicherungsort; weltweit temporär Außenversicherung bis 12 Monate (100% VS)",
+    "vertragslaufzeit": "flexible Vereinbarung, typisch 1 oder 3 Jahre mit automatischer 1-Jahr-Verlängerung"
+  },
+  "leistungen": [
+    "Schadenabwendungs- und Minderungskosten",
+    "Hotelkosten bis 12 Monate (2‰ VS/Tag)",
+    "Lagerkosten bis 12 Monate",
+    "Reparaturkosten nach Einbruch",
+    "Schlossänderungen unbegrenzt",
+    "Schlüsseldienst bis 150 EUR",
+    "Telefonmissbrauch nach Einbruch bis 1.000 EUR",
+    "Scheck- und Kreditkartenmissbrauch bis 3.000 EUR",
+    "Trickdiebstahl im Versicherungsort bis 5.000 EUR",
+    "Diebstahl am Arbeitsplatz 3% VS",
+    "Rückstauschäden bis 5% VS",
+    "Cyberschutz: Phishing bis 3.000 EUR, Datenrettung, Internet-Daten bis 2.500 EUR",
+    "Außenversicherung 100% VS weltweit",
+    "Sportgeräte-Außenversicherung bis 5.000 EUR",
+    "Garage außerhalb Grundstück bis 6.000 EUR",
+    "Rückreisekosten bis 5.000 EUR",
+    "Miet- und Ersatzgeräte",
+    "Tierarztkosten bis VS",
+    "Schäden wild lebende Tiere bis 7.500 EUR",
+    "Smart-Home-Technik bis 3.500 EUR",
+    "Ladestation (Wallbox) bis 3.500 EUR",
+    "Psychologische Betreuung nach Einbruch bis 500 EUR",
+    "Kinderbetreuung Notfall ab 1.500 EUR (250 EUR)",
+    "Technische Sicherungsanlagen bis 5% VS (max. 2.000 EUR)",
+    "Grobe Fahrlässigkeit wird nicht angerechnet (außer Obliegenheiten)",
+    "Unterversicherungsverzicht bei Kleinschäden bis 1% VS",
+    "Beitragsbefreiung bei unverschuldeter Arbeitslosigkeit (12 Monate)"
+  ],
+  "ausschluesse": [
+    "Krieg, kriegsähnliche Ereignisse, Bürgerkrieg, Revolution, Aufstand",
+    "Kernenergie, nukleare Strahlung, radioaktive Substanzen",
+    "Innere Unruhen",
+    "Schwamm und Pilzbefall",
+    "Sturmflut",
+    "Schäden durch Vorsatz des Versicherungsnehmers",
+    "Gebäudebestandteile (mit Ausnahmen für Mieter-Einbauten)",
+    "Kraftfahrzeuge aller Art, Anhänger, Teile und Zubehör",
+    "Luft- und Wasserfahrzeuge",
+    "Elektronisch gespeicherte Daten und Programme (mit Ausnahmen)",
+    "Plansch- und Reinigungswasser",
+    "Grundwasser, stehendes/fließendes Oberflächenwasser ohne Elementarversicherung",
+    "Erdsenkung/Erdrutsch (außer Verursachung durch Leitungswasser)",
+    "Schäden in nicht bezugsfertigen Gebäuden",
+    "Schäden durch Vergessen, Verlieren, Stehenlassen",
+    "Eigenbauten (Fahrräder), Hochräder, Spaßfahrräder",
+    "Schäden in nicht ordnungsgemäß geschlossenen Öffnungen (Fenster/Türen)",
+    "Verbrennungsmotor-Explosionsschäden (mit Ausnahmen)"
+  ],
+  "besonderheiten": [
+    "Vier Tarif-Stufen: Base, Fair, Ideal, Optimum/Optimum+ — dies ist Ideal",
+    "Umfassender Cyber-Schutz integriert (Phishing, Datenrettung, Online-Banking)",
+    "Großzügige weltweite Außenversicherung (100% VS bis 12 Monate)",
+    "Grobe Fahrlässigkeit nicht angerechnet (außer Obliegenheiten und Gefahrerhöhungen)",
+    "Unterversicherungsverzicht auch für Kleinschäden bis 1% VS",
+    "Erweiterte Rückstauabdeckung (5% VS mit Rückstausicherung)",
+    "Fahrraddiebstahl optional vereinbar, Rund-um-Uhr-Schutz, keine Einstellpflicht",
+    "Nachhaltigkeitsleistungen: CO2-Kompensation bei Brandschaden",
+    "Flexible Selbstbeteiligung mit Schadenfreiheitsregelung möglich",
+    "Beitragsbefreiung bei unverschuldeter Arbeitslosigkeit (bis 12 Monate)",
+    "Seniorenrabatt (25% nach 3 Jahren bei Umzug ins Seniorenheim)",
+    "Optionale Module: Glasversicherung, Elementarschadenversicherung",
+    "Erhöhte Wertsachen-Limits in Wertschutzschränken nach Widerstandsgrad EN 1143-1"
+  ],
+  "_input_hash": "089f8d95c7586846de7a40828c7fe2f7ffe6d5cb466e437882fbcc081013b3ac",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "720207d8689b7076c2fff10596a010a3c27c112b729987d87358d9cb45d44628"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "7cf3fcf83482c20fd4442bfcb409e4cc95c706f51a050129a8454b747580b67f"
+    }
+  ]
+}

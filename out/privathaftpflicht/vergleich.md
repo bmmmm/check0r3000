@@ -1,30 +1,39 @@
 # Rechtsschutzversicherung — Vergleich
 
-_3 Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergebnisliste._
+_4 Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergebnisliste._
 
 ## Leistungsmatrix
 
-| Merkmal | Neodigital Versicherung AG — AO NOW Balance 2025 | BavariaDirekt Versicherung AG — Privathaftpflichtversicherung | BavariaDirekt Versicherung AG — Privathaftpflichtversicherung |
-|---|---|---|---|
-| Privat | ✓ | ✓ | ✓ |
-| Haushalt | ✓ | ✓ | ✓ |
-| Ehrenamt | ✓ | ✓ | ✓ |
-| Immobilien | ✓ | ✓ | ✓ |
-| Mietsache | ✓ | ✓ | ✓ |
-| Tiere | ✓ | ✓ | ✓ |
-| Verkehr | ✓ | ✓ | ✓ |
-| Daten | ✓ | ✓ | ✓ |
-| Ausland | ✓ | ✓ | ✓ |
-| Umwelt | ✓ | – | – |
-| Versicherungssumme | – | – | – |
-| Selbstbeteiligung | vereinbart (Höhe im Versicherungsschein) | vereinbart (Höhe im Versicherungsschein) | vereinbart (Höhe im Versicherungsschein) |
-| Wartezeit (Monate) | – | 0 | 0 |
-| Geltungsbereich | Weltweit bei vorübergehendem Auslandsaufenthalt (bis 5 Jahre, EU unbegrenzt) | Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein | Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein |
-| Laufzeit | Mindestens 1 Jahr mit automatischer Verlängerung | 1 Jahr (automatische Verlängerung um weitere Jahre) | 1 Jahr (automatische Verlängerung um weitere Jahre) |
-| Beitrag/Monat (EUR) | – | – | – |
+| Merkmal | Württembergische Versicherung AG — Adam Riese L | Neodigital Versicherung AG — AO NOW Balance 2025 | BavariaDirekt Versicherung AG — Privathaftpflichtversicherung | BavariaDirekt Versicherung AG — Privathaftpflichtversicherung |
+|---|---|---|---|---|
+| Privat | ✓ | ✓ | ✓ | ✓ |
+| Haushalt | ✓ | ✓ | ✓ | ✓ |
+| Ehrenamt | ✓ | ✓ | ✓ | ✓ |
+| Immobilien | ✓ | ✓ | ✓ | ✓ |
+| Mietsache | ✓ | ✓ | ✓ | ✓ |
+| Tiere | ✓ | ✓ | ✓ | ✓ |
+| Verkehr | ✓ | ✓ | ✓ | ✓ |
+| Daten | ✓ | ✓ | ✓ | ✓ |
+| Ausland | ✓ | ✓ | ✓ | ✓ |
+| Umwelt | ✓ | ✓ | – | – |
+| Versicherungssumme | vereinbart (Höhe im Versicherungsschein); Spezifisch: Mietsachschäden 10.000 EUR, Schlüsselverlust 10.000 EUR, Flugmodelle 3.000.000 EUR | – | – | – |
+| Selbstbeteiligung | vereinbart (Höhe im Versicherungsschein); Mietsachschäden Ferienunterkunft/Leih-Sachen: 250 EUR | vereinbart (Höhe im Versicherungsschein) | vereinbart (Höhe im Versicherungsschein) | vereinbart (Höhe im Versicherungsschein) |
+| Wartezeit (Monate) | – | – | 0 | 0 |
+| Geltungsbereich | weltweit (mit Bedingungen: Auslandsaufenthalt bis 2 Jahre, EU/EFTA unbegrenzt, Datenschäden nur Europa) | Weltweit bei vorübergehendem Auslandsaufenthalt (bis 5 Jahre, EU unbegrenzt) | Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein | Europa und EU-Außengebiete unbegrenzt; außereuropäisch temporär bis Versicherungsschein |
+| Laufzeit | 1 Jahr mit automatischer jährlicher Verlängerung | Mindestens 1 Jahr mit automatischer Verlängerung | 1 Jahr (automatische Verlängerung um weitere Jahre) | 1 Jahr (automatische Verlängerung um weitere Jahre) |
+| Beitrag/Monat (EUR) | – | – | – | – |
 
 
 ## Details je Tarif
+
+### Württembergische Versicherung AG — Adam Riese L
+
+**Leistungen:** Forderungsausfalldeckung (Ausfallrisiko); Schlüsselverlust-Kostendeckung (Auswechslung, Notschloss, Objektschutz bis 14 Tage); Kaution im Ausland (bis 10.000 EUR bei behördlicher Anordnung); Waiver der Deliktsunfähigkeit für Minderjährige (bis 10.000 EUR pro Jahr); Rettungs- und Gutachterkosten (bei Umweltschäden/Gewässerschäden)
+
+**Ausschlüsse:** vorsätzlich herbeigeführte Schäden; gewerbliche und berufliche Tätigkeiten; versicherungspflichtige Kraftfahrzeuge; Jagd und jagdlicher Waffengebrauch; Hunde, Rinder, Pferde, Wildtiere; Senkungen, Erdrutschungen, Überschwemmungen; Asbest; Gentechnische Schäden; Persönlichkeits- und Namensrechtsverletzungen; Anfeindung, Schikane, Belästigung, Diskriminierung; Krankheitsübertragung; ionisierende Strahlung; ungewöhnliche und gefährliche Beschäftigungen; verantwortliche Betätigung in Vereinigungen; Tätigkeitsschäden (Bearbeitung fremder Sachen); Schäden an hergestellten oder gelieferten Sachen; Schäden zwischen Versicherten und Angehörigen in häuslicher Gemeinschaft; Leasing, Pacht, verbotene Eigenmacht; Folgeschäden von Schlüsselverlust
+
+**Besonderheiten:** Ausfalldeckung (Forderungsausfallrisiko) bei Zahlungsunfähigkeit des Schädigers; weltweite Geltung mit Einschränkungen; Mitversicherung Ehegatte/Lebenspartner, Kinder, im Haushalt beschäftigte Personen; ehrenamtliche Tätigkeiten mitversichert; Sport und Radfahren mitversichert; Umweltrisiken und Gewässerschäden mitversichert; elektronischer Datentransfer mitversichert; Schlüsselverlust-Kostendeckung mit Notfallschutz; Kaution im Ausland bis 10.000 EUR
+
 
 ### Neodigital Versicherung AG — AO NOW Balance 2025
 
@@ -55,44 +64,52 @@ _3 Tarif(e). Fakten aus den Vertragsunterlagen; Beiträge ggf. aus check24-Ergeb
 
 ## Vor- & Nachteile im Vergleich
 
-### Neodigital — AO NOW Balance 2025
+### Württembergische Versicherung — Adam Riese L
 
 **Vorteile:**
-- Umweltrisiko (Gewässerschäden, USchadG) **im Basis-Tarif** enthalten
-- Erweiterte Tierhaltung: Signalhunde, Behindertenbegleithunde, wilde Kleintiere im Haushalt
-- Sportliche Aktivitäten pauschal eingeschlossen: Radrennen, Kite-Sport, Segelboote bis 15 m², Flugmodelle bis 5 kg
-- Immobilien-Vielfalt: Vermietung bis 8 Fremdenzimmerbetten, Wohnungen bis 30.000 EUR Jahresmietwert, Anlagen für erneuerbare Energien
-- Fahrzeug-Leistungen: Betankungsschäden fremder Fahrzeuge, Be-/Entladeschäden
-- Tägliches Kündigungsrecht und Teilkündigungsrecht je Baustein
-- Partner ohne namentliche Nennung versicherbar
+- Ausfalldeckung (Forderungsausfallrisiko) direkt im Tarif enthalten – deckt Schäden durch insolvente Schädiger ab, während Konkurrenten dies nur optional anbieten
+- Umweltschäden und Gewässerschäden bereits Standard-Leistung (bei BavariaDirekt nur optional)
+- Schlüsselverlust mit spezialisierter Notfallschutz-Komponente (Notschloss, Objektschutz bis 14 Tage)
 
 **Nachteile:**
-- Umfangreichere Feature-Liste kann undurchsichtiger wirken
-- Nischendeckungen (z. B. Radrennen, Kite-Sport) sind für viele Versicherte irrelevant
+- Ältester Stand unter den Tarifen (01.05.2023)
+- Auslandsaufenthalt begrenzt auf 2 Jahre (Neodigital: 5 Jahre; beide: EU unbegrenzt)
+- Kautionsleistung nur bis 10.000 EUR (Neodigital: 100.000 EUR; BavariaDirekt optional: 200.000 EUR)
+- Weniger Optionen für Erweiterungen im Vergleich zu Neodigital
 
----
-
-### BavariaDirekt — Privathaftpflichtversicherung
+### Neodigital Versicherung — AO NOW Balance 2025
 
 **Vorteile:**
-- Umweltschäden nur als **optionale Erweiterung** – schlankerer Basis-Tariff
-- Explizite Beitragsgarantie 36 Monate (optional)
-- Leistungs-Update-Garantie für zukünftige Verbesserungen kostenfrei
-- Garantie: keine Schlechterstellung gegenüber GDV-Musterbedingungen (Stand 2020)
-- Smartphone-Reparaturmehrleistung bis 20 % (optional)
-- Nachhaltigkeitsmehrleistungen optional bis 1.000 EUR
+- Umfangreichste konkrete Leistungsbeträge: Kaution bis 100.000 EUR, Schäden durch deliktsunfähige Kinder bis 50.000 EUR
+- Datenschäden weltweit versichert bis 10.000 EUR (explizit global, nicht nur regional)
+- Tägliches Kündigungsrecht – höchste Flexibilität am Markt
+- Neuester Stand (2025) mit größter Anzahl spezialisierter Optionen (Tagesmutter auch gewerblich, Assistenzhunde, Fahrräder, Segelboote, Flugmodelle)
+- Tagesmutter/Tagesvater auch in Gewerblichen Betriebsformen versichert
+
+**Nachteile:**
+- Viele attraktive Leistungen sind optional, nicht Standard (z. B. Forderungsausfallrisiko, Neuwertersatz)
+- Umweltschäden nicht explizit in Kern-Modulbeschreibung (nur als „USchadG" in besonderheiten erwähnt)
+- Komplexeste Tarifstruktur mit meisten Wahlmöglichkeiten – weniger Klarheit über echte Basis-Leistungen
+
+### BavariaDirekt Versicherung — Privathaftpflichtversicherung
+
+**Vorteile:**
+- Neuester Stand (02.12.2025)
+- Leistungs-Update-Garantie – zukünftige Verbesserungen kostenfrei mitversichert (Wettbewerbsvorteil)
+- Best-Bedingungs-Zusage plus Garantie gegen Schlechterstellung vs. GDV-Musterbedingungen 2020
+- Keine Wartezeit (0 Monate) – sofortiger Versicherungsschutz
+- Beitragsgarantie über 36 Monate optional – Planungssicherheit
 - Nebenberufliche Tätigkeiten bis 12.000 EUR Jahresumsatz versicherbar
-- Best-Bedingungs-Zusage mit optionalem erweitertem Vorsorgeschutz
 
 **Nachteile:**
-- Umweltschäden nicht im Standard-Leistungsumfang (Zusatzkosten nötig)
-- Weniger detaillierte Sport-/Hobby-Abdeckung explizit genannt
-- Weniger ausführliche Tierhaltungs-Optionen (Assistenzhunde ausgenommen, aber kein Behindertenbegleithund erwähnt)
-
----
+- Umweltschäden/Gewässerschäden nur optional – nicht automatisch enthalten wie bei Württembergische
+- Konkrete Leistungsbeträge weniger transparent als bei Neodigital
+- Kaution bis 200.000 EUR nur optional (nicht Basis wie die bis-10.000-EUR-Varianten der Konkurrenz)
+- Ausland außereuropäisch nur temporär (EU aber unbegrenzt)
+- Doppeleintrag in Daten deutet auf mögliche Duplikation hin
 
 ### Fazit
 
-**Neodigital passt für:** Versicherte mit vielfältigen Aktivitäten, Immobilien-Engagement oder besonderen Hobbys (Sport, Kleintiere), die alles in einem Tariff abgedeckt haben möchten.
-
-**BavariaDirekt passt für:** Versicherte, die einen standardisierten, schlankeren Tariff bevorzugen und nur Zusatzbausteine hinzukaufen, die sie wirklich benötigen – insbesondere mit Wertschätzung für Beitragsgarantien und Leistungs-Updates.
+- **Für maximale Standard-Leistung & weltweite Ausfalldeckung:** Württembergische Adam Riese L – bietet Ausfalldeckung und Umweltschutz ohne Zusatzkosten
+- **Für höchste Flexibilität & optionale Erweiterungen:** Neodigital AO NOW Balance 2025 – beste Wahl bei individuellen Bedarf und wechselnden Anforderungen (täglich kündbar)
+- **Für Sicherheit & zukünftige Verbesserungen:** BavariaDirekt Privathaftpflichtversicherung – stärkste Zukunftsgarantien und Bedingungen-Innovationen, sinnvoll für langfristige Planung ohne Neuverhandlungen

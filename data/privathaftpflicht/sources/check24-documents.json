@@ -95,6 +95,34 @@
           "url": "https://privathaftpflicht.check24.de/file/tariff/terms_extra/16647/2/Besondere_Versicherungsbedingungen.pdf"
         }
       ]
+    },
+    {
+      "stem": "adam-riese__l",
+      "insurer": "Adam Riese",
+      "tariff": "L",
+      "position": 66,
+      "hash": "panel:88144ec28030887c",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "additional_documents",
+          "file": "Weitere_Unterlagen",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/additional_documents/17083/1/Weitere_Unterlagen.pdf"
+        },
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "infos_static",
+          "file": "Produktinformationsblatt",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/infos_static/17083/1/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "terms_combined",
+          "file": "Versicherungsbedingungen_kombiniert",
+          "url": "https://privathaftpflicht.check24.de/file/tariff/terms_combined/17083/1/Versicherungsbedingungen_kombiniert.pdf"
+        }
+      ]
     }
   ]
 }

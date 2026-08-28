@@ -71,6 +71,28 @@
           "url": "https://hausratversicherungen.check24.de/file/ad9b023445d6e855a692fa3db5c926a350d74208/Allgemeine+Versicherungsbedingungen.pdf"
         }
       ]
+    },
+    {
+      "stem": "agencio__natura-ideal",
+      "insurer": "agencio",
+      "tariff": "natura ideal",
+      "position": 41,
+      "hash": "panel:760ea7b0722c0b3c",
+      "harvested": "2026-08-28",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/dd28c5be40431d2a39ffbc416df031fa25f12204/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/1b9110115c903346e526ced9184da659ef845367/Allgemeine+Versicherungsbedingungen.pdf"
+        }
+      ]
     }
   ]
 }
