@@ -1,46 +1,67 @@
 # check0r3000 — CLAUDE.md
 
-Rechtsschutzversicherungs-Vergleichstool. Scraped CHECK24, extrahiert Leistungsfakten per
-LLM aus Versicherer-PDFs, und zeigt alles in einer lokalen Textual-TUI. Kein DB-Engine,
-nur Dateien + stdlib + uv.
+Versicherungs-Vergleichstool (Multi-Vertical; Start-Sparte Rechtsschutz). Scraped
+CHECK24, extrahiert Leistungsfakten per LLM aus Versicherer-PDFs, und zeigt alles in
+einer lokalen Textual-TUI. Kein DB-Engine, nur Dateien + stdlib + uv.
 
-## Dateistruktur (was wohin gehört)
+## Vertical-Namespace
+
+Jede Sparte (`rechtsschutz`, künftig `hausrat`, `privathaftpflicht`, …) lebt in einem
+eigenen Namespace: `data/<v>/`, `out/<v>/`, `schema/<v>/`, `benchmarks/<v>/`,
+`config/verticals/<v>/`. Aktive Sparte via `CHECK0R_VERTICAL` (Default aus der
+Registry `config/verticals.json`: `{label, host, funnel_path, status}` je Sparte;
+status production|experimental|disabled). **Alle Pfade laufen über
+`scripts/_vertical.py`** — nie wieder eine `ROOT / "data" / …`-Konstante anlegen.
+Sparten-Spezifika sind DATEN in `config/verticals/<v>/vertical.json` (module_labels,
+filter_anchors, extract_instruction, query.pin_keys/module_labels,
+regression_generic_tokens), nicht Code. Gitignorte lokale Artefakte migriert
+`scripts/migrate_layout.py --apply` einmalig je Checkout.
+
+## Dateistruktur (was wohin gehört; <v> = Sparte)
 
 ```
-scripts/          Alle ausführbaren Scripts (uv-Shebang, direkt startbar)
-config/           Query-Profil + Konfiguration (check24-profile.json gitignored: PII)
-data/             Lokale Rohdaten — alles gitignored außer sources/
-  inbox/          Sammelordner für neue PDFs
-  raw/<stem>/     Klassifizierte PDFs (intake.py sortiert ein)
-  extracted/      Klartext aus PDFs (ingest.py, gitignored)
-  snapshots/      Datierte CHECK24-Preislisten (gitignored)
-  sources/        check24-documents.json (URL-Manifest) + external-ratings.json
-                  (handkuratierte externe Testurteile) — beide getrackt, kein PDF-Inhalt
-  offers/         Persönliche Beitrags-/Stufendaten (gitignored; nur _example + README getrackt)
-out/              Ergebnisse — getrackt außer enriched/ und screenshots/
-  tariffs/        Reine LLM-Fakten-Records (beitrag immer null)
-  enriched/       Mit Beitrag/Stufe angereichert (gitignored, persönlich)
-  tariff-history/ Versionierte Records je Stem (content-hash-basiert, getrackt)
-  vergleich.md    Synthesierter Vergleich (getrackt)
-  index.html      HTML-Version
-benchmarks/       golden.json + Regression-Digest (getrackt)
-schema/           JSON-Schemas (tariff + offer)
+scripts/            Alle ausführbaren Scripts (uv-Shebang, direkt startbar)
+config/
+  verticals.json    Sparten-Registry (TUI-Auswahl-Datenquelle, getrackt)
+  verticals/<v>/    vertical.json + Profil/Weights/Favoriten/Taxonomy je Sparte
+                    (check24-profile.json + favorite-notes.json gitignored: PII)
+  tui-prefs.json    Globale UI-Prefs (Theme; gitignored)
+data/<v>/           Lokale Rohdaten — alles gitignored außer sources/
+  inbox/            Sammelordner für neue PDFs
+  raw/<stem>/       Klassifizierte PDFs (intake.py sortiert ein)
+  extracted/        Klartext aus PDFs (ingest.py, gitignored)
+  snapshots/        Datierte CHECK24-Preislisten (gitignored)
+  sources/          check24-documents.json (URL-Manifest) + external-ratings.json
+                    (handkuratierte externe Testurteile) — getrackt, kein PDF-Inhalt
+  offers/           Persönliche Beitrags-/Stufendaten (gitignored; _example + README getrackt)
+out/<v>/            Ergebnisse — getrackt außer enriched/ und screenshots/
+  tariffs/          Reine LLM-Fakten-Records (beitrag immer null)
+  enriched/         Mit Beitrag/Stufe angereichert (gitignored, persönlich)
+  tariff-history/   Versionierte Records je Stem (content-hash-basiert, getrackt)
+  vergleich.md      Synthesierter Vergleich (getrackt)
+  index.html        HTML-Version
+benchmarks/<v>/     golden.json + Regression-Digest (getrackt)
+schema/<v>/         JSON-Schemas (tariff + offer)
 ```
 
 ## Shared Leaf-Module (stdlib-only, nie neu erfinden)
 
-- `scripts/_modules.py` — einzige Quelle für Baustein-Keys/-Labels (aus dem Schema).
+- `scripts/_vertical.py` — einziger Pfad-Resolver (aktive Sparte, Registry,
+  `vertical_config()`); Selftest: `python3 scripts/_vertical.py`.
+- `scripts/_modules.py` — einzige Quelle für Baustein-Keys/-Labels (Keys aus dem
+  Sparten-Schema, Labels aus vertical.json).
 - `scripts/_jsonio.py` — `atomic_write_json` (tmp+`os.replace`) + `load_json_or`; jeder
   neue JSON-Writer/-Loader nutzt die. (Heißt `_jsonio`, weil `_io.py` das CPython-Builtin
   schatten würde.)
-- `scripts/_manifest.py` — einziger Loader für `data/sources/check24-documents.json`
+- `scripts/_manifest.py` — einziger Loader für das Doc-Manifest der aktiven Sparte
   (fetch_docs/harvest_docs/intake); `create_if_missing=True` nur für harvest-Erstlauf.
 
 ## Der `stem` ist die einzige ID
 
 Jeder Tarif hat einen kanonischen `stem` = `<versicherer>__<tarif>` (aus
-`data/sources/check24-documents.json`). TUI, Pipeline-Output, Doc-Manifest, Tariff-History
-und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem-Lookup.
+`data/<v>/sources/check24-documents.json`). TUI, Pipeline-Output, Doc-Manifest,
+Tariff-History und alle Scripts hängen daran; Stems sind nur innerhalb ihrer Sparte
+eindeutig. Nie ad-hoc Pfade konstruieren — immer via stem-Lookup + `_vertical`.
 
 ## Pipeline-Invarianten
 
@@ -54,14 +75,14 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
 - **Verlauf-Statistik:** `price_history.market_stats()` (CLI: `--market`) aggregiert je
   Snapshot count/min/median/max; TUI-Verlauf zeigt „Markt über Zeit"-Headerzeile +
   Preisverlauf-Sparkline je Stem (`ChangeInfo.price_series`, gepinnte SB-Variante).
-- `out/tariffs/<stem>.json` enthält **nie** Beitrag, Stufe oder SB — die kommen nur via
-  `overlay.py` aus `data/offers/` in `out/enriched/`. `regression.py` pinnt das.
+- `out/<v>/tariffs/<stem>.json` enthält **nie** Beitrag, Stufe oder SB — die kommen nur via
+  `overlay.py` aus `data/<v>/offers/` in `out/<v>/enriched/`. `regression.py` pinnt das.
 - `extract.py` ruft nach dem Schreiben automatisch `feature_history.archive_version()` auf.
 - `PROMPT_VERSION` in `extract.py` erhöhen wenn das Schema sich ändert (invalidiert Cache).
 - `pipeline.sh` läuft immer `regression.py` am Ende (nicht-fatal, aber laut).
 - **Magic Find scored Beitrag/Preis NIE** — `magic.py` ist read-only über `out/tariffs/`;
   Preis ist nur Anzeige + letzter Tiebreaker bei Score-Gleichstand. Gewichte + `pool_k`
-  aus `config/magic-weights.json` (getrackt, kein PII; jede Teilmenge übersteuert die
+  aus `config/verticals/<v>/magic-weights.json` (getrackt, kein PII; jede Teilmenge übersteuert die
   Code-Defaults in `MagicWeights`). `leistung_cov` zählt distinkte `coverage_taxonomy`-
   Kategorien, nicht rohe leistungen — Tarife mit Benefits außerhalb der Taxonomie werden
   dadurch untergewichtet (bekannte Grenze, kein Extraction-Bug).
@@ -70,13 +91,13 @@ und alle Scripts hängen daran. Nie ad-hoc Pfade konstruieren — immer via stem
   **nicht mehr gewertet** (nur ~3/26 Records tragen ein Level — gepinntes `level:null`
   gegen haiku-Halluzination; eine Tier-Gewichtung belohnte Extraktions-Vollständigkeit,
   nicht Qualität) → bleibt als `MagicScore.module_tier_raw` reine Detail-Anzeige.
-- **Bedarf-Toggle `[P]`** — `config/needs-weights.json` (getrackt, kein PII, neutral-1.0-
+- **Bedarf-Toggle `[P]`** — `config/verticals/<v>/needs-weights.json` (getrackt, kein PII, neutral-1.0-
   Placeholder) gewichtet **nur** `module_breadth` nach persönlichem Bedarf. Neutrale
   Gewichte = identisch zum objektiven Ranking. `needs=None` (Default) = objektiv.
   **`[W]`** öffnet den `NeedsEditorScreen` (diskrete 0–3-Skala je Baustein,
   `magic.save_needs` schreibt die JSON, behält `_comment`); ein non-neutraler Save
   schaltet `[P]` automatisch an. Feinere Floats bleiben per Hand-Edit der JSON möglich.
-- **Externe Bewertungen sind display-only** — `data/sources/external-ratings.json`
+- **Externe Bewertungen sind display-only** — `data/<v>/sources/external-ratings.json`
   (getrackt, handkuratiert: Finanztip/F&B/Finanztest-Urteile, stem-keyed `tariffs` +
   whole-word-gematchte `insurers` + `_market_notes` für Nicht-CHECK24-Tarife wie
   WGV/HUK-Coburg). Fließt NIE in einen Score (sparse Coverage würde Magic biasen —
@@ -147,7 +168,7 @@ URLs in `[link="…"]` immer durch `tui_format.link_url()` (percent-encoded `"`/
 | `[v]` | Vergleich-Tab (Coverage-Matrix) |
 | `[B]` | Benchmark-Tab (Modell-Scorecard aus `benchmarks/results.json`) |
 | `[M]` | Magic-Find-Tab (markt-weites Qualitäts-Ranking; Preis fließt NIE in den Score) |
-| `[P]` | Bedarf-Modus an/aus (Module nach `config/needs-weights.json` gewichten) |
+| `[P]` | Bedarf-Modus an/aus (Module nach `config/verticals/<v>/needs-weights.json` gewichten) |
 | `[W]` | Bedarf-Gewichte bearbeiten (Editor: Relevanz je Baustein 0–3) |
 | `[d]` | Detail-Band ein/aus |
 | `Tab` / `⇧Tab` | Nächster / voriger Tab (zyklisch) |
@@ -155,11 +176,11 @@ URLs in `[link="…"]` immer durch `tui_format.link_url()` (percent-encoded `"`/
 
 ## Wichtige Constraints
 
-- **Keine PDFs committen** — `data/raw/`, `data/extracted/`, `data/inbox/` gitignored.
-  Nur `data/sources/check24-documents.json` (URLs, kein Inhalt) ist getrackt.
-- **Kein PII in getrackte Files** — `config/check24-profile.json` gitignored.
-  `config/favorites.json` enthält nur stem/tag/SB-Band, keine Preise. `[N]`-Notizen
-  landen im gitignorten Sidecar `config/favorite-notes.json` (stem-keyed), nie in
+- **Keine PDFs committen** — `data/<v>/raw|extracted|inbox/` gitignored.
+  Nur `data/<v>/sources/check24-documents.json` (URLs, kein Inhalt) ist getrackt.
+- **Kein PII in getrackte Files** — `check24-profile.json` je Sparte gitignored.
+  `config/verticals/<v>/favorites.json` enthält nur stem/tag/SB-Band, keine Preise. `[N]`-Notizen
+  landen im gitignorten Sidecar `config/verticals/<v>/favorite-notes.json` (stem-keyed), nie in
   favorites.json.
 - **Modell-Spec** immer als `[provider:]model[@endpoint]` (via `_providers.py`).
   API-Keys aus Umgebung (`OMLX_API_KEY`, `OPENAI_API_KEY`), nie im Code.
