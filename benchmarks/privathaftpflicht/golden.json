@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "note": "Hand-verified extraction invariants for privathaftpflicht (C3, 2026-08-28). Sources: the tariff's own extracted documents under data/privathaftpflicht/extracted/. Every 'why' cites the document passage that proves the expectation.",
+  "tariffs": {
+    "ao-now__balance-2025": {
+      "insurer_contains": "",
+      "invariants": [
+        {
+          "path": "insurer",
+          "check": "nonnull",
+          "why": "AO NOW is the brand, Neodigital Versicherung AG the risk carrier named in the AVB — both are legitimate readings, so pin presence only"
+        },
+        {
+          "path": "tariff",
+          "check": "contains",
+          "expected": "Balance",
+          "why": "identity known from manifest (AO NOW Balance 2025)"
+        },
+        {
+          "path": "modules.privat.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB A1-6: private legal liability as Familienvorstand/Privatperson is the core of the product"
+        },
+        {
+          "path": "modules.verkehr.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB A1-7.14-01NEO: non-registration-required vehicles, bicycles, and the Mallorca-Deckung for rented cars abroad are covered"
+        },
+        {
+          "path": "modules.ausland.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB A1-6.14/-01NEO Auslandsaufenthalte: worldwide temporary stays covered, Kautionsleistung bis 100.000 EUR"
+        },
+        {
+          "path": "modules.tiere.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB: zahme Haustiere/gezähmte Kleintiere/Bienen covered (dogs, horses etc. excluded — an exclusion, not absence of the module)"
+        },
+        {
+          "path": "coverage.selbstbeteiligung",
+          "check": "contains_all_digits",
+          "expected": ["150"],
+          "why": "AVB (e.g. Mietsachschäden clause): 'beträgt die Selbstbeteiligung des Versicherungsnehmers an jedem Schaden 150 EUR' — the standard deductible"
+        },
+        {
+          "path": "modules.privat.level",
+          "check": "isnull",
+          "why": "phv documents grade nothing — a level would be hallucinated from the tariff name"
+        },
+        {
+          "path": "beitrag",
+          "check": "isnull",
+          "why": "premiums never enter out/tariffs records — they live in data/offers + out/enriched only"
+        }
+      ]
+    }
+  }
+}

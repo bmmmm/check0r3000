@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "note": "Hand-verified extraction invariants for hausrat (C3, 2026-08-28). Sources: the tariff's own extracted documents under data/hausrat/extracted/. Every 'why' cites the document passage that proves the expectation.",
+  "tariffs": {
+    "allianz-direct__direct": {
+      "insurer_contains": "Allianz",
+      "invariants": [
+        {
+          "path": "insurer",
+          "check": "contains",
+          "expected": "Allianz",
+          "why": "identity known from manifest and AVB footer (Allianz Direct Versicherungs-AG)"
+        },
+        {
+          "path": "tariff",
+          "check": "nonnull",
+          "why": "identity known from manifest"
+        },
+        {
+          "path": "modules.feuer.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB Teil A.1 base coverage: Brand, Blitzschlag, Explosion are core perils"
+        },
+        {
+          "path": "modules.einbruchdiebstahl.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB Teil A.1 base coverage: Einbruchdiebstahl/Raub is a core peril"
+        },
+        {
+          "path": "modules.wasserschaeden.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB Teil A.1 base coverage: Leitungswasser incl. Heizungs-/Klimaanlagen"
+        },
+        {
+          "path": "modules.naturgefahren.included",
+          "check": "eq",
+          "expected": true,
+          "why": "AVB Teil A.1 'Naturgefahren': Sturm ab Windstärke 7, Hagel, Blitzschlag, Erdbeben, Erdfall, Erdrutsch, Schneedruck, Lawinen, Vulkanausbruch are BASE coverage — only Überschwemmung & Rückstau is the add-on Teil A.5"
+        },
+        {
+          "path": "modules.glasschutz.included",
+          "check": "eq",
+          "expected": false,
+          "why": "AVB Teil A.3: Glas-Schutz is an optional Zusatzbaustein ('Entscheidest du dich für den Zusatzbaustein ...'), not part of the base tariff"
+        },
+        {
+          "path": "modules.fahrradschutz.included",
+          "check": "eq",
+          "expected": false,
+          "why": "AVB Teil A.4: Fahrrad-Schutz is an optional Zusatzbaustein, not part of the base tariff"
+        },
+        {
+          "path": "modules.feuer.level",
+          "check": "isnull",
+          "why": "hausrat documents grade nothing — a level would be hallucinated from the tariff name"
+        },
+        {
+          "path": "coverage.wartezeit_monate",
+          "check": "isnull",
+          "why": "the AVB name no waiting period anywhere; a number here would be invented"
+        },
+        {
+          "path": "beitrag",
+          "check": "isnull",
+          "why": "premiums never enter out/tariffs records — they live in data/offers + out/enriched only"
+        }
+      ]
+    }
+  }
+}
