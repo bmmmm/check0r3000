@@ -1,7 +1,39 @@
 {
   "version": 1,
-  "_draft": true,
-  "_doc": "DRAFT taxonomy for Privathaftpflicht, model-derived from example AVBs. Category order is match precedence; extend/curate by hand.",
+  "_doc": "Taxonomy for Privathaftpflicht — scaffolded from example AVBs, curated 2026-08-28 against the real records (100% mapped). Category order is match precedence; extend/curate by hand.",
+  "_alignment_doc": "alignment_cases pin cross-tariff naming alignments for the selftest: [text, kind, expected_key] triples (kind 'leistung' or 'ausschluss'). Precedence guard: Berufskrankheiten belongs to the SGB-VII exclusion, not Krankheitsübertragung.",
+  "alignment_cases": [
+    ["Prüfung der Haftpflichtfrage und Abwehr unberechtigter Ansprüche", "leistung", "abwehr_unberechtigter"],
+    ["Prüfung und Abwehr unberechtigter Schadensersatzansprüche", "leistung", "abwehr_unberechtigter"],
+    ["Strafverteidigungskosten im Strafverfahren", "leistung", "strafverteidigung"],
+    ["Übernahme Verteidigerkosten im Strafverfahren", "leistung", "strafverteidigung"],
+    ["Gefälligkeitsschäden (bis 10.000 EUR, Selbstbeteiligung 150 EUR)", "leistung", "gefaelligkeit"],
+    ["Gefälligkeitshandlungen", "leistung", "gefaelligkeit"],
+    ["Neuwertentschädigung (unter 3.000 EUR, maximal 1 Jahr alt)", "leistung", "neuwertentschaedigung"],
+    ["Neuwertentschädigung für Sachschäden bis Kaufdatum 12 Monate (falls vereinbart)", "leistung", "neuwertentschaedigung"],
+    ["Tagesmutter/Babysitter-Deckung mit Fremdkindern", "leistung", "fremdbetreuung_kinder"],
+    ["Schutz für Schäden durch minderjährige Enkel und Tageskinder (bis 10.000 EUR/Jahr)", "leistung", "fremdbetreuung_kinder"],
+    ["Mangelhafte oder schädliche Produkte/Arbeiten (bei Kenntnis)", "ausschluss", "ausschluss_eigene_produkte"],
+    ["Mangelhaftigkeit/Schädlichkeit bekannter Erzeugnisse oder Arbeiten", "ausschluss", "ausschluss_eigene_produkte"],
+    ["Schäden an von Versichertem hergestellten oder gelieferten Sachen/Arbeiten", "ausschluss", "ausschluss_eigene_produkte"],
+    ["Ansprüche zwischen Versicherten", "ausschluss", "ausschluss_familienangehoerige"],
+    ["Haftpflichtansprüche zwischen Mitversicherten", "ausschluss", "ausschluss_familienangehoerige"],
+    ["Persönlichkeits- und Namensrechtsverletzungen", "ausschluss", "ausschluss_persoenlichkeitsrecht"],
+    ["Persönlichkeits- und Namensrechtsverletzungen (mit Ausnahmen)", "ausschluss", "ausschluss_persoenlichkeitsrecht"],
+    ["Anfeindung, Schikane, Belästigung, Diskriminierung", "ausschluss", "ausschluss_diskriminierung"],
+    ["Diskriminierung, Anfeindung, Schikane", "ausschluss", "ausschluss_diskriminierung"],
+    ["Krankheitsübertragung", "ausschluss", "ausschluss_krankheitsuebertragung"],
+    ["Übertragung von Krankheiten", "ausschluss", "ausschluss_krankheitsuebertragung"],
+    ["Erkrankungsübertragung ohne Fahrlässigkeitsnachweis", "ausschluss", "ausschluss_krankheitsuebertragung"],
+    ["Arbeitsunfälle und Berufskrankheiten SGB VII", "ausschluss", "ausschluss_arbeitsunfaelle"],
+    ["Ungewöhnliche und gefährliche Beschäftigung", "ausschluss", "ausschluss_gefaehrliche_taetigkeit"],
+    ["verantwortliche Betätigung in Vereinen/Verbänden", "ausschluss", "ausschluss_vereinstaetigkeit"],
+    ["Verantwortliche Betätigung in Vereinigungen", "ausschluss", "ausschluss_vereinstaetigkeit"],
+    ["Vermögensschäden aus Ratschlägen, Anlagegeschäften, Zahlungsvorgängen", "ausschluss", "ausschluss_vermoegensschaeden"],
+    ["Leasing, Pacht, verbotene Eigenmacht, Verwahrungsverträge", "ausschluss", "ausschluss_mietleasing"],
+    ["Leasing, Pacht, Leihe fremder Sachen", "ausschluss", "ausschluss_mietleasing"],
+    ["Bearbeitung/Reparatur fremder Sachen (Tätigkeitsschäden)", "ausschluss", "ausschluss_taetigkeitsschaeden"]
+  ],
   "benefit_categories": [
     {
       "key": "haushalt_haftung",
@@ -175,6 +207,138 @@
         "codekarten",
         "schlüsseltranspondern"
       ]
+    },
+    {
+      "key": "abwehr_unberechtigter",
+      "label_de": "Abwehr unberechtigter Ansprüche",
+      "kind": "leistung",
+      "synonyms": [
+        "abwehr unberechtigter",
+        "prüfung der haftpflichtfrage",
+        "prüfung und abwehr"
+      ]
+    },
+    {
+      "key": "freistellung",
+      "label_de": "Freistellung berechtigter Ansprüche",
+      "kind": "leistung",
+      "synonyms": [
+        "freistellung"
+      ]
+    },
+    {
+      "key": "rechtskosten",
+      "label_de": "Prozess-/Anwaltskosten",
+      "kind": "leistung",
+      "synonyms": [
+        "rechtsanwaltskosten",
+        "prozesskosten"
+      ]
+    },
+    {
+      "key": "strafverteidigung",
+      "label_de": "Strafverteidigungskosten",
+      "kind": "leistung",
+      "synonyms": [
+        "strafverteidigung",
+        "verteidigerkosten"
+      ]
+    },
+    {
+      "key": "deliktunfaehige",
+      "label_de": "Deliktunfähige Personen",
+      "kind": "leistung",
+      "synonyms": [
+        "deliktsunfähig",
+        "deliktunfähig"
+      ]
+    },
+    {
+      "key": "gefaelligkeit",
+      "label_de": "Gefälligkeitsschäden",
+      "kind": "leistung",
+      "synonyms": [
+        "gefälligkeit"
+      ]
+    },
+    {
+      "key": "fremdbetreuung_kinder",
+      "label_de": "Betreuung fremder Kinder",
+      "kind": "leistung",
+      "synonyms": [
+        "tagesmutter",
+        "babysitter",
+        "tageskinder",
+        "fremdkinder"
+      ]
+    },
+    {
+      "key": "neuwertentschaedigung",
+      "label_de": "Neuwertentschädigung",
+      "kind": "leistung",
+      "synonyms": [
+        "neuwertentschädigung"
+      ]
+    },
+    {
+      "key": "mallorca_deckung",
+      "label_de": "Mallorca-Deckung (Mietfahrzeuge)",
+      "kind": "leistung",
+      "synonyms": [
+        "mallorca"
+      ]
+    },
+    {
+      "key": "nebenberuflich",
+      "label_de": "Nebenberufliche Tätigkeiten",
+      "kind": "leistung",
+      "synonyms": [
+        "nebenberuflich"
+      ]
+    },
+    {
+      "key": "falschbetankung",
+      "label_de": "Falschbetankung",
+      "kind": "leistung",
+      "synonyms": [
+        "falschbetankung"
+      ]
+    },
+    {
+      "key": "garantien",
+      "label_de": "Update-/Bedingungs-/Beitragsgarantien",
+      "kind": "leistung",
+      "synonyms": [
+        "update-garantie",
+        "leistungs-update",
+        "best-bedingungs",
+        "besitzstandsgarantie",
+        "beitragsgarantie"
+      ]
+    },
+    {
+      "key": "smartphone_reparatur",
+      "label_de": "Smartphone-Reparatur-Mehrleistung",
+      "kind": "leistung",
+      "synonyms": [
+        "smartphone"
+      ]
+    },
+    {
+      "key": "nachhaltigkeit_mehrleistung",
+      "label_de": "Nachhaltigkeits-Mehrleistungen",
+      "kind": "leistung",
+      "synonyms": [
+        "nachhaltigkeit"
+      ]
+    },
+    {
+      "key": "arbeitsunfaelle_mitversichert",
+      "label_de": "Mitversicherte Arbeitsunfälle",
+      "kind": "leistung",
+      "synonyms": [
+        "arbeitsunfälle"
+      ]
     }
   ],
   "exclusion_categories": [
@@ -287,7 +451,188 @@
         "ehegattin",
         "angehörige",
         "ansprüche untereinander",
-        "untereinander"
+        "untereinander",
+        "zwischen versicherten",
+        "zwischen mitversicherten"
+      ]
+    },
+    {
+      "key": "ausschluss_eigene_produkte",
+      "label_de": "Eigene Erzeugnisse/Arbeiten",
+      "kind": "ausschluss",
+      "synonyms": [
+        "hergestellten oder gelieferten",
+        "hergestellten/gelieferten",
+        "selbst hergestellt",
+        "gelieferten waren",
+        "erzeugnisse oder arbeiten",
+        "mangelhaft"
+      ]
+    },
+    {
+      "key": "ausschluss_taetigkeitsschaeden",
+      "label_de": "Tätigkeits-/Bearbeitungsschäden",
+      "kind": "ausschluss",
+      "synonyms": [
+        "bearbeitung",
+        "tätigkeitsschäden",
+        "reparatur fremder sachen"
+      ]
+    },
+    {
+      "key": "ausschluss_mietleasing",
+      "label_de": "Leasing/Pacht/Leihe",
+      "kind": "ausschluss",
+      "synonyms": [
+        "leasing",
+        "pacht",
+        "verwahrung"
+      ]
+    },
+    {
+      "key": "ausschluss_persoenlichkeitsrecht",
+      "label_de": "Persönlichkeits-/Namensrecht",
+      "kind": "ausschluss",
+      "synonyms": [
+        "persönlichkeits- und namensrecht",
+        "persönlichkeitsrecht",
+        "namensrecht"
+      ]
+    },
+    {
+      "key": "ausschluss_diskriminierung",
+      "label_de": "Anfeindung/Schikane/Diskriminierung",
+      "kind": "ausschluss",
+      "synonyms": [
+        "diskriminierung",
+        "schikane",
+        "anfeindung",
+        "belästigung"
+      ]
+    },
+    {
+      "key": "ausschluss_arbeitsunfaelle",
+      "label_de": "Arbeitsunfälle/Berufskrankheiten (SGB VII)",
+      "kind": "ausschluss",
+      "synonyms": [
+        "arbeitsunfälle",
+        "berufskrankheiten"
+      ]
+    },
+    {
+      "key": "ausschluss_krankheitsuebertragung",
+      "label_de": "Krankheitsübertragung",
+      "kind": "ausschluss",
+      "synonyms": [
+        "krankheitsübertragung",
+        "übertragung von krankheiten",
+        "erkrankungsübertragung"
+      ]
+    },
+    {
+      "key": "ausschluss_gefaehrliche_taetigkeit",
+      "label_de": "Ungewöhnliche/gefährliche Beschäftigung",
+      "kind": "ausschluss",
+      "synonyms": [
+        "ungewöhnliche und gefährliche",
+        "gefährliche beschäftigung"
+      ]
+    },
+    {
+      "key": "ausschluss_vereinstaetigkeit",
+      "label_de": "Verantwortliche Vereins-/Verbandstätigkeit",
+      "kind": "ausschluss",
+      "synonyms": [
+        "betätigung in verein",
+        "betätigung in vereinigungen"
+      ]
+    },
+    {
+      "key": "ausschluss_vermoegensschaeden",
+      "label_de": "Reine Vermögensschäden (Rat/Anlage/Fristen)",
+      "kind": "ausschluss",
+      "synonyms": [
+        "vermögensschäden aus",
+        "anlagegeschäft",
+        "ratschläg"
+      ]
+    },
+    {
+      "key": "ausschluss_it_dienstleistung",
+      "label_de": "IT-Dienstleistungen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "it-dienstleistung",
+        "host-providing",
+        "software"
+      ]
+    },
+    {
+      "key": "ausschluss_gewerblich",
+      "label_de": "Gewerbliche/berufliche Tätigkeit",
+      "kind": "ausschluss",
+      "synonyms": [
+        "gewerblich",
+        "berufliche tätigkeit"
+      ]
+    },
+    {
+      "key": "ausschluss_jagd",
+      "label_de": "Jagd",
+      "kind": "ausschluss",
+      "synonyms": [
+        "jagd"
+      ]
+    },
+    {
+      "key": "ausschluss_geistiges_eigentum",
+      "label_de": "Patent-/Markenrecht",
+      "kind": "ausschluss",
+      "synonyms": [
+        "patent",
+        "markenrecht"
+      ]
+    },
+    {
+      "key": "ausschluss_verschleiss",
+      "label_de": "Abnutzung/Verschleiß",
+      "kind": "ausschluss",
+      "synonyms": [
+        "abnutzung",
+        "verschleiß"
+      ]
+    },
+    {
+      "key": "ausschluss_umweltschadensgesetz",
+      "label_de": "Umweltschadensgesetz",
+      "kind": "ausschluss",
+      "synonyms": [
+        "umweltschadensgesetz"
+      ]
+    },
+    {
+      "key": "ausschluss_spam",
+      "label_de": "Spam/Cookie-Missbrauch",
+      "kind": "ausschluss",
+      "synonyms": [
+        "spam",
+        "cookies"
+      ]
+    },
+    {
+      "key": "ausschluss_abhandenkommen",
+      "label_de": "Abhandenkommen von Sachen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "abhandenkommen"
+      ]
+    },
+    {
+      "key": "ausschluss_geothermie",
+      "label_de": "Geothermie-Anlagen",
+      "kind": "ausschluss",
+      "synonyms": [
+        "geothermie"
       ]
     }
   ]

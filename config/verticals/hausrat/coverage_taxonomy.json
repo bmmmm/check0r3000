@@ -1,7 +1,33 @@
 {
   "version": 1,
-  "_draft": true,
-  "_doc": "DRAFT taxonomy for Hausrat, model-derived from example AVBs. Category order is match precedence; extend/curate by hand.",
+  "_doc": "Taxonomy for Hausrat — scaffolded from example AVBs, curated 2026-08-28 against the real records (100% mapped). Category order is match precedence; extend/curate by hand.",
+  "_alignment_doc": "alignment_cases pin cross-tariff naming alignments for the selftest: [text, kind, expected_key] triples (kind 'leistung' or 'ausschluss'). Includes two precedence guards: Umzugs-/Einlagerungskosten must not be eaten by the Lagerkosten category, Tierarzt-/Unterbringungskosten not by the Hotel category.",
+  "alignment_cases": [
+    ["Hotelkosten wenn Wohnung unbewohnbar", "leistung", "hotel_unterbringung"],
+    ["Hotelkosten ohne Begrenzung bei Unbewohnbarkeit", "leistung", "hotel_unterbringung"],
+    ["Unterbringungskosten (unbewohnbare Wohnung)", "leistung", "hotel_unterbringung"],
+    ["Transport- und Lagerkosten", "leistung", "aufraeum_transport_lager"],
+    ["Aufräum-, Transport-, Lagerkosten", "leistung", "aufraeum_transport_lager"],
+    ["Transport- und Lagerkosten bis 12 Monate", "leistung", "aufraeum_transport_lager"],
+    ["Schadenabwendungs- und Minderungskosten", "leistung", "schadenabwendung_minderung"],
+    ["Schadenabwendungskosten", "leistung", "schadenabwendung_minderung"],
+    ["Schadenminderungs- und Ermittlungskosten", "leistung", "schadenabwendung_minderung"],
+    ["Rückreisekosten bei Urlaubsabbruch", "leistung", "rueckreisekosten"],
+    ["Rückreisekosten Dienstreise", "leistung", "rueckreisekosten"],
+    ["Rückfahrtkosten bei Fahrraddiebstahl während Fahrt", "leistung", "rueckreisekosten"],
+    ["Umzugs- und Einlagerungskosten", "leistung", "umzugskosten"],
+    ["Umzugskosten nach versichertem Schaden", "leistung", "umzugskosten"],
+    ["Tierarzt- und Unterbringungskosten für Haustiere", "leistung", "tierbetreuung"],
+    ["Haustier-Betreuungskosten nach Schaden", "leistung", "tierbetreuung"],
+    ["Psychologische Betreuung nach Einbruch/Raub/Brand", "leistung", "psychologische_betreuung"],
+    ["Reparaturkosten nach Einbruch", "leistung", "reparatur_einbruch"],
+    ["Gebäudereparaturen nach Einbruch", "leistung", "reparatur_einbruch"],
+    ["Sturmflut", "ausschluss", "ausschluss_sturmflut"],
+    ["Gebäudebestandteile außer Mieter-Einbauten", "ausschluss", "ausschluss_gebaeudebestandteile"],
+    ["Elektronisch gespeicherte Daten und Programme", "ausschluss", "ausschluss_daten"],
+    ["Elementargefahren ohne optionale Versicherung", "ausschluss", "ausschluss_elementar_ohne_baustein"],
+    ["Überschwemmung durch Starkregen (im Base-Tariff)", "ausschluss", "ausschluss_elementar_ohne_baustein"]
+  ],
   "benefit_categories": [
     {
       "key": "fahrlässigkeit_versichert",
@@ -182,6 +208,151 @@
         "online beratung",
         "dokumenten-center",
         "online-rechtsberatung"
+      ]
+    },
+    {
+      "key": "schadenabwendung_minderung",
+      "label_de": "Schadenabwendungs-/Minderungskosten",
+      "kind": "leistung",
+      "synonyms": [
+        "schadenabwendung",
+        "schadenminderung",
+        "minderungskosten",
+        "abwendungskosten",
+        "ermittlungskosten"
+      ]
+    },
+    {
+      "key": "umzugskosten",
+      "label_de": "Umzugskosten nach Schaden",
+      "kind": "leistung",
+      "synonyms": [
+        "umzugskosten",
+        "umzugs- und einlagerung"
+      ]
+    },
+    {
+      "key": "aufraeum_transport_lager",
+      "label_de": "Aufräum-/Transport-/Lagerkosten",
+      "kind": "leistung",
+      "synonyms": [
+        "aufräum",
+        "transportkosten",
+        "lagerkosten",
+        "transport- und lagerkosten",
+        "einlagerungskosten"
+      ]
+    },
+    {
+      "key": "tierbetreuung",
+      "label_de": "Tierarzt-/Tierbetreuungskosten",
+      "kind": "leistung",
+      "synonyms": [
+        "tierarzt",
+        "haustier-betreuung",
+        "tierbetreuung",
+        "unterbringungskosten für haustiere"
+      ]
+    },
+    {
+      "key": "hotel_unterbringung",
+      "label_de": "Hotel-/Unterbringungskosten",
+      "kind": "leistung",
+      "synonyms": [
+        "hotelkosten",
+        "hotel",
+        "unbewohnbar"
+      ]
+    },
+    {
+      "key": "bewachungskosten",
+      "label_de": "Bewachungskosten",
+      "kind": "leistung",
+      "synonyms": [
+        "bewachung"
+      ]
+    },
+    {
+      "key": "reparatur_einbruch",
+      "label_de": "Gebäudereparatur nach Einbruch",
+      "kind": "leistung",
+      "synonyms": [
+        "reparaturkosten nach einbruch",
+        "gebäudereparatur",
+        "reparatur nach einbruch"
+      ]
+    },
+    {
+      "key": "notreparatur_provisorisch",
+      "label_de": "Provisorische Notmaßnahmen",
+      "kind": "leistung",
+      "synonyms": [
+        "provisorisch"
+      ]
+    },
+    {
+      "key": "rueckreisekosten",
+      "label_de": "Rückreisekosten",
+      "kind": "leistung",
+      "synonyms": [
+        "rückreise",
+        "rückfahrtkosten",
+        "reiseabbruch",
+        "urlaubsabbruch"
+      ]
+    },
+    {
+      "key": "psychologische_betreuung",
+      "label_de": "Psychologische Betreuung",
+      "kind": "leistung",
+      "synonyms": [
+        "psychologische betreuung",
+        "psychologische hilfe"
+      ]
+    },
+    {
+      "key": "sachverstaendigenkosten",
+      "label_de": "Sachverständigenkosten",
+      "kind": "leistung",
+      "synonyms": [
+        "sachverständige"
+      ]
+    },
+    {
+      "key": "kinderbetreuung_notfall",
+      "label_de": "Notfall-Kinderbetreuung",
+      "kind": "leistung",
+      "synonyms": [
+        "kinderbetreuung"
+      ]
+    },
+    {
+      "key": "wallbox_emobility",
+      "label_de": "Wallbox/E-Ladestation",
+      "kind": "leistung",
+      "synonyms": [
+        "wallbox",
+        "e-ladestation",
+        "ladestation"
+      ]
+    },
+    {
+      "key": "nachhaltigkeit_mehrkosten",
+      "label_de": "Nachhaltigkeits-Mehrleistungen",
+      "kind": "leistung",
+      "synonyms": [
+        "nachhaltige reparatur",
+        "co2-kompensation",
+        "nachhaltigkeitskriterien"
+      ]
+    },
+    {
+      "key": "ersatzgeraete",
+      "label_de": "Ersatzgeräte bei Defekt",
+      "kind": "leistung",
+      "synonyms": [
+        "ersatzgerät",
+        "ersatzgeräte"
       ]
     }
   ],
@@ -365,6 +536,40 @@
         "grundwasser nicht oberfläche",
         "tiefenwasser",
         "grundwasserschäden"
+      ]
+    },
+    {
+      "key": "ausschluss_sturmflut",
+      "label_de": "Sturmflut",
+      "kind": "ausschluss",
+      "synonyms": [
+        "sturmflut"
+      ]
+    },
+    {
+      "key": "ausschluss_gebaeudebestandteile",
+      "label_de": "Gebäudebestandteile",
+      "kind": "ausschluss",
+      "synonyms": [
+        "gebäudebestandteile",
+        "vom gebäudeeigentümer bereitgestellt"
+      ]
+    },
+    {
+      "key": "ausschluss_daten",
+      "label_de": "Elektronisch gespeicherte Daten",
+      "kind": "ausschluss",
+      "synonyms": [
+        "elektronisch gespeicherte daten"
+      ]
+    },
+    {
+      "key": "ausschluss_elementar_ohne_baustein",
+      "label_de": "Elementar nur mit Zusatzbaustein",
+      "kind": "ausschluss",
+      "synonyms": [
+        "elementargefahren ohne",
+        "überschwemmung durch starkregen"
       ]
     }
   ]
