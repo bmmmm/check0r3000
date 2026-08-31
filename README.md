@@ -15,9 +15,10 @@ Tarif.** check0r3000 liest die Original-AVB der Versicherer, extrahiert per LLM
 schema-valide, regressionsgetestete Leistungsdaten und rankt ganze
 Versicherungs-Märkte nach Qualität — mit Preisverlauf, Feature-Diffs
 über die Zeit („was hat der Versicherer still gestrichen?") und externen
-Testurteilen. Multi-Vertical: Start-Sparte **Rechtsschutz** (production),
-**Hausrat** und **Privathaftpflicht** laufen als experimental mit; `[S]`
-wechselt die Sparte zur Laufzeit. Kein DB-Engine, keine schweren Frameworks:
+Testurteilen. Multi-Vertical: **Rechtsschutz**, **Hausrat** und
+**Privathaftpflicht** sind alle drei `production` und gleichberechtigt — die TUI
+öffnet mit der Sparten-Auswahl, `[S]` wechselt sie zur Laufzeit. Kein DB-Engine,
+keine schweren Frameworks:
 **Dateien + Python-stdlib + `uv`**, Modell-Backend frei wählbar (Claude-Cloud
 oder lokal via Ollama/oMLX/mlx).
 
@@ -77,14 +78,16 @@ Die TUI von überall starten (uv-Shebang + pfad-auflösender Entry-Point):
 
 ```sh
 ln -s "$(pwd)/scripts/tui.py" ~/.local/bin/check0r3000   # einmalig
-check0r3000                                              # von überall
+check0r3000                                              # fragt, welche Sparte
+check0r3000 --vertical hausrat                           # direkt hinein
 ```
 
 ## 🖥️ Die TUI — sechs Tabs
 
 `scripts/tui.py` ist das einzige Skript mit `textual`-Dependency; alles andere
-ist stdlib. Beim Start läuft der Boot-Splash, während Pipelines laufen ein
-zentrierter Loader mit Statuszeile.
+ist stdlib. Beim Start wird zuerst die Sparte gewählt (übersprungen mit
+`--vertical` / `CHECK0R_VERTICAL`), dann läuft der Boot-Splash; während
+Pipelines laufen ein zentrierter Loader mit Statuszeile.
 
 | Tab | Taste | Was |
 |---|---|---|
@@ -105,7 +108,7 @@ Die wichtigsten Aktionen (`[?]` zeigt alle):
 | `[U]` | **Update-All**: Scan+Snapshot → Docs → volle Re-Analyse (Zwilling von `update-all.sh`) |
 | `[a]` / `[u]` | Tarif zum Vergleich hinzufügen/entfernen / Favorit an-aus |
 | `[P]` / `[W]` | Bedarf-Modus an/aus / Bedarf-Gewichte-Editor (0–3 je Baustein) |
-| `[S]` | Sparte wechseln (Registry-basiert; experimental-Sparten tragen ein Badge) |
+| `[S]` | Sparte wechseln (Registry-basiert, mit Tarif-Zahl je Sparte; erscheint auch beim Start) |
 | `[d]` | Detail-Band ein/aus (voller Record, Score-Breakdown, externe Bewertungen, Preisverlauf) |
 | `[R]` / `[D]` / `[o]` / `[O]` | Δ-Referenz setzen / lokale Daten löschen / Quelldokumente öffnen / Auf CHECK24 öffnen |
 

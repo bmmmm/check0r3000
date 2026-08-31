@@ -549,8 +549,19 @@ CompareManagerScreen {
     background: $surface-darken-2;
 }
 
+/* Centered like the other modals (CompareManagerScreen & co). Without this rule
+   the box sticks to the top-left corner — which is the first thing seen on every
+   launch now that the selector also opens at boot. */
+VerticalSelectScreen {
+    align: center middle;
+    background: $surface 60%;
+}
+
 #vertical-box {
-    width: 52;
+    /* 60, not 52: each row carries a tariff count, and an experimental vertical
+       adds an "(experimental)" badge on top of that — at 52 the longest row
+       (scaffolded, still data-less, experimental) was clipped. */
+    width: 60;
     height: auto;
     max-height: 80%;
     padding: 1 2;

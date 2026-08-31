@@ -54,6 +54,7 @@ from pathlib import Path
 # `uv run`, then import the siblings.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _vertical  # noqa: E402
 from tui_data import (  # noqa: E402
     _load_detail,
     _raw_dir_for_stem,
@@ -272,9 +273,12 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="tui.py",
         description=(
-            "check0r3000 — Rechtsschutz-Vergleich\n"
-            "Interactive terminal UI for browsing German legal-protection-insurance tariffs.\n\n"
-            "Run without flags to launch the interactive TUI.\n"
+            "check0r3000 — Versicherungs-Vergleich (multi-vertical)\n"
+            "Interactive terminal UI for browsing German insurance tariffs across the\n"
+            "verticals registered in config/verticals.json (Rechtsschutz, Hausrat,\n"
+            "Privathaftpflicht, ...).\n\n"
+            "Run without flags to launch the interactive TUI; it opens with the Sparte\n"
+            "selector unless --vertical or CHECK0R_VERTICAL already names one.\n"
             "Use --selftest to verify data loading without launching the UI."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -298,11 +302,27 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="Render each tab to SVG in DIR (headless), then exit without an interactive UI.",
     )
+    parser.add_argument(
+        "--vertical",
+        metavar="NAME",
+        default=None,
+        help=("Open this Sparte directly and skip the selector (same effect as "
+              "CHECK0R_VERTICAL). Names come from config/verticals.json."),
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = _parse_args()
+    if args.vertical:
+        # Set before the app starts so every path resolver and every child process
+        # (pipeline.sh, extract.py, ...) sees the choice; active() re-reads the
+        # environment on each call, nothing is frozen at import time. Calling it
+        # here turns a typo into an immediate, named error instead of an empty UI.
+        try:
+            _vertical.set_active(args.vertical.strip())
+        except ValueError as exc:
+            sys.exit(f"tui.py: {exc}")
     if args.selftest:
         sys.exit(run_selftest(args.snapshot))
     elif args.screenshot is not None:

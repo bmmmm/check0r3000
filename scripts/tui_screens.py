@@ -912,15 +912,18 @@ class VerticalSelectScreen(ModalScreen["str | None"]):
     """Pick the active insurance vertical (Sparte) from the registry
         (config/verticals.json). Modeled on NeedsEditorScreen: an OptionList in a
         modal box, Enter selects, Esc cancels. Returns the vertical name on select,
-        None on cancel. Experimental verticals carry a badge; the active one a dot."""
+        None on cancel. Experimental verticals carry a badge; the active one a dot.
+        Each row carries its analyzed-tariff count so the choice is informed — the
+        same screen serves [S] and the boot-time selection."""
 
     BINDINGS = [
         Binding("escape", "cancel", "Abbrechen"),
         Binding("q", "cancel", "Abbrechen"),
     ]
 
-    def __init__(self, entries: list[tuple[str, str, str]], active: str) -> None:
-        # entries: (name, label, status) in registry order; active: current vertical.
+    def __init__(self, entries: list[tuple[str, str, str, int]], active: str) -> None:
+        # entries: (name, label, status, tariff_count) in registry order;
+        # active: current vertical.
         super().__init__()
         self._entries = list(entries)
         self._active = active
@@ -937,10 +940,13 @@ class VerticalSelectScreen(ModalScreen["str | None"]):
     def on_mount(self) -> None:
         lst = self.query_one("#vertical-list", OptionList)
         highlight = 0
-        for i, (name, label, status) in enumerate(self._entries):
+        width = max((len(label) for _, label, _, _ in self._entries), default=0)
+        for i, (name, label, status, count) in enumerate(self._entries):
             marker = "[green]●[/green]" if name == self._active else "[dim]○[/dim]"
             badge = "  [yellow](experimental)[/yellow]" if status == "experimental" else ""
-            lst.add_option(Option(f"{marker} {label}{badge}", id=name))
+            tally = f"  [dim]{count} Tarife[/dim]" if count else "  [dim]keine Daten[/dim]"
+            lst.add_option(
+                Option(f"{marker} {_esc(label):<{width}}{tally}{badge}", id=name))
             if name == self._active:
                 highlight = i
         if self._entries:
@@ -1004,7 +1010,8 @@ class HelpScreen(ModalScreen[None]):
             (", / .", "älteren / neueren Vergleichs-Snapshot wählen (ab 3 Snapshots)"),
         ]),
         ("Werkzeuge", [
-            ("S", "Sparte wechseln (Rechtsschutz / Hausrat / … — config/verticals.json)"),
+            ("S", "Sparte wechseln (Rechtsschutz / Hausrat / … — erscheint auch beim "
+                  "Start; --vertical bzw. CHECK0R_VERTICAL überspringen die Auswahl)"),
             ("b", "CHECK24-Query-URL bauen (nur Ansicht)"),
             ("e", "CHECK24-Suche bearbeiten (Levers ändern + speichern)"),
             ("r", "Daten neu laden"),

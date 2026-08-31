@@ -21,9 +21,12 @@ LLM-Drafts mit `"_draft": true` + Registry-Eintrag `experimental`; Kuration
 (Taxonomy, golden.json, external-ratings) ist der Weg zu `production`.
 `regression.py --all-verticals` loopt die Registry (golden-los = Markt-Sweep, CI
 macht das). Harvest für PHV/Hausrat: Docs liegen im Tarifdetails-Panel unter
-`/file/…`-URLs (sessionfrei; „weiter" ist Login-Wall) — Panel-Harvest bisher via
-`tmp/vertical-probe/mini_harvest.py` (Probe-Grade), Generalisierung von
-harvest_docs.py ist offene Folgearbeit.
+`/file/…`-URLs (sessionfrei; „weiter" ist Login-Wall); `harvest_docs.py` beherrscht
+das generalisiert über die `harvest`-Spec in vertical.json (`flow=panel`), die
+Probe-Skripte liegen als Referenz in `scripts/probe/`.
+**Start:** die TUI öffnet mit der Sparten-Auswahl (derselbe `VerticalSelectScreen`
+wie `[S]`, mit Tarif-Zahl je Sparte); `--vertical <name>` bzw. `CHECK0R_VERTICAL`
+überspringen sie, headless (`--screenshot`, tui_test) erscheint sie nie.
 
 ## Dateistruktur (was wohin gehört; <v> = Sparte)
 
@@ -178,7 +181,7 @@ URLs in `[link="…"]` immer durch `tui_format.link_url()` (percent-encoded `"`/
 | `[M]` | Magic-Find-Tab (markt-weites Qualitäts-Ranking; Preis fließt NIE in den Score) |
 | `[P]` | Bedarf-Modus an/aus (Module nach `config/verticals/<v>/needs-weights.json` gewichten) |
 | `[W]` | Bedarf-Gewichte bearbeiten (Editor: Relevanz je Baustein 0–3) |
-| `[S]` | Sparte wechseln (VerticalSelectScreen; Registry-basiert, Guard bei laufender Pipeline) |
+| `[S]` | Sparte wechseln (VerticalSelectScreen; Registry-basiert, Guard bei laufender Pipeline; derselbe Screen erscheint beim Start) |
 | `[d]` | Detail-Band ein/aus |
 | `Tab` / `⇧Tab` | Nächster / voriger Tab (zyklisch) |
 | `[?]` | Alle Shortcuts |

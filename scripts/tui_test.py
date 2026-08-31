@@ -884,12 +884,15 @@ async def t_splash_and_loader(app, pilot) -> None:
     await pilot.pause()
     assert not isinstance(app.screen, SplashScreen), "key did not skip splash"
 
-    # ~100 frames since the settle phase; 5ms nominal + timer overhead needs
-    # more than the old 0.6s to play through.
+    # 82 frames at a 5ms nominal interval = ~0.4s of timer ticks, but the real
+    # cost is per-tick overhead, which balloons when the machine is busy. A fixed
+    # sleep is therefore a race that loses under load (it was already bumped
+    # 0.6s -> 1.5s once, and still flaked); poll for the condition instead and
+    # give it a deadline generous enough to be about correctness, not speed.
     await app.push_screen(SplashScreen(frames, interval=0.005))
-    await asyncio.sleep(1.5)
-    await pilot.pause()
-    assert not isinstance(app.screen, SplashScreen), "splash did not self-dismiss"
+    dismissed = await _wait_until(
+        pilot, lambda: not isinstance(app.screen, SplashScreen), timeout=10.0)
+    assert dismissed, "splash did not self-dismiss"
 
     app._pipeline_running = True
     try:
@@ -953,6 +956,16 @@ async def t_vertical_switch(app, pilot) -> None:
         assert await _wait_until(pilot, lambda: len(app.screen_stack) > base), (
             "[S] did not open the vertical selector")
         lst = app.screen_stack[-1].query_one("#vertical-list", OptionList)
+        # No row may exceed the box: every row carries a tariff count AND an
+        # experimental one adds a badge, so the widest case is a freshly
+        # scaffolded, data-less, experimental vertical — exactly the fixture
+        # above. Silent clipping is what this pins (#vertical-box in tui.tcss).
+        from rich.text import Text
+        for i in range(lst.option_count):
+            plain = Text.from_markup(str(lst.get_option_at_index(i).prompt)).plain
+            assert len(plain) <= lst.content_size.width, (
+                f"selector row clipped ({len(plain)} > "
+                f"{lst.content_size.width}): {plain!r}")
         idx = next(i for i in range(lst.option_count)
                    if lst.get_option_at_index(i).id == name)
         lst.highlighted = idx
@@ -983,6 +996,67 @@ async def t_vertical_switch(app, pilot) -> None:
         os.environ.pop("CHECK0R_VERTICAL", None)
         _modules.reset_cache()
         shutil.rmtree(schema_dir, ignore_errors=True)
+
+
+async def t_boot_vertical_selector(app, pilot) -> None:
+    """The boot-time Sparte selector must never reach a headless run: it is a modal,
+    and a modal on top swallows the Pilot's keys — which would silently break every
+    other case in this suite (and --screenshot). Also pins that an explicit
+    CHECK0R_VERTICAL suppresses it, and that the entries carry a tariff count."""
+    import os
+
+    import _vertical
+    from tui_screens import VerticalSelectScreen
+
+    assert not isinstance(app.screen, VerticalSelectScreen), (
+        "vertical selector leaked into headless run — it would eat the Pilot's keys")
+
+    # _maybe_select_vertical is a no-op headless regardless of the environment.
+    had = os.environ.pop("CHECK0R_VERTICAL", None)
+    try:
+        app._maybe_select_vertical()
+        await pilot.pause()
+        assert not isinstance(app.screen, VerticalSelectScreen), (
+            "selector pushed despite is_headless")
+
+        # The entries the selector is built from: registry order, tariff counts read
+        # from each vertical's OWN namespace without switching the active one.
+        before = _vertical.active()
+        entries = app._selectable_verticals()
+        assert entries, "no selectable verticals"
+        assert _vertical.active() == before, "listing the options changed the vertical"
+        names = [n for n, _, _, _ in entries]
+        assert "rechtsschutz" in names, names
+        for name, label, _status, count in entries:
+            assert isinstance(count, int) and count >= 0, (name, count)
+            assert label, name
+        counted = dict((n, c) for n, _, _, c in entries)
+        on_disk = len(list(_vertical.tariffs_dir("rechtsschutz").glob("*.json")))
+        assert counted["rechtsschutz"] == on_disk, (counted, on_disk)
+
+        # Positive path: without the headless guard the selector MUST appear —
+        # otherwise the assertions above would pass just as happily on a
+        # _maybe_select_vertical() that never pushes anything. run_test() is always
+        # headless, so is_headless (an App property) is patched on the class.
+        cls = type(app)
+        original = cls.is_headless
+        cls.is_headless = property(lambda self: False)
+        try:
+            app._maybe_select_vertical()
+            await pilot.pause()
+            assert isinstance(app.screen, VerticalSelectScreen), (
+                "selector did not appear on the interactive path")
+            # Esc cancels -> _apply_vertical(None) returns early -> the app simply
+            # stays in the registry default rather than exiting.
+            await pilot.press("escape")
+            await pilot.pause()
+            assert not isinstance(app.screen, VerticalSelectScreen), "Esc did not close"
+            assert _vertical.active() == before, "Esc changed the active vertical"
+        finally:
+            cls.is_headless = original
+    finally:
+        if had is not None:
+            os.environ["CHECK0R_VERTICAL"] = had
 
 
 async def t_vertical_switch_real(app, pilot) -> None:
@@ -1075,6 +1149,7 @@ CASES = [
     ("verlauf_stats", t_verlauf_stats),
     ("splash_and_loader", t_splash_and_loader),
     ("vertical_switch", t_vertical_switch),
+    ("boot_vertical_selector", t_boot_vertical_selector),
     ("vertical_switch_real", t_vertical_switch_real),
 ]
 

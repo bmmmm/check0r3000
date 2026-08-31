@@ -600,6 +600,9 @@ class CheckApp(App):
         self._populate_magic()
         self._update_header()
         self._prewarm_analyze_model()
+        # Order matters: the selector is pushed FIRST so the splash lands on top of
+        # it, plays, dismisses itself, and reveals the selector underneath.
+        self._maybe_select_vertical()
         self._maybe_show_splash()
         self.set_interval(0.09, self._animate_pipeline_status)
 
@@ -619,6 +622,37 @@ class CheckApp(App):
             atomic_write_json(self._PREFS_PATH, {"theme": self.theme})
         except OSError as exc:
             self.notify(f"Theme nicht gespeichert: {exc}", severity="warning", timeout=5)
+
+    def _selectable_verticals(self) -> list[tuple[str, str, str, int]]:
+        """Registry entries offered by the Sparte selector, with each vertical's
+            analyzed-tariff count. The count reads that vertical's own namespace
+            directly (_vertical.tariffs_dir takes an explicit name), so listing the
+            options never switches the active vertical."""
+        out: list[tuple[str, str, str, int]] = []
+        for name, e in _vertical.registry()["verticals"].items():
+            if not isinstance(e, dict) or e.get("status") == "disabled":
+                continue
+            try:
+                count = len(list(_vertical.tariffs_dir(name).glob("*.json")))
+            except OSError:
+                count = 0
+            out.append((name, str(e.get("label") or name), str(e.get("status") or ""), count))
+        return out
+
+    def _maybe_select_vertical(self) -> None:
+        """Ask which Sparte to open, instead of silently falling back to the
+            registry default. Skipped when CHECK0R_VERTICAL names one explicitly (a
+            deliberate choice is not re-asked, mirroring CHECK0R_SPLASH=off) and when
+            only one vertical is selectable. Headless runs (tui_test.py,
+            --screenshot) never see it — the modal would swallow the Pilot's keys,
+            the same trap _maybe_show_splash guards against."""
+        if self.is_headless or os.environ.get("CHECK0R_VERTICAL", "").strip():
+            return
+        entries = self._selectable_verticals()
+        if len(entries) < 2:
+            return
+        self.push_screen(VerticalSelectScreen(entries, _vertical.active()),
+                         self._apply_vertical)
 
     def _maybe_show_splash(self) -> None:
         """Push the boot animation over the freshly-loaded app. CHECK0R_SPLASH
@@ -2792,11 +2826,8 @@ class CheckApp(App):
             self.notify("Pipeline läuft — Sparten-Wechsel erst nach Abschluss.",
                         severity="warning", timeout=5)
             return
-        reg = _vertical.registry()["verticals"]
-        entries = [(name, str(e.get("label") or name), str(e.get("status") or ""))
-                   for name, e in reg.items()
-                   if isinstance(e, dict) and e.get("status") != "disabled"]
-        self.push_screen(VerticalSelectScreen(entries, _vertical.active()),
+        self.push_screen(VerticalSelectScreen(self._selectable_verticals(),
+                                              _vertical.active()),
                          self._apply_vertical)
 
     def _apply_vertical(self, vertical: str | None) -> None:
