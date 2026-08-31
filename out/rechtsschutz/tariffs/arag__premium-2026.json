@@ -20,9 +20,9 @@
       "level": null
     },
     "internet_web": {
-      "included": true,
+      "included": false,
       "level": null,
-      "note": "optional via web@ktiv addon"
+      "note": "Nicht enthalten - nur als separat zu vereinbarender Zusatz ARAG web@ktiv (Sonderbedingungen 12/12a/12b) buchbar"
     },
     "steuer": {
       "included": true,

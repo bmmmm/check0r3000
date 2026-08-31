@@ -175,6 +175,12 @@
           "why": "AVB: Verwaltungs-Rechtsschutz in Verkehrs-/Nichtverkehrssachen (verified core)"
         },
         {
+          "path": "modules.internet_web.included",
+          "check": "eq",
+          "expected": false,
+          "why": "AVB Sonderbedingungen 12/12a/12b: web@ktiv is a SEPARATELY vereinbarter, separately priced add-on -- never part of Aktiv-Rechtsschutz Premium itself (ARAG online calculator 2026-08-31 offers it as a paid extra). Pinned false because a faithful extraction of the AVB alone can never legitimately report it as included."
+        },
+        {
           "path": "modules.privat.level",
           "check": "isnull",
           "why": "Kompakt/Komfort/Premium listed as options only; chosen Stufe not stated -> null (haiku once hallucinated 'Komfort')"
