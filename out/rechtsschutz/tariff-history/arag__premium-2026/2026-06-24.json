@@ -22,7 +22,7 @@
       "note": "Wohnungs-/Grundstücks-Rechtsschutz; Immobilienbereich bzw. Aktiv-Rechtsschutz Immobilie (§ 2 c, § 29/29 b/29 p)"
     },
     "internet_web": {
-      "included": true,
+      "included": false,
       "level": null,
       "note": "Optionaler Baustein ARAG web@ktiv (Basis/Komfort/Premium, Sonderbedingung 12/12 a/12 b)"
     },
@@ -96,6 +96,6 @@
   "tariff": "Aktiv-Rechtsschutz (ARB 2026)",
   "stem": "arag__premium-2026",
   "_history_date": "2026-06-24",
-  "_content_sha256": "4336ed94b8f00305f62091a05cedf588930bb06f602c232aaf78895b59d65412",
+  "_content_sha256": "89ba94f0be1444f1f45393fa0159de7fae85952694ccfdecb98f0de827157e36",
   "_supersedes": null
 }

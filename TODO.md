@@ -63,8 +63,9 @@ Alle Punkte A–D am 2026-08-28 umgesetzt (Commits `7e6f21e..HEAD`).
 - [x] **D1 `README.md`:** 14 Pfadklassen auf den Vertical-Namespace gezogen,
       Multi-Vertical-Features (Registry, `[S]`, Scaffolder, Panel-Flow,
       `--all-verticals`) nachgetragen.
-- [ ] **D2 Worktree `multi-vertical` entfernen** (beim Sessionende; lokaler
-      `main` im Haupt-Checkout braucht danach `git merge --ff-only origin/main`).
+- [x] **D2 Worktree `multi-vertical` entfernt** (2026-08-31: clean, kein Prozess
+      darin, Branch vollständig in `origin/main` → Worktree + Branch gelöscht;
+      Haupt-Checkout per `git pull --ff-only` nachgezogen).
 
 ---
 

@@ -18,7 +18,7 @@
       "level": null
     },
     "internet_web": {
-      "included": true,
+      "included": false,
       "level": null,
       "note": "optional via web@ktiv addon"
     },
@@ -106,6 +106,6 @@
   "tariff": "Aktiv-Rechtsschutz Komfort für Privatpersonen",
   "stem": "arag__premium-2026",
   "_history_date": "2026-06-28",
-  "_content_sha256": "3086d2044d1209e1b5cc309953beda9b6a6c6075eb9e1565c0df8b19902f3f46",
+  "_content_sha256": "a4f1a06b6b24dad435927917ea3a44bd8da6cd96dcfcf21b795eaf7191e9b106",
   "_supersedes": "2026-06-24"
 }

@@ -18,7 +18,7 @@
       "level": null
     },
     "internet_web": {
-      "included": true,
+      "included": false,
       "level": null,
       "note": "optional via web@ktiv addon"
     },
@@ -144,6 +144,6 @@
   "tariff": "Aktiv-Rechtsschutz Premium",
   "stem": "arag__premium-2026",
   "_history_date": "2026-06-30",
-  "_content_sha256": "209420786264ad4a704bc3a11fd3763654efe5defbf440395b81867f3a9d5484",
+  "_content_sha256": "4f8738d97b8e554580a5135e55ce1a2b0f9bc85124fdfa903d184b40c2f5f2db",
   "_supersedes": "2026-06-28"
 }
