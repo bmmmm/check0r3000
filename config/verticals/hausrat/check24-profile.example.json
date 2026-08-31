@@ -1,5 +1,10 @@
 {
   "_note": "Tracked placeholder from the feasibility probe (deliberately fake personal values). Copy to check24-profile.json (gitignored) and adjust the levers.",
+  "_lever_traps": [
+    "paymentperiod: keep 'year'. With 'month' CHECK24 only lists tariffs that offer monthly billing — measured 2026-08-31: 54 rows instead of 86. The scraped monatlich_eur stays a monthly figure either way.",
+    "module_elementary=yes ALSO needs module_elementary_street + _street_number (the ZUERS flood zone is address-based). Without them the result URL 404s — the scrape then dies on a 'waiting for .result_tile' timeout, which looks like a scraper bug but is a bad query.",
+    "insurancesum follows squaremeter (CHECK24 rechnet rund 650 EUR/qm). Two quotes are only comparable at the same qm AND the same sum."
+  ],
   "base_url": "https://hausratversicherungen.check24.de/hausrat/vergleichsergebnis/",
   "query": "squaremeter=80&zipcode=10115&birthdate=1985-05-15&insurancesum=52000&paymentperiod=year&module_glass=no&building_type=3&module_elementary=no&module_elementary_city=Berlin&module_elementary_street=&module_elementary_street_number=&bike_insurance_sum=0&activity_source=input1"
 }

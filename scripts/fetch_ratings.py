@@ -139,7 +139,10 @@ def main() -> int:
 
     tmp = _vertical.TMP
     tmp.mkdir(exist_ok=True)
-    out = Path(args.out) if args.out else tmp / f"rows_{args.date}.json"
+    # resolve(): a relative --out is relative to the CWD, and printing it below via
+    # relative_to(ROOT) used to raise ValueError *after* the scrape had already been
+    # written — losing a finished (and rate-limited) run to a cosmetic path error.
+    out = Path(args.out).resolve() if args.out else tmp / f"rows_{args.date}.json"
 
     url = build_url()
     rows = asyncio.run(scrape(url))
@@ -148,7 +151,11 @@ def main() -> int:
         sys.exit("No rows scraped — page may not have loaded or Vue did not hydrate.")
 
     out.write_text(json.dumps(rows, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"Saved -> {out.relative_to(ROOT)}")
+    try:
+        shown = out.relative_to(ROOT)
+    except ValueError:  # --out pointed outside the repo; show the absolute path
+        shown = out
+    print(f"Saved -> {shown}")
 
     if args.snapshot:
         res = subprocess.run(

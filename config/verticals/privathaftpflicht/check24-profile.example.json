@@ -1,5 +1,11 @@
 {
   "_note": "Tracked placeholder from the feasibility probe (deliberately fake personal values). Copy to check24-profile.json (gitignored) and adjust the levers.",
+  "_lever_traps": [
+    "coinsured is the NUMBER OF INSURED PEOPLE, not the count of extra people: 1 = single, 2 = couple. Measured 2026-08-31 on 79 comparable tariffs: 2 is dearer than 1 for 77 of them (median +1.17 EUR/mo). A couple quote left at 1 silently prices a single.",
+    "paymentperiod: keep 'year'. With 'month' CHECK24 only lists tariffs that offer monthly billing — measured 2026-08-31: 27 rows instead of 82. The scraped monatlich_eur stays a monthly figure either way.",
+    "min_insure_sum is a MINIMUM filter in millions (5 still returns 20/50 Mio tariffs). Premiums are only comparable at the same Deckungssumme.",
+    "birthdate is DD.MM.YYYY here, while hausrat wants ISO YYYY-MM-DD."
+  ],
   "base_url": "https://privathaftpflicht.check24.de/privathaftpflicht/vergleichsergebnis/",
   "query": "coinsured=1&birthdate=15.05.1985&zipcode=10115&city=&protection_level=none&amountinsuredchildren=-1&childrenunder7or10=no&public_service=no&sortorder=asc&min_insure_sum=5&max_costsharing=0&paymentperiod=year&insure_date=29.08.2026&grade=4&min_stars=0&costsharing=no&from_ipss=yes"
 }
