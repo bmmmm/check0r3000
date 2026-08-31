@@ -1,0 +1,117 @@
+{
+  "insurer": "agencio",
+  "tariff": "natura optimum+",
+  "stand": "01.03.2023",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null
+    },
+    "naturgefahren": {
+      "included": true,
+      "level": null
+    },
+    "tiere": {
+      "included": true,
+      "level": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null
+    },
+    "internet": {
+      "included": true,
+      "level": null
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null
+    },
+    "fahrradschutz": {
+      "included": true,
+      "level": null,
+      "note": "1% Versicherungssumme beitragsfrei mitversichert"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Überschwemmung durch Starkregen: 1 Monat Wartezeit"
+    ],
+    "geltungsbereich": "Deutschland; Außenversicherung weltweit bis 12 Monate",
+    "vertragslaufzeit": "1 oder 3+ Jahre"
+  },
+  "leistungen": [
+    "Schadenabwendungs- und Schademinderungskosten",
+    "Aufräumungskosten",
+    "Transport- und Lagerkosten",
+    "Hotelkosten unbegrenzt",
+    "Umzugskosten",
+    "Bewachungskosten",
+    "Schlüsseldienst bis 150 EUR",
+    "Reparaturkosten für provisorische Maßnahmen",
+    "Sachverständigenkosten",
+    "Psychologische Betreuung nach Einbruch",
+    "Kinderbetreuung im Notfall",
+    "Tierarzt- und Unterbringungskosten",
+    "Rückreisekosten bis 5.000 EUR",
+    "Reiserücktrittskosten bis 3.500 EUR"
+  ],
+  "ausschluesse": [
+    "Krieg, kriegsähnliche Ereignisse, Aufstand",
+    "Innere Unruhen",
+    "Kernenergie",
+    "Schwamm",
+    "Sturmflut",
+    "Vorsätzlich verursachte Schäden",
+    "Gebäudebestandteile",
+    "Kraftfahrzeuge aller Art und Anhänger",
+    "Luft- und Wasserfahrzeuge",
+    "Elektronisch gespeicherte Daten",
+    "Schäden durch Abnutzung und Verschleiß",
+    "Schäden durch Alterung oder natürliche Beschaffenheit"
+  ],
+  "besonderheiten": [
+    "Auto-Verlängerung jährlich",
+    "Erweiterte einfache Diebstahl-Deckungen für Alltäge",
+    "Cyber-Schutz inkl. Phishing, Online-Betrug",
+    "Fahrraddiebstahl rund um die Uhr ohne Einstellpflicht",
+    "Überschwemmung durch Starkregen mitversichert",
+    "Schäden durch wild lebende Tiere bis 10.000 EUR",
+    "Psychologische Unterstützung nach Straftat",
+    "Verzicht auf Anrechnung grober Fahrlässigkeit",
+    "Jährliche Prämieanpassung nach Preisindex"
+  ],
+  "beitrag": null,
+  "_input_hash": "523a69c7be6205082493c07c54dc4ab7fcd9a49b2519a3b4ac3539c6499f7626",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "a7f3f9319eff56b0dcbb7e39414737776e25e171b514a04b21d392b107b6167a"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "eeecba5f3bac5b15b9d03e819f9b7cb44b535d3e18a4eda93a556797d7712474"
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "insurer": "DOCURA VVaG",
+  "tariff": "Hausratversicherung COVER",
+  "stand": "01/2023",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null
+    },
+    "tiere": {
+      "included": false,
+      "level": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null
+    },
+    "diebstahl_erweitert": {
+      "included": false,
+      "level": null
+    },
+    "internet": {
+      "included": false,
+      "level": null
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null
+    },
+    "fahrradschutz": {
+      "included": false,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "weltweit",
+    "vertragslaufzeit": "mind. 1 Jahr"
+  },
+  "leistungen": [
+    "Schlossänderungskosten",
+    "Hotelkosten bis 180 Tage (max. 100€/Tag)",
+    "Transport- und Lagerkosten",
+    "Bewachungskosten",
+    "Reparaturkosten für Gebäudeschäden",
+    "Reparaturkosten für Leitungswasserschäden",
+    "Datenrettungskosten (Cyberschutz)",
+    "Tierarztkosten",
+    "Umzugskosten",
+    "Rückreisekosten"
+  ],
+  "ausschluesse": [
+    "Schäden durch vorsätzliche Herbeiführung",
+    "Einfacher Diebstahl",
+    "Eigentum von Untermietern",
+    "Kraftfahrzeuge aller Art",
+    "Krieg und kriegsähnliche Ereignisse",
+    "Kernenergie",
+    "Schäden in nicht bezugsfertig gestellten Gebäuden"
+  ],
+  "besonderheiten": [
+    "Unterversicherungsverzicht möglich",
+    "Innovationsgarantie für zukünftige Bedingungsverbesserungen",
+    "Leistungsgarantie gegenüber GDV-Musterbedingungen",
+    "Verzicht auf Einrede der groben Fahrlässigkeit",
+    "Vorsorgeversicherung für Kinder (20% der Versicherungssumme)",
+    "Weltweit versichert (Naturgefahren nur innerhalb Gebäuden)"
+  ],
+  "beitrag": null,
+  "_input_hash": "cd22eecd8e7adf5d52e4f128b6345c111ceea5c7d8f3066052ee18446a0627bb",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "6ed6dc6c12a36c5afa98db0341cc192534e41046016c070f61fef8eb979168e9"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "b4dd5700e9b349dc36da2bba930af134f201e7156cfe84442a669bd2931397af"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "2fd7600f58be1a0314f0086307eba8030f5963414f1235dacb8ad43d67801ab8"
+    }
+  ]
+}

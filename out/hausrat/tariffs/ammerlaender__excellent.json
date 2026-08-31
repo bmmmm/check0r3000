@@ -1,0 +1,131 @@
+{
+  "insurer": "Ammerländer Versicherung VVaG",
+  "tariff": "Excellent-Schutz",
+  "stand": "03.2026",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null,
+      "note": "optional als Elementarversicherung"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null,
+      "note": "optional als separate Glasversicherung"
+    },
+    "fahrradschutz": {
+      "included": true,
+      "level": null,
+      "note": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Überschwemmung durch Starkregen: 1 Monat (falls Elementarversicherung)"
+    ],
+    "geltungsbereich": "Deutschland",
+    "vertragslaufzeit": "1 oder 3 Jahre"
+  },
+  "leistungen": [
+    "Brandschutz",
+    "Blitzschlag- und Überspannungsschutz",
+    "Einbruchdiebstahlschutz",
+    "Wasserschadendeckung (Leitungswasser)",
+    "Sturm- und Hagelschutz",
+    "Fahrraddiebstahlschutz ohne Einstellpflicht",
+    "Diebstahl am Arbeitsplatz",
+    "Seniorenschutz (Hörhilfen, Sehhilfen, Taschendiebstahl)",
+    "Cyber-Schutz (Online-Handel-Betrug, Phishing, Skimming)",
+    "Psychologische Betreuung nach Einbruch oder Raub",
+    "Schlüsseldienst bis 300 EUR",
+    "Hotelkosten bei Unbewohnbarkeit",
+    "Umzugskosten nach Schaden",
+    "Reparaturkosten für provisorische Maßnahmen",
+    "Tierarztkosten bei Schaden",
+    "Kinderbetreuung im Notfall (bis 350 EUR)",
+    "Reiserücktrittskosten nach Schaden (bis 3.500 EUR)"
+  ],
+  "ausschluesse": [
+    "Krieg und kriegsähnliche Ereignisse",
+    "Innere Unruhen",
+    "Kernenergie",
+    "Schwamm",
+    "Sturmflut",
+    "Vorsätzlich herbeigeführte Schäden",
+    "Kraftfahrzeuge und Anhänger",
+    "Luft- und Wasserfahrzeuge"
+  ],
+  "besonderheiten": [
+    "Erweiterte Leistungsgarantie (Best-Leistungs-Garantie)",
+    "Besitzstandsgarantie",
+    "Nachhaltigkeit-Option (bis 25%, max. 3.500 EUR)",
+    "Vorsorgeversicherung für Kinder (bis 50% der VS, max. 12 Monate)",
+    "Erweiterter Unterversicherungsverzicht für Kleinschäden bis 5.000 EUR",
+    "Beitragsbefreiung bei unverschuldeter Arbeitslosigkeit (bis 12 Monate)",
+    "Beitragsreduzierung bei Umzug in Seniorenheim",
+    "Verzicht auf Kündigungsfrist zum Ablauf",
+    "Balkonkraftwerk-Versicherung optional",
+    "Fahrrad-Vollkasko optional"
+  ],
+  "beitrag": null,
+  "_input_hash": "86e39ab56dd8f0129597223bb0817c7eb221e4baa48804b9c692effee6add8fc",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "9da375be5e87814bf8e43bd31f5f6dfb112fc7aaccf952620fe8434f73b0f980"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "f376e1da487b4ba16ef10e7042feadd6a407271d8d562e90f35d0fc9739a5904"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "746fcbeb88161f9d8703fc769cd681d84289d5a642e921e11153c9428a9e343e"
+    }
+  ]
+}

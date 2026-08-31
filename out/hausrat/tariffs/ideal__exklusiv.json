@@ -1,0 +1,107 @@
+{
+  "insurer": "IDEAL Versicherung AG",
+  "tariff": "IDEAL HausRat",
+  "stand": "07.2024",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null,
+      "note": "wählbarer IDEAL Elementarschutz"
+    },
+    "tiere": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "diebstahl_erweitert": {
+      "included": false,
+      "level": null,
+      "note": "einfacher Diebstahl mit Einschränkungen enthalten"
+    },
+    "internet": {
+      "included": false,
+      "level": null,
+      "note": "wählbarer IDEAL Cyberschutz"
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null,
+      "note": "wählbarer IDEAL Glasschutz"
+    },
+    "fahrradschutz": {
+      "included": false,
+      "level": null,
+      "note": "wählbarer IDEAL Fahrradschutz"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "0 EUR",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Versicherte Wohnung in Deutschland; Außenversicherung weltweit zeitlich begrenzt",
+    "vertragslaufzeit": "1, 3 oder 5 Jahre"
+  },
+  "leistungen": [
+    "Schadenabwendungs- und Schadenminderungskosten",
+    "Aufräumungskosten",
+    "Hotelkosten",
+    "Umzugs- und Lagerkosten",
+    "Schlossänderungskosten",
+    "Bewachungskosten",
+    "Provisorische Maßnahmen",
+    "Reparaturkosten Leitungswasserschäden",
+    "Datenrettungskosten"
+  ],
+  "ausschluesse": [
+    "Kriegsereignisse",
+    "Kernenergie und nukleare Strahlung",
+    "Schwamm und Hausfäulepilze",
+    "Sturmflut",
+    "Elementargefahren (außer wenn versichert)"
+  ],
+  "besonderheiten": [
+    "Neuwertentschädigung",
+    "Keine Selbstbeteiligung im Klassik-Tarif",
+    "Automatische Summenanpassung"
+  ],
+  "beitrag": null,
+  "_input_hash": "f2c76751a2c6a2dd612dd048af511b25be97efd29022b25b642a7427e637fdde",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "e8f529586110e4f9684af2ed865fa0945a481f2ea0c5c82bd09c683157ce8b6e"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "a0e3af2f33b6a60ac94b0b96521fe5f650099526c7aeb669858f7f7d8ec019a9"
+    }
+  ]
+}

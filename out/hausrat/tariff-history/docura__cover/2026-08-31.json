@@ -1,0 +1,93 @@
+{
+  "stand": "01/2023",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null
+    },
+    "tiere": {
+      "included": false,
+      "level": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null
+    },
+    "diebstahl_erweitert": {
+      "included": false,
+      "level": null
+    },
+    "internet": {
+      "included": false,
+      "level": null
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null
+    },
+    "fahrradschutz": {
+      "included": false,
+      "level": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "weltweit",
+    "vertragslaufzeit": "mind. 1 Jahr"
+  },
+  "leistungen": [
+    "Schlossänderungskosten",
+    "Hotelkosten bis 180 Tage (max. 100€/Tag)",
+    "Transport- und Lagerkosten",
+    "Bewachungskosten",
+    "Reparaturkosten für Gebäudeschäden",
+    "Reparaturkosten für Leitungswasserschäden",
+    "Datenrettungskosten (Cyberschutz)",
+    "Tierarztkosten",
+    "Umzugskosten",
+    "Rückreisekosten"
+  ],
+  "ausschluesse": [
+    "Schäden durch vorsätzliche Herbeiführung",
+    "Einfacher Diebstahl",
+    "Eigentum von Untermietern",
+    "Kraftfahrzeuge aller Art",
+    "Krieg und kriegsähnliche Ereignisse",
+    "Kernenergie",
+    "Schäden in nicht bezugsfertig gestellten Gebäuden"
+  ],
+  "besonderheiten": [
+    "Unterversicherungsverzicht möglich",
+    "Innovationsgarantie für zukünftige Bedingungsverbesserungen",
+    "Leistungsgarantie gegenüber GDV-Musterbedingungen",
+    "Verzicht auf Einrede der groben Fahrlässigkeit",
+    "Vorsorgeversicherung für Kinder (20% der Versicherungssumme)",
+    "Weltweit versichert (Naturgefahren nur innerhalb Gebäuden)"
+  ],
+  "beitrag": null,
+  "insurer": "DOCURA VVaG",
+  "tariff": "Hausratversicherung COVER",
+  "stem": "docura__cover",
+  "_history_date": "2026-08-31",
+  "_content_sha256": "cc0b36762b9623e93dc88854b27c224342a71445e8fe4dc48b2cc4a85bcf5184",
+  "_supersedes": null
+}

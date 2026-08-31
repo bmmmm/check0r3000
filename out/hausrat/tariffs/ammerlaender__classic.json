@@ -1,0 +1,123 @@
+{
+  "insurer": "Ammerländer Versicherung VVaG",
+  "tariff": "Classic-Schutz",
+  "stand": "03.2026",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": "Leitungswasser, Wasserschäden aus Aquarien und Wasserbetten"
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null,
+      "note": "Elementarschäden sind Optionalbausteine"
+    },
+    "tiere": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": "Anprall von Schienen-, Wasser- und Straßenfahrzeugen"
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": "Mehrere Diebstahlarten einschließlich einfacher Diebstahl und Trickdiebstahl"
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": "Cyber-Schutz: Phishing, Datenrettung, aus Internet geladene Daten"
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null,
+      "note": "Glas ist Optionalbaustein"
+    },
+    "fahrradschutz": {
+      "included": false,
+      "level": null,
+      "note": "Fahrraddiebstahl kann vereinbart werden"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": null,
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Deutschland",
+    "vertragslaufzeit": "Mindestens ein Jahr mit automatischer Jahresverlängerung"
+  },
+  "leistungen": [
+    "Schadenabwendungs- und Schadensminderungskosten",
+    "Aufräumungs-, Bewegungs- und Schutzkosten",
+    "Transport- und Lagerkosten bis 12 Monate",
+    "Hotelkosten bis 6 Monate, max. 100 EUR/Tag",
+    "Umzugskosten",
+    "Bewachungskosten",
+    "Schlossänderungskosten",
+    "Reparaturkosten nach Einbruchdiebstahl",
+    "Sachverständigenkosten",
+    "Phishing-Schutz bis 2.500 EUR",
+    "Datenrettungskosten",
+    "Telefonmissbrauch-Schutz bis 100 EUR",
+    "Scheck- und Kreditkartenmissbrauch bis 1.500 EUR",
+    "Trickdiebstahl-Schutz bis 2.500 EUR"
+  ],
+  "ausschluesse": [
+    "Krieg, kriegsähnliche Ereignisse, Bürgerkrieg",
+    "Kernenergie und nukleare Strahlung",
+    "Innere Unruhen",
+    "Schwamm",
+    "Sturmflut",
+    "Vorsätzlich herbeigeführte Schäden",
+    "Erdbeben",
+    "Gebäudebestandteile",
+    "Kraftfahrzeuge und Anhänger",
+    "Luft- und Wasserfahrzeuge",
+    "Elektronisch gespeicherte Daten"
+  ],
+  "besonderheiten": [
+    "Leistungsgarantie gegenüber GDV-Musterbedingungen",
+    "Verzicht auf Einrede der groben Fahrlässigkeit bis 20.000 EUR",
+    "Erweiterter Unterversicherungsverzicht bei Umzug in größere Wohnung",
+    "Künftige Bedingungsverbesserungen (Innovationsklausel)"
+  ],
+  "beitrag": null,
+  "_input_hash": "ab3f10db78e1972687f74f42a3932ab87b5f44f70848c48e77384a65f0e43b04",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "6153d92a13b388d098997a281539b62de62612fd9e51b4edb007145a7988cbd2"
+    },
+    {
+      "doctype": "avb_besondere",
+      "content_sha256": "f376e1da487b4ba16ef10e7042feadd6a407271d8d562e90f35d0fc9739a5904"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "ec23fc6cef599bb0969ce89e4e712c804f38ea3d6440f395f9e5616bf4405a69"
+    }
+  ]
+}

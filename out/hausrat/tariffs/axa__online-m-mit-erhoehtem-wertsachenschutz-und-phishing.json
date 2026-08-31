@@ -1,0 +1,100 @@
+{
+  "insurer": "AXA Versicherung AG",
+  "tariff": "Hausratversicherung Online - Leistungspaket M",
+  "stand": "06.2019",
+  "modules": {
+    "feuer": {
+      "included": true
+    },
+    "einbruchdiebstahl": {
+      "included": true
+    },
+    "wasserschaeden": {
+      "included": true
+    },
+    "naturgefahren": {
+      "included": false
+    },
+    "tiere": {
+      "included": true
+    },
+    "fahrzeuganprall": {
+      "included": true
+    },
+    "diebstahl_erweitert": {
+      "included": true
+    },
+    "internet": {
+      "included": false
+    },
+    "wohnungsschutzbrief": {
+      "included": false
+    },
+    "glasschutz": {
+      "included": false
+    },
+    "fahrradschutz": {
+      "included": false
+    }
+  },
+  "coverage": {
+    "versicherungssumme": "wie vereinbart",
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [],
+    "geltungsbereich": "Deutschland; Außenversicherung weltweit bis 6 Monate",
+    "vertragslaufzeit": "1 Jahr mit automatischer Verlängerung um jeweils ein Jahr"
+  },
+  "leistungen": [
+    "Schlossänderungskosten",
+    "Kosten für provisorische Sicherungsmaßnahmen",
+    "Reparaturkosten für Gebäudeschäden nach Einbruch",
+    "Hotelkosten mit Tierpension bis 180 EUR/Tag",
+    "Rückreisekosten aus Urlaub bis 5.000 EUR",
+    "Umzugskosten bis 1.000 EUR",
+    "Datenrettungskosten bis 1.000 EUR",
+    "Versicherungssummen-Vorsorge bis 10%",
+    "Mehrkosten Wasser-/Medienverlust nach Rohrbruch",
+    "Sachverständigenkosten bei Schäden über 50.000 EUR",
+    "Transport- und Lagerkosten",
+    "Aufräumkosten",
+    "Schadensabwendungs- und Schadenminderungskosten",
+    "Telefonmehrkosten nach Einbruch"
+  ],
+  "ausschluesse": [
+    "Krieg",
+    "Innere Unruhen",
+    "Kernenergie",
+    "Schwamm",
+    "Sturmflut",
+    "Erdbeben und Vulkanausbruch",
+    "Vorsätzlich herbeigeführte Schäden",
+    "Kraftfahrzeuge aller Art",
+    "Luft- und Wasserfahrzeuge",
+    "Vom Gebäudeeigentümer eingebrachte Sachen",
+    "Vandalismus nach versuchtem Einbruch",
+    "Schäden durch dauernde Einwirkung von Rauch/Ruß"
+  ],
+  "besonderheiten": [
+    "Leistungs-Update-Garantie (Innovationsklausel)",
+    "Unterversicherungsverzicht unter angegebenen Bedingungen",
+    "Wertsachen bis 40% der Versicherungssumme, max. 30.000 EUR",
+    "Bargeld unverschlossen bis 1.000 EUR",
+    "Bargeld verschlossen im Safe bis 40% VS, max. 30.000 EUR",
+    "Optionale Bausteine: Fahrrad, Phishing, Reise, Mobiliarverglasung, Gebäudeverglasung, Elementare Naturgefahren"
+  ],
+  "beitrag": null,
+  "_input_hash": "4c741e1db85d5dcdf1e707bad10f00d01ba1a975951d821f815970f602a5a7ce",
+  "_model": "haiku",
+  "_filter": "avb-filter",
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "4b1f59ce3bef9409cc36caa743da0146877f8d33ee80143331c4093d434990d8"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "1afd8ca2951a6e607d92ae3c408e795a370f4f83301fe3ffec21fa5d87aba50a"
+    }
+  ]
+}

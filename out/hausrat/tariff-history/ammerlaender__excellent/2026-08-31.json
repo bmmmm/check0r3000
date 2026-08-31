@@ -1,0 +1,118 @@
+{
+  "stand": "03.2026",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "naturgefahren": {
+      "included": false,
+      "level": null,
+      "note": "optional als Elementarversicherung"
+    },
+    "tiere": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "glasschutz": {
+      "included": false,
+      "level": null,
+      "note": "optional als separate Glasversicherung"
+    },
+    "fahrradschutz": {
+      "included": true,
+      "level": null,
+      "note": null
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "vereinbart, Höhe im Versicherungsschein",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Überschwemmung durch Starkregen: 1 Monat (falls Elementarversicherung)"
+    ],
+    "geltungsbereich": "Deutschland",
+    "vertragslaufzeit": "1 oder 3 Jahre"
+  },
+  "leistungen": [
+    "Brandschutz",
+    "Blitzschlag- und Überspannungsschutz",
+    "Einbruchdiebstahlschutz",
+    "Wasserschadendeckung (Leitungswasser)",
+    "Sturm- und Hagelschutz",
+    "Fahrraddiebstahlschutz ohne Einstellpflicht",
+    "Diebstahl am Arbeitsplatz",
+    "Seniorenschutz (Hörhilfen, Sehhilfen, Taschendiebstahl)",
+    "Cyber-Schutz (Online-Handel-Betrug, Phishing, Skimming)",
+    "Psychologische Betreuung nach Einbruch oder Raub",
+    "Schlüsseldienst bis 300 EUR",
+    "Hotelkosten bei Unbewohnbarkeit",
+    "Umzugskosten nach Schaden",
+    "Reparaturkosten für provisorische Maßnahmen",
+    "Tierarztkosten bei Schaden",
+    "Kinderbetreuung im Notfall (bis 350 EUR)",
+    "Reiserücktrittskosten nach Schaden (bis 3.500 EUR)"
+  ],
+  "ausschluesse": [
+    "Krieg und kriegsähnliche Ereignisse",
+    "Innere Unruhen",
+    "Kernenergie",
+    "Schwamm",
+    "Sturmflut",
+    "Vorsätzlich herbeigeführte Schäden",
+    "Kraftfahrzeuge und Anhänger",
+    "Luft- und Wasserfahrzeuge"
+  ],
+  "besonderheiten": [
+    "Erweiterte Leistungsgarantie (Best-Leistungs-Garantie)",
+    "Besitzstandsgarantie",
+    "Nachhaltigkeit-Option (bis 25%, max. 3.500 EUR)",
+    "Vorsorgeversicherung für Kinder (bis 50% der VS, max. 12 Monate)",
+    "Erweiterter Unterversicherungsverzicht für Kleinschäden bis 5.000 EUR",
+    "Beitragsbefreiung bei unverschuldeter Arbeitslosigkeit (bis 12 Monate)",
+    "Beitragsreduzierung bei Umzug in Seniorenheim",
+    "Verzicht auf Kündigungsfrist zum Ablauf",
+    "Balkonkraftwerk-Versicherung optional",
+    "Fahrrad-Vollkasko optional"
+  ],
+  "beitrag": null,
+  "insurer": "Ammerländer Versicherung VVaG",
+  "tariff": "Excellent-Schutz",
+  "stem": "ammerlaender__excellent",
+  "_history_date": "2026-08-31",
+  "_content_sha256": "aac6afed4f8b4c9e3d8c9839787e470a6125dfdb2d8e894c2c5b4b17b7ad08bf",
+  "_supersedes": null
+}

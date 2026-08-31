@@ -1,0 +1,124 @@
+{
+  "insurer": "Württembergische Versicherung AG",
+  "tariff": "Adam Riese XL",
+  "stand": "02.2024",
+  "modules": {
+    "feuer": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "einbruchdiebstahl": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "wasserschaeden": {
+      "included": true,
+      "level": null,
+      "note": null
+    },
+    "naturgefahren": {
+      "included": true,
+      "level": null,
+      "note": "Sturm/Hagel standard; extreme Naturgewalten zusätzlich versicherbar"
+    },
+    "tiere": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "fahrzeuganprall": {
+      "included": true,
+      "level": null,
+      "note": "subsidiär; eigene Versicherung vorrangig"
+    },
+    "diebstahl_erweitert": {
+      "included": true,
+      "level": null,
+      "note": "Fahrräder, Gartenmöbel, Werkzeuge, Kinderwagen, KfZ-Diebstahl, Arbeitsplatz je max. 2.500€"
+    },
+    "internet": {
+      "included": true,
+      "level": null,
+      "note": "Phishing, Pharming, Skimming max. 2.500€"
+    },
+    "wohnungsschutzbrief": {
+      "included": false,
+      "level": null,
+      "note": null
+    },
+    "glasschutz": {
+      "included": true,
+      "level": null,
+      "note": "zusätzlich versicherbar; Glasbruch und Muschelausbrüche"
+    },
+    "fahrradschutz": {
+      "included": true,
+      "level": null,
+      "note": "zusätzlich versicherbar; Sicherungspflicht"
+    }
+  },
+  "coverage": {
+    "versicherungssumme": null,
+    "selbstbeteiligung": "individuell vereinbar; 1.000€ für extreme Naturgewalten",
+    "wartezeit_monate": 0,
+    "wartezeit_ausnahmen": [
+      "Extreme Naturgewalten: 14 Tage nach Antragstellung"
+    ],
+    "geltungsbereich": "Deutschland (Versicherungsort); weltweit temporär (Außenversicherung max. 12 Monate)",
+    "vertragslaufzeit": "1 Jahr oder längere Laufzeiten"
+  },
+  "leistungen": [
+    "Aufräumungs- und Entsorgungskosten",
+    "Hotelkosten bei Unbewohnbarkeit (max. 100€/Tag, 360 Tage)",
+    "Transport- und Lagerkosten",
+    "Reparaturkosten Gebäudeschäden (Einbruch/Raub)",
+    "Reparaturkosten Wasserschäden",
+    "Rückreise bei Urlaubsabbruch",
+    "Datenrettungskosten (max. 2.500€)",
+    "Tierarzt- und Unterbringungskosten Haustiere",
+    "Fehlalarm-Kostenerstattung (Rauch-/Gasmelder)",
+    "Anpassung Versicherungssumme an Verbraucherpreise",
+    "Erhöhung VS um 25.000€ bei Hochzeit/Kind/Umzug"
+  ],
+  "ausschluesse": [
+    "Krieg, Bürgerkrieg, Revolution",
+    "Kernenergie, Atomkraft",
+    "Schwamm",
+    "Sturmflut",
+    "Grundwasser",
+    "Einfacher Diebstahl (außer in Spezialmodulen)",
+    "Tricdiebstahl",
+    "Eindringen Regen durch offene Fenster",
+    "Gebäude/Teile nicht bezugsfertig",
+    "Photovoltaikanlagen (Glasbruch)",
+    "Bildschirme von Elektrogeräten (Glasbruch)"
+  ],
+  "besonderheiten": [
+    "Unterversicherungsverzicht optional vereinbar",
+    "Außenversicherung weltweit bis 12 Monate",
+    "Wertsachen mit Entschädigungsgrenzen (Schmuck max. 3.000€, Bargeld/Urkunden begrenzt)",
+    "Multiple Diebstahl-Erweiterungen mit individuellen Limits",
+    "Automatische Erhöhung Versicherungssumme um 10% Vorsorgebetrag",
+    "Update-Garantie: Leistungsverbesserungen ohne Mehrkosten"
+  ],
+  "beitrag": null,
+  "sources": [
+    {
+      "doctype": "avb",
+      "content_sha256": "18bff778218eac99c0e23bc71d9f2bcd1bc24003390c3678997774bb48260531"
+    },
+    {
+      "doctype": "produktinfoblatt",
+      "content_sha256": "d9d8becb2b4b736271a4eed7ce752622a50e4a931df68310e3ff6eeffd6725bf"
+    },
+    {
+      "doctype": "weitere_unterlagen",
+      "content_sha256": "c81a48c2bbde7512ada1583a57d1c5556293fd697056ebbef5002ce04c9c8f68"
+    }
+  ],
+  "_input_hash": "17a8f3153ef768569a866d4815ea5a276b01938e6ce8b0804626ff2123ffe410",
+  "_model": "haiku",
+  "_filter": "avb-filter"
+}

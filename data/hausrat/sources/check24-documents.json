@@ -335,6 +335,184 @@
           "url": "https://hausratversicherungen.check24.de/file/feaaaf236757d065a513e6cb2c1683d314b227f0/Weitere+Unterlagen+als+PDF.pdf"
         }
       ]
+    },
+    {
+      "stem": "ideal__exklusiv",
+      "insurer": "IDEAL",
+      "tariff": "Exklusiv",
+      "position": 11,
+      "hash": "panel:e4ec99f95ee619a8",
+      "harvested": "2026-08-31",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/81cb228103338930931222d90e202a49ed7e5c66/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/93c29037873f99c8c30f78be2a45035c23c26048/Allgemeine+Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "adam-riese__xl",
+      "insurer": "Adam Riese",
+      "tariff": "XL",
+      "position": 25,
+      "hash": "panel:e0465ea08f7c420a",
+      "harvested": "2026-08-31",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/fe19d799cd3bbaf1474a677b39c3a3fd10b1370b/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/abba727e7db18725f020a735cbcd9cfd3679dc3e/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/ba238bd4c4a6c81c7b112db3dd262a9088d00e0a/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "ammerlaender__classic",
+      "insurer": "Ammerländer",
+      "tariff": "Classic",
+      "position": 6,
+      "hash": "panel:b5b7bf5d65f43dac",
+      "harvested": "2026-08-31",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/338794b594d027449b3c50fa8762e34d31632d9a/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/ebd015f0785733a519e5fdcd15521db6ee684692/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/3beba382ac928c4776288dc8833ddb83e311605f/Besondere+Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "axa__online-m-mit-erhoehtem-wertsachenschutz-und-phishing",
+      "insurer": "AXA",
+      "tariff": "Online M mit erhöhtem Wertsachenschutz und Phishing",
+      "position": 8,
+      "hash": "panel:f6d234767d4e08d7",
+      "harvested": "2026-08-31",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/2178673e200cfb0bc3759ce8d4f9d701f667d74b/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/d74012dc3e0ce0d834adab823d587eeb6cfc71b7/Allgemeine+Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "docura__cover",
+      "insurer": "DOCURA",
+      "tariff": "Cover",
+      "position": 9,
+      "hash": "panel:13aa8b0bf8fe61b2",
+      "harvested": "2026-08-31",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/8f02255359c3141283d239f12488b86e8be0f39a/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/541ed294126cf4d99b5ad0560d9eddaf52f53ed8/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/137fe5751d862061de828658571822cd88f1064b/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "ammerlaender__excellent",
+      "insurer": "Ammerländer",
+      "tariff": "Excellent",
+      "position": 31,
+      "hash": "panel:4ae1f531ad452bc1",
+      "harvested": "2026-08-31",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/f8e0d6e990e4026c83e67414ded4787a4fbeb4cb/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/80af09579bab432647ecec2079d2e9e636c8381d/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/12b1eb64612179d89b16a053f43766676aed5c5e/Besondere+Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "agencio__natura-optimum-2",
+      "insurer": "agencio",
+      "tariff": "natura optimum+",
+      "position": 38,
+      "hash": "panel:781c7b795b7128a4",
+      "harvested": "2026-08-31",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/be89975a8dd7247e1f98698edd88ce8d2cac0fc9/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/05635f8fae1bdc39bc0618849c1e24e7c3c80ab3/Allgemeine+Versicherungsbedingungen.pdf"
+        }
+      ]
     }
   ]
 }
