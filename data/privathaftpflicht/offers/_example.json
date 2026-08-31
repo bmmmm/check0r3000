@@ -1,0 +1,6 @@
+{
+  "quelle": "check24-Ergebnisliste YYYY-MM-DD (BEISPIEL — echte Angebote sind gitignored)",
+  "doctype": "check24",
+  "beitrag": { "monatlich_eur": 2.15, "jaehrlich_eur": 25.80 },
+  "coverage": { "versicherungssumme": "5 Mio EUR", "selbstbeteiligung": null }
+}

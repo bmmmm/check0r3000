@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bmmmm/check0r3000/schema/offer.schema.json",
-  "title": "Tariff offer overlay (structured, non-LLM)",
-  "description": "User-supplied facts that are NOT in the AVB/PIB and that extraction correctly leaves null: the premium, the chosen service level per module, and the chosen Selbstbeteiligung. Source: a check24 result row, a personal Angebot, or a Leistungsuebersicht. scripts/overlay.py validates each data/offers/<key>.json against this, then merges it onto the pure record out/tariffs/<key>.json into out/enriched/<key>.json. No model touches this path; every value is copied verbatim.",
+  "$id": "https://github.com/bmmmm/check0r3000/schema/hausrat/offer.schema.json",
+  "title": "Hausrat tariff offer overlay (structured, non-LLM)",
+  "description": "User-supplied facts that are NOT in the AVB/PIB and that extraction correctly leaves null: the premium, the chosen Versicherungs-/Deckungssumme, the chosen Selbstbeteiligung and (where a tariff grades them) the chosen service level per module. Source: a check24 result row, a personal Angebot, or a Leistungsuebersicht. scripts/overlay.py validates each data/hausrat/offers/<key>.json against this, then merges it onto the pure record out/hausrat/tariffs/<key>.json into out/hausrat/enriched/<key>.json. No model touches this path; every value is copied verbatim.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -38,30 +38,39 @@
     "modules": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Chosen service level per module. overlay refuses a level on a module the tariff record does not mark included.",
+      "description": "Chosen service level per module, for tariffs that grade them. overlay refuses a level on a module the tariff record does not mark included. Module keys mirror schema/hausrat/tariff.schema.json.",
       "properties": {
-        "privat": {
+        "feuer": {
           "$ref": "#/$defs/levelpick"
         },
-        "beruf": {
+        "einbruchdiebstahl": {
           "$ref": "#/$defs/levelpick"
         },
-        "verkehr": {
+        "wasserschaeden": {
           "$ref": "#/$defs/levelpick"
         },
-        "wohnen_immobilien": {
+        "naturgefahren": {
           "$ref": "#/$defs/levelpick"
         },
-        "internet_web": {
+        "tiere": {
           "$ref": "#/$defs/levelpick"
         },
-        "steuer": {
+        "fahrzeuganprall": {
           "$ref": "#/$defs/levelpick"
         },
-        "sozialgericht": {
+        "diebstahl_erweitert": {
           "$ref": "#/$defs/levelpick"
         },
-        "verwaltungsrecht": {
+        "internet": {
+          "$ref": "#/$defs/levelpick"
+        },
+        "wohnungsschutzbrief": {
+          "$ref": "#/$defs/levelpick"
+        },
+        "glasschutz": {
+          "$ref": "#/$defs/levelpick"
+        },
+        "fahrradschutz": {
           "$ref": "#/$defs/levelpick"
         }
       }
@@ -71,6 +80,13 @@
       "additionalProperties": false,
       "description": "Chosen coverage values the AVB lists only as selectable options.",
       "properties": {
+        "versicherungssumme": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Chosen Versicherungssumme, e.g. '36.400 EUR' — for Hausrat it follows from the living space and is a contract choice, not an AVB fact."
+        },
         "selbstbeteiligung": {
           "type": [
             "string",
@@ -100,6 +116,5 @@
         }
       }
     }
-  },
-  "_draft": true
+  }
 }

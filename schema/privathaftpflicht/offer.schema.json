@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bmmmm/check0r3000/schema/offer.schema.json",
-  "title": "Tariff offer overlay (structured, non-LLM)",
-  "description": "User-supplied facts that are NOT in the AVB/PIB and that extraction correctly leaves null: the premium, the chosen service level per module, and the chosen Selbstbeteiligung. Source: a check24 result row, a personal Angebot, or a Leistungsuebersicht. scripts/overlay.py validates each data/offers/<key>.json against this, then merges it onto the pure record out/tariffs/<key>.json into out/enriched/<key>.json. No model touches this path; every value is copied verbatim.",
+  "$id": "https://github.com/bmmmm/check0r3000/schema/privathaftpflicht/offer.schema.json",
+  "title": "Privathaftpflicht tariff offer overlay (structured, non-LLM)",
+  "description": "User-supplied facts that are NOT in the AVB/PIB and that extraction correctly leaves null: the premium, the chosen Versicherungs-/Deckungssumme, the chosen Selbstbeteiligung and (where a tariff grades them) the chosen service level per module. Source: a check24 result row, a personal Angebot, or a Leistungsuebersicht. scripts/overlay.py validates each data/privathaftpflicht/offers/<key>.json against this, then merges it onto the pure record out/privathaftpflicht/tariffs/<key>.json into out/privathaftpflicht/enriched/<key>.json. No model touches this path; every value is copied verbatim.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -38,30 +38,36 @@
     "modules": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Chosen service level per module. overlay refuses a level on a module the tariff record does not mark included.",
+      "description": "Chosen service level per module, for tariffs that grade them. overlay refuses a level on a module the tariff record does not mark included. Module keys mirror schema/privathaftpflicht/tariff.schema.json.",
       "properties": {
         "privat": {
           "$ref": "#/$defs/levelpick"
         },
-        "beruf": {
+        "haushalt": {
+          "$ref": "#/$defs/levelpick"
+        },
+        "ehrenamt": {
+          "$ref": "#/$defs/levelpick"
+        },
+        "immobilien": {
+          "$ref": "#/$defs/levelpick"
+        },
+        "mietsache": {
+          "$ref": "#/$defs/levelpick"
+        },
+        "tiere": {
           "$ref": "#/$defs/levelpick"
         },
         "verkehr": {
           "$ref": "#/$defs/levelpick"
         },
-        "wohnen_immobilien": {
+        "daten": {
           "$ref": "#/$defs/levelpick"
         },
-        "internet_web": {
+        "ausland": {
           "$ref": "#/$defs/levelpick"
         },
-        "steuer": {
-          "$ref": "#/$defs/levelpick"
-        },
-        "sozialgericht": {
-          "$ref": "#/$defs/levelpick"
-        },
-        "verwaltungsrecht": {
+        "umwelt": {
           "$ref": "#/$defs/levelpick"
         }
       }
@@ -71,6 +77,13 @@
       "additionalProperties": false,
       "description": "Chosen coverage values the AVB lists only as selectable options.",
       "properties": {
+        "versicherungssumme": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Chosen Deckungssumme, e.g. '5 Mio EUR' — the personally selected cover, not an AVB fact."
+        },
         "selbstbeteiligung": {
           "type": [
             "string",
@@ -100,6 +113,5 @@
         }
       }
     }
-  },
-  "_draft": true
+  }
 }
