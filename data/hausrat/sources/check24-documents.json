@@ -513,6 +513,152 @@
           "url": "https://hausratversicherungen.check24.de/file/05635f8fae1bdc39bc0618849c1e24e7c3c80ab3/Allgemeine+Versicherungsbedingungen.pdf"
         }
       ]
+    },
+    {
+      "stem": "gvo__premium-plusn-vs",
+      "insurer": "GVO",
+      "tariff": "Premium PlusN VS",
+      "position": 2,
+      "hash": "panel:7ce2cba9c9993e07",
+      "harvested": "2026-09-01",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/5e981d5b12471796afe615be3df7cf3d4f51e1e6/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/b998e83a0b1cf9ab07730d2551c444a431614fd6/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/a5843ced3edd4cdadae7375922f870f96e9d94d2/Besondere+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/67c9028708875d999d929a22ac10844b0deb8b88/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "vhv__klassik-garant",
+      "insurer": "VHV",
+      "tariff": "Klassik-Garant",
+      "position": 6,
+      "hash": "panel:6fbe91c8fe9a2f45",
+      "harvested": "2026-09-01",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/988378ff56e3141c663de0cc427ed05012babbd8/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/b38314fbf9351090f558f4ab8cb8b9bcb3c1d826/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/658fe5cd70c3cc5c1a739fd0671a7b875dfca358/Besondere+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/7ceed23cbc2ae1d4b8bcf7189ac302414f1a401f/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "hausbesitzer-versicherung__premium",
+      "insurer": "Hausbesitzer-Versicherung",
+      "tariff": "Premium",
+      "position": 10,
+      "hash": "panel:9a4377a8b6eae70d",
+      "harvested": "2026-09-01",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/0c5b129745c7ad470ad005f06385ad63866b2ff9/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/df37b0d047b30ba09ad166a87b9e105673e759a5/Allgemeine+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "avb_besondere",
+          "kind": "avb_besondere",
+          "file": "Besondere+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/c1f92e01964bb60e9f9d7cd48fb37828dc93453f/Besondere+Versicherungsbedingungen.pdf"
+        },
+        {
+          "doctype": "weitere_unterlagen",
+          "kind": "weitere_unterlagen",
+          "file": "Weitere+Unterlagen+als+PDF",
+          "url": "https://hausratversicherungen.check24.de/file/6f2b4b2ee104d00d7077098d95abbbd5477b1df0/Weitere+Unterlagen+als+PDF.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "wecoya-ehem-conceptif__cif4all-best-advice-vs",
+      "insurer": "WECOYA (ehem. ConceptIF)",
+      "tariff": "CIF4ALL best advice (VS)",
+      "position": 14,
+      "hash": "panel:2918058be0a7af45",
+      "harvested": "2026-09-01",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/d992274272d6845a646ac50f52ffa6a33ee83de9/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/21335aff1de50b63cd513df58dff408b221f01c5/Allgemeine+Versicherungsbedingungen.pdf"
+        }
+      ]
+    },
+    {
+      "stem": "allstern__5-sterne-inkl-unbenannte-gefahren",
+      "insurer": "Allstern",
+      "tariff": "5 Sterne inkl. Unbenannte Gefahren",
+      "position": 24,
+      "hash": "panel:daeffffb50f3f440",
+      "harvested": "2026-09-01",
+      "docs": [
+        {
+          "doctype": "produktinfoblatt",
+          "kind": "produktinfoblatt",
+          "file": "Produktinformationsblatt",
+          "url": "https://hausratversicherungen.check24.de/file/28580a9b2956e909c1f6fb1af3ca0cc1f6713b43/Produktinformationsblatt.pdf"
+        },
+        {
+          "doctype": "avb",
+          "kind": "avb",
+          "file": "Allgemeine+Versicherungsbedingungen",
+          "url": "https://hausratversicherungen.check24.de/file/391a30e5c757196a7d8541bb007c1b512f651030/Allgemeine+Versicherungsbedingungen.pdf"
+        }
+      ]
     }
   ]
 }
