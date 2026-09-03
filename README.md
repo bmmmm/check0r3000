@@ -24,6 +24,18 @@ oder lokal via Ollama/oMLX/mlx).
 
 `Python + uv` · `Textual-TUI` · `modellfrei wo immer möglich` · `GPL-3.0`
 
+> **In English:** German insurance policy terms (AVB) are unstructured legal
+> prose, formatted differently by every insurer. check0r3000 uses an LLM for
+> exactly one step — normalising that prose into a fixed schema — and keeps the
+> rest deterministic. The extraction is measured rather than assumed: golden
+> files per line of business, scored on faithfulness, schema validity,
+> hallucination-freedom and module coverage, with a regression run after every
+> pipeline pass. The headline finding is that **what you feed the model matters
+> more than which model** — on the same contract with the same input, a local
+> 20B model scored 100 where Opus scored 57.
+> See the [scorecard](benchmarks/rechtsschutz/scorecard.md) and
+> [how the benchmark works](#-benchmark-modell---input-vergleich).
+
 > **Datenherkunft & Spielregeln:** Die Fakten kommen aus den Bedingungswerken
 > (AVB/PIB) — öffentlich zugängliche Dokumente der Versicherer. Die PDFs selbst
 > bleiben lokal (fremdes Urheberrecht); getrackt sind nur abgeleitete Fakten und
